@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% block title %}รายงานและสถิติ - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-bar-chart-line-fill me-2"></i>รายงานและสถิติ</h1>
+    <div>
+        <button class="btn btn-success disabled"><i class="bi bi-file-earmark-excel-fill me-1"></i> Export Excel</button>
+        <button class="btn btn-danger disabled"><i class="bi bi-file-earmark-pdf-fill me-1"></i> Export PDF</button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-header">
+                <h5 class="mb-0">สรุปจำนวนการใช้งานแต่ละห้อง</h5>
+            </div>
+            <div class="card-body">
+                {% if room_usage_stats %}
+                <ul class="list-group list-group-flush">
+                    {% for room in room_usage_stats %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        {{ room.name }}
+                        <span class="badge bg-primary rounded-pill">{{ room.booking_count }} ครั้ง</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="text-muted text-center">ยังไม่มีข้อมูลการใช้งาน</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-header">
+                <h5 class="mb-0">สรุปการจองตามแผนก</h5>
+            </div>
+            <div class="card-body">
+                {% if department_stats %}
+                <ul class="list-group list-group-flush">
+                    {% for stat in department_stats %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        {{ stat.department }}
+                        <span class="badge bg-info rounded-pill">{{ stat.count }} ครั้ง</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="text-muted text-center">ยังไม่มีข้อมูลแผนก</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h5 class="mb-0">Dashboard สรุปเชิงสถิติ (กราฟ)</h5>
+            </div>
+            <div class="card-body text-center text-muted">
+                <p>พื้นที่สำหรับแสดงกราฟสรุปการใช้งาน</p>
+                <p class="small">(ต้องใช้ Library เพิ่มเติม เช่น Chart.js สำหรับการพัฒนาระยะถัดไป)</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
