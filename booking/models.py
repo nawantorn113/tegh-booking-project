@@ -23,6 +23,7 @@ class Booking(models.Model):
     start_time = models.DateTimeField(verbose_name="เวลาเริ่มต้น")
     end_time = models.DateTimeField(verbose_name="เวลาสิ้นสุด")
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='PENDING', verbose_name="สถานะ")
+    recurring = models.BooleanField(default=False, verbose_name="จองซ้ำ")  # เพิ่มบรรทัดนี้
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
