@@ -5,7 +5,8 @@ def menu_context(request):
 
     is_admin = request.user.groups.filter(name='Admin').exists()
     is_approver = request.user.groups.filter(name='Approver').exists()
-
+    
+    # ดึงชื่อ page ปัจจุบันจาก URL
     current_page = request.resolver_match.url_name if request.resolver_match else ''
 
     menu_items = [
@@ -13,14 +14,25 @@ def menu_context(request):
         { 'id': 'history', 'label': 'ประวัติการจอง', 'icon': 'bi-clock-history', 'url_name': 'history', 'show': True },
         { 'id': 'approvals', 'label': 'รออนุมัติ', 'icon': 'bi-check2-square', 'url_name': 'approvals', 'show': is_approver or is_admin },
         { 'id': 'rooms', 'label': 'จัดการห้องประชุม', 'icon': 'bi-door-open-fill', 'url_name': 'rooms', 'show': is_admin },
-        # เพิ่มเมนูอื่นๆ ที่นี่ในอนาคต
+        { 'id': 'users', 'label': 'จัดการผู้ใช้งาน', 'icon': 'bi-people-fill', 'url_name': 'users', 'show': is_admin },
+        { 'id': 'reports', 'label': 'รายงานและสถิติ', 'icon': 'bi-bar-chart-line-fill', 'url_name': 'reports', 'show': is_admin },
+        { 'id': 'settings', 'label': 'ตั้งค่าระบบ', 'icon': 'bi-gear-fill', 'url_name': 'settings', 'show': is_admin },
     ]
 
+    # เพิ่ม state 'active' ให้กับเมนูปัจจุบัน
     for item in menu_items:
         item['active'] = (item['url_name'] == current_page)
 
+    # กำหนด Role Badge
+    role_badge = {'label': 'ผู้ใช้งาน', 'class': 'bg-secondary'}
+    if is_admin:
+        role_badge = {'label': 'ผู้ดูแลระบบ', 'class': 'bg-danger'}
+    elif is_approver:
+        role_badge = {'label': 'ผู้อนุมัติ', 'class': 'bg-info'}
+
     return {
         'menu_items': menu_items,
+        'role_badge': role_badge,
         'is_admin': is_admin,
         'is_approver': is_approver
     }

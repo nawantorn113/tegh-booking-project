@@ -6,14 +6,12 @@ urlpatterns = [
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
 
-    # Pages (จาก Sidebar)
+    # Pages
     path('', views.dashboard_view, name='dashboard'),
     path('history/', views.history_view, name='history'),
     path('approvals/', views.approvals_view, name='approvals'),
     path('rooms/', views.room_management_view, name='rooms'),
-
-    # Actions
-    path('booking/new/', views.create_booking_view, name='create_booking'),
-    path('booking/<int:booking_id>/approve/', views.approve_booking_view, name='approve_booking'),
-    path('booking/<int:booking_id>/reject/', views.reject_booking_view, name='reject_booking'),
+    path('users/', views.user_management_view, name='users'),
+    path('reports/', views.reports_view, name='reports'),
+    path('settings/', views.settings_view, name='settings'),
 ]

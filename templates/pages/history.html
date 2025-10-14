@@ -7,14 +7,11 @@
     <ul class="list-group list-group-flush">
         {% for booking in my_bookings %}
         <li class="list-group-item d-flex justify-content-between align-items-center">
-            <div>
-                <strong>{{ booking.title }}</strong> ({{ booking.room.name }})<br>
-                <small class="text-muted">{{ booking.start_time|date:"d M Y, H:i" }} - {{ booking.end_time|date:"H:i" }}</small>
-            </div>
+            <div><strong>{{ booking.title }}</strong> ({{ booking.room.name }})<br><small class="text-muted">{{ booking.start_time|date:"d M Y, H:i" }} - {{ booking.end_time|date:"H:i" }}</small></div>
             <span class="badge {% if booking.status == 'APPROVED' %}bg-success{% elif booking.status == 'PENDING' %}bg-warning text-dark{% else %}bg-danger{% endif %}">{{ booking.get_status_display }}</span>
         </li>
         {% endfor %}
     </ul>
-    {% else %}<div class="card-body"><p class="text-muted mb-0">คุณยังไม่มีประวัติการจอง</p></div>{% endif %}
+    {% else %}<div class="card-body"><p class="text-muted text-center mb-0">คุณยังไม่มีประวัติการจอง</p></div>{% endif %}
 </div>
 {% endblock %}
