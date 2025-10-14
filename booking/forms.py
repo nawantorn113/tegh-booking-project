@@ -1,18 +1,36 @@
+# booking/forms.py
 from django import forms
-from .models import Booking, Profile
+from .models import Booking, Profile # [สำคัญ] import Profile model เข้ามาด้วย
 from django.utils import timezone
 from datetime import time
-from django.contrib.auth.forms import PasswordChangeForm
+from django.contrib.auth.forms import PasswordChangeForm # [สำคัญ] import ฟอร์มเปลี่ยนรหัสผ่าน
 
 class BookingForm(forms.ModelForm):
     class Meta:
         model = Booking
-        fields = ['room', 'title', 'start_time', 'end_time', 'chairman', 'participant_count', 'department', 'requester_phone', 'equipment_needed', 'additional_notes']
+        fields = [
+            'room', 'title', 'start_time', 'end_time', 
+            'chairman', 'participant_count', 'department', 'requester_phone',
+            'additional_notes'
+        ]
         widgets = {
-            'room': forms.Select(attrs={'class': 'form-select'}), 'title': forms.TextInput(attrs={'class': 'form-control'}), 'start_time': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'form-control'}), 'end_time': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'form-control'}), 'chairman': forms.TextInput(attrs={'class': 'form-control'}), 'participant_count': forms.NumberInput(attrs={'class': 'form-control', 'min': '1'}), 'department': forms.TextInput(attrs={'class': 'form-control'}), 'requester_phone': forms.TextInput(attrs={'class': 'form-control'}), 'equipment_needed': forms.CheckboxSelectMultiple(attrs={'class': 'form-check-input'}), 'additional_notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'room': forms.Select(attrs={'class': 'form-select'}),
+            'title': forms.TextInput(attrs={'class': 'form-control'}),
+            'start_time': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'form-control'}),
+            'end_time': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'form-control'}),
+            'chairman': forms.TextInput(attrs={'class': 'form-control'}),
+            'participant_count': forms.NumberInput(attrs={'class': 'form-control', 'min': '1'}),
+            'department': forms.TextInput(attrs={'class': 'form-control'}),
+            'requester_phone': forms.TextInput(attrs={'class': 'form-control'}),
+            'additional_notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'เช่น ปากกาไวท์บอร์ด, สาย HDMI'}),
         }
-        labels = {'title': 'วาระการประชุม', 'chairman': 'ประธานการประชุม', 'participant_count': 'จำนวนผู้เข้าร่วมประชุม', 'requester_phone': 'เบอร์โทรติดต่อ', 'equipment_needed': 'อุปกรณ์เสริมที่ต้องใช้ (เลือกจาก List)', 'additional_notes': 'เพิ่มเติม'}
-    
+        labels = {
+            'title': 'วาระการประชุม',
+            'chairman': 'ประธานการประชุม',
+            'participant_count': 'จำนวนผู้เข้าร่วมประชุม',
+            'requester_phone': 'เบอร์โทรติดต่อ',
+        }
+
     def clean(self):
         cleaned_data = super().clean()
         start_time, end_time = cleaned_data.get("start_time"), cleaned_data.get("end_time")
@@ -26,11 +44,18 @@ class BookingForm(forms.ModelForm):
             if conflicting.exists(): raise forms.ValidationError(f"ห้อง '{room.name}' ไม่ว่างในช่วงเวลานี้")
         return cleaned_data
 
+# --- [ใหม่] เพิ่ม 2 Class นี้เข้าไป ---
+
+# ฟอร์มสำหรับอัปโหลดรูป
 class ProfilePictureForm(forms.ModelForm):
     class Meta:
         model = Profile
-        fields = ['profile_picture']; labels = {'profile_picture': 'เปลี่ยนรูปโปรไฟล์ใหม่'}
+        fields = ['profile_picture']
+        labels = {
+            'profile_picture': 'เปลี่ยนรูปโปรไฟล์ใหม่'
+        }
 
+# ฟอร์มสำหรับเปลี่ยนรหัสผ่าน
 class CustomPasswordChangeForm(PasswordChangeForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

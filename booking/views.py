@@ -58,7 +58,7 @@ def create_booking_view(request):
     if request.method == 'POST':
         form = BookingForm(request.POST)
         if form.is_valid():
-            booking = form.save(commit=False); booking.booked_by = request.user; booking.save(); form.save_m2m()
+            booking = form.save(commit=False); booking.booked_by = request.user; booking.save(); 
             messages.success(request, f"การจอง '{booking.title}' ถูกสร้างเรียบร้อยแล้ว รอการอนุมัติ"); return redirect('dashboard')
     else: form = BookingForm()
     return render(request, 'create_booking.html', {'form': form})

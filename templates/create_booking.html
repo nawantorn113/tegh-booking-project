@@ -1,32 +1,30 @@
 {% extends 'base.html' %}
-
 {% block title %}สร้างการจองใหม่ - {{ block.super }}{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-lg-8">
         <div class="card shadow-sm">
-            <div class="card-header">
-                <h3 class="mb-0"><i class="bi bi-calendar-plus-fill me-2"></i>สร้างการจองใหม่</h3>
-            </div>
+            <div class="card-header"><h3 class="mb-0"><i class="bi bi-calendar-plus-fill me-2"></i>สร้างการจองใหม่</h3></div>
             <div class="card-body">
                 <form method="post" novalidate>
                     {% csrf_token %}
-                    
-                    {% if form.non_field_errors %}
-                        <div class="alert alert-danger">{{ form.non_field_errors|first }}</div>
-                    {% endif %}
-                    
+                    {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors|first }}</div>{% endif %}
+
                     {% for field in form %}
-                    <div class="mb-3">
-                        <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
-                        {{ field }}
-                        {% if field.errors %}
-                        <div class="invalid-feedback d-block">{{ field.errors|first }}</div>
+                        <div class="mb-3">
+                            <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.errors %}<div class="invalid-feedback d-block">{{ field.errors|first }}</div>{% endif %}
+                        </div>
+
+                        {% if field.name == 'room' %}
+                        <div id="room-equipment-details" class="alert alert-info d-none mt-2">
+                            </div>
                         {% endif %}
-                    </div>
+
                     {% endfor %}
-                    
+
                     <hr>
                     <button type="submit" class="btn btn-primary">ยืนยันการจอง</button>
                     <a href="{% url 'dashboard' %}" class="btn btn-secondary">ยกเลิก</a>
@@ -35,4 +33,39 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const roomSelect = document.getElementById('{{ form.room.id_for_label }}');
+        const equipmentDetailsDiv = document.getElementById('room-equipment-details');
+
+        roomSelect.addEventListener('change', function() {
+            const roomId = this.value;
+
+            if (roomId) {
+                // พนักงานเสิร์ฟวิ่งไปหาเชฟ!
+                fetch(`/api/room/${roomId}/details/`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.equipment) {
+                            // ได้ข้อมูลแล้ว เขียนลงบนป้าย
+                            equipmentDetailsDiv.innerHTML = `<strong>อุปกรณ์ประจำห้อง:</strong><br>${data.equipment.replace(/\\n/g, '<br>')}`;
+                            equipmentDetailsDiv.classList.remove('d-none');
+                        } else {
+                            equipmentDetailsDiv.classList.add('d-none');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching room details:', error);
+                        equipmentDetailsDiv.classList.add('d-none');
+                    });
+            } else {
+                // ถ้ายังไม่ได้เลือกห้อง ให้ซ่อนป้ายไว้
+                equipmentDetailsDiv.classList.add('d-none');
+            }
+        });
+    });
+</script>
 {% endblock %}
