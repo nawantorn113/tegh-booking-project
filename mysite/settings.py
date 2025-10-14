@@ -74,3 +74,5 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # ตั้งค่า URL สำหรับหน้า Login ให้ถูกต้อง
 LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = 'calendar'
+LOGOUT_REDIRECT_URL = 'login'
