@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard - {{ block.super }}{% endblock %}
+{% block content %}
+<h1 class="mb-4"><i class="bi bi-door-open-fill me-2"></i>ห้องประชุมทั้งหมด</h1>
+<div class="row">
+    {% for room in rooms %}
+    <div class="col-lg-4 col-md-6 mb-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body d-flex flex-column">
+                <h5 class="card-title">{{ room.name }}</h5>
+                <p class="card-text text-muted small">
+                    <strong><i class="bi bi-geo-alt-fill"></i> สถานที่:</strong> {{ room.location }}<br>
+                    <strong><i class="bi bi-people-fill"></i> ความจุ:</strong> {{ room.capacity }} คน<br>
+                    <strong><i class="bi bi-tools"></i> อุปกรณ์:</strong> {{ room.equipment|linebreaksbr }}
+                </p>
+                <div class="mt-auto pt-2">
+                    <a href="{% url 'create_booking' %}" class="btn btn-primary w-100"><i class="bi bi-calendar-plus"></i> จองห้องนี้</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12"><p class="text-center text-muted">ยังไม่มีห้องประชุมในระบบ</p></div>
+    {% endfor %}
+</div>
+{% endblock %}

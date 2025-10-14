@@ -1,22 +1,21 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import JsonResponse
-from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
-from django.utils.dateparse import parse_datetime
 from .models import Room, Booking
+from .forms import BookingForm
 
-# --- ส่วนของการ Login/Logout ---
+# --- 1. Views สำหรับ Auth (เหมือนเดิม) ---
 def login_view(request):
     if request.user.is_authenticated:
-        return redirect('calendar')
+        return redirect('dashboard')
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
         user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)
-            return redirect('calendar')
+            return redirect('dashboard')
         else:
             messages.error(request, 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง')
             return redirect('login')
@@ -25,68 +24,69 @@ def login_view(request):
 @login_required
 def logout_view(request):
     logout(request)
+    messages.success(request, 'คุณได้ออกจากระบบเรียบร้อยแล้ว')
     return redirect('login')
 
-# --- ส่วนของหน้าปฏิทิน ---
+# --- 2. [ใหม่] Views สำหรับแต่ละหน้า (Page) ---
+
 @login_required
-def calendar_view(request):
-    rooms = Room.objects.all()
-    return render(request, 'calendar.html', {'rooms': rooms})
+def dashboard_view(request):
+    # หน้านี้จะแสดงข้อมูลห้องประชุมทั้งหมด
+    rooms = Room.objects.all().order_by('location', 'name')
+    return render(request, 'pages/dashboard.html', {'rooms': rooms})
+
+@login_required
+def history_view(request):
+    # หน้านี้จะแสดงประวัติการจองของผู้ใช้ที่ login อยู่
+    my_bookings = Booking.objects.filter(booked_by=request.user)
+    return render(request, 'pages/history.html', {'my_bookings': my_bookings})
+
+def is_approver_or_admin(user):
+    return user.groups.filter(name__in=['Approver', 'Admin']).exists()
+
+@login_required
+@user_passes_test(is_approver_or_admin)
+def approvals_view(request):
+    # หน้านี้จะแสดงรายการที่รออนุมัติ
+    pending_bookings = Booking.objects.filter(status='PENDING')
+    return render(request, 'pages/approvals.html', {'pending_bookings': pending_bookings})
+
+@login_required
+@user_passes_test(lambda u: u.groups.filter(name='Admin').exists())
+def room_management_view(request):
+    # ในอนาคต หน้านี้จะใช้สำหรับจัดการห้อง (ตอนนี้แสดงแค่ placeholder)
+    return render(request, 'pages/rooms.html')
+
+# --- 3. Views สำหรับจัดการการจอง (ส่วนใหญ่เหมือนเดิม) ---
 
 @login_required
 def create_booking_view(request):
     if request.method == 'POST':
-        try:
-            room_id = request.POST.get('room')
-            title = request.POST.get('title')
-            start_time = parse_datetime(request.POST.get('start_time'))
-            end_time = parse_datetime(request.POST.get('end_time'))
-
-            conflicting_bookings = Booking.objects.filter(
-                room_id=room_id,
-                start_time__lt=end_time,
-                end_time__gt=start_time
-            ).exclude(status='REJECTED').exists()
-
-            if conflicting_bookings:
-                messages.error(request, 'ช่วงเวลาที่เลือกซ้อนทับกับการจองอื่น')
-            else:
-                Booking.objects.create(
-                    room_id=room_id,
-                    title=title,
-                    start_time=start_time,
-                    end_time=end_time,
-                    booked_by=request.user,
-                    status='APPROVED' # ตั้งเป็นอนุมัติเลยเพื่อความง่ายในเวอร์ชันนี้
-                )
-                messages.success(request, 'สร้างการจองสำเร็จแล้ว')
-        except Exception as e:
-            messages.error(request, f'เกิดข้อผิดพลาด: {e}')
-        
-        return redirect('calendar')
-
-# --- API สำหรับส่งข้อมูลให้ FullCalendar ---
-@login_required
-def resources_api(request):
-    rooms = Room.objects.all()
-    resources = [{'id': str(room.id), 'title': room.name} for room in rooms]
-    return JsonResponse(resources, safe=False)
+        form = BookingForm(request.POST)
+        if form.is_valid():
+            booking = form.save(commit=False)
+            booking.booked_by = request.user
+            booking.save()
+            messages.success(request, f"การจอง '{booking.title}' ถูกสร้างเรียบร้อยแล้ว รอการอนุมัติ")
+            return redirect('dashboard')
+    else:
+        form = BookingForm()
+    return render(request, 'create_booking.html', {'form': form})
 
 @login_required
-def bookings_api(request):
-    start = request.GET.get('start')
-    end = request.GET.get('end')
-    
-    bookings = Booking.objects.filter(start_time__gte=start, end_time__lte=end)
-    events = []
-    for booking in bookings:
-        color = '#0d6efd' if booking.status == 'APPROVED' else '#ffc107'
-        events.append({
-            'id': booking.id,
-            'resourceId': str(booking.room.id),
-            'title': f"{booking.title}\n({booking.booked_by.username})",
-            'start': booking.start_time.isoformat(),
-            'end': booking.end_time.isoformat(),
-            'color': color,
-        })
-    return JsonResponse(events, safe=False)
+@user_passes_test(is_approver_or_admin)
+def approve_booking_view(request, booking_id):
+    booking = get_object_or_404(Booking, id=booking_id)
+    booking.status = 'APPROVED'
+    booking.save()
+    messages.success(request, f"การจอง '{booking.title}' ได้รับการอนุมัติแล้ว")
+    return redirect('approvals') # กลับไปหน้ารออนุมัติ
+
+@login_required
+@user_passes_test(is_approver_or_admin)
+def reject_booking_view(request, booking_id):
+    booking = get_object_or_404(Booking, id=booking_id)
+    booking.status = 'REJECTED'
+    booking.save()
+    messages.warning(request, f"การจอง '{booking.title}' ถูกปฏิเสธ")
+    return redirect('approvals') # กลับไปหน้ารออนุมัติ
