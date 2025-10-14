@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+{% block title %}Calendar View{% endblock %}
+
+{% block extra_head %}
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar-scheduler@6.1.14/index.global.min.js'></script>
+{% endblock %}
+
+{% block content %}
+<div id='calendar-container' class="bg-white p-3 rounded shadow-sm">
+    <div id='calendar'></div>
+</div>
+
+<div class="modal fade" id="bookingModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">สร้างการจองใหม่</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="bookingForm" action="{% url 'create_booking' %}" method="post">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="title" class="form-label">หัวข้อการประชุม</label>
+                        <input type="text" class="form-control" id="title" name="title" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="room" class="form-label">ห้องประชุม</label>
+                        <select class="form-select" id="room" name="room" required readonly>
+                            {% for room in rooms %}
+                                <option value="{{ room.id }}">{{ room.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="start_time" class="form-label">เวลาเริ่มต้น</label>
+                            <input type="datetime-local" class="form-control" id="start_time" name="start_time" readonly>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="end_time" class="form-label">เวลาสิ้นสุด</label>
+                            <input type="datetime-local" class="form-control" id="end_time" name="end_time" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+                    <button type="submit" class="btn btn-primary">ยืนยันการจอง</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var calendarEl = document.getElementById('calendar');
+    var bookingModal = new bootstrap.Modal(document.getElementById('bookingModal'));
+    
+    // Form elements
+    const form = document.getElementById('bookingForm');
+    const titleInput = document.getElementById('title');
+    const roomSelect = document.getElementById('room');
+    const startTimeInput = document.getElementById('start_time');
+    const endTimeInput = document.getElementById('end_time');
+
+    var calendar = new FullCalendar.Calendar(calendarEl, {
+        schedulerLicenseKey: 'GPL-My-Project-Is-Open-Source', // For Open Source projects
+        initialView: 'resourceTimelineDay',
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'resourceTimelineDay,resourceTimelineWeek,dayGridMonth'
+        },
+        slotMinTime: '08:00:00',
+        slotMaxTime: '18:00:00',
+        editable: true,
+        selectable: true,
+        resources: '/api/resources/', // Fetch rooms from our API
+        events: '/api/bookings/',     // Fetch bookings from our API
+
+        select: function(info) {
+            const formatDateTimeLocal = (date) => {
+                const offset = date.getTimezoneOffset() * 60000;
+                const localISOTime = new Date(date - offset).toISOString().slice(0, 16);
+                return localISOTime;
+            };
+
+            titleInput.value = ''; // Clear previous title
+            startTimeInput.value = formatDateTimeLocal(info.start);
+            endTimeInput.value = formatDateTimeLocal(info.end);
+            roomSelect.value = info.resource.id;
+            
+            bookingModal.show();
+        },
+        eventClick: function(info) {
+            // In the future, you can open a modal with event details here
+            alert('Event: ' + info.event.title);
+        }
+    });
+    calendar.render();
+});
+</script>
+{% endblock %}
