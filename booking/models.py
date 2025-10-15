@@ -1,6 +1,4 @@
 # booking/models.py
-# [แก้ไข] แก้ไขการจัดย่อหน้า (Indentation) และอักขระพิเศษทั้งหมด
-
 from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
@@ -16,7 +14,13 @@ class Room(models.Model):
         return f"{self.name} ({self.location})"
 
 class Booking(models.Model):
-    STATUS_CHOICES = [('PENDING', 'รออนุมัติ'), ('APPROVED', 'อนุมัติแล้ว'), ('REJECTED', 'ถูกปฏิเสธ')]
+    # [แก้ไข] จัดเรียงลำดับสถานะใหม่ตามที่คุณต้องการ
+    STATUS_CHOICES = [
+        ('PENDING', 'รออนุมัติ'),
+        ('APPROVED', 'อนุมัติแล้ว'),
+        ('REJECTED', 'ถูกปฏิเสธ'),
+        ('CANCELLED', 'ยกเลิกแล้ว'),
+    ]
     room = models.ForeignKey(Room, on_delete=models.CASCADE, related_name='bookings', verbose_name="ห้องประชุม")
     booked_by = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="ผู้ขอใช้")
     title = models.CharField(max_length=255, verbose_name="วาระการประชุม")
@@ -47,7 +51,6 @@ class Profile(models.Model):
 def create_or_update_user_profile(sender, instance, created, **kwargs):
     if created:
         Profile.objects.create(user=instance)
-    # Ensure profile exists for old users on their first save
     try:
         instance.profile.save()
     except Profile.DoesNotExist:

@@ -5,14 +5,16 @@
 <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.14/index.global.min.js'></script>
 <style>
     #calendar { max-width: 1100px; margin: 0 auto; }
-    .fc .fc-button-primary { background-color: #5e9eff; border-color: #4a8ff7; }
+    .fc .fc-button-primary { background-color: #0d6efd; border-color: #0d6efd; }
 </style>
 {% endblock %}
 
 {% block content %}
-<a href="{% url 'dashboard' %}" class="btn btn-outline-secondary btn-sm mb-3"><i class="bi bi-arrow-left"></i> กลับไปหน้าหลัก</a>
+<a href="{% url 'dashboard' %}" class="btn btn-outline-secondary btn-sm mb-3"><i class="bi bi-arrow-left"></i> กลับไปหน้า Dashboard</a>
 <h1 class="mb-1">ตารางการใช้ห้อง: {{ room.name }}</h1>
 <p class="text-muted mb-4">{{ room.location }}</p>
+
+<span id="admin-status-flag" data-is-admin="{{ is_admin_user|yesno:'true,false' }}" style="display: none;"></span>
 
 <div id='calendar-container' class="bg-white p-3 rounded shadow-sm">
     <div id='calendar'></div>
@@ -52,32 +54,59 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         var calendarEl = document.getElementById('calendar');
-        var bookingModal = new bootstrap.Modal(document.getElementById('bookingModal'));
-        const bookingForm = document.getElementById('bookingForm');
+        var bookingModalEl = document.getElementById('bookingModal');
 
-        var calendar = new FullCalendar.Calendar(calendarEl, {
-            headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,timeGridDay' },
-            initialView: 'timeGridWeek',
-            slotMinTime: '08:00:00',
-            slotMaxTime: '18:00:00',
-            selectable: true,
-            events: `/api/bookings/?room_id={{ room.id }}`, // ดึงข้อมูลเฉพาะห้องนี้
-            select: function(info) {
-                const formatDateTimeLocal = (date) => new Date(date.getTime() - (date.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
+        if (calendarEl && bookingModalEl) {
+            var bookingModal = new bootstrap.Modal(bookingModalEl);
+            const bookingForm = document.getElementById('bookingForm');
 
-                document.getElementById('{{ form.start_time.id_for_label }}').value = formatDateTimeLocal(info.start);
-                document.getElementById('{{ form.end_time.id_for_label }}').value = formatDateTimeLocal(info.end);
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,timeGridDay' },
+                initialView: 'timeGridWeek',
+                slotMinTime: '08:00:00',
+                slotMaxTime: '19:00:00',
+                selectable: true,
+                events: `/api/bookings/?room_id={{ room.id }}`,
+                select: function(info) {
+                    const formatDateTimeLocal = (date) => new Date(date.getTime() - (date.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
+                    document.getElementById('{{ form.start_time.id_for_label }}').value = formatDateTimeLocal(info.start);
+                    document.getElementById('{{ form.end_time.id_for_label }}').value = formatDateTimeLocal(info.end);
+                    bookingForm.action = `{% url 'create_booking_for_room' room.id %}`;
+                    bookingModal.show();
+                    calendar.unselect();
+                },
+                eventClick: function(info) {
+                    info.jsEvent.preventDefault();
+                    const triggerButton = document.createElement('button');
+                    triggerButton.style.display = 'none';
+                    triggerButton.setAttribute('data-bs-toggle', 'modal');
+                    triggerButton.setAttribute('data-bs-target', '#bookingActionModal');
+                    triggerButton.setAttribute('data-booking-id', info.event.id);
 
-                bookingForm.action = `{% url 'create_booking_for_room' room.id %}`;
+                    let cleanTitle = info.event.title.split('\\n')[0];
+                    if (cleanTitle.startsWith('[')) {
+                        cleanTitle = cleanTitle.substring(cleanTitle.indexOf(']') + 2);
+                    }
+                    triggerButton.setAttribute('data-booking-title', cleanTitle);
 
-                bookingModal.show();
-                calendar.unselect();
-            },
-            eventClick: function(info) {
-                alert('การจอง: ' + info.event.title);
-            }
-        });
-        calendar.render();
+                    const isOwner = info.event.title.includes("({{ request.user.username }})");
+
+                    const adminFlag = document.getElementById('admin-status-flag');
+                    const isAdmin = adminFlag.dataset.isAdmin === 'true';
+
+                    const canManage = isOwner || isAdmin;
+
+                    triggerButton.setAttribute('data-can-manage', canManage);
+
+                    document.body.appendChild(triggerButton);
+                    triggerButton.click();
+                    document.body.removeChild(triggerButton);
+                }
+            });
+            calendar.render();
+        } else {
+            console.error("Critical Error: Calendar or Booking Modal element not found!");
+        }
     });
 </script>
 {% endblock %}

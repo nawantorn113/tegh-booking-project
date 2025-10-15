@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block title %}{{ title }} - {{ block.super }}{% endblock %}
+
+{% block content %}
+<a href="{% url 'rooms' %}" class="btn btn-outline-secondary btn-sm mb-3"><i class="bi bi-arrow-left"></i> กลับไปหน้ารายการ</a>
+<h1 class="mb-4">{{ title }}</h1>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            {% for field in form %}
+                <div class="mb-3">
+                    <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.errors %}<div class="invalid-feedback d-block">{{ field.errors|first }}</div>{% endif %}
+                </div>
+            {% endfor %}
+            <hr>
+            <button type="submit" class="btn btn-primary">บันทึกข้อมูล</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

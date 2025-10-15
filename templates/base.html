@@ -7,13 +7,13 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <style>
         body { background-color: #f0f8ff; }
-        #sidebar { min-width: 280px; max-width: 280px; background: linear-gradient(to bottom right, #007bff, #00c6ff); color: #fff; transition: all 0.3s; }
-        @media (max-width: 767.98px) { #sidebar { margin-left: -280px; position: fixed; height: 100%; z-index: 1050; } #sidebar.active { margin-left: 0; } }
+        #sidebar { position: fixed; top: 0; left: 0; height: 100vh; min-width: 280px; max-width: 280px; background: linear-gradient(to bottom right, #007bff, #00c6ff); color: #fff; transition: all 0.3s; z-index: 1030; }
+        .main-content { margin-left: 280px; width: calc(100% - 280px); }
+        @media (max-width: 767.98px) { #sidebar { margin-left: -280px; } #sidebar.active { margin-left: 0; } .main-content { margin-left: 0; width: 100%; } }
         .sidebar-header, .sidebar-footer { border-color: rgba(255, 255, 255, 0.2) !important; }
         .sidebar-menu-button { color: rgba(255, 255, 255, 0.9); }
         .sidebar-menu-button:hover { background-color: rgba(255, 255, 255, 0.1); color: #fff; }
         .sidebar-menu-button.active { background-color: rgba(255, 255, 255, 0.2); color: #fff; font-weight: 600; }
-        .main-content { flex-grow: 1; overflow-y: auto; }
     </style>
     {% block extra_head %}{% endblock %}
 </head>
@@ -51,8 +51,69 @@
             </main>
         </div>
     </div>
+
+    <div class="modal fade" id="bookingActionModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header"><h5 class="modal-title" id="bookingActionModalTitle">จัดการการจอง</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body"><p>คุณต้องการทำอะไรกับการจองนี้?</p></div>
+                <div class="modal-footer justify-content-between">
+                    <button id="modalCancelTrigger" type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal"><i class="bi bi-trash-fill me-1"></i> ยกเลิกการจอง</button>
+                    <a id="modalEditButton" href="#" class="btn btn-warning"><i class="bi bi-pencil-fill me-1"></i> แก้ไขเวลา/รายละเอียด</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="confirmDeleteModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header"><h5 class="modal-title text-danger">ยืนยันการยกเลิก</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <p>คุณแน่ใจหรือไม่ว่าต้องการยกเลิกการจองนี้?</p>
+                    <p class="text-danger small">การกระทำนี้จะเปลี่ยนสถานะเป็น "ยกเลิกแล้ว" และไม่สามารถย้อนกลับได้</p>
+                </div>
+                <div class="modal-footer">
+                    <form id="modalDeleteForm" action="" method="post">
+                        {% csrf_token %}
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ไม่</button>
+                        <button type="submit" class="btn btn-danger">ใช่, ยืนยันการยกเลิก</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     {% block extra_scripts %}{% endblock %}
-    <script>document.getElementById('sidebar-toggle')?.addEventListener('click', () => document.getElementById('sidebar')?.classList.toggle('active'));</script>
+    <script>
+        document.getElementById('sidebar-toggle')?.addEventListener('click', () => document.getElementById('sidebar')?.classList.toggle('active'));
+        const bookingActionModalEl = document.getElementById('bookingActionModal');
+        if (bookingActionModalEl) {
+            bookingActionModalEl.addEventListener('show.bs.modal', function (event) {
+                const triggerElement = event.relatedTarget;
+                const bookingId = triggerElement.getAttribute('data-booking-id');
+                const bookingTitle = triggerElement.getAttribute('data-booking-title');
+                const canManage = triggerElement.getAttribute('data-can-manage') === 'true';
+
+                const modalTitle = bookingActionModalEl.querySelector('.modal-title');
+                const editButton = bookingActionModalEl.querySelector('#modalEditButton');
+                const cancelTriggerButton = bookingActionModalEl.querySelector('#modalCancelTrigger');
+                const deleteForm = document.getElementById('modalDeleteForm');
+
+                modalTitle.textContent = `จัดการการจอง: ${bookingTitle}`;
+                editButton.href = `/booking/${bookingId}/edit/`;
+                deleteForm.action = `/booking/${bookingId}/delete/`;
+
+                if (canManage) {
+                    editButton.style.display = 'inline-block';
+                    cancelTriggerButton.style.display = 'inline-block';
+                } else {
+                    editButton.style.display = 'none';
+                    cancelTriggerButton.style.display = 'none';
+                }
+            });
+        }
+    </script>
 </body>
 </html>
