@@ -9,7 +9,7 @@ def menu_context(request):
     current_page = request.resolver_match.url_name if request.resolver_match else ''
 
     menu_items = [
-        {'id': 'dashboard', 'label': 'แดชบอร์ด', 'icon': 'bi-grid-1x2-fill', 'url_name': 'dashboard', 'show': True},
+        {'id': 'dashboard', 'label': 'หน้าหลัก', 'icon': 'bi-grid-1x2-fill', 'url_name': 'dashboard', 'show': True},
         {'id': 'history', 'label': 'ประวัติการจอง', 'icon': 'bi-clock-history', 'url_name': 'history', 'show': True},
         {'id': 'approvals', 'label': 'รออนุมัติ', 'icon': 'bi-check2-square', 'url_name': 'approvals', 'show': is_approver or is_admin},
         {'id': 'rooms', 'label': 'จัดการห้องประชุม', 'icon': 'bi-door-open-fill', 'url_name': 'rooms', 'show': is_admin},
