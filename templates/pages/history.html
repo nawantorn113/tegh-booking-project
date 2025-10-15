@@ -3,17 +3,46 @@
 
 {% block content %}
 <h1 class="mb-4"><i class="bi bi-clock-history me-2"></i>ประวัติการจองของฉัน</h1>
+
+<!-- <div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <form method="get" action="{% url 'history' %}">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label for="date" class="form-label">วันที่</label>
+                    <input type="date" class="form-control" id="date" name="date" value="{{ request.GET.date }}">
+                </div>
+                <div class="col-md-3">
+                    <label for="room" class="form-label">ห้องประชุม</label>
+                    <select id="room" name="room" class="form-select">
+                        <option value="">-- ทั้งหมด --</option>
+                        {% for room in all_rooms %}
+                            <option value="{{ room.id }}" {% if request.GET.room == room.id|stringformat:"s" %}selected{% endif %}>{{ room.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="status" class="form-label">สถานะ</label>
+                    <select id="status" name="status" class="form-select">
+                        <option value="">-- ทั้งหมด --</option>
+                        {% for value, display in status_choices %}
+                            <option value="{{ value }}" {% if request.GET.status == value %}selected{% endif %}>{{ display }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">ค้นหา</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div> -->
+
 <div class="card shadow-sm">
     {% if my_bookings %}
     <div class="list-group list-group-flush">
         {% for booking in my_bookings %}
-        <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
-             style="cursor: pointer;"
-             data-bs-toggle="modal" 
-             data-bs-target="#bookingActionModal"
-             data-booking-id="{{ booking.id }}"
-             data-booking-title="{{ booking.title }}"
-             data-can-manage="true">
+        <div class="list-group-item d-flex justify-content-between align-items-center">
             <div>
                 <strong>{{ booking.title }}</strong> ({{ booking.room.name }})
                 <br><small class="text-muted">{{ booking.start_time|date:"d M Y, H:i" }} - {{ booking.end_time|date:"H:i" }}</small>
@@ -31,15 +60,16 @@
         {% endfor %}
     </div>
     {% else %}
-    <div class="card-body"><p class="text-muted text-center mb-0">คุณยังไม่มีประวัติการจอง</p></div>
+    <div class="card-body text-center py-5">
+        <p class="text-muted mb-0">ไม่พบรายการจองที่ตรงกับเงื่อนไข</p>
+        <a href="{% url 'history' %}" class="btn btn-sm btn-outline-secondary mt-2">ล้างการค้นหา</a>
+    </div>
     {% endif %}
 </div>
 {% endblock %}
 
 {% block extra_head %}
 <style>
-    .bg-orange {
-        background-color: #fd7e14 !important;
-    }
+    .bg-orange { background-color: #fd7e14 !important; }
 </style>
 {% endblock %}
