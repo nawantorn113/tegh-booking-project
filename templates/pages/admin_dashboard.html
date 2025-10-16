@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block title %}Admin Dashboard - {{ block.super }}{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">Admin Dashboard</h1>
+
+<div class="row g-4 mb-4">
+    </div>
+
+<div class="row g-4 mb-4">
+    <div class="col-lg-7">
+        <div class="card shadow-sm h-100">
+            <div class="card-header">สถิติการใช้ห้อง (30 วันล่าสุด)</div>
+            <div class="card-body"><canvas id="roomUsageChart"></canvas></div>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="card shadow-sm h-100">
+            <div class="card-header">การจองตามแผนก (30 วันล่าสุด)</div>
+            <div class="card-body"><canvas id="departmentChart"></canvas></div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    </div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const chartDefaults = { responsive: true, maintainAspectRatio: false };
+    const roomCtx = document.getElementById('roomUsageChart')?.getContext('2d');
+    if (roomCtx) new Chart(roomCtx, { type: 'bar', data: { labels: {{ room_usage_labels|safe }}, datasets: [{ label: 'จำนวนครั้งที่ใช้งาน', data: {{ room_usage_data|safe }}, backgroundColor: 'rgba(54, 162, 235, 0.6)', borderRadius: 4 }] }, options: { ...chartDefaults, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } } });
+    const deptCtx = document.getElementById('departmentChart')?.getContext('2d');
+    if (deptCtx) new Chart(deptCtx, { type: 'doughnut', data: { labels: {{ dept_usage_labels|safe }}, datasets: [{ data: {{ dept_usage_data|safe }}, backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40'], borderWidth: 2 }] }, options: { ...chartDefaults, cutout: '60%' } });
+});
+</script>
+{% endblock %}

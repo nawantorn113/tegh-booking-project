@@ -1,5 +1,5 @@
 # booking/urls.py
-# [ฉบับสมบูรณ์ล่าสุด - แก้ไข IndentationError และ NoReverseMatch]
+# [ฉบับสมบูรณ์ - ศูนย์บัญชาการ]
 
 from django.urls import path
 from . import views
@@ -21,7 +21,7 @@ urlpatterns = [
     path('booking/<int:booking_id>/', views.booking_detail_view, name='booking_detail'),
     path('booking/<int:booking_id>/edit/', views.edit_booking_view, name='edit_booking'),
     path('booking/<int:booking_id>/delete/', views.delete_booking_view, name='delete_booking'),
-
+    
     # APIs
     path('api/bookings/', views.bookings_api, name='api_bookings'),
     path('api/booking/update-time/', views.update_booking_time_api, name='api_update_booking_time'),
@@ -31,6 +31,7 @@ urlpatterns = [
     path('approvals/', views.approvals_view, name='approvals'),
     path('approvals/<int:booking_id>/approve/', views.approve_booking_view, name='approve_booking'),
     path('approvals/<int:booking_id>/reject/', views.reject_booking_view, name='reject_booking'),
+    path('management/dashboard/', views.admin_dashboard_view, name='admin_dashboard'), # <-- [ใหม่]
     path('management/users/', views.user_management_view, name='user_management'),
     path('management/users/<int:user_id>/edit/', views.edit_user_roles_view, name='edit_user_roles'),
     path('management/rooms/', views.room_management_view, name='rooms'),

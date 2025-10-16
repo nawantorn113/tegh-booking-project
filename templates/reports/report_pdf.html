@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>รายงานสรุป</title>
+    <style>
+        @font-face {
+            font-family: 'TH Sarabun PSK';
+            src: url(https://fonts.gstatic.com/s/th-sarabun-new/v15/SLXOc1a-ro9IYUA7Wd-ftj9aA-zz6Uc.woff2) format('woff2'); /* ใช้ฟอนต์จาก Google Fonts */
+        }
+        body { font-family: 'TH Sarabun PSK', sans-serif; font-size: 16pt; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        h1 { text-align: center; }
+    </style>
+</head>
+<body>
+    <h1>{{ report_title }}</h1>
+    <p>วันที่ออกรายงาน: {{ today_date|date:"d F Y" }}</p>
+    <table>
+        <thead>
+            <tr><th>ชื่อห้องประชุม</th><th>จำนวนครั้งที่ใช้งาน</th></tr>
+        </thead>
+        <tbody>
+            {% for stat in room_usage_stats %}
+            <tr><td>{{ stat.name }}</td><td>{{ stat.booking_count }}</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>
