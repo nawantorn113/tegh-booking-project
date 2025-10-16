@@ -1,5 +1,5 @@
 # booking/models.py
-# [ฉบับแก้ไข] เพิ่ม field 'building' และ 'floor' ใน Room
+# [ฉบับแก้ไขล่าสุด]
 
 from django.db import models
 from django.contrib.auth.models import User
@@ -39,7 +39,7 @@ class Booking(models.Model):
         ordering = ['-start_time']
 
 class Profile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     profile_picture = models.ImageField(upload_to='profile_pics/', default='profile_pics/default.jpg', verbose_name="รูปโปรไฟล์")
 
     def __str__(self):

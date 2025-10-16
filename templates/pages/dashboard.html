@@ -8,7 +8,7 @@
         <p class="text-muted">ระบบจองห้องประชุม TEGH</p>
     </div>
     <div>
-        <a href="#" class="btn btn-primary disabled">
+        <a href="{% url 'master_calendar' %}" class="btn btn-primary">
             <i class="bi bi-calendar3 me-1"></i> ตารางเวลารวม
         </a>
     </div>
@@ -16,39 +16,39 @@
 
 <div class="row g-4 mb-4">
     <div class="col-md-4">
-        <div class="card shadow-sm">
+        <div class="card summary-card shadow-sm border-0">
             <div class="card-body d-flex justify-content-between align-items-center">
                 <div>
                     <h6 class="card-subtitle mb-2 text-muted">ห้องประชุมทั้งหมด</h6>
-                    <span class="h2 font-weight-bold mb-0">{{ summary_cards.total_rooms }}</span>
+                    <span class="h2 font-weight-bold mb-0 text-dark">{{ summary_cards.total_rooms }}</span>
                 </div>
-                <div class="rounded-circle bg-success bg-opacity-10 p-3">
+                <div class="summary-icon-wrapper bg-success-subtle">
                     <i class="bi bi-door-open-fill h4 text-success m-0"></i>
                 </div>
             </div>
         </div>
     </div>
     <div class="col-md-4">
-        <div class="card shadow-sm">
+        <div class="card summary-card shadow-sm border-0">
             <div class="card-body d-flex justify-content-between align-items-center">
                 <div>
                     <h6 class="card-subtitle mb-2 text-muted">การจองวันนี้</h6>
-                    <span class="h2 font-weight-bold mb-0">{{ summary_cards.today_bookings }}</span>
+                    <span class="h2 font-weight-bold mb-0 text-dark">{{ summary_cards.today_bookings }}</span>
                 </div>
-                <div class="rounded-circle bg-primary bg-opacity-10 p-3">
+                <div class="summary-icon-wrapper bg-primary-subtle">
                     <i class="bi bi-check-circle-fill h4 text-primary m-0"></i>
                 </div>
             </div>
         </div>
     </div>
     <div class="col-md-4">
-        <div class="card shadow-sm">
+        <div class="card summary-card shadow-sm border-0">
             <div class="card-body d-flex justify-content-between align-items-center">
                 <div>
                     <h6 class="card-subtitle mb-2 text-muted">รออนุมัติ</h6>
-                    <span class="h2 font-weight-bold mb-0">{{ summary_cards.pending_approvals }}</span>
+                    <span class="h2 font-weight-bold mb-0 text-dark">{{ summary_cards.pending_approvals }}</span>
                 </div>
-                <div class="rounded-circle bg-warning bg-opacity-10 p-3">
+                <div class="summary-icon-wrapper bg-warning-subtle">
                     <i class="bi bi-clock-fill h4 text-warning m-0"></i>
                 </div>
             </div>
@@ -58,40 +58,159 @@
 
 <hr class="my-4">
 
-<h3 class="mb-3">สถานะห้องประชุม</h3>
-<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-    {% for room in rooms %}
-    <div class="col">
-        <div class="card h-100 shadow-sm">
-            <div class="card-body">
-                <h5 class="card-title">{{ room.name }}</h5>
-                <p class="card-text text-muted"><i class="bi bi-geo-alt-fill me-1"></i> {{ room.location|default:"-" }}</p>
-                <ul class="list-group list-group-flush mb-3">
-                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
-                        สถานะปัจจุบัน:
-                        {% if room.status == 'ว่าง' %}
-                            <span class="badge bg-success">ว่าง</span>
-                        {% else %}
-                            <span class="badge bg-danger">ไม่ว่าง</span>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="mb-0">สถานะห้องประชุม</h3>
+    <form method="get" class="d-flex align-items-center gap-2">
+        <label for="sort-select" class="form-label mb-0 text-muted small">เรียงตาม:</label>
+        <select name="sort" id="sort-select" class="form-select form-select-sm" style="width: 150px;" onchange="this.form.submit()">
+            <option value="floor" {% if current_sort == 'floor' %}selected{% endif %}>ชั้น</option>
+            <option value="name" {% if current_sort == 'name' %}selected{% endif %}>ชื่อ</option>
+            <option value="capacity" {% if current_sort == 'capacity' %}selected{% endif %}>ความจุ</option>
+            <option value="status" {% if current_sort == 'status' %}selected{% endif %}>สถานะ</option>
+        </select>
+    </form>
+</div>
+
+<div class="d-flex flex-column gap-4">
+    {% for building_name, rooms_in_building in buildings.items %}
+    <div class="card shadow-sm building-block">
+        <div class="card-header bg-light">
+            <h5 class="mb-0"><i class="bi bi-building me-2"></i>{{ building_name|default:"(ไม่ได้ระบุอาคาร)" }}</h5>
+        </div>
+        <div class="card-body">
+            <div class="room-grid">
+                {% for room in rooms_in_building %}
+                <div class="card h-100 room-card">
+                    <div class="card-body d-flex flex-column">
+                        <div class="room-card-indicator {% if room.status == 'ว่าง' %}bg-success{% else %}bg-danger{% endif %}"></div>
+                        <div class="d-flex justify-content-between align-items-start">
+                            <h6 class="card-title room-name">{{ room.name }}</h6>
+                            {% if room.status == 'ว่าง' %}
+                                <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle">ว่าง</span>
+                            {% else %}
+                                <span class="badge bg-danger-subtle text-danger-emphasis border border-danger-subtle">ไม่ว่าง</span>
+                            {% endif %}
+                        </div>
+                        <p class="card-text text-muted small mb-2 room-meta">
+                            <i class="bi bi-people-fill"></i> {{ room.capacity }} คน | <i class="bi bi-layers-fill"></i> {{ room.floor }}
+                        </p>
+
+                        <div class="alert alert-secondary small p-2 mt-auto booking-info-box">
+                            {% if room.current_booking_info %}
+                                <strong class="text-danger">กำลังใช้งาน:</strong>
+                                <p class="mb-0 fw-bold truncate-text" title="{{ room.current_booking_info.title }}">{{ room.current_booking_info.title }}</p>
+                                <small>{{ room.current_booking_info.start_time|date:"H:i" }} - {{ room.current_booking_info.end_time|date:"H:i" }}</small>
+                            {% elif room.next_booking_info %}
+                                <strong class="text-primary">คิวถัดไป:</strong>
+                                <p class="mb-0 fw-bold truncate-text" title="{{ room.next_booking_info.title }}">{{ room.next_booking_info.title }}</p>
+                                <small>{{ room.next_booking_info.start_time|date:"H:i" }} - {{ room.next_booking_info.end_time|date:"H:i" }}</small>
+                            {% else %}
+                                <strong class="text-muted">ไม่มีการจองถัดไป</strong>
+                            {% endif %}
+                        </div>
+
+                        {% if room.equipment_list %}
+                        <div class="equipment-section">
+                            <small class="text-muted">อุปกรณ์:</small>
+                            <div class="d-flex flex-wrap gap-1 mt-1">
+                                {% for eq in room.equipment_list|slice:":2" %}
+                                <span class="badge bg-light text-dark border">{{ eq }}</span>
+                                {% endfor %}
+                                {% if room.equipment_list|length > 2 %}
+                                <span class="badge bg-light text-dark border">+{{ room.equipment_list|length|add:"-2" }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
                         {% endif %}
-                    </li>
-                    <li class="list-group-item px-0">
-                        <i class="bi bi-people-fill me-2"></i> ความจุ: {{ room.capacity }} คน
-                    </li>
-                </ul>
-                {% if room.status == 'ไม่ว่าง' %}
-                <div class="alert alert-warning small p-2 text-center">
-                    <strong>กำลังใช้งาน:</strong> {{ room.current_booking_title }}
+                    </div>
+                    <div class="card-footer bg-white border-0 p-2">
+                        <a href="{% url 'room_calendar' room.id %}" class="btn btn-sm btn-outline-primary w-100">ดูตาราง / จอง</a>
+                    </div>
                 </div>
-                {% endif %}
-            </div>
-            <div class="card-footer bg-white border-0 p-3">
-                <a href="{% url 'room_calendar' room.id %}" class="btn btn-outline-primary w-100">
-                    <i class="bi bi-calendar-week-fill me-1"></i> ดูตาราง / จอง
-                </a>
+                {% endfor %}
             </div>
         </div>
     </div>
+    {% empty %}
+    <div class="alert alert-info">
+        ไม่พบข้อมูลห้องประชุม กรุณาตรวจสอบให้แน่ใจว่าคุณได้เพิ่มข้อมูล "อาคาร" และ "ชั้น" ให้กับห้องประชุมในหน้า Admin แล้ว
+    </div>
     {% endfor %}
 </div>
+{% endblock %}
+
+
+{% block extra_head %}
+<style>
+    /* Modern & Clean Theme */
+    body, .main-content {
+        background-color: #f8f9fa; /* Light gray background */
+    }
+    .navbar.bg-white {
+        background-color: #ffffff !important;
+    }
+
+    /* Summary Cards */
+    .summary-card {
+        transition: all 0.2s ease-in-out;
+        border-radius: 0.5rem;
+    }
+    .summary-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+    }
+    .summary-icon-wrapper {
+        width: 48px; height: 48px; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+    }
+
+    /* Building Block */
+    .building-block {
+        border-radius: 0.75rem;
+    }
+    .room-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1rem;
+    }
+
+    /* Room Card Styling */
+    .room-card {
+        border-radius: 0.5rem;
+        transition: all 0.2s ease-in-out;
+        box-shadow: 0 1px 3px rgba(0,0,0,.05);
+        position: relative;
+        overflow: hidden; /* Important for the indicator */
+    }
+    .room-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 4px 12px rgba(0,0,0,.1);
+    }
+    .room-card-indicator {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 5px;
+        height: 100%;
+    }
+    .room-card .card-body {
+        padding-left: 1.5rem; /* Make space for indicator */
+    }
+    .room-name { font-weight: 600; color: #343a40; }
+    .room-meta { margin-bottom: 1rem !important; }
+
+    /* Booking Info Box */
+    .booking-info-box {
+        background-color: #f8f9fa !important;
+        border-radius: .375rem;
+    }
+    .truncate-text { 
+        white-space: nowrap; 
+        overflow: hidden; 
+        text-overflow: ellipsis; 
+    }
+    .equipment-section {
+        margin-top: 1rem;
+    }
+</style>
 {% endblock %}
