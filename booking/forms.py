@@ -1,5 +1,7 @@
 # booking/forms.py
 from django import forms
+from django.contrib.auth.models import User
+from dal import autocomplete
 from .models import Room, Booking, Profile
 from django.utils import timezone
 from django.contrib.auth.forms import PasswordChangeForm
@@ -16,9 +18,17 @@ class RoomForm(forms.ModelForm):
         }
 
 class BookingForm(forms.ModelForm):
+    participants = forms.ModelMultipleChoiceField(
+        queryset=User.objects.all(),
+        # --- [แก้ไขครั้งสุดท้าย] เปลี่ยนชื่อ Widget ให้ถูกต้อง 100% ---
+        widget=autocomplete.SelectMultiple(url='user-autocomplete'),
+        required=False,
+        label="รายชื่อผู้เข้าร่วม"
+    )
+
     class Meta:
         model = Booking
-        fields = ['room', 'title', 'start_time', 'end_time', 'chairman', 'participant_count', 'additional_notes']
+        fields = ['room', 'title', 'start_time', 'end_time', 'chairman', 'participant_count', 'participants', 'additional_notes', 'attachment']
         widgets = {
             'room': forms.HiddenInput(),
             'title': forms.TextInput(attrs={'class': 'form-control'}),
@@ -27,8 +37,15 @@ class BookingForm(forms.ModelForm):
             'chairman': forms.TextInput(attrs={'class': 'form-control'}),
             'participant_count': forms.NumberInput(attrs={'class': 'form-control', 'min': '1'}),
             'additional_notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'attachment': forms.ClearableFileInput(attrs={'class': 'form-control'}),
         }
-        labels = {'title': 'วาระการประชุม', 'chairman': 'ประธาน', 'participant_count': 'จำนวนผู้เข้าร่วม'}
+        labels = {
+            'title': 'วาระการประชุม',
+            'chairman': 'ประธานการประชุม',
+            'participant_count': 'จำนวนผู้เข้าร่วม (โดยประมาณ)',
+            'additional_notes': 'หมายเหตุ / อุปกรณ์ที่ต้องการเพิ่มเติม',
+            'attachment': 'ไฟล์แนบประกอบการประชุม (ถ้ามี)',
+        }
 
     def clean(self):
         cleaned_data = super().clean()
@@ -57,7 +74,9 @@ class BookingForm(forms.ModelForm):
         return cleaned_data
 
 class ProfilePictureForm(forms.ModelForm):
-    class Meta: model = Profile; fields = ['profile_picture']
+    class Meta:
+        model = Profile
+        fields = ['profile_picture']
 
 class CustomPasswordChangeForm(PasswordChangeForm):
     def __init__(self, *args, **kwargs):

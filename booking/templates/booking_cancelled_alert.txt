@@ -1,0 +1,14 @@
+เรียน ผู้ดูแลระบบ,
+
+มีการยกเลิกการจองห้องประชุมโดยผู้ใช้งาน
+
+รายละเอียดการจองที่ถูกยกเลิก:
+วาระการประชุม: {{ booking.title }}
+ห้อง: {{ booking.room.name }}
+ผู้จอง: {{ booking.booked_by.get_full_name }} ({{ booking.booked_by.username }})
+เวลาเดิม: {{ booking.start_time|date:"d M Y, H:i" }} - {{ booking.end_time|date:"H:i" }}
+
+สถานะปัจจุบัน: {{ booking.get_status_display }}
+
+จึงเรียนมาเพื่อทราบ
+ระบบจองห้องประชุม

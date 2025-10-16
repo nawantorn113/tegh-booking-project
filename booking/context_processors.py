@@ -1,30 +1,26 @@
 # booking/context_processors.py
 def menu_context(request):
-    if not request.user.is_authenticated:
-        return {}
-
-    is_admin = request.user.groups.filter(name='Admin').exists()
-    is_approver = request.user.groups.filter(name='Approver').exists()
-
-    current_page = request.resolver_match.url_name if request.resolver_match else ''
+    current_path = request.path
+    is_admin = request.user.is_authenticated and request.user.groups.filter(name='Admin').exists()
+    is_approver = request.user.is_authenticated and request.user.groups.filter(name='Approver').exists()
 
     menu_items = [
-        {'id': 'dashboard', 'label': 'หน้าหลัก', 'icon': 'bi-grid-1x2-fill', 'url_name': 'dashboard', 'show': True},
-        {'id': 'history', 'label': 'ประวัติการจอง', 'icon': 'bi-clock-history', 'url_name': 'history', 'show': True},
-        {'id': 'approvals', 'label': 'รออนุมัติ', 'icon': 'bi-check2-square', 'url_name': 'approvals', 'show': is_approver or is_admin},
-        {'id': 'rooms', 'label': 'จัดการห้องประชุม', 'icon': 'bi-door-open-fill', 'url_name': 'rooms', 'show': is_admin},
-
-        # --- [ใหม่] เพิ่มเมนูรายงานและสถิติ ---
-        {'id': 'reports', 'label': 'รายงานและสถิติ', 'icon': 'bi-bar-chart-line-fill', 'url_name': 'reports', 'show': is_admin},
+        {'label': 'Dashboard', 'icon': 'bi bi-grid-fill', 'url_name': 'dashboard', 'path': '/', 'show': True},
+        {'label': 'ประวัติการจอง', 'icon': 'bi bi-clock-history', 'url_name': 'history', 'path': '/history/', 'show': True},
+        {'label': 'รออนุมัติ', 'icon': 'bi bi-hourglass-split', 'url_name': 'approvals', 'path': '/approvals/', 'show': is_admin or is_approver},
+        {'label': 'รายงาน', 'icon': 'bi bi-bar-chart-line-fill', 'url_name': 'reports', 'path': '/reports/', 'show': is_admin},
+        {'label': 'จัดการห้องประชุม', 'icon': 'bi bi-door-closed-fill', 'url_name': 'rooms', 'path': '/management/rooms/', 'show': is_admin},
+        # --- [ใหม่] เพิ่มเมนูจัดการผู้ใช้ ---
+        {'label': 'จัดการผู้ใช้', 'icon': 'bi bi-people-fill', 'url_name': 'user_management', 'path': '/management/users/', 'show': is_admin},
     ]
 
     for item in menu_items:
-        item['active'] = (item['url_name'] == current_page)
+        item['active'] = current_path == item['path']
 
-    role_badge = {'label': 'ผู้ใช้งาน', 'class': 'bg-secondary'}
+    role_badge = {'label': 'User', 'class': 'bg-secondary'}
     if is_admin:
-        role_badge = {'label': 'ผู้ดูแลระบบ', 'class': 'bg-danger'}
+        role_badge = {'label': 'Admin', 'class': 'bg-danger'}
     elif is_approver:
-        role_badge = {'label': 'ผู้อนุมัติ', 'class': 'bg-info'}
+        role_badge = {'label': 'Approver', 'class': 'bg-info text-dark'}
 
     return {'menu_items': menu_items, 'role_badge': role_badge}

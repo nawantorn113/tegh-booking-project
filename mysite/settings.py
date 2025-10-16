@@ -39,3 +39,20 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'dashboard'
 LOGOUT_REDIRECT_URL = 'login'
+
+# mysite/settings.py
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
+# mysite/settings.py
+
+# ... การตั้งค่าอื่นๆ ...
+
+# --- [ใหม่] Email Backend Configuration ---
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'your-email@gmail.com'  # ใส่อีเมลของคุณที่นี่
+EMAIL_HOST_PASSWORD = 'your-app-password' # ใส่ App Password 16 หลักที่สร้างจาก Google
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
