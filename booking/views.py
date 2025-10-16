@@ -1,8 +1,8 @@
 # booking/views.py
-# [ฉบับสมบูรณ์ล่าสุด 16/10/2025 - เพิ่ม Master Calendar]
+# [ฉบับสมบูรณ์ล่าสุด]
 
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
@@ -13,10 +13,12 @@ from django.views.decorators.http import require_POST
 from django.contrib.auth.models import User, Group
 from dal_select2.views import Select2QuerySetView
 from django.core.mail import send_mail
-from django.template.loader import render_to_string
+from django.template.loader import render_to_string, get_template
 from django.conf import settings
 from openpyxl import Workbook
 from django.utils import timezone
+from weasyprint import HTML
+from collections import defaultdict
 from .models import Room, Booking, Profile
 from .forms import BookingForm, ProfilePictureForm, CustomPasswordChangeForm, RoomForm
 
@@ -74,20 +76,44 @@ def logout_view(request):
 def dashboard_view(request):
     now = timezone.now()
     today = now.date()
-    all_rooms = Room.objects.all().order_by('name')
+    sort_by = request.GET.get('sort', 'floor')
+    all_rooms = Room.objects.all()
+
+    if sort_by == 'status':
+        all_rooms = sorted(all_rooms, key=lambda room: not room.bookings.filter(start_time__lte=now, end_time__gt=now, status='APPROVED').exists())
+    elif sort_by == 'capacity':
+        all_rooms = sorted(all_rooms, key=lambda room: room.capacity, reverse=True)
+    elif sort_by == 'name':
+        all_rooms = all_rooms.order_by('name')
+    else: # Default to floor
+        all_rooms = all_rooms.order_by('floor')
+
+    buildings = defaultdict(list)
     for room in all_rooms:
-        current_booking = Booking.objects.filter(
-            room=room, start_time__lte=now, end_time__gt=now, status='APPROVED'
-        ).first()
-        room.status = 'ไม่ว่าง' if current_booking else 'ว่าง'
-        room.current_booking_title = current_booking.title if current_booking else None
-    
+        current_booking = room.bookings.filter(start_time__lte=now, end_time__gt=now, status='APPROVED').first()
+        if current_booking:
+            room.status = 'ไม่ว่าง'
+            room.current_booking_info = current_booking
+            room.next_booking_info = None
+        else:
+            room.status = 'ว่าง'
+            room.current_booking_info = None
+            room.next_booking_info = room.bookings.filter(start_time__gt=now, status='APPROVED').order_by('start_time').first()
+
+        room.equipment_list = [eq.strip() for eq in room.equipment_in_room.split('\n') if eq.strip()]
+        buildings[room.building].append(room)
+
     summary_cards = {
-        'total_rooms': all_rooms.count(),
+        'total_rooms': Room.objects.count(),
         'today_bookings': Booking.objects.filter(start_time__date=today, status='APPROVED').count(),
         'pending_approvals': Booking.objects.filter(status='PENDING').count(),
     }
-    context = {'rooms': all_rooms, 'summary_cards': summary_cards}
+
+    context = {
+        'buildings': dict(buildings),
+        'summary_cards': summary_cards,
+        'current_sort': sort_by,
+    }
     return render(request, 'pages/dashboard.html', context)
 
 @login_required
@@ -107,9 +133,12 @@ def history_view(request):
     query_date = request.GET.get('date')
     query_room = request.GET.get('room')
     query_status = request.GET.get('status')
-    if query_date: my_bookings = my_bookings.filter(start_time__date=query_date)
-    if query_room: my_bookings = my_bookings.filter(room__id=query_room)
-    if query_status: my_bookings = my_bookings.filter(status=query_status)
+    if query_date:
+        my_bookings = my_bookings.filter(start_time__date=query_date)
+    if query_room:
+        my_bookings = my_bookings.filter(room__id=query_room)
+    if query_status:
+        my_bookings = my_bookings.filter(status=query_status)
     context = {
         'my_bookings': my_bookings, 'all_rooms': Room.objects.all().order_by('name'),
         'status_choices': Booking.STATUS_CHOICES,
@@ -130,12 +159,10 @@ def bookings_api(request):
     start = request.GET.get('start')
     end = request.GET.get('end')
     room_id = request.GET.get('room_id')
-    
     if room_id:
         bookings = Booking.objects.filter(room_id=room_id, start_time__gte=start, end_time__lte=end)
     else:
         bookings = Booking.objects.filter(start_time__gte=start, end_time__lte=end)
-
     events = []
     for booking in bookings:
         color_map = {'APPROVED': '#198754', 'PENDING': '#ffc107', 'REJECTED': '#dc3545', 'CANCELLED': '#fd7e14'}
@@ -329,23 +356,81 @@ def delete_room_view(request, room_id):
 
 @login_required
 def reports_view(request):
-    room_usage_stats = Room.objects.annotate(booking_count=Count('bookings', filter=Q(bookings__status='APPROVED'))).order_by('-booking_count')
-    context = {'room_usage_stats': room_usage_stats, 'department_stats': []}
+    period = request.GET.get('period', 'monthly')
+    today = timezone.now().date()
+    if period == 'daily':
+        start_date = today
+        title = 'รายวัน'
+    elif period == 'weekly':
+        start_date = today - timedelta(days=7)
+        title = 'รายสัปดาห์ (7 วันล่าสุด)'
+    else:
+        start_date = today - timedelta(days=30)
+        title = 'รายเดือน (30 วันล่าสุด)'
+    recent_bookings = Booking.objects.filter(start_time__date__gte=start_date, status='APPROVED')
+    room_usage_stats = Room.objects.annotate(
+        booking_count=Count('bookings', filter=Q(bookings__in=recent_bookings))
+    ).order_by('-booking_count')
+    context = {
+        'room_usage_stats': room_usage_stats,
+        'report_title': title,
+        'current_period': period,
+    }
     return render(request, 'pages/reports.html', context)
 
 @login_required
 @user_passes_test(is_admin)
 def export_reports_excel(request):
+    period = request.GET.get('period', 'monthly')
+    today = timezone.now().date()
+    if period == 'daily':
+        start_date = today
+    elif period == 'weekly':
+        start_date = today - timedelta(days=7)
+    else:
+        start_date = today - timedelta(days=30)
     response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-    response['Content-Disposition'] = 'attachment; filename="booking_reports.xlsx"'
+    response['Content-Disposition'] = f'attachment; filename="report_{period}.xlsx"'
     workbook = Workbook()
-    ws1 = workbook.active
-    ws1.title = "Room Usage"
-    ws1.append(['ชื่อห้องประชุม', 'จำนวนครั้งที่ใช้งาน (อนุมัติแล้ว)'])
-    room_stats = Room.objects.annotate(count=Count('bookings', filter=Q(bookings__status='APPROVED'))).order_by('-count')
+    ws = workbook.active
+    ws.title = "Room Usage"
+    ws.append(['ชื่อห้องประชุม', 'จำนวนครั้งที่ใช้งาน'])
+    recent_bookings = Booking.objects.filter(start_time__date__gte=start_date, status='APPROVED')
+    room_stats = Room.objects.annotate(count=Count('bookings', filter=Q(bookings__in=recent_bookings))).order_by('-count')
     for room in room_stats:
-        ws1.append([room.name, room.count])
+        ws.append([room.name, room.count])
     workbook.save(response)
+    return response
+
+@login_required
+@user_passes_test(is_admin)
+def export_reports_pdf(request):
+    period = request.GET.get('period', 'monthly')
+    today = timezone.now().date()
+    if period == 'daily':
+        start_date = today
+        title = 'รายงานสรุปรายวัน'
+    elif period == 'weekly':
+        start_date = today - timedelta(days=7)
+        title = 'รายงานสรุปรายสัปดาห์ (7 วันล่าสุด)'
+    else:
+        start_date = today - timedelta(days=30)
+        title = 'รายงานสรุปรายเดือน (30 วันล่าสุด)'
+    recent_bookings = Booking.objects.filter(start_time__date__gte=start_date, status='APPROVED')
+    room_usage_stats = Room.objects.annotate(
+        booking_count=Count('bookings', filter=Q(bookings__in=recent_bookings))
+    ).order_by('-booking_count')
+    context = {
+        'room_usage_stats': room_usage_stats,
+        'report_title': title,
+        'today_date': today,
+    }
+    template = get_template('reports/report_pdf.html')
+    html_string = template.render(context)
+    html = HTML(string=html_string)
+    pdf_file = html.write_pdf()
+    response = HttpResponse(pdf_file, content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="report_{period}.pdf"'
     return response
 
 # --- Profile View ---

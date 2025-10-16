@@ -77,6 +77,29 @@
         </div>
     </div>
 </div>
+
+<div class="modal fade" id="bookingActionModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="bookingActionModalLabel">จัดการการจอง</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>คุณต้องการทำอะไรกับการจองนี้:</p>
+                <h6 id="modalBookingTitle" class="fw-bold"></h6>
+                <div class="d-grid gap-2 mt-3">
+                    <a id="viewDetailBtn" href="#" class="btn btn-outline-primary"><i class="bi bi-info-circle-fill me-2"></i>ดูรายละเอียด</a>
+                    <a id="editBtn" href="#" class="btn btn-outline-warning"><i class="bi bi-pencil-fill me-2"></i>แก้ไขการจอง</a>
+                    <form id="deleteForm" method="post" class="d-grid">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-danger"><i class="bi bi-trash-fill me-2"></i>ยกเลิกการจอง</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_scripts %}
@@ -85,9 +108,11 @@
     document.addEventListener('DOMContentLoaded', function() {
         var calendarEl = document.getElementById('calendar');
         var bookingModalEl = document.getElementById('bookingModal');
+        var actionModalEl = document.getElementById('bookingActionModal');
 
-        if (calendarEl && bookingModalEl) {
+        if (calendarEl && bookingModalEl && actionModalEl) {
             var bookingModal = new bootstrap.Modal(bookingModalEl);
+            var actionModal = new bootstrap.Modal(actionModalEl);
             const bookingForm = document.getElementById('bookingForm');
             const adminFlag = document.getElementById('admin-status-flag');
             const isCurrentUserAdmin = adminFlag.dataset.isAdmin === 'true';
@@ -95,6 +120,7 @@
             function updateBookingTime(info) {
                 const isOwner = info.event.title.includes("({{ request.user.username }})");
                 if (!isOwner && !isCurrentUserAdmin) {
+                    alert("คุณไม่มีสิทธิ์แก้ไขการจองนี้");
                     info.revert();
                     return;
                 }
@@ -116,6 +142,8 @@
                     if (result.status !== 'success') {
                         alert('Error: ' + result.message);
                         info.revert();
+                    } else {
+                        calendar.refetchEvents();
                     }
                 }).catch(error => {
                     alert('An unexpected error occurred.');
@@ -141,29 +169,41 @@
                 },
                 eventClick: function(info) {
                     info.jsEvent.preventDefault();
-                    const triggerButton = document.createElement('button');
-                    triggerButton.style.display = 'none';
-                    triggerButton.setAttribute('data-bs-toggle', 'modal');
-                    triggerButton.setAttribute('data-bs-target', '#bookingActionModal');
-                    triggerButton.setAttribute('data-booking-id', info.event.id);
+
+                    const modalTitle = actionModalEl.querySelector('#modalBookingTitle');
+                    const viewDetailBtn = actionModalEl.querySelector('#viewDetailBtn');
+                    const editBtn = actionModalEl.querySelector('#editBtn');
+                    const deleteForm = actionModalEl.querySelector('#deleteForm');
+
                     let cleanTitle = info.event.title.split('\\n')[0];
                     if (cleanTitle.startsWith('[')) {
                         cleanTitle = cleanTitle.substring(cleanTitle.indexOf(']') + 2);
                     }
-                    triggerButton.setAttribute('data-booking-title', cleanTitle);
+                    modalTitle.textContent = cleanTitle;
+
+                    viewDetailBtn.href = `/booking/${info.event.id}/`;
+                    editBtn.href = `/booking/${info.event.id}/edit/`;
+                    deleteForm.action = `/booking/${info.event.id}/delete/`;
+
                     const isOwner = info.event.title.includes("({{ request.user.username }})");
                     const canManage = isOwner || isCurrentUserAdmin;
-                    triggerButton.setAttribute('data-can-manage', canManage);
-                    document.body.appendChild(triggerButton);
-                    triggerButton.click();
-                    document.body.removeChild(triggerButton);
+
+                    if (canManage) {
+                        editBtn.style.display = 'block';
+                        deleteForm.style.display = 'block';
+                    } else {
+                        editBtn.style.display = 'none';
+                        deleteForm.style.display = 'none';
+                    }
+
+                    actionModal.show();
                 },
                 eventDrop: updateBookingTime,
                 eventResize: updateBookingTime
             });
             calendar.render();
         } else {
-            console.error("Critical Error: Calendar or Booking Modal element not found!");
+            console.error("Critical Error: Calendar or Modal element not found!");
         }
     });
 </script>

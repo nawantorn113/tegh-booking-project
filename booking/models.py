@@ -1,4 +1,6 @@
 # booking/models.py
+# [ฉบับแก้ไข] เพิ่ม field 'building' และ 'floor' ใน Room
+
 from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
@@ -6,10 +8,14 @@ from django.dispatch import receiver
 
 class Room(models.Model):
     name = models.CharField(max_length=100, unique=True, verbose_name="ชื่อห้องประชุม")
-    location = models.CharField(max_length=255, blank=True, verbose_name="อาคาร / สถานที่")
+    building = models.CharField(max_length=100, blank=True, verbose_name="อาคาร")
+    floor = models.CharField(max_length=50, blank=True, verbose_name="ชั้น")
+    location = models.CharField(max_length=255, blank=True, verbose_name="โซน / สถานที่")
     capacity = models.PositiveIntegerField(verbose_name="ความจุ (คน)")
     equipment_in_room = models.TextField(blank=True, verbose_name="อุปกรณ์ที่พร้อมใช้งาน")
-    def __str__(self): return f"{self.name} ({self.location})"
+
+    def __str__(self):
+        return f"{self.name} ({self.building})"
 
 class Booking(models.Model):
     STATUS_CHOICES = [('PENDING', 'รออนุมัติ'), ('APPROVED', 'อนุมัติแล้ว'), ('REJECTED', 'ถูกปฏิเสธ'), ('CANCELLED', 'ยกเลิกแล้ว')]
@@ -23,17 +29,24 @@ class Booking(models.Model):
     participants = models.ManyToManyField(User, related_name='meetings_attending', blank=True, verbose_name="รายชื่อผู้เข้าร่วม")
     additional_notes = models.TextField(blank=True, verbose_name="หมายเหตุ")
     attachment = models.FileField(upload_to='attachments/%Y/%m/', blank=True, null=True, verbose_name="ไฟล์แนบ")
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='PENDING', verbose_name="สถานะ") # Field ที่ขาดไป
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='PENDING', verbose_name="สถานะ")
     created_at = models.DateTimeField(auto_now_add=True)
-    def __str__(self): return f"'{self.title}' ในห้อง {self.room.name}"
-    class Meta: ordering = ['-start_time']
+
+    def __str__(self):
+        return f"'{self.title}' ในห้อง {self.room.name}"
+
+    class Meta:
+        ordering = ['-start_time']
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     profile_picture = models.ImageField(upload_to='profile_pics/', default='profile_pics/default.jpg', verbose_name="รูปโปรไฟล์")
-    def __str__(self): return f'{self.user.username} Profile'
+
+    def __str__(self):
+        return f'{self.user.username} Profile'
 
 @receiver(post_save, sender=User)
 def create_or_update_user_profile(sender, instance, created, **kwargs):
-    if created: Profile.objects.create(user=instance)
+    if created:
+        Profile.objects.create(user=instance)
     instance.profile.save()
