@@ -1,4 +1,6 @@
 # booking/admin.py
+# [ฉบับสมบูรณ์]
+
 from django.contrib import admin
 from .models import Room, Booking, Profile, LoginHistory
 

@@ -1,5 +1,5 @@
 # booking/forms.py
-# [ฉบับแก้ไข AttributeError]
+# [ฉบับสมบูรณ์]
 
 from django import forms
 from django.contrib.auth.models import User
@@ -24,7 +24,6 @@ class RoomForm(forms.ModelForm):
 class BookingForm(forms.ModelForm):
     participants = forms.ModelMultipleChoiceField(
         queryset=User.objects.all(),
-        # --- [แก้ไขครั้งสุดท้าย] เปลี่ยนชื่อ Widget ให้ถูกต้อง 100% ---
         widget=autocomplete.SelectMultiple(url='user-autocomplete'),
         required=False,
         label="รายชื่อผู้เข้าร่วม"
@@ -50,10 +49,8 @@ class BookingForm(forms.ModelForm):
             'attachment': forms.ClearableFileInput(attrs={'class': 'form-control'}),
         }
         labels = {
-            'title': 'วาระการประชุม',
-            'chairman': 'ประธานการประชุม',
-            'participant_count': 'จำนวนผู้เข้าร่วม (โดยประมาณ)',
-            'additional_notes': 'หมายเหตุ',
+            'title': 'วาระการประชุม', 'chairman': 'ประธานการประชุม',
+            'participant_count': 'จำนวนผู้เข้าร่วม (โดยประมาณ)', 'additional_notes': 'หมายเหตุ',
             'additional_requests': 'คำขออุปกรณ์ / บริการเพิ่มเติม',
             'attachment': 'ไฟล์แนบประกอบการประชุม (ถ้ามี)',
         }

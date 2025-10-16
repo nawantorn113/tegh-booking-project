@@ -5,7 +5,59 @@
 <h1 class="mb-4">Admin Dashboard</h1>
 
 <div class="row g-4 mb-4">
+    <div class="col-md-6 col-lg-3">
+        <a href="{% url 'approvals' %}" class="card kpi-card kpi-card-warning text-decoration-none">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="me-3 text-start">
+                        <p class="text-muted mb-1">รออนุมัติ</p>
+                        <h2 class="fw-bold mb-0">{{ pending_count }}</h2>
+                    </div>
+                    <div class="kpi-icon"><i class="bi bi-clock-history"></i></div>
+                </div>
+            </div>
+        </a>
     </div>
+    <div class="col-md-6 col-lg-3">
+        <a href="{% url 'master_calendar' %}" class="card kpi-card kpi-card-primary text-decoration-none">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="me-3 text-start">
+                        <p class="text-muted mb-1">การจองวันนี้</p>
+                        <h2 class="fw-bold mb-0">{{ today_bookings_count }}</h2>
+                    </div>
+                    <div class="kpi-icon"><i class="bi bi-calendar-check"></i></div>
+                </div>
+            </a>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-3">
+        <a href="{% url 'rooms' %}" class="card kpi-card kpi-card-success text-decoration-none">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="me-3 text-start">
+                        <p class="text-muted mb-1">ห้องทั้งหมด</p>
+                        <h2 class="fw-bold mb-0">{{ total_rooms_count }}</h2>
+                    </div>
+                    <div class="kpi-icon"><i class="bi bi-door-open"></i></div>
+                </div>
+            </a>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-3">
+        <a href="{% url 'user_management' %}" class="card kpi-card kpi-card-info text-decoration-none">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="me-3 text-start">
+                        <p class="text-muted mb-1">ผู้ใช้ทั้งหมด</p>
+                        <h2 class="fw-bold mb-0">{{ total_users_count }}</h2>
+                    </div>
+                    <div class="kpi-icon"><i class="bi bi-people"></i></div>
+                </div>
+            </a>
+        </div>
+    </div>
+</div>
 
 <div class="row g-4 mb-4">
     <div class="col-lg-7">
@@ -23,7 +75,44 @@
 </div>
 
 <div class="card shadow-sm">
+    <div class="card-header">ประวัติการเข้าระบบล่าสุด</div>
+    <div class="table-responsive">
+        <table class="table table-striped table-hover mb-0 align-middle">
+            <thead>
+                <tr><th scope="col">ผู้ใช้</th><th scope="col">การกระทำ</th><th scope="col" class="text-end">เวลา</th></tr>
+            </thead>
+            <tbody>
+                {% for log in login_history %}
+                <tr>
+                    <td><i class="bi bi-person-circle me-2"></i><strong>{{ log.user.get_full_name|default:log.user.username }}</strong></td>
+                    <td>
+                        {% if log.action == 'LOGIN' %}
+                        <span class="badge bg-success-subtle text-success-emphasis"><i class="bi bi-box-arrow-in-right me-1"></i> {{ log.get_action_display }}</span>
+                        {% else %}
+                        <span class="badge bg-danger-subtle text-danger-emphasis"><i class="bi bi-box-arrow-left me-1"></i> {{ log.get_action_display }}</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end text-muted">{{ log.timestamp|timesince }} ที่แล้ว</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="3" class="text-center text-muted">ไม่พบประวัติการเข้าระบบ</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
+</div>
+{% endblock %}
+
+{% block extra_head %}
+<style>
+    .kpi-card { border: 1px solid #dee2e6; border-left-width: 5px; transition: all 0.2s ease-in-out; }
+    .kpi-card:hover { transform: translateY(-5px); box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important; }
+    .kpi-card-warning { border-left-color: #ffc107; } .kpi-card-primary { border-left-color: #0d6efd; }
+    .kpi-card-success { border-left-color: #198754; } .kpi-card-info { border-left-color: #0dcaf0; }
+    .kpi-icon { font-size: 2.5rem; opacity: 0.2; }
+    .kpi-card-warning .kpi-icon { color: #ffc107; } .kpi-card-primary .kpi-icon { color: #0d6efd; }
+    .kpi-card-success .kpi-icon { color: #198754; } .kpi-card-info .kpi-icon { color: #0dcaf0; }
+</style>
 {% endblock %}
 
 {% block extra_scripts %}

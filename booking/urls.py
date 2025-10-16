@@ -1,5 +1,5 @@
 # booking/urls.py
-# [ฉบับสมบูรณ์ - ศูนย์บัญชาการ]
+# [ฉบับมาสเตอร์ - แก้ไขเส้นทางทั้งหมดให้ถูกต้อง]
 
 from django.urls import path
 from . import views
@@ -15,13 +15,16 @@ urlpatterns = [
     path('history/', views.history_view, name='history'),
     path('profile/edit/', views.edit_profile_view, name='edit_profile'),
 
-    # Booking Actions
+    # --- [จุดที่แก้ไข] บรรทัดนี้คือหัวใจสำคัญ ---
+    # เส้นทาง /room/<id>/calendar/ จะต้องชี้ไปที่ room_calendar_view เท่านั้น
     path('room/<int:room_id>/calendar/', views.room_calendar_view, name='room_calendar'),
+
+    # Booking Actions
     path('booking/<int:room_id>/create/', views.create_booking_view, name='create_booking_for_room'),
     path('booking/<int:booking_id>/', views.booking_detail_view, name='booking_detail'),
     path('booking/<int:booking_id>/edit/', views.edit_booking_view, name='edit_booking'),
     path('booking/<int:booking_id>/delete/', views.delete_booking_view, name='delete_booking'),
-    
+
     # APIs
     path('api/bookings/', views.bookings_api, name='api_bookings'),
     path('api/booking/update-time/', views.update_booking_time_api, name='api_update_booking_time'),
@@ -31,7 +34,7 @@ urlpatterns = [
     path('approvals/', views.approvals_view, name='approvals'),
     path('approvals/<int:booking_id>/approve/', views.approve_booking_view, name='approve_booking'),
     path('approvals/<int:booking_id>/reject/', views.reject_booking_view, name='reject_booking'),
-    path('management/dashboard/', views.admin_dashboard_view, name='admin_dashboard'), # <-- [ใหม่]
+    path('management/dashboard/', views.admin_dashboard_view, name='admin_dashboard'),
     path('management/users/', views.user_management_view, name='user_management'),
     path('management/users/<int:user_id>/edit/', views.edit_user_roles_view, name='edit_user_roles'),
     path('management/rooms/', views.room_management_view, name='rooms'),

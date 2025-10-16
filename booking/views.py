@@ -1,5 +1,5 @@
 # booking/views.py
-# [ฉบับมาสเตอร์ - มีครบทุกฟังก์ชัน]
+# [ฉบับสมบูรณ์]
 
 import json
 from datetime import datetime, timedelta
@@ -31,7 +31,8 @@ def user_logged_in_callback(sender, request, user, **kwargs):
 
 @receiver(user_logged_out)
 def user_logged_out_callback(sender, request, user, **kwargs):
-    if user: LoginHistory.objects.create(user=user, action='LOGOUT')
+    if user and user.is_authenticated:
+        LoginHistory.objects.create(user=user, action='LOGOUT')
 
 # --- Helper Functions ---
 def send_booking_notification(booking, template_name, subject, recipient_list):
@@ -49,7 +50,7 @@ def get_admin_emails():
 class UserAutocomplete(Select2QuerySetView):
     def get_queryset(self):
         if not self.request.user.is_authenticated: return User.objects.none()
-        qs = User.objects.all().order_by('first_name')
+        qs = User.objects.all().order_by('username')
         if self.q: qs = qs.filter(Q(username__icontains=self.q) | Q(first_name__icontains=self.q) | Q(last_name__icontains=self.q))
         return qs
 
@@ -72,7 +73,11 @@ def login_view(request):
 
 @login_required
 def logout_view(request):
-    logout(request); messages.success(request, 'คุณได้ออกจากระบบเรียบร้อยแล้ว'); return redirect('login')
+    user_before_logout = request.user
+    logout(request)
+    # Manually trigger the logout signal after logout completes
+    user_logged_out.send(sender=user_before_logout.__class__, request=request, user=user_before_logout)
+    messages.success(request, 'คุณได้ออกจากระบบเรียบร้อยแล้ว'); return redirect('login')
 
 @login_required
 def dashboard_view(request):
@@ -81,7 +86,7 @@ def dashboard_view(request):
     if sort_by == 'status': all_rooms = sorted(all_rooms, key=lambda r: not r.bookings.filter(start_time__lte=now, end_time__gt=now, status='APPROVED').exists())
     elif sort_by == 'capacity': all_rooms = sorted(all_rooms, key=lambda r: r.capacity, reverse=True)
     elif sort_by == 'name': all_rooms = all_rooms.order_by('name')
-    else: all_rooms = all_rooms.order_by('floor', 'name')
+    else: all_rooms = all_rooms.order_by('building', 'floor', 'name')
     buildings = defaultdict(list)
     for room in all_rooms:
         current_booking = room.bookings.filter(start_time__lte=now, end_time__gt=now, status='APPROVED').first()
@@ -156,15 +161,15 @@ def admin_dashboard_view(request):
     thirty_days_ago = timezone.now() - timedelta(days=30)
     recent_bookings = Booking.objects.filter(start_time__gte=thirty_days_ago, status='APPROVED')
     room_usage = Room.objects.annotate(count=Count('bookings', filter=Q(bookings__in=recent_bookings))).order_by('-count')
-    dept_usage = Profile.objects.filter(user__booking__in=recent_bookings).values('department').annotate(count=Count('user__booking')).order_by('-count')
+    dept_usage = Profile.objects.filter(user__booking__in=recent_bookings).exclude(department__exact='').values('department').annotate(count=Count('user__booking')).order_by('-count')
     context = {
         'pending_count': Booking.objects.filter(status='PENDING').count(),
         'today_bookings_count': Booking.objects.filter(start_time__date=timezone.now().date(), status='APPROVED').count(),
         'total_users_count': User.objects.count(), 'total_rooms_count': Room.objects.count(),
         'login_history': LoginHistory.objects.all()[:7],
         'room_usage_labels': json.dumps([r.name for r in room_usage]), 'room_usage_data': json.dumps([r.count for r in room_usage]),
-        'dept_usage_labels': json.dumps([d['department'] for d in dept_usage if d['department']]),
-        'dept_usage_data': json.dumps([d['count'] for d in dept_usage if d['department']]),
+        'dept_usage_labels': json.dumps([d['department'] for d in dept_usage]),
+        'dept_usage_data': json.dumps([d['count'] for d in dept_usage]),
     }
     return render(request, 'pages/admin_dashboard.html', context)
 
@@ -328,21 +333,20 @@ def delete_room_view(request, room_id):
     return redirect('rooms')
 
 @login_required
+@user_passes_test(is_admin)
 def reports_view(request):
-    period = request.GET.get('period', 'monthly'); today = timezone.now().date()
-    department_filter = request.GET.get('department', '')
+    period = request.GET.get('period', 'monthly'); department_filter = request.GET.get('department', '')
+    today = timezone.now().date()
     if period == 'daily': start_date, title = today, 'รายวัน'
     elif period == 'weekly': start_date, title = today - timedelta(days=7), 'รายสัปดาห์ (7 วันล่าสุด)'
     else: start_date, title = today - timedelta(days=30), 'รายเดือน (30 วันล่าสุด)'
-
+    
     recent_bookings = Booking.objects.filter(start_time__date__gte=start_date, status='APPROVED')
     if department_filter:
         recent_bookings = recent_bookings.filter(booked_by__profile__department=department_filter)
 
     room_usage_stats = Room.objects.annotate(booking_count=Count('bookings', filter=Q(bookings__in=recent_bookings))).order_by('-booking_count')
-
-    all_departments = Profile.objects.exclude(department__exact='').values_list('department', flat=True).distinct()
-
+    all_departments = Profile.objects.exclude(department__exact='').values_list('department', flat=True).distinct().order_by('department')
     context = {
         'room_usage_stats': room_usage_stats, 'report_title': title, 'current_period': period,
         'all_departments': all_departments, 'current_department': department_filter,
@@ -352,16 +356,20 @@ def reports_view(request):
 @login_required
 @user_passes_test(is_admin)
 def export_reports_excel(request):
-    period = request.GET.get('period', 'monthly'); today = timezone.now().date()
+    period = request.GET.get('period', 'monthly'); department_filter = request.GET.get('department', '')
+    today = timezone.now().date()
     if period == 'daily': start_date = today
     elif period == 'weekly': start_date = today - timedelta(days=7)
     else: start_date = today - timedelta(days=30)
+    
+    recent_bookings = Booking.objects.filter(start_time__date__gte=start_date, status='APPROVED')
+    if department_filter: recent_bookings = recent_bookings.filter(booked_by__profile__department=department_filter)
+    
+    room_stats = Room.objects.annotate(count=Count('bookings', filter=Q(bookings__in=recent_bookings))).order_by('-count')
     response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-    response['Content-Disposition'] = f'attachment; filename="report_{period}.xlsx"'
+    response['Content-Disposition'] = f'attachment; filename="report_{period}_{department_filter or "all"}.xlsx"'
     workbook = Workbook()
     ws = workbook.active; ws.title = "Room Usage"; ws.append(['ชื่อห้องประชุม', 'จำนวนครั้งที่ใช้งาน'])
-    recent_bookings = Booking.objects.filter(start_time__date__gte=start_date, status='APPROVED')
-    room_stats = Room.objects.annotate(count=Count('bookings', filter=Q(bookings__in=recent_bookings))).order_by('-count')
     for room in room_stats: ws.append([room.name, room.count])
     workbook.save(response)
     return response
@@ -369,16 +377,22 @@ def export_reports_excel(request):
 @login_required
 @user_passes_test(is_admin)
 def export_reports_pdf(request):
-    period = request.GET.get('period', 'monthly'); today = timezone.now().date()
+    period = request.GET.get('period', 'monthly'); department_filter = request.GET.get('department', '')
+    today = timezone.now().date()
     if period == 'daily': start_date, title = today, 'รายงานสรุปรายวัน'
-    elif period == 'weekly': start_date, title = today - timedelta(days=7), 'รายงานสรุปรายสัปดาห์ (7 วันล่าสุด)'
-    else: start_date, title = today - timedelta(days=30), 'รายงานสรุปรายเดือน (30 วันล่าสุด)'
+    elif period == 'weekly': start_date, title = today - timedelta(days=7), 'รายสัปดาห์'
+    else: start_date, title = today - timedelta(days=30), 'รายเดือน'
+
     recent_bookings = Booking.objects.filter(start_time__date__gte=start_date, status='APPROVED')
+    if department_filter:
+        recent_bookings = recent_bookings.filter(booked_by__profile__department=department_filter)
+        title += f" (แผนก: {department_filter})"
+
     room_usage_stats = Room.objects.annotate(booking_count=Count('bookings', filter=Q(bookings__in=recent_bookings))).order_by('-booking_count')
     context = {'room_usage_stats': room_usage_stats, 'report_title': title, 'today_date': today}
     template = get_template('reports/report_pdf.html')
     html_string = template.render(context)
     html = HTML(string=html_string); pdf_file = html.write_pdf()
     response = HttpResponse(pdf_file, content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename="report_{period}.pdf"'
+    response['Content-Disposition'] = f'attachment; filename="report_{period}_{department_filter or "all"}.pdf"'
     return response
