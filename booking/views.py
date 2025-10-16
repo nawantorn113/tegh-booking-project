@@ -1,9 +1,9 @@
 # booking/views.py
-# [CORRECTED VERSION]
+# [ฉบับสมบูรณ์ล่าสุด 16/10/2025 - เพิ่ม Master Calendar]
 
 import json
 from datetime import datetime
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required, user_passes_test
@@ -15,6 +15,8 @@ from dal_select2.views import Select2QuerySetView
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.conf import settings
+from openpyxl import Workbook
+from django.utils import timezone
 from .models import Room, Booking, Profile
 from .forms import BookingForm, ProfilePictureForm, CustomPasswordChangeForm, RoomForm
 
@@ -70,7 +72,23 @@ def logout_view(request):
 
 @login_required
 def dashboard_view(request):
-    return render(request, 'pages/dashboard.html', {'rooms': Room.objects.all().order_by('name')})
+    now = timezone.now()
+    today = now.date()
+    all_rooms = Room.objects.all().order_by('name')
+    for room in all_rooms:
+        current_booking = Booking.objects.filter(
+            room=room, start_time__lte=now, end_time__gt=now, status='APPROVED'
+        ).first()
+        room.status = 'ไม่ว่าง' if current_booking else 'ว่าง'
+        room.current_booking_title = current_booking.title if current_booking else None
+    
+    summary_cards = {
+        'total_rooms': all_rooms.count(),
+        'today_bookings': Booking.objects.filter(start_time__date=today, status='APPROVED').count(),
+        'pending_approvals': Booking.objects.filter(status='PENDING').count(),
+    }
+    context = {'rooms': all_rooms, 'summary_cards': summary_cards}
+    return render(request, 'pages/dashboard.html', context)
 
 @login_required
 def room_calendar_view(request, room_id):
@@ -80,17 +98,18 @@ def room_calendar_view(request, room_id):
     return render(request, 'pages/room_calendar.html', context)
 
 @login_required
+def master_calendar_view(request):
+    return render(request, 'pages/master_calendar.html')
+
+@login_required
 def history_view(request):
     my_bookings = Booking.objects.filter(booked_by=request.user).order_by('-start_time')
     query_date = request.GET.get('date')
     query_room = request.GET.get('room')
     query_status = request.GET.get('status')
-    if query_date:
-        my_bookings = my_bookings.filter(start_time__date=query_date)
-    if query_room:
-        my_bookings = my_bookings.filter(room__id=query_room)
-    if query_status:
-        my_bookings = my_bookings.filter(status=query_status)
+    if query_date: my_bookings = my_bookings.filter(start_time__date=query_date)
+    if query_room: my_bookings = my_bookings.filter(room__id=query_room)
+    if query_status: my_bookings = my_bookings.filter(status=query_status)
     context = {
         'my_bookings': my_bookings, 'all_rooms': Room.objects.all().order_by('name'),
         'status_choices': Booking.STATUS_CHOICES,
@@ -105,22 +124,60 @@ def booking_detail_view(request, booking_id):
         return redirect('dashboard')
     return render(request, 'pages/booking_detail.html', {'booking': booking})
 
+# --- API Views ---
 @login_required
 def bookings_api(request):
     start = request.GET.get('start')
     end = request.GET.get('end')
     room_id = request.GET.get('room_id')
-    bookings = Booking.objects.filter(start_time__gte=start, end_time__lte=end)
+    
     if room_id:
-        bookings = bookings.filter(room_id=room_id)
+        bookings = Booking.objects.filter(room_id=room_id, start_time__gte=start, end_time__lte=end)
+    else:
+        bookings = Booking.objects.filter(start_time__gte=start, end_time__lte=end)
+
     events = []
     for booking in bookings:
         color_map = {'APPROVED': '#198754', 'PENDING': '#ffc107', 'REJECTED': '#dc3545', 'CANCELLED': '#fd7e14'}
         color = color_map.get(booking.status, '#6c757d')
         event_title = f"[{booking.get_status_display()}] {booking.title}\n({booking.booked_by.username})"
-        events.append({'id': booking.id, 'title': event_title, 'start': booking.start_time.isoformat(), 'end': booking.end_time.isoformat(), 'color': color, 'borderColor': color})
+        events.append({
+            'id': booking.id,
+            'title': event_title,
+            'start': booking.start_time.isoformat(),
+            'end': booking.end_time.isoformat(),
+            'color': color,
+            'borderColor': color,
+            'extendedProps': {
+                'room_id': booking.room.id,
+                'room_name': booking.room.name
+            }
+        })
     return JsonResponse(events, safe=False)
 
+@login_required
+@require_POST
+def update_booking_time_api(request):
+    try:
+        data = json.loads(request.body)
+        booking = get_object_or_404(Booking, pk=data.get('booking_id'))
+        if booking.booked_by != request.user and not is_admin(request.user):
+            return JsonResponse({'status': 'error', 'message': 'Permission denied.'}, status=403)
+        new_start = datetime.fromisoformat(data.get('start_time').replace('Z', '+00:00'))
+        new_end = datetime.fromisoformat(data.get('end_time').replace('Z', '+00:00'))
+        conflicts = Booking.objects.filter(room=booking.room, start_time__lt=new_end, end_time__gt=new_start).exclude(pk=booking.id).exclude(status__in=['REJECTED', 'CANCELLED'])
+        if conflicts.exists():
+            return JsonResponse({'status': 'error', 'message': 'ช่วงเวลาที่เลือกไม่ว่าง'}, status=400)
+        booking.start_time = new_start
+        booking.end_time = new_end
+        booking.save()
+        admin_emails = get_admin_emails()
+        send_booking_notification(booking, 'emails/booking_changed_alert.txt', f"[เปลี่ยนเวลา] {booking.title}", admin_emails)
+        return JsonResponse({'status': 'success'})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+# --- Booking Action Views ---
 @login_required
 def create_booking_view(request, room_id):
     room = get_object_or_404(Room, pk=room_id)
@@ -163,28 +220,6 @@ def edit_booking_view(request, booking_id):
     return render(request, 'pages/edit_booking.html', {'form': form, 'booking': booking})
 
 @login_required
-@require_POST
-def update_booking_time_api(request):
-    try:
-        data = json.loads(request.body)
-        booking = get_object_or_404(Booking, pk=data.get('booking_id'))
-        if booking.booked_by != request.user and not is_admin(request.user):
-            return JsonResponse({'status': 'error', 'message': 'Permission denied.'}, status=403)
-        new_start = datetime.fromisoformat(data.get('start_time').replace('Z', '+00:00'))
-        new_end = datetime.fromisoformat(data.get('end_time').replace('Z', '+00:00'))
-        conflicts = Booking.objects.filter(room=booking.room, start_time__lt=new_end, end_time__gt=new_start).exclude(pk=booking.id).exclude(status__in=['REJECTED', 'CANCELLED'])
-        if conflicts.exists():
-            return JsonResponse({'status': 'error', 'message': 'ช่วงเวลาที่เลือกไม่ว่าง'}, status=400)
-        booking.start_time = new_start
-        booking.end_time = new_end
-        booking.save()
-        admin_emails = get_admin_emails()
-        send_booking_notification(booking, 'emails/booking_changed_alert.txt', f"[เปลี่ยนเวลา] {booking.title}", admin_emails)
-        return JsonResponse({'status': 'success'})
-    except Exception as e:
-        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
-
-@login_required
 def delete_booking_view(request, booking_id):
     booking = get_object_or_404(Booking, pk=booking_id)
     if booking.booked_by != request.user and not is_admin(request.user):
@@ -199,6 +234,7 @@ def delete_booking_view(request, booking_id):
         return redirect('room_calendar', room_id=booking.room.id)
     return redirect('dashboard')
 
+# --- Approver Views ---
 @login_required
 @user_passes_test(is_approver_or_admin)
 def approvals_view(request):
@@ -227,6 +263,7 @@ def reject_booking_view(request, booking_id):
         send_booking_notification(booking, 'emails/booking_status_update.txt', f"สถานะการจอง: '{booking.title}' ถูกปฏิเสธ", [booking.booked_by.email])
     return redirect('approvals')
 
+# --- Admin Views ---
 @login_required
 @user_passes_test(is_admin)
 def user_management_view(request):
@@ -291,6 +328,28 @@ def delete_room_view(request, room_id):
     return redirect('rooms')
 
 @login_required
+def reports_view(request):
+    room_usage_stats = Room.objects.annotate(booking_count=Count('bookings', filter=Q(bookings__status='APPROVED'))).order_by('-booking_count')
+    context = {'room_usage_stats': room_usage_stats, 'department_stats': []}
+    return render(request, 'pages/reports.html', context)
+
+@login_required
+@user_passes_test(is_admin)
+def export_reports_excel(request):
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = 'attachment; filename="booking_reports.xlsx"'
+    workbook = Workbook()
+    ws1 = workbook.active
+    ws1.title = "Room Usage"
+    ws1.append(['ชื่อห้องประชุม', 'จำนวนครั้งที่ใช้งาน (อนุมัติแล้ว)'])
+    room_stats = Room.objects.annotate(count=Count('bookings', filter=Q(bookings__status='APPROVED'))).order_by('-count')
+    for room in room_stats:
+        ws1.append([room.name, room.count])
+    workbook.save(response)
+    return response
+
+# --- Profile View ---
+@login_required
 def edit_profile_view(request):
     profile, created = Profile.objects.get_or_create(user=request.user)
     if request.method == 'POST':
@@ -315,11 +374,3 @@ def edit_profile_view(request):
         picture_form = ProfilePictureForm(instance=profile)
         password_form = CustomPasswordChangeForm(request.user)
     return render(request, 'pages/edit_profile.html', {'picture_form': picture_form, 'password_form': password_form})
-
-@login_required
-@user_passes_test(is_admin)
-def reports_view(request):
-    room_usage_stats = Room.objects.annotate(booking_count=Count('bookings', filter=Q(bookings__status='APPROVED'))).order_by('-booking_count')
-    department_stats = Booking.objects.filter(status='APPROVED').exclude(department__exact='').values('department').annotate(count=Count('id')).order_by('-count')
-    context = {'room_usage_stats': room_usage_stats, 'department_stats': department_stats}
-    return render(request, 'pages/reports.html', context)
