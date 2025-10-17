@@ -1,11 +1,35 @@
 {% extends 'base.html' %}
+
 {% block title %}ตารางเวลารวม - {{ block.super }}{% endblock %}
 
 {% block extra_head %}
 <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.14/index.global.min.js'></script>
+
 <style>
     #calendar { max-width: 1200px; margin: 0 auto; }
-    .fc .fc-button-primary { background-color: #0d6efd; border-color: #0d6efd; }
+
+    .fc .fc-button-primary { 
+        background-color: #0d6efd; 
+        border-color: #0d6efd; 
+    }
+
+    /* Event Style */
+    .fc-event {
+        border-radius: 5px;
+        padding: 2px 4px;
+        font-size: 0.85rem;
+        white-space: normal;
+    }
+
+    .fc-event-title b {
+        color: #0d6efd;
+    }
+
+    /* TimeGrid stacked view ปรับให้อ่านง่าย */
+    .fc-timegrid-event {
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
 </style>
 {% endblock %}
 
@@ -29,33 +53,45 @@
 
 {% block extra_scripts %}
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        var calendarEl = document.getElementById('calendar');
-        var calendar = new FullCalendar.Calendar(calendarEl, {
-            headerToolbar: {
-                left: 'prev,next today',
-                center: 'title',
-                right: 'dayGridMonth,timeGridWeek,timeGridDay'
-            },
-            initialView: 'timeGridWeek',
-            slotMinTime: '08:00:00',
-            slotMaxTime: '19:00:00',
-            events: "{% url 'api_bookings' %}", // ดึงข้อมูลการจองทั้งหมด
-            eventDidMount: function(info) {
-                // เพิ่มชื่อห้องเข้าไปใน Event title
-                const roomName = info.event.extendedProps.room_name || '';
-                const originalTitle = info.event.title;
-                info.el.querySelector('.fc-event-title').innerHTML = `<b>${roomName}:</b> ${originalTitle}`;
-            },
-            eventClick: function(info) {
-                // คลิกที่ Event เพื่อไปยังหน้าปฏิทินของห้องนั้นๆ
-                const roomId = info.event.extendedProps.room_id;
-                if (roomId) {
-                    window.location.href = `/room/${roomId}/calendar/`;
-                }
+document.addEventListener('DOMContentLoaded', function() {
+    var calendarEl = document.getElementById('calendar');
+
+    var calendar = new FullCalendar.Calendar(calendarEl, {
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,timeGridDay'
+        },
+        initialView: 'timeGridWeek',
+        slotMinTime: '08:00:00',
+        slotMaxTime: '19:00:00',
+        events: "{% url 'api_bookings' %}", // ดึงข้อมูลการจองทั้งหมด
+
+        eventDisplay: 'block',
+        eventOverlap: false,
+        slotEventOverlap: false,  // ป้องกัน Event ซ้อนทับ
+        eventOrder: 'start',      // จัดเรียงตามเวลา
+        eventTimeFormat: { hour: '2-digit', minute: '2-digit', hour12: false },
+        displayEventEnd: false,   // ลดการซ้อนเวลา
+        displayEventTime: true,
+
+        eventDidMount: function(info) {
+            // แสดงชื่อห้อง + ชื่อ Event
+            const roomName = info.event.extendedProps.room_name || '';
+            const originalTitle = info.event.title;
+            info.el.querySelector('.fc-event-title').innerHTML = `<b>${roomName}:</b> ${originalTitle}`;
+        },
+
+        eventClick: function(info) {
+            // คลิก Event ไปปฏิทินห้องนั้น
+            const roomId = info.event.extendedProps.room_id;
+            if (roomId) {
+                window.location.href = `/room/${roomId}/calendar/`;
             }
-        });
-        calendar.render();
+        }
     });
+
+    calendar.render();
+});
 </script>
 {% endblock %}

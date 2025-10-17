@@ -1,44 +1,65 @@
 {% extends 'base.html' %}
+{% load static %}
+
 {% block title %}แก้ไขโปรไฟล์ - {{ block.super }}{% endblock %}
 
+{% block extra_head %}
+<style>
+.profile-container {
+    max-width: 600px;
+    margin: 30px auto;
+    padding: 25px;
+    background-color: #f8f9fa;
+    border-radius: 12px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+.profile-img {
+    display: block;
+    margin: 0 auto 20px auto;
+    width: 180px;
+    height: 180px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 3px solid #0d6efd;
+}
+
+.profile-form label {
+    font-weight: bold;
+}
+
+.btn-group-custom {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+</style>
+{% endblock %}
+
 {% block content %}
-<h1 class="mb-4"><i class="bi bi-person-fill-gear me-2"></i>แก้ไขโปรไฟล์</h1>
+<div class="profile-container">
+    <h2 class="text-center mb-4">แก้ไขโปรไฟล์</h2>
 
-<div class="row">
-    <div class="col-lg-5 mb-4">
-        <div class="card shadow-sm">
-            <div class="card-body text-center">
-                <h5 class="card-title mb-3">รูปโปรไฟล์ปัจจุบัน</h5>
-                <img src="{{ user.profile.profile_picture.url }}" alt="Profile Picture" class="rounded-circle mb-3" width="150" height="150" style="object-fit: cover;">
-                
-                <form method="post" enctype="multipart/form-data">
-                    {% csrf_token %}
-                    {{ picture_form.as_p }}
-                    <button type="submit" name="change_picture" class="btn btn-primary mt-2">อัปโหลดรูปใหม่</button>
-                </form>
-            </div>
-        </div>
-    </div>
+    <!-- รูปโปรไฟล์ -->
+    {% if profile_form.instance.profile_picture %}
+        <img src="{{ profile_form.instance.profile_picture.url }}" alt="Profile" class="profile-img">
+    {% else %}
+        <img src="{% static 'images/default_profile.png' %}" alt="Profile Default" class="profile-img">
+    {% endif %}
 
-    <div class="col-lg-7">
-        <div class="card shadow-sm">
-            <div class="card-body">
-                <h5 class="card-title mb-3">เปลี่ยนรหัสผ่าน</h5>
-                <form method="post">
-                    {% csrf_token %}
-                    {% for field in password_form %}
-                    <div class="mb-3">
-                        <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
-                        {{ field }}
-                        {% if field.errors %}
-                        <div class="invalid-feedback d-block">{{ field.errors|first }}</div>
-                        {% endif %}
-                    </div>
-                    {% endfor %}
-                    <button type="submit" name="change_password" class="btn btn-warning">เปลี่ยนรหัสผ่าน</button>
-                </form>
-            </div>
+    <!-- ฟอร์มแก้ไขโปรไฟล์ -->
+    <form method="POST" enctype="multipart/form-data" class="profile-form">
+        {% csrf_token %}
+        {{ profile_form.as_p }}
+
+        <!-- ฟอร์มเปลี่ยนรหัสผ่าน -->
+        <!-- <h5 class="mt-4">เปลี่ยนรหัสผ่าน</h5>
+        {{ password_form.as_p }} -->
+
+        <div class="btn-group-custom">
+            <button type="submit" class="btn btn-primary">บันทึกการเปลี่ยนแปลง</button>
+            <a href="{% url 'dashboard' %}" class="btn btn-secondary">กลับไป Dashboard</a>
         </div>
-    </div>
-</div>
+    </form>
+</div> 
 {% endblock %}
