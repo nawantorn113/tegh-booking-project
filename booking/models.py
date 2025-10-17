@@ -7,13 +7,15 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils import timezone
 
+
 class Room(models.Model):
-    name = models.CharField(max_length=100, unique=True, verbose_name="ชื่อห้องประชุม")
-    building = models.CharField(max_length=100, blank=True, verbose_name="อาคาร")
-    floor = models.CharField(max_length=50, blank=True, verbose_name="ชั้น")
-    location = models.CharField(max_length=255, blank=True, verbose_name="โซน / สถานที่")
-    capacity = models.PositiveIntegerField(verbose_name="ความจุ (คน)")
-    equipment_in_room = models.TextField(blank=True, verbose_name="อุปกรณ์ที่มีในห้อง (แต่ละรายการขึ้นบรรทัดใหม่)")
+    name = models.CharField(max_length=100)
+    building = models.CharField(max_length=100)
+    floor = models.CharField(max_length=10)
+    capacity = models.IntegerField()
+    location = models.CharField(max_length=255, blank=True, null=True)
+    equipment_in_room = models.TextField(blank=True, null=True)
+    room_image = models.ImageField(upload_to='room_images/', blank=True, null=True)  # ✅ เพิ่มตรงนี้
 
     def __str__(self):
         return f"{self.name} ({self.building})"
