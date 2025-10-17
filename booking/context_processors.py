@@ -11,7 +11,7 @@ def menu_context(request):
     # รายการเมนูทั้งหมด
     menu_items = [
         {
-            'label': 'Dashboard',
+            'label': 'หน้าหลัก',
             'url_name': 'dashboard',
             'icon': 'bi-grid-fill',
             'show': True # แสดงสำหรับทุกคน
