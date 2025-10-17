@@ -1,0 +1,34 @@
+/* static/css/theme.css - Modern & Clean UI Theme */
+
+:root {
+    --theme-bg: #f8f9fa; /* Light gray background */
+    --theme-card-bg: #ffffff;
+    --theme-border-color: #dee2e6;
+    --theme-text-muted: #6c757d;
+}
+
+body, .main-content {
+    background-color: var(--theme-bg);
+}
+
+.navbar.bg-white {
+    background-color: var(--theme-card-bg) !important;
+}
+
+/* Modern Card Style */
+.modern-card {
+    background-color: var(--theme-card-bg);
+    border: 1px solid var(--theme-border-color);
+    border-radius: 0.75rem; /* More rounded corners */
+    box-shadow: 0 1px 3px rgba(0,0,0,.04);
+    transition: all 0.2s ease-in-out;
+}
+.modern-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 15px rgba(0,0,0,.08);
+}
+
+.card-header {
+    background-color: transparent;
+    border-bottom: 1px solid var(--theme-border-color);
+}

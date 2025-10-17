@@ -75,7 +75,6 @@ def login_view(request):
 def logout_view(request):
     user_before_logout = request.user
     logout(request)
-    # Manually trigger the logout signal after logout completes
     user_logged_out.send(sender=user_before_logout.__class__, request=request, user=user_before_logout)
     messages.success(request, 'คุณได้ออกจากระบบเรียบร้อยแล้ว'); return redirect('login')
 
@@ -175,6 +174,12 @@ def admin_dashboard_view(request):
 
 # --- API Views ---
 @login_required
+def rooms_api(request):
+    rooms = Room.objects.all().order_by('building', 'name')
+    resources = [{'id': room.id, 'title': room.name, 'building': room.building} for room in rooms]
+    return JsonResponse(resources, safe=False)
+
+@login_required
 def bookings_api(request):
     start, end, room_id = request.GET.get('start'), request.GET.get('end'), request.GET.get('room_id')
     bookings = Booking.objects.filter(start_time__gte=start, end_time__lte=end)
@@ -183,11 +188,11 @@ def bookings_api(request):
     for booking in bookings:
         color_map = {'APPROVED': '#198754', 'PENDING': '#ffc107', 'REJECTED': '#dc3545', 'CANCELLED': '#fd7e14'}
         color = color_map.get(booking.status, '#6c757d')
-        event_title = f"[{booking.get_status_display()}] {booking.title}\n({booking.booked_by.username})"
+        event_title = f"{booking.title}\n({booking.booked_by.username})"
         events.append({
             'id': booking.id, 'title': event_title, 'start': booking.start_time.isoformat(),
             'end': booking.end_time.isoformat(), 'color': color, 'borderColor': color,
-            'extendedProps': {'room_id': booking.room.id, 'room_name': booking.room.name}
+            'resourceId': booking.room.id
         })
     return JsonResponse(events, safe=False)
 
@@ -234,10 +239,7 @@ def edit_booking_view(request, booking_id):
     if request.method == 'POST':
         form = BookingForm(request.POST, request.FILES, instance=booking)
         if form.is_valid():
-            updated_booking = form.save()
-            messages.success(request, "การจองถูกแก้ไขเรียบร้อยแล้ว")
-            admin_emails = get_admin_emails()
-            send_booking_notification(updated_booking, 'emails/booking_changed_alert.txt', f"[แก้ไขการจอง] {updated_booking.title}", admin_emails)
+            form.save(); messages.success(request, "การจองถูกแก้ไขเรียบร้อยแล้ว")
             return redirect('history')
     else: form = BookingForm(instance=booking)
     return render(request, 'pages/edit_booking.html', {'form': form, 'booking': booking})
@@ -248,11 +250,8 @@ def delete_booking_view(request, booking_id):
     if booking.booked_by != request.user and not is_admin(request.user):
         messages.error(request, "คุณไม่มีสิทธิ์ยกเลิกการจองนี้"); return redirect('dashboard')
     if request.method == 'POST':
-        booking.status = 'CANCELLED'; booking.save()
-        messages.success(request, "การจองได้ถูกยกเลิกเรียบร้อยแล้ว")
-        admin_emails = get_admin_emails()
-        send_booking_notification(booking, 'emails/booking_cancelled_alert.txt', f"[ยกเลิกการจอง] {booking.title}", admin_emails)
-        return redirect('room_calendar', room_id=booking.room.id)
+        booking.delete(); messages.success(request, "การจองได้ถูกลบเรียบร้อยแล้ว")
+        return redirect('history')
     return redirect('dashboard')
 
 # --- Approver & Admin Views ---
@@ -304,7 +303,7 @@ def edit_user_roles_view(request, user_id):
 @login_required
 @user_passes_test(is_admin)
 def room_management_view(request):
-    return render(request, 'pages/rooms.html', {'rooms': Room.objects.all().order_by('name')})
+    return render(request, 'pages/rooms.html', {'rooms': Room.objects.all().order_by('building', 'name')})
 
 @login_required
 @user_passes_test(is_admin)
