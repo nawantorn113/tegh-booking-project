@@ -1,34 +1,46 @@
-/* static/css/theme.css - Modern & Clean UI Theme */
-
-:root {
-    --theme-bg: #f8f9fa; /* Light gray background */
-    --theme-card-bg: #ffffff;
-    --theme-border-color: #dee2e6;
-    --theme-text-muted: #6c757d;
-}
-
+/* static/css/theme.css */
 body, .main-content {
-    background-color: var(--theme-bg);
+    background-color: #f8f9fa; /* Light gray background */
 }
-
-.navbar.bg-white {
-    background-color: var(--theme-card-bg) !important;
-}
-
-/* Modern Card Style */
-.modern-card {
-    background-color: var(--theme-card-bg);
-    border: 1px solid var(--theme-border-color);
-    border-radius: 0.75rem; /* More rounded corners */
+.card {
+    border-radius: 0.75rem;
+    border: 1px solid #e9ecef;
     box-shadow: 0 1px 3px rgba(0,0,0,.04);
+}
+.sidebar {
+    width: 260px;
+    min-width: 260px;
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1030;
+    color: white;
+    background-image: linear-gradient(to bottom right, #f97316, #ef4444, #ec4899);
+}
+.sidebar-header, .sidebar-footer {
+    border-color: rgba(255, 255, 255, 0.2) !important;
+}
+.sidebar-menu-button {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    text-decoration: none;
+    color: rgba(255, 255, 255, 0.85);
     transition: all 0.2s ease-in-out;
 }
-.modern-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 4px 15px rgba(0,0,0,.08);
+.sidebar-menu-button:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
 }
-
-.card-header {
-    background-color: transparent;
-    border-bottom: 1px solid var(--theme-border-color);
+.sidebar-menu-button.active {
+    background-color: rgba(255, 255, 255, 0.2);
+    color: white;
+    font-weight: 600;
+}
+.main-content-wrapper {
+    margin-left: 260px;
+    width: calc(100% - 260px);
 }

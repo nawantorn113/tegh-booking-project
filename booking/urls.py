@@ -1,5 +1,4 @@
 # booking/urls.py
-# [ฉบับสมบูรณ์]
 
 from django.urls import path
 from . import views
@@ -33,7 +32,4 @@ urlpatterns = [
     path('reports/', views.reports_view, name='reports'),
     path('reports/export/excel/', views.export_reports_excel, name='export_reports_excel'),
     path('reports/export/pdf/', views.export_reports_pdf, name='export_reports_pdf'),
-    path('booking/<int:booking_id>/', views.booking_detail_view, name='booking_detail'),
-    path('booking/<int:booking_id>/edit/', views.edit_booking_view, name='booking_edit'),
-    path('booking/<int:booking_id>/cancel/', views.delete_booking_view, name='booking_cancel'),
 ]

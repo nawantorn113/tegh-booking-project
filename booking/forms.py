@@ -1,5 +1,5 @@
 # booking/forms.py
-# [ฉบับสมบูรณ์]
+# [ฉบับมาสเตอร์]
 
 from django import forms
 from django.contrib.auth.models import User
@@ -51,7 +51,7 @@ class BookingForm(forms.ModelForm):
         labels = {
             'title': 'วาระการประชุม', 'chairman': 'ประธานการประชุม',
             'participant_count': 'จำนวนผู้เข้าร่วม (โดยประมาณ)', 'additional_notes': 'หมายเหตุ',
-            'additional_requests': 'คำขออุปกรณ์ / บริการเพิ่มเติม',
+            'additional_requests': 'คำขออุปกรณ์ / เพิ่มเติม',
             'attachment': 'ไฟล์แนบประกอบการประชุม (ถ้ามี)',
         }
 

@@ -5,12 +5,12 @@
 <div class="d-flex flex-column flex-sm-row align-items-start justify-content-between gap-4 mb-4">
     <div>
         <h1 class="mb-0">ระบบจองห้องประชุม</h1>
-        <p class="text-muted">TEGH</p>
+        <p class="text-muted"><h5>TEGH</h5></p>
     </div>
     <div>
-        <a href="{% url 'master_calendar' %}" class="btn btn-primary">
+        <!-- <a href="{% url 'master_calendar' %}" class="btn btn-primary">
             <i class="bi bi-calendar3 me-1"></i> ตารางเวลารวม
-        </a>
+        </a> -->
     </div>
 </div>
 
@@ -75,7 +75,7 @@
     {% for building_name, rooms_in_building in buildings.items %}
     <div class="card shadow-sm building-block">
         <div class="card-header bg-light">
-            <h5 class="mb-0"><i class="bi bi-building me-2"></i>{{ building_name|default:"(อาคาร / สถานที่)" }}</h5>
+            <h5 class="mb-0"><i class="bi bi-building me-2"></i>{{ building_name|default:"(ไม่ได้ระบุอาคาร)" }}</h5>
         </div>
         <div class="card-body">
             <div class="room-grid">
