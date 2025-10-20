@@ -1,4 +1,5 @@
 # booking/urls.py
+# [ฉบับมาสเตอร์]
 
 from django.urls import path
 from . import views

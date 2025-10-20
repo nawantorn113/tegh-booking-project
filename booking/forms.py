@@ -51,7 +51,7 @@ class BookingForm(forms.ModelForm):
         labels = {
             'title': 'วาระการประชุม', 'chairman': 'ประธานการประชุม',
             'participant_count': 'จำนวนผู้เข้าร่วม (โดยประมาณ)', 'additional_notes': 'หมายเหตุ',
-            'additional_requests': 'คำขออุปกรณ์ / เพิ่มเติม',
+            'additional_requests': 'คำขออุปกรณ์ / บริการเพิ่มเติม',
             'attachment': 'ไฟล์แนบประกอบการประชุม (ถ้ามี)',
         }
 

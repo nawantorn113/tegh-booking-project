@@ -1,34 +1,47 @@
-/* static/css/theme.css - Modern & Clean UI Theme */
-
-:root {
-    --theme-bg: #f8f9fa; /* Light gray background */
-    --theme-card-bg: #ffffff;
-    --theme-border-color: #dee2e6;
-    --theme-text-muted: #6c757d;
+/* static/css/theme.css */
+body, .main-content-wrapper {
+    background-color: #f8f9fa; /* Light gray background */
 }
-
-body, .main-content {
-    background-color: var(--theme-bg);
+.card {
+    border-radius: 0.75rem;
+    border: 1px solid #e9ecef;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
-
-.navbar.bg-white {
-    background-color: var(--theme-card-bg) !important;
+.sidebar {
+    width: 260px;
+    min-width: 260px;
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1030;
+    color: white;
+    /* Gradient from React example */
+    background-image: linear-gradient(to bottom right, #6493d6, #4883d6, #1a4281);
 }
-
-/* Modern Card Style */
-.modern-card {
-    background-color: var(--theme-card-bg);
-    border: 1px solid var(--theme-border-color);
-    border-radius: 0.75rem; /* More rounded corners */
-    box-shadow: 0 1px 3px rgba(0,0,0,.04);
+.main-content-wrapper {
+    margin-left: 260px;
+    width: calc(100% - 260px);
+}
+.sidebar-header, .sidebar-footer {
+    border-color: rgba(255, 255, 255, 0.15) !important;
+}
+.sidebar-menu-button {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    text-decoration: none;
+    color: rgba(255, 255, 255, 0.8);
     transition: all 0.2s ease-in-out;
 }
-.modern-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 4px 15px rgba(0,0,0,.08);
+.sidebar-menu-button:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+    color: white;
 }
-
-.card-header {
-    background-color: transparent;
-    border-bottom: 1px solid var(--theme-border-color);
+.sidebar-menu-button.active {
+    background-color: rgba(255, 255, 255, 0.15);
+    color: white;
+    font-weight: 600;
 }

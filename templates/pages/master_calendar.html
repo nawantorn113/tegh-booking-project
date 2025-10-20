@@ -1,97 +1,204 @@
 {% extends 'base.html' %}
-
 {% block title %}ตารางเวลารวม - {{ block.super }}{% endblock %}
+{% block page_title %}<i class="bi bi-calendar3 me-2"></i>ตารางเวลารวม{% endblock %}
 
 {% block extra_head %}
-<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.14/index.global.min.js'></script>
-
+{# --- CSS เพิ่มเติมสำหรับ FullCalendar --- #}
 <style>
-    #calendar { max-width: 1200px; margin: 0 auto; }
-
-    .fc .fc-button-primary { 
-        background-color: #458bf5; 
-        border-color: #1d66d3; 
+    #calendar {
+        max-width: 95%; /* Adjust as needed */
+        margin: 20px auto;
+        background-color: white; /* Ensure calendar background is white */
+        padding: 1rem; /* Add padding inside the calendar container */
+        border-radius: 0.75rem; /* Match card style */
+        box-shadow: 0 1px 3px rgba(0,0,0,.04); /* Match card shadow */
     }
 
-    /* Event Style */
+    /* --- Event Colors (Using Bootstrap Variables for Consistency) --- */
     .fc-event {
-        border-radius: 5px;
-        padding: 2px 4px;
-        font-size: 0.85rem;
-        white-space: normal;
+        border: 1px solid transparent !important;
+        padding: 2px 5px !important;
+        font-size: 0.8rem !important;
+        line-height: 1.3 !important;
+        cursor: pointer !important;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+    .fc-event[data-status="APPROVED"] { /* Green */
+        background-color: var(--bs-success) !important;
+        border-color: var(--bs-success) !important;
+        color: white !important;
+    }
+    .fc-event[data-status="PENDING"] { /* Yellow */
+        background-color: var(--bs-warning) !important;
+        border-color: var(--bs-warning) !important;
+        color: black !important; /* Dark text on yellow */
+    }
+    .fc-event[data-status="REJECTED"] { /* Red */
+        background-color: var(--bs-danger) !important;
+        border-color: var(--bs-danger) !important;
+        color: white !important;
+        opacity: 0.75;
+    }
+    .fc-event[data-status="CANCELLED"] { /* Orange - Using Bootstrap Orange */
+        background-color: var(--bs-orange, #fd7e14) !important; /* Fallback color */
+        border-color: var(--bs-orange, #fd7e14) !important;
+        color: white !important;
+        opacity: 0.65;
     }
 
-    .fc-event-title b {
-        color: #0d6efd;
-    }
-
-    /* TimeGrid stacked view ปรับให้อ่านง่าย */
-    .fc-timegrid-event {
+    /* --- Event Content Styling --- */
+    .event-room { font-weight: bold; margin-right: 5px;}
+    .fc-event-main-frame .fc-event-title, /* Target title within frame */
+    .fc-event-main .fc-event-title { /* Target title directly */
+        white-space: normal; /* Allow wrapping */
         overflow: hidden;
         text-overflow: ellipsis;
     }
+    .fc-event-time { margin-right: 5px; font-weight: bold;}
+    .fc-daygrid-event .fc-event-title-container { overflow: hidden; }
+
+    /* --- Calendar Header Styling --- */
+    .fc .fc-toolbar.fc-header-toolbar { margin-bottom: 1rem; }
+    .fc .fc-toolbar-title { font-size: 1.25rem; }
+    .fc .fc-button { text-transform: capitalize; }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-        <h1 class="mb-0"><i class="bi bi-calendar3 me-2"></i>ตารางเวลารวม</h1>
-        <p class="text-muted mb-0">ภาพรวมการจองห้องประชุมทั้งหมด</p>
-    </div>
-    <!-- <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
-        <i class="bi bi-grid-fill me-1"></i> กลับสู่หน้าหลัก
-    </a> -->
-</div>
-
-<div class="card shadow-sm">
-    <div class="card-body">
-        <div id='calendar'></div>
-    </div>
-</div>
+<div id="calendar"></div>
 {% endblock %}
 
 {% block extra_scripts %}
+{# --- FullCalendar Core script loaded from base.html --- #}
+
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    var calendarEl = document.getElementById('calendar');
-
-    var calendar = new FullCalendar.Calendar(calendarEl, {
-        headerToolbar: {
-            left: 'prev,next today',
-            center: 'title',
-            right: 'dayGridMonth,timeGridWeek,timeGridDay'
-        },
-        initialView: 'timeGridWeek',
-        slotMinTime: '08:00:00',
-        slotMaxTime: '19:00:00',
-        events: "{% url 'api_bookings' %}", // ดึงข้อมูลการจองทั้งหมด
-
-        eventDisplay: 'block',
-        eventOverlap: false,
-        slotEventOverlap: false,  // ป้องกัน Event ซ้อนทับ
-        eventOrder: 'start',      // จัดเรียงตามเวลา
-        eventTimeFormat: { hour: '2-digit', minute: '2-digit', hour12: false },
-        displayEventEnd: false,   // ลดการซ้อนเวลา
-        displayEventTime: true,
-
-        eventDidMount: function(info) {
-            // แสดงชื่อห้อง + ชื่อ Event
-            const roomName = info.event.extendedProps.room_name || '';
-            const originalTitle = info.event.title;
-            info.el.querySelector('.fc-event-title').innerHTML = `<b>${roomName}:</b> ${originalTitle}`;
-        },
-
-        eventClick: function(info) {
-            // คลิก Event ไปปฏิทินห้องนั้น
-            const roomId = info.event.extendedProps.room_id;
-            if (roomId) {
-                window.location.href = `/room/${roomId}/calendar/`;
-            }
+    document.addEventListener('DOMContentLoaded', function() {
+        const calendarEl = document.getElementById('calendar');
+        if (!calendarEl) {
+            console.error("Calendar element not found!");
+            return;
         }
-    });
 
-    calendar.render();
-});
+        if (typeof FullCalendar === 'undefined') {
+            console.error("FullCalendar core not loaded!");
+            calendarEl.innerHTML = "<div class='alert alert-danger'>❌ FullCalendar ยังไม่โหลด กรุณาล้าง Cache และรีเฟรชหน้า</div>";
+            return;
+        }
+        console.log("FullCalendar Core loaded.");
+
+        // Check if Bootstrap Tooltip is available
+        const isTooltipAvailable = typeof bootstrap !== 'undefined' && typeof bootstrap.Tooltip !== 'undefined';
+        if (!isTooltipAvailable) {
+            console.warn("Bootstrap Tooltip JS not found. Tooltips will be disabled.");
+        }
+
+        const calendar = new FullCalendar.Calendar(calendarEl, {
+            // --- Basic Settings ---
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,timeGridDay'
+            },
+            initialView: 'timeGridWeek',
+            locale: 'th',
+            buttonText: { today: 'วันนี้', month: 'เดือน', week: 'สัปดาห์', day: 'วัน' },
+            slotMinTime: '08:00:00',
+            slotMaxTime: '19:00:00',
+            allDaySlot: false,
+            editable: false,
+            nowIndicator: true,
+
+            // --- Event Data Source ---
+            events: "{% url 'api_bookings' %}", // Comma after this line is crucial if more options follow
+
+            // --- Event Rendering Hook ---
+            eventDidMount: function(info) {
+                const event = info.event;
+                const props = event.extendedProps;
+                const roomName = props.room_name || 'N/A';
+                const bookedBy = props.booked_by_username || 'N/A';
+                const title = (event.title || 'No Title').split('\n')[0];
+                const status = props.status || '';
+
+                info.el.setAttribute('data-status', status); // For CSS
+
+                // --- Build event content HTML ---
+                const newTitleHtml = `<span class="event-room">${roomName}:</span> <span>${title} (${bookedBy})</span>`;
+                let finalHtml = '';
+
+                // Try to find the time element provided by FullCalendar
+                const timeEl = info.el.querySelector('.fc-event-time');
+                if (timeEl && info.view.type.includes('timeGrid')) { // Show time in timeGrid views
+                    finalHtml = `<span class="fc-event-time">${timeEl.innerText}</span> | ${newTitleHtml}`;
+                    // timeEl.style.display = 'none'; // Hide original if needed
+                } else {
+                    finalHtml = newTitleHtml; // No explicit time in month view title
+                }
+
+                // --- Safely update event content ---
+                // Find the best place to put the content
+                let contentTargetEl = info.el.querySelector('.fc-event-title'); // Try the title element first
+                if (!contentTargetEl) {
+                     contentTargetEl = info.el.querySelector('.fc-event-main-frame') || info.el.querySelector('.fc-event-main'); // Try containers
+                }
+
+                if (contentTargetEl) {
+                    contentTargetEl.innerHTML = finalHtml;
+                } else {
+                     console.warn('Could not find standard event content element for', info.event);
+                     // As a fallback, try appending (might look weird)
+                     const fallbackContainer = document.createElement('div');
+                     fallbackContainer.innerHTML = finalHtml;
+                     info.el.appendChild(fallbackContainer);
+                }
+
+
+                // --- Add Bootstrap Tooltip (if available) ---
+                if (isTooltipAvailable) {
+                    new bootstrap.Tooltip(info.el, {
+                        title: `${roomName}: ${title} (${bookedBy})<br>สถานะ: ${status}`,
+                        placement: 'top',
+                        trigger: 'hover',
+                        container: 'body',
+                        html: true
+                    });
+                }
+            }, // <-- **ตรวจสอบ Comma ตรงนี้**
+
+            // --- Event Click Handler ---
+            eventClick: function(info) {
+                const roomId = info.event.extendedProps.room_id;
+                if (roomId) {
+                    window.location.href = `/room/${roomId}/calendar/`;
+                } else {
+                    console.warn("Event clicked has no room_id in extendedProps:", info.event);
+                }
+            }, // <-- **ตรวจสอบ Comma ตรงนี้**
+
+            // --- Loading Indicator ---
+            loading: function(isLoading) {
+                // console.log("Calendar loading:", isLoading);
+            }, // <-- **ตรวจสอบ Comma ตรงนี้**
+
+            // --- Error Handling for Events ---
+            eventSourceFailure: function(error) {
+                console.error("Events fetch error:", error.message);
+                // Avoid adding duplicate error messages
+                if (!calendarEl.querySelector('.event-fetch-error')) {
+                    calendarEl.insertAdjacentHTML('afterbegin', "<div class='alert alert-warning small py-1 px-2 event-fetch-error'>⚠ ไม่สามารถโหลดข้อมูลการจองได้</div>");
+                }
+            } // <-- **ไม่มี Comma หลัง Option สุดท้าย**
+
+        }); // --- End of FullCalendar options ---
+
+        // --- Render the Calendar ---
+        try {
+            calendar.render();
+            console.log("Standard Master Calendar rendered successfully.");
+        } catch (e) {
+            console.error("Error rendering calendar:", e);
+            calendarEl.innerHTML = `<div class='alert alert-danger'>Error rendering calendar: ${e.message}</div>`;
+        }
+    }); // --- End of DOMContentLoaded ---
 </script>
 {% endblock %}
