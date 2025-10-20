@@ -1,70 +1,171 @@
 {% extends 'base.html' %}
-{% block title %}รายงานและสถิติ - {{ block.super }}{% endblock %}
+{% block title %}รายงานการจอง - {{ block.super }}{% endblock %}
+
+{% block page_title %}<i class="bi bi-bar-chart-fill me-2"></i>รายงานการจอง{% endblock %}
+
+{% block extra_head %}
+<!-- Select2 CSS -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1><i class="bi bi-bar-chart-line-fill me-2"></i>รายงานและสถิติ</h1>
-    <div>
-        <button class="btn btn-success disabled"><i class="bi bi-file-earmark-excel-fill me-1"></i> Export Excel</button>
-        <button class="btn btn-danger disabled"><i class="bi bi-file-earmark-pdf-fill me-1"></i> Export PDF</button>
+<div class="container-fluid">
+
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <label>เลือกเดือน</label>
+            <select class="form-select select2" id="filterMonth">
+                <option value="0" selected>ทั้งหมด</option>
+                {% for month in months %}
+                <option value="{{ month.value }}">{{ month.label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label>เลือกแผนก</label>
+            <select class="form-select select2" id="filterDept">
+                <option value="0" selected>ทั้งหมด</option>
+                {% for dept in departments %}
+                <option value="{{ dept.id }}">{{ dept.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-4 d-flex align-items-end gap-2">
+            <button class="btn btn-primary" id="btnFilter">กรอง</button>
+            <button class="btn btn-success" id="exportExcel">Export Excel</button>
+            <button class="btn btn-danger" id="exportPDF">Export PDF</button>
+        </div>
     </div>
+
+    <div class="row" id="reportCards">
+        <!-- Card 1: ตารางการจอง -->
+        <div class="col-md-12 mb-3">
+            <div class="card p-3">
+                <h5 class="card-title"><i class="bi bi-table me-2"></i>ตารางการจอง</h5>
+                <div class="table-responsive">
+                    <table class="table table-striped" id="bookingTable">
+                        <thead>
+                            <tr>
+                                <th>วันที่</th>
+                                <th>ห้องประชุม</th>
+                                <th>หัวข้อ</th>
+                                <th>ผู้จอง</th>
+                                <th>สถานะ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for b in bookings %}
+                            <tr>
+                                <td>{{ b.date }}</td>
+                                <td>{{ b.room.name }}</td>
+                                <td>{{ b.title }}</td>
+                                <td>{{ b.user.get_full_name }}</td>
+                                <td>
+                                    {% if b.status == 'approved' %}
+                                    <span class="badge bg-success">อนุมัติแล้ว</span>
+                                    {% elif b.status == 'pending' %}
+                                    <span class="badge bg-warning text-dark">รออนุมัติ</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">ยกเลิก</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 2: กราฟสรุปการจอง -->
+        <div class="col-md-12 mb-3">
+            <div class="card p-3">
+                <h5 class="card-title"><i class="bi bi-bar-chart-line-fill me-2"></i>สถิติการจองตามห้อง</h5>
+                <canvas id="bookingChart" height="100"></canvas>
+            </div>
+        </div>
+    </div>
+
 </div>
+{% endblock %}
 
-<div class="row">
-    <div class="col-lg-6 mb-4">
-        <div class="card shadow-sm h-100">
-            <div class="card-header">
-                <h5 class="mb-0">สรุปจำนวนการใช้งานแต่ละห้อง</h5>
-            </div>
-            <div class="card-body">
-                {% if room_usage_stats %}
-                <ul class="list-group list-group-flush">
-                    {% for room in room_usage_stats %}
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        {{ room.name }}
-                        <span class="badge bg-primary rounded-pill">{{ room.booking_count }} ครั้ง</span>
-                    </li>
-                    {% endfor %}
-                </ul>
-                {% else %}
-                <p class="text-muted text-center">ยังไม่มีข้อมูลการใช้งาน</p>
-                {% endif %}
-            </div>
-        </div>
-    </div>
+{% block extra_scripts %}
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<!-- SheetJS สำหรับ Export Excel -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<!-- jsPDF + html2canvas สำหรับ Export PDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
-    <div class="col-lg-6 mb-4">
-        <div class="card shadow-sm h-100">
-            <div class="card-header">
-                <h5 class="mb-0">สรุปการจองตามแผนก</h5>
-            </div>
-            <div class="card-body">
-                {% if department_stats %}
-                <ul class="list-group list-group-flush">
-                    {% for stat in department_stats %}
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        {{ stat.department }}
-                        <span class="badge bg-info rounded-pill">{{ stat.count }} ครั้ง</span>
-                    </li>
-                    {% endfor %}
-                </ul>
-                {% else %}
-                <p class="text-muted text-center">ยังไม่มีข้อมูลแผนก</p>
-                {% endif %}
-            </div>
-        </div>
-    </div>
+<script>
+$(document).ready(function(){
+    $('.select2').select2({ width: '100%' });
 
-    <div class="col-12">
-        <div class="card shadow-sm">
-            <div class="card-header">
-                <h5 class="mb-0">Dashboard สรุปเชิงสถิติ (กราฟ)</h5>
-            </div>
-            <div class="card-body text-center text-muted">
-                <p>พื้นที่สำหรับแสดงกราฟสรุปการใช้งาน</p>
-                <p class="small">(ต้องใช้ Library เพิ่มเติม เช่น Chart.js สำหรับการพัฒนาระยะถัดไป)</p>
-            </div>
-        </div>
-    </div>
-</div>
+    // --- Chart.js ---
+    const ctx = document.getElementById('bookingChart').getContext('2d');
+    const bookingData = {
+        labels: {{ room_names|safe }},  // ["O1-1","O1-2","RD1",...]
+        datasets: [{
+            label: 'จำนวนการจอง',
+            data: {{ booking_counts|safe }}, // [5,3,7,...]
+            backgroundColor: 'rgba(54, 162, 235, 0.6)',
+            borderColor: 'rgba(54, 162, 235, 1)',
+            borderWidth: 1
+        }]
+    };
+    const bookingChart = new Chart(ctx, {
+        type: 'bar',
+        data: bookingData,
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true } }
+        }
+    });
+
+    // --- Export Excel ---
+    $('#exportExcel').click(function(){
+        let wb = XLSX.utils.book_new();
+        let ws_data = [['วันที่','ห้องประชุม','หัวข้อ','ผู้จอง','สถานะ']];
+        $('#bookingTable tbody tr').each(function(){
+            let row = [];
+            $(this).find('td').each(function(){ row.push($(this).text().trim()); });
+            ws_data.push(row);
+        });
+        let ws = XLSX.utils.aoa_to_sheet(ws_data);
+        XLSX.utils.book_append_sheet(wb, ws, "Report");
+        XLSX.writeFile(wb, "TEGH_Report.xlsx");
+    });
+
+    // --- Export PDF ---
+    $('#exportPDF').click(async function(){
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('p','mm','a4');
+        const cards = document.querySelectorAll('.card');
+        let yOffset = 10;
+
+        for(let card of cards){
+            const canvas = await html2canvas(card,{ scale: 2 });
+            const imgData = canvas.toDataURL('image/png');
+            const imgProps = doc.getImageProperties(imgData);
+            const pdfWidth = 190;
+            const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+            if(yOffset + pdfHeight > 280){
+                doc.addPage(); yOffset=10;
+            }
+            doc.addImage(imgData,'PNG',10,yOffset,pdfWidth,pdfHeight);
+            yOffset += pdfHeight + 10;
+        }
+        doc.save('TEGH_Report.pdf');
+    });
+
+    // --- Filter (ยังเป็น placeholder) ---
+    $('#btnFilter').click(function(){
+        alert("คุณสามารถเพิ่ม AJAX filter เพื่อรีเฟรชตารางและกราฟได้");
+    });
+});
+</script>
 {% endblock %}

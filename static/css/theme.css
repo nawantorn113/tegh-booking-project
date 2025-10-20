@@ -1,12 +1,15 @@
-/* static/css/theme.css */
-body, .main-content-wrapper {
-    background-color: #f8f9fa; /* Light gray background */
+static/css/theme.css
+
+/* Basic body styling */
+body {
+    margin: 0;
+    padding: 0;
+    background-color: #f8f9fa; /* Light grey background */
+    font-family: 'Prompt', sans-serif; /* Example font */
+    overflow-x: hidden;
 }
-.card {
-    border-radius: 0.75rem;
-    border: 1px solid #e9ecef;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-}
+
+/* Sidebar styling */
 .sidebar {
     width: 260px;
     min-width: 260px;
@@ -16,32 +19,73 @@ body, .main-content-wrapper {
     left: 0;
     z-index: 1030;
     color: white;
-    /* Gradient from React example */
-    background-image: linear-gradient(to bottom right, #6493d6, #4883d6, #1a4281);
+    /* Example Gradient */
+    background-image: linear-gradient(to bottom right, #334155, #475569, #1e293b);
+    display: flex; /* Ensure flex direction */
+    flex-direction: column;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.1);
 }
-.main-content-wrapper {
-    margin-left: 260px;
-    width: calc(100% - 260px);
-}
-.sidebar-header, .sidebar-footer {
-    border-color: rgba(255, 255, 255, 0.15) !important;
-}
+.sidebar-header { border-bottom: 1px solid rgba(255, 255, 255, 0.15); }
+.sidebar-footer { border-top: 1px solid rgba(255, 255, 255, 0.15); }
 .sidebar-menu-button {
-    display: flex;
-    align-items: center;
-    gap: 0.85rem;
-    padding: 0.75rem 1rem;
-    border-radius: 0.5rem;
-    text-decoration: none;
-    color: rgba(255, 255, 255, 0.8);
-    transition: all 0.2s ease-in-out;
+    display: flex; align-items: center; gap: 0.85rem;
+    padding: 0.75rem 1rem; border-radius: 0.5rem;
+    text-decoration: none; color: rgba(255, 255, 255, 0.8);
+    transition: all 0.2s ease-in-out; margin-bottom: 4px; /* Spacing */
 }
-.sidebar-menu-button:hover {
-    background-color: rgba(255, 255, 255, 0.08);
-    color: white;
+.sidebar-menu-button:hover { background-color: rgba(255, 255, 255, 0.08); color: white; }
+.sidebar-menu-button.active { background-color: rgba(255, 255, 255, 0.15); color: white; font-weight: 500; }
+.sidebar-menu-button i { min-width: 20px; /* Ensure icon alignment */ text-align: center; }
+
+/* Main content wrapper */
+.main-content-wrapper {
+    margin-left: 260px; /* <<<=== ระยะห่างจาก Sidebar */
+    width: calc(100% - 260px); /* <<<=== ความกว้างที่เหลือ */
+    min-height: 100vh;
+    padding: 0; /* Wrapper itself has no padding */
+    background-color: #f8f9fa;
+    transition: margin-left 0.3s ease, width 0.3s ease; /* For potential sidebar toggle */
 }
-.sidebar-menu-button.active {
-    background-color: rgba(255, 255, 255, 0.15);
-    color: white;
-    font-weight: 600;
+
+/* Sticky Header */
+.main-content-wrapper header {
+     /* Styles for header are handled by Bootstrap classes */
+}
+
+/* Inner padding for the content area (div inside main) */
+.main-content-wrapper > div.p-4 { /* Target the div with p-4 */
+     /* Padding is applied by the 'p-4' class */
+}
+
+/* Cards and other elements should respect Bootstrap grid/padding */
+.card {
+    border-radius: 0.75rem;
+    border: 1px solid #e9ecef;
+    box-shadow: 0 1px 3px rgba(0,0,0,.04);
+    margin-bottom: 1rem; /* Add default bottom margin */
+}
+
+/* Adjust Select2 theme */
+.select2-container--bootstrap-5 .select2-selection {
+    border-radius: var(--bs-border-radius);
+    min-height: calc(1.5em + .75rem + 2px);
+    padding: .375rem .75rem;
+}
+.select2-container--bootstrap-5 .select2-selection--single .select2-selection__arrow {
+    height: calc(1.5em + .75rem);
+}
+.select2-container--bootstrap-5 .select2-selection--multiple {
+     min-height: calc(1.5em + .75rem + 2px);
+}
+/* Ensure Select2 dropdown appears above modal footer if needed */
+ .select2-dropdown {
+      z-index: 1061; /* Higher than Bootstrap modal backdrop */
+ }
+
+/* --- Responsive --- (Optional: for sidebar toggle) */
+@media (max-width: 991.98px) {
+    #sidebar { left: -260px; }
+    #sidebar.active { left: 0; }
+    .main-content-wrapper { margin-left: 0; width: 100%; }
+    /* Add toggle button styles if needed */
 }

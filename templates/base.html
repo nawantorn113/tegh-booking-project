@@ -3,25 +3,43 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}TEGH Booking{% endblock %}</title>
 
-    {# --- Bootstrap CSS --- #}
+    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
-    {# --- Select2 CSS --- #}
+    <!-- Select2 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 
-    {# --- Your Custom CSS --- #}
+    <!-- FullCalendar CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.14/index.global.min.css" rel="stylesheet" />
+
+    <!-- Custom CSS -->
     <link rel="stylesheet" href="{% static 'css/theme.css' %}">
 
-    {# --- Page-specific CSS --- #}
+    <style>
+        body {
+            margin: 0;
+            background-color: #f8f9fa;
+        }
+        .main-content-wrapper {
+            margin-left: 260px;
+            width: calc(100% - 260px);
+            padding: 1.5rem;
+        }
+        .fc {
+            max-width: 100% !important;
+        }
+    </style>
+
     {% block extra_head %}{% endblock %}
 </head>
 <body>
 <div class="d-flex">
-    {# Sidebar ---}
+    <!-- Sidebar -->
     <nav class="sidebar d-flex flex-column">
         <div class="sidebar-header p-4 border-bottom">
             <a href="{% url 'dashboard' %}" class="d-flex align-items-center gap-3 text-decoration-none">
@@ -72,13 +90,13 @@
         </div>
     </nav>
 
-    {# Main Content ---}
+    <!-- Main Content -->
     <main class="main-content-wrapper flex-grow-1">
         <header class="sticky-top bg-white p-3 border-bottom shadow-sm d-flex justify-content-between align-items-center">
-             <h5 class="mb-0">{% block page_title %}{% endblock %}</h5>
-             <div></div>
+            <h5 class="mb-0">{% block page_title %}{% endblock %}</h5>
+            <div></div>
         </header>
-        <div class="p-4">
+        <div>
             {% if messages %}
             <div class="position-fixed top-0 end-0 p-3" style="z-index: 1100;">
                 {% for message in messages %}
@@ -94,47 +112,32 @@
     </main>
 </div>
 
-{# ==================== Scripts ==================== #}
-{% block extra_scripts %}
-    <!-- jQuery -->
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<!-- Scripts -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.14/index.global.min.js"></script>
 
-    <!-- Bootstrap Bundle (Popper included) -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+$(document).ready(function() {
+    if ($.fn.select2) {
+        $.fn.select2.defaults.set("theme", "bootstrap-5");
+        $('.select2').select2({ width: '100%' });
+    }
 
-    <!-- Select2 JS -->
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    $('.alert:not(.alert-danger)').delay(5000).queue(function() {
+        $(this).alert('close'); $(this).dequeue();
+    });
+    $('.alert.alert-danger').delay(10000).queue(function() {
+        $(this).alert('close'); $(this).dequeue();
+    });
 
-    <!-- FullCalendar -->
-    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.14/index.global.min.js"></script>
+    $('.modal').on('shown.bs.modal', function() {
+        $(this).find('.select2').select2({ width: '100%' });
+    });
+});
+</script>
 
-    <!-- Global JS -->
-    <script>
-        $(document).ready(function() {
-            // Global Select2 init
-            if ($.fn.select2) {
-                $.fn.select2.defaults.set("theme", "bootstrap-5");
-                $('.select2').select2({ width: '100%' });
-                console.log("Select2 ready globally.");
-            } else {
-                console.warn("Select2 not loaded.");
-            }
-
-            // Auto-dismiss alerts
-            $('.alert:not(.alert-danger)').delay(5000).queue(function() {
-                $(this).alert('close'); $(this).dequeue();
-            });
-            $('.alert.alert-danger').delay(10000).queue(function() {
-                $(this).alert('close'); $(this).dequeue();
-            });
-
-            // Initialize Select2 in modals dynamically
-            $('.modal').on('shown.bs.modal', function() {
-                $(this).find('.select2').select2({ width: '100%' });
-            });
-        });
-    </script>
-
-{% endblock %}
+{% block extra_scripts %}{% endblock %}
 </body>
 </html>

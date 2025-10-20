@@ -1,243 +1,98 @@
 {% extends 'base.html' %}
-{% load static %}
-{% block title %}ตารางห้อง {{ room.name }} - {{ block.super }}{% endblock %}
-{% block page_title %}<i class="bi bi-door-open-fill me-2"></i>ตารางห้อง: {{ room.name }}{% endblock %}
+{% load static %}  {# เพิ่มบรรทัดนี้เพื่อใช้ static tag #}
+
+{% block title %}ตารางการจองห้อง {{ room.name }}{% endblock %}
+
+{% block page_title %}
+<i class="bi bi-calendar3 me-2"></i> ตารางการจองห้อง: {{ room.name }}
+{% endblock %}
 
 {% block extra_head %}
-{# --- CSS เพิ่มเติมสำหรับ FullCalendar และ Carousel --- #}
 <style>
-    /* --- CSS สำหรับ Image Carousel --- */
-    .room-image-carousel img { max-height: 400px; object-fit: cover; width: 100%; border-radius: 0.75rem; }
-    .carousel-caption { background-color: rgba(0, 0, 0, 0.5); border-radius: 0.5rem; padding: 0.5rem 1rem; }
-    .carousel-indicators [data-bs-target] { background-color: rgba(255, 255, 255, 0.7); }
-    .carousel-indicators .active { background-color: white; }
-    .carousel-control-prev-icon, .carousel-control-next-icon { background-color: rgba(0, 0, 0, 0.5); border-radius: 50%; padding: 0.5rem; }
-
-    /* --- CSS สำหรับ FullCalendar --- */
     #calendar {
-        background-color: white; padding: 1rem; border-radius: 0.75rem;
-        box-shadow: 0 1px 3px rgba(47, 92, 241, 0.04); margin-top: 1.5rem;
+        max-width: 100%;
+        margin: 2rem auto;
     }
-    .fc-event { border: 1px solid transparent !important; padding: 2px 5px !important; font-size: 0.8rem !important; line-height: 1.3 !important; cursor: pointer !important; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
-    .fc-event[data-status="APPROVED"] { background-color: var(--bs-success) !important; border-color: var(--bs-success) !important; color: white !important; }
-    .fc-event[data-status="PENDING"] { background-color: var(--bs-warning) !important; border-color: var(--bs-warning) !important; color: black !important; }
-    .fc-event[data-status="REJECTED"] { background-color: var(--bs-danger) !important; border-color: var(--bs-danger) !important; color: white !important; opacity: 0.75; }
-    .fc-event[data-status="CANCELLED"] { background-color: var(--bs-orange, #fd7e14) !important; border-color: var(--bs-orange, #fd7e14) !important; color: white !important; opacity: 0.65; }
-    .event-room { font-weight: bold; margin-right: 5px; }
-    .fc-event-main-frame .fc-event-title, .fc-event-main .fc-event-title { white-space: normal; overflow: hidden; text-overflow: ellipsis; }
-    .fc-event-time { margin-right: 5px; font-weight: bold; }
-    .fc-daygrid-event .fc-event-title-container { overflow: hidden; }
-    .fc .fc-toolbar.fc-header-toolbar { margin-bottom: 1rem; }
-    .fc .fc-toolbar-title { font-size: 1.25rem; }
-    .fc .fc-button { text-transform: capitalize; }
+    .room-images img {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+        border-radius: 8px;
+    }
+    .carousel-inner img {
+        height: 300px;
+        object-fit: cover;
+    }
 </style>
 {% endblock %}
 
 {% block content %}
-    {# --- ส่วนแสดงรูปภาพ (Bootstrap Carousel) --- #}
-    {% if room.image1 or room.image2 or room.image3 %}
-    <div class="card modern-card mb-4 shadow-sm">
-     <div class="card-body p-2">
-        <div id="roomImageCarousel" class="carousel slide room-image-carousel" data-bs-ride="carousel">
-            <div class="carousel-indicators">
-                {% if room.image1 %}<button type="button" data-bs-target="#roomImageCarousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>{% endif %}
-                {% if room.image2 %}<button type="button" data-bs-target="#roomImageCarousel" data-bs-slide-to="1" {% if not room.image1 %}class="active" aria-current="true"{% endif %} aria-label="Slide 2"></button>{% endif %}
-                {% if room.image3 %}<button type="button" data-bs-target="#roomImageCarousel" data-bs-slide-to="2" {% if not room.image1 and not room.image2 %}class="active" aria-current="true"{% endif %} aria-label="Slide 3"></button>{% endif %}
-            </div>
-            <div class="carousel-inner">
-                {% if room.image1 %}<div class="carousel-item active" data-bs-interval="5000"><img src="{{ room.image1.url }}" class="d-block w-100" alt="{{ room.name }} 1"></div>{% endif %}
-                {% if room.image2 %}<div class="carousel-item {% if not room.image1 %}active{% endif %}" data-bs-interval="5000"><img src="{{ room.image2.url }}" class="d-block w-100" alt="{{ room.name }} 2"></div>{% endif %}
-                {% if room.image3 %}<div class="carousel-item {% if not room.image1 and not room.image2 %}active{% endif %}" data-bs-interval="5000"><img src="{{ room.image3.url }}" class="d-block w-100" alt="{{ room.name }} 3"></div>{% endif %}
-            </div>
-            {% if room.image2 or room.image3 %}
-            <button class="carousel-control-prev" type="button" data-bs-target="#roomImageCarousel" data-bs-slide="prev"><span class="carousel-control-prev-icon" aria-hidden="true"></span><span class="visually-hidden">Previous</span></button>
-            <button class="carousel-control-next" type="button" data-bs-target="#roomImageCarousel" data-bs-slide="next"><span class="carousel-control-next-icon" aria-hidden="true"></span><span class="visually-hidden">Next</span></button>
-            {% endif %}
+
+<!-- Room Images Carousel -->
+<div id="roomCarousel" class="carousel slide mb-4" data-bs-ride="carousel">
+    <div class="carousel-inner room-images">
+        {% for img in room.images.all %}
+        <div class="carousel-item {% if forloop.first %}active{% endif %}">
+            <img src="{{ img.file.url }}" class="d-block w-100" alt="Room image {{ forloop.counter }}">
         </div>
-      </div>
+        {% empty %}
+        <div class="carousel-item active">
+            <img src="{% static 'images/no_image.png' %}" class="d-block w-100" alt="No image">
+        </div>
+        {% endfor %}
     </div>
-    {% else %}
-        <div class="alert alert-secondary text-center">ยังไม่มีรูปภาพสำหรับห้องประชุมนี้</div>
-    {% endif %}
-    {# --- สิ้นสุดส่วนแสดงรูปภาพ --- #}
+    <button class="carousel-control-prev" type="button" data-bs-target="#roomCarousel" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Previous</span>
+    </button>
+    <button class="carousel-control-next" type="button" data-bs-target="#roomCarousel" data-bs-slide="next">
+        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Next</span>
+    </button>
+</div>
 
-    {# --- ปฏิทิน --- #}
-    <div id="calendar"></div>
-
-    {# --- Modal สำหรับการจอง --- #}
-    {% include 'partials/_booking_form_modal.html' %}
+<!-- Calendar -->
+<div class="card shadow-sm">
+    <div class="card-body">
+        <div id="calendar"></div>
+    </div>
+</div>
 
 {% endblock %}
 
 {% block extra_scripts %}
-    {{ block.super }} {# <--- เพิ่มบรรทัดนี้ เพื่อดึง Script จาก base.html มาก่อน #}
+{{ block.super }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var calendarEl = document.getElementById('calendar');
 
-    {# --- Script ของหน้านี้ (FullCalendar) เริ่มตรงนี้ --- #}
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // --- Get DOM Elements (Add Checks!) ---
-        const calendarEl = document.getElementById('calendar');
-        const bookingModalElement = document.getElementById('bookingModal');
-        const form = document.getElementById('bookingForm');
-        const startTimeInput = document.getElementById('id_start_time');
-        const endTimeInput = document.getElementById('id_end_time');
-        const roomIdInput = form ? form.querySelector('input[name="room"]') : null;
-        const modalTitleEl = bookingModalElement ? bookingModalElement.querySelector('.modal-title') : null;
-        const formErrorsDiv = bookingModalElement ? bookingModalElement.querySelector('#formErrors') : null;
-        const participantsSelect = $('#id_participants'); // ใช้ jQuery Selector
-
-        // --- Essential Element Checks ---
-        if (!calendarEl) { console.error("FATAL: Calendar element '#calendar' not found!"); return; }
-        if (!bookingModalElement) { console.error("FATAL: Booking modal element '#bookingModal' not found! Check include path."); return; }
-        if (!form) { console.error("FATAL: Booking form '#bookingForm' not found in modal!"); return; }
-        if (!startTimeInput || !endTimeInput) { console.error("FATAL: Start/End time inputs not found in modal!"); return; }
-        if (!roomIdInput) { console.error("FATAL: Hidden room input 'input[name=\"room\"]' not found in modal!"); return; }
-        if (!modalTitleEl) { console.warn("Modal title element '.modal-title' not found."); }
-
-        // --- Initialize Bootstrap Modal ---
-        const bookingModal = new bootstrap.Modal(bookingModalElement);
-
-        // --- Check FullCalendar ---
-        if (typeof FullCalendar === 'undefined') {
-            console.error("FATAL: FullCalendar core JS not loaded!");
-            calendarEl.innerHTML = "<div class='alert alert-danger'>❌ FullCalendar ยังไม่โหลด!</div>";
-            return;
+    var calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek'
+        },
+        events: [
+            {% for booking in bookings %}
+            {
+                title: '{{ booking.user.get_full_name|escapejs }}',
+                start: '{{ booking.start|date:"Y-m-d\\TH:i:s" }}',
+                end: '{{ booking.end|date:"Y-m-d\\TH:i:s" }}',
+                color: '{{ booking.color|default:"#3788d8" }}'
+            },
+            {% endfor %}
+        ],
+        navLinks: true,
+        editable: false,
+        dayMaxEvents: true,
+        dateClick: function(info) {
+            var bookingUrl = "{% url 'create_booking' room.id %}?date=" + info.dateStr;
+            window.location.href = bookingUrl;
         }
-        console.log("FullCalendar Core IS loaded.");
-        const isTooltipAvailable = typeof bootstrap !== 'undefined' && typeof bootstrap.Tooltip !== 'undefined';
-        if (!isTooltipAvailable) { console.warn("Bootstrap Tooltip JS not found."); }
+    });
 
-        // --- Check jQuery and Select2 (loaded via block.super) ---
-         if (typeof $ === 'undefined' || !$.fn.select2) {
-             console.warn("jQuery or Select2 JS not loaded. Participant selection might not work correctly.");
-         }
-
-        // --- Initialize FullCalendar ---
-        try {
-            const calendar = new FullCalendar.Calendar(calendarEl, {
-                // --- Options ---
-                headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,timeGridDay' },
-                initialView: 'timeGridWeek',
-                locale: 'th',
-                buttonText: { today: 'วันนี้', month: 'เดือน', week: 'สัปดาห์', day: 'วัน' },
-                slotMinTime: '08:00:00',
-                slotMaxTime: '19:00:00',
-                allDaySlot: false,
-                editable: {{ is_admin_user|yesno:"true,false" }},
-                selectable: true,
-                nowIndicator: true,
-                events: "{% url 'api_bookings' %}?room_id={{ room.id }}",
-
-                // --- select callback ---
-                select: function(info) {
-                    console.log('Select:', info.startStr, info.endStr);
-                    form.reset();
-                    // Clear Select2
-                    if (participantsSelect.length && participantsSelect.data('select2')) {
-                         participantsSelect.val(null).trigger('change');
-                    }
-                    // Format date/time
-                    try {
-                        const localStart = new Date(info.start.getTime() - (info.start.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
-                        const localEnd = new Date(info.end.getTime() - (info.end.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
-                        startTimeInput.value = localStart;
-                        endTimeInput.value = localEnd;
-                    } catch (e) { console.error("Error formatting date:", e); }
-                    roomIdInput.value = '{{ room.id }}';
-                    // Update modal for CREATION
-                    if (modalTitleEl) modalTitleEl.textContent = 'จองห้องประชุม: {{ room.name|escapejs }}';
-                    form.action = "{% url 'create_booking_for_room' room_id=room.id %}";
-                    if (formErrorsDiv) formErrorsDiv.innerHTML = ''; // Clear errors
-                    bookingModal.show();
-                },
-
-                // --- eventDidMount callback ---
-                eventDidMount: function(info) {
-                    const props = info.event.extendedProps; const bookedBy = props.booked_by_username || 'N/A';
-                    const status = props.status || ''; const title = info.event.title || 'No Title';
-                    info.el.setAttribute('data-status', status);
-                    const newTitle = `<span>${title} (${bookedBy})</span>`; let finalHtml = '';
-                    const timeEl = info.el.querySelector('.fc-event-time');
-                    if (timeEl && info.view.type.includes('timeGrid')) { finalHtml = `<span class="fc-event-time">${timeEl.innerText}</span> | ${newTitle}`; }
-                    else { finalHtml = newTitle; }
-                    const contentTarget = info.el.querySelector('.fc-event-title') || info.el.querySelector('.fc-event-main-frame') || info.el.querySelector('.fc-event-main');
-                    if (contentTarget) { contentTarget.innerHTML = finalHtml; }
-                    if (isTooltipAvailable) { new bootstrap.Tooltip(info.el, { title: `${title} (${bookedBy})<br>สถานะ: ${status}`, placement: 'top', trigger: 'hover', container: 'body', html: true }); }
-                },
-
-                // --- eventClick callback ---
-                eventClick: function(info) {
-                     window.location.href = `/booking/${info.event.id}/`;
-                },
-
-                // --- eventDrop/Resize callbacks ---
-                eventDrop: function(info) { handleEventUpdate(info); },
-                eventResize: function(info) { handleEventUpdate(info); },
-
-                // --- Loading/Error callbacks ---
-                loading: function(isLoading) { /* ... */ },
-                eventSourceFailure: function(error) {
-                     console.error("Events fetch error:", error.message);
-                     if (!calendarEl.querySelector('.event-fetch-error')) {
-                         calendarEl.insertAdjacentHTML('afterbegin', "<div class='alert alert-warning small py-1 px-2 event-fetch-error'>⚠ ไม่สามารถโหลดข้อมูลการจองได้</div>");
-                     }
-                 }
-            }); // End FullCalendar options
-
-            // --- Render Calendar ---
-            calendar.render();
-            console.log("Calendar render command executed.");
-
-        } catch (e) {
-            console.error("!!! ERROR INITIALIZING OR RENDERING CALENDAR !!!", e);
-            calendarEl.innerHTML = `<div class='alert alert-danger'>เกิดข้อผิดพลาดในการสร้างปฏิทิน: ${e.message}</div>`;
-        }
-
-        // --- Function handleEventUpdate ---
-        function handleEventUpdate(info) {
-            if (!{{ is_admin_user|yesno:"true,false" }}) { info.revert(); return; }
-
-            const event = info.event;
-            const updatedData = {
-                booking_id: event.id,
-                start_time: event.start.toISOString(),
-                end_time: event.end ? event.end.toISOString() : event.start.toISOString() // Need careful fallback
-            };
-
-            if (!updatedData.end_time || updatedData.start_time >= updatedData.end_time) {
-                alert("⚠ เวลาสิ้นสุดไม่ถูกต้อง"); info.revert(); return;
-            }
-
-            console.log("Submitting event update:", updatedData);
-
-            // --- AJAX request ---
-            fetch("{% url 'api_update_booking_time' %}", {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
-                body: JSON.stringify(updatedData)
-            })
-            .then(response => {
-                 if (!response.ok) {
-                     return response.json().then(errData => { throw new Error(errData.message || `เกิดข้อผิดพลาด (${response.status})`); });
-                 }
-                 return response.json();
-            })
-            .then(data => {
-                if (data.status === 'success') {
-                    console.log("Update success:", data.message);
-                    // Show success toast?
-                } else {
-                    throw new Error(data.message || "เกิดข้อผิดพลาดไม่ทราบสาเหตุ");
-                }
-            })
-            .catch(error => {
-                console.error('Update Error:', error);
-                alert("⚠ ไม่สามารถอัปเดตเวลาได้: " + error.message);
-                info.revert(); // Revert on failure
-            });
-        } // End handleEventUpdate
-
-    }); // End DOMContentLoaded
-    </script>
-    {# --- สิ้นสุด Script ของหน้านี้ --- #}
+    calendar.render();
+});
+</script>
 {% endblock %}
