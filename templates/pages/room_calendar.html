@@ -1,43 +1,124 @@
 {% extends 'base.html' %}
 {% load static %}
-
-{% block title %}ตารางห้อง {{ room.name }}{% endblock %}
-
 {% block extra_head %}
-<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+<style>
+  .fc-event.vacant { background-color: #28a745; }
+  .fc-event.booked { background-color: #007bff; }
+  .fc-event.pending { background-color: #ffc107; }
+  .room-card { border: 1px solid #ddd; padding:10px; margin-bottom:10px; border-radius:8px; display:flex; gap:10px; }
+  .room-card img { width:120px; height:80px; object-fit:cover; border-radius:5px; }
+</style>
 {% endblock %}
 
 {% block content %}
-<div id="calendar"></div>
+<h3>ตารางห้อง: {{ room.name }}</h3>
+
+<!-- รูปตัวอย่างห้อง -->
+<div class="room-card">
+  {% if room.image %}
+    <img src="{{ room.image.url }}" alt="Room Image">
+  {% else %}
+    <img src="{% static 'images/default_room.png' %}" alt="No Image">
+  {% endif %}
+  <div>
+    <p><strong>{{ room.name }}</strong></p>
+    <p>รองรับ: {{ room.capacity }} คน</p>
+    <p>อุปกรณ์: {{ room.equipment }}</p>
+  </div>
+</div>
+
+<div id='calendar'></div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    var calendarEl = document.getElementById('calendar');
+  let calendarEl = document.getElementById('calendar');
+  let calendar = new FullCalendar.Calendar(calendarEl, {
+    initialView: 'timeGridWeek',
+    selectable: true,
+    selectMirror: true,
+    timeZone: 'Asia/Bangkok',
+    events: "{% url 'api_bookings' %}?room_id={{ room.id }}",
+    eventClassNames: function(info) {
+      if(info.event.extendedProps.status === 'APPROVED') return ['booked'];
+      else if(info.event.extendedProps.status === 'PENDING') return ['pending'];
+      else return ['vacant'];
+    },
+    select: function(info) {
+      let now = new Date();
+      let start = info.start;
+      let end = info.end;
 
-    var calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: 'dayGridMonth',
-        events: [
-            {% for booking in bookings %}
-            {
-                title: '{{ booking.title }}',
-                start: '{{ booking.start|date:"Y-m-d\\TH:i:s" }}',
-                end: '{{ booking.end|date:"Y-m-d\\TH:i:s" }}',
-                color: '{{ booking.color|default:"#3788d8" }}'
-            },
-            {% endfor %}
-        ],
-        navLinks: true,
-        editable: false,
-        dayMaxEvents: true,
-        dateClick: function(info) {
-            // redirect ไปหน้าจอง room
-            var bookingUrl = "{% url 'booking:create_booking' room.id %}?date=" + info.dateStr;
-            window.location.href = bookingUrl;
+      if(start < now){
+        alert("ไม่สามารถจองย้อนหลังได้");
+        calendar.unselect(); 
+        return;
+      }
+
+      if(start.getHours() < 8 || end.getHours() > 18 || (end.getHours() === 18 && end.getMinutes() > 0)){
+        alert("สามารถจองได้เฉพาะเวลา 08:00 - 18:00");
+        calendar.unselect();
+        return;
+      }
+
+      // ตรวจสอบการซ้อนทับ
+      for(let ev of calendar.getEvents()){
+        if((start < ev.end) && (end > ev.start)){
+          alert("ช่วงเวลานี้ถูกจองแล้ว");
+          calendar.unselect();
+          return;
         }
-    });
+      }
 
-    calendar.render();
+      // AJAX สร้างการจอง
+      fetch("{% url 'create_booking_for_room' room.id %}", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": "{{ csrf_token }}",
+        },
+        body: JSON.stringify({
+          start_time: start.toISOString(),
+          end_time: end.toISOString()
+        })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if(data.success){
+          alert("จองห้องเรียบร้อย!");
+          calendar.refetchEvents();
+        } else {
+          alert("ไม่สามารถจองได้: " + data.error);
+        }
+      });
+      calendar.unselect();
+    },
+    eventClick: function(info){
+      if(info.event.extendedProps.user_id == {{ request.user.id }}){
+        if(confirm("คุณต้องการยกเลิกการจองนี้หรือไม่?")){
+          fetch("{% url 'cancel_booking' %}" + info.event.id + "/", {
+            method: "POST",
+            headers: { "X-CSRFToken": "{{ csrf_token }}" },
+          })
+          .then(res => res.json())
+          .then(data => {
+            if(data.success){ 
+              alert("ยกเลิกเรียบร้อย"); 
+              calendar.refetchEvents(); 
+            } else { 
+              alert("เกิดข้อผิดพลาด: " + data.error); 
+            }
+          });
+        }
+      } else {
+        alert("คุณไม่สามารถแก้ไขการจองของผู้อื่นได้");
+      }
+    },
+    editable: false,
+    headerToolbar: { left: 'prev,next today', center: 'title', right: 'timeGridDay,timeGridWeek,dayGridMonth' }
+  });
+  calendar.render();
 });
 </script>
 {% endblock %}

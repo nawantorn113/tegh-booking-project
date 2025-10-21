@@ -1,7 +1,7 @@
+<!-- templates/partials/_booking_form_modal.html -->
 <div class="modal fade" id="bookingModal" tabindex="-1" aria-labelledby="bookingModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            {# --- Updated: Form action will be set by JS --- #}
             <form id="bookingForm" method="post" action="" enctype="multipart/form-data">
                 {% csrf_token %}
                 <div class="modal-header">
@@ -9,34 +9,16 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    {# Div for showing non-field form errors #}
                     <div id="formErrors" class="alert alert-danger d-none" role="alert"></div>
-
-                    {# Hidden input for room ID - value set by JS #}
                     <input type="hidden" name="room" id="id_room_hidden_modal" value="">
-
-                    {# --- Render form fields using Bootstrap structure --- #}
-                    {# Use crispy forms if installed, otherwise render manually #}
-                    {% if form.errors and '__all__' in form.errors %}
-                        <div class="alert alert-danger">
-                            {% for error in form.non_field_errors %} {{ error }} {% endfor %}
-                        </div>
-                    {% endif %}
 
                     <div class="row g-3">
                         {% for field in form %}
-                            {% if field.name != 'room' %} {# Don't render hidden room field again #}
+                            {% if field.name != 'room' %}
                             <div class="col-md-{% if field.name == 'start_time' or field.name == 'end_time' or field.name == 'chairman' or field.name == 'participant_count' %}6{% else %}12{% endif %} mb-3">
                                 <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}{% if field.field.required %} <span class="text-danger">*</span>{% endif %}</label>
                                 {{ field }}
-                                {% if field.help_text %}
-                                    <small class="form-text text-muted">{{ field.help_text|safe }}</small>
-                                {% endif %}
-                                {% if field.errors %}
-                                    <div class="invalid-feedback d-block"> {# Force display errors #}
-                                        {% for error in field.errors %} {{ error }} {% endfor %}
-                                    </div>
-                                {% endif %}
+                                {% if field.errors %}<div class="invalid-feedback d-block">{% for error in field.errors %} {{ error }} {% endfor %}</div>{% endif %}
                             </div>
                             {% endif %}
                         {% endfor %}
@@ -50,38 +32,3 @@
         </div>
     </div>
 </div>
-
-{# --- Script for Select2 within Modal (ensure jQuery & Select2 are loaded in base.html) --- #}
-<script>
-(function() { // Use IIFE to avoid global scope issues
-    const bookingModalElement = document.getElementById('bookingModal');
-    if (!bookingModalElement) return;
-
-    bookingModalElement.addEventListener('shown.bs.modal', function () {
-        // Check if jQuery and Select2 are available
-        if (typeof $ !== 'undefined' && $.fn.select2) {
-             const participantsSelect = $('#id_participants'); // Ensure this ID matches your form field
-             if (participantsSelect.length) {
-                 // Check if Select2 is already initialized on this element
-                 if (!participantsSelect.hasClass('select2-hidden-accessible')) {
-                     console.log("Initializing Select2 in modal.");
-                     participantsSelect.select2({
-                         dropdownParent: $('#bookingModal .modal-body'), // Attach dropdown to modal body
-                         width: '100%',
-                         placeholder: 'เลือกผู้เข้าร่วม (พิมพ์เพื่อค้นหา)...',
-                         allowClear: true,
-                         theme: 'bootstrap-5' // Ensure theme is set
-                     });
-                 } else {
-                     // console.log("Select2 already initialized, ensuring width.");
-                     participantsSelect.select2('width', '100%'); // Adjust width just in case
-                 }
-             } else {
-                 // console.warn("Participants select element (#id_participants) not found in modal.");
-             }
-        } else {
-            console.warn("jQuery or Select2 JS not loaded. Cannot initialize Select2 in modal.");
-        }
-    });
-})();
-</script>
