@@ -1,5 +1,4 @@
 # booking/views.py
-# [ฉบับแก้ไขสมบูรณ์ - ตรวจสอบ Dependencies + แก้ไข delete/bookings_api]
 
 import json
 from datetime import datetime, timedelta
@@ -9,7 +8,7 @@ from django.contrib.auth import authenticate, login, logout, update_session_auth
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.db.models import Count, Q
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_POST, require_http_methods
 from django.contrib.auth.models import User, Group
 # --- ต้องติดตั้ง: pip install django-autocomplete-light ---
 try:
@@ -59,9 +58,13 @@ def user_logged_out_callback(sender, request, user, **kwargs):
         ip_address = request.META.get('REMOTE_ADDR')
         LoginHistory.objects.create(user=user, action='LOGOUT', ip_address=ip_address)
 
-# --- Helper Functions ---
-def is_admin(user): return user.is_authenticated and user.groups.filter(name='Admin').exists()
-def is_approver_or_admin(user): return user.is_authenticated and user.groups.filter(name__in=['Approver', 'Admin']).exists()
+# --- Helper Functions (สำคัญสำหรับ Sidebar) ---
+def is_admin(user): 
+    return user.is_authenticated and user.groups.filter(name='Admin').exists()
+def is_approver_or_admin(user): 
+    return user.is_authenticated and user.groups.filter(name__in=['Approver', 'Admin']).exists()
+# --- ------------------------------------ ---
+
 def get_admin_emails(): return list(User.objects.filter(groups__name__in=['Admin', 'Approver'], is_active=True).exclude(email__exact='').values_list('email', flat=True))
 def send_booking_notification(booking, template, subject, recipients=None):
     if recipients is None: recipients = get_admin_emails()
@@ -92,7 +95,6 @@ else: # Placeholder if DAL not installed
 
 # --- Auth ---
 def login_view(request):
-    # ... (Keep as is) ...
     if request.user.is_authenticated: return redirect('dashboard')
     if request.method == 'POST':
         form = AuthenticationForm(request, data=request.POST); print("Login POST received.")
@@ -108,7 +110,6 @@ def login_view(request):
 
 @login_required
 def logout_view(request):
-    # ... (Keep as is) ...
     user_before = request.user; logout(request)
     user_logged_out.send(sender=user_before.__class__, request=request, user=user_before)
     messages.success(request, 'คุณได้ออกจากระบบเรียบร้อยแล้ว'); return redirect('login')
@@ -116,7 +117,6 @@ def logout_view(request):
 # --- Main Pages ---
 @login_required
 def dashboard_view(request):
-    # ... (Keep as is) ...
     now = timezone.now(); sort_by = request.GET.get('sort', 'floor')
     all_rooms = Room.objects.all()
     if sort_by == 'status': all_rooms = sorted(all_rooms, key=lambda r: not r.bookings.filter(start_time__lte=now, end_time__gt=now, status='APPROVED').exists())
@@ -136,19 +136,17 @@ def dashboard_view(request):
 
 @login_required
 def room_calendar_view(request, room_id):
-    # ... (Keep as is) ...
     room = get_object_or_404(Room, pk=room_id); form = BookingForm(initial={'room': room})
-    context = {'room': room, 'form': form, 'is_admin_user': is_admin(request.user)}
+    # context_processors.py จะส่ง is_admin_user มาให้อัตโนมัติ
+    context = {'room': room, 'form': form}
     return render(request, 'pages/room_calendar.html', context)
 
 @login_required
 def master_calendar_view(request):
-    # ... (Keep as is) ...
     return render(request, 'pages/master_calendar.html')
 
 @login_required
 def history_view(request):
-    # ... (Keep as is) ...
     bookings = Booking.objects.filter(booked_by=request.user).select_related('room').order_by('-start_time')
     date_f = request.GET.get('date'); room_f = request.GET.get('room'); status_f = request.GET.get('status')
     try:
@@ -161,17 +159,15 @@ def history_view(request):
 
 @login_required
 def booking_detail_view(request, booking_id):
-    # ... (Keep as is) ...
     booking = get_object_or_404(Booking.objects.select_related('room', 'booked_by', 'booked_by__profile').prefetch_related('participants'), pk=booking_id)
     is_participant = request.user in booking.participants.all()
     if (booking.booked_by != request.user and not is_admin(request.user) and not is_participant):
         messages.error(request, "No access"); return redirect('dashboard')
-    context = {'booking': booking, 'is_admin': is_admin(request.user)}
+    context = {'booking': booking} # is_admin จะถูกส่งจาก context_processor
     return render(request, 'pages/booking_detail.html', context)
 
 @login_required
 def edit_profile_view(request):
-    # ... (Keep as is) ...
     profile, created = Profile.objects.get_or_create(user=request.user)
     if request.method == 'POST':
         if 'change_password' in request.POST:
@@ -199,7 +195,6 @@ def edit_profile_view(request):
 @login_required
 @user_passes_test(is_admin)
 def admin_dashboard_view(request):
-    # ... (Keep as is) ...
     thirty_days_ago = timezone.now() - timedelta(days=30)
     recent = Booking.objects.filter(start_time__gte=thirty_days_ago, status='APPROVED')
     room_usage = Room.objects.annotate(count=Count('bookings', filter=Q(bookings__in=recent))).order_by('-count')
@@ -216,14 +211,12 @@ def admin_dashboard_view(request):
 # --- APIs ---
 @login_required
 def rooms_api(request):
-    # ... (Keep as is) ...
     rooms = Room.objects.all().order_by('building', 'name')
     resources = [{'id': r.id, 'title': r.name, 'building': r.building or ""} for r in rooms]
     return JsonResponse(resources, safe=False)
 
 @login_required
 def bookings_api(request):
-    # ... (Keep as is - using corrected filtering) ...
     start_str = request.GET.get('start'); end_str = request.GET.get('end'); room_id = request.GET.get('room_id')
     try: start_dt = timezone.make_aware(datetime.fromisoformat(start_str.replace('Z', '+00:00'))) if start_str else None; end_dt = timezone.make_aware(datetime.fromisoformat(end_str.replace('Z', '+00:00'))) if end_str else None
     except: return JsonResponse({'error': 'Invalid date'}, status=400)
@@ -231,14 +224,19 @@ def bookings_api(request):
     bookings = Booking.objects.filter(start_time__lt=end_dt, end_time__gt=start_dt).select_related('room', 'booked_by')
     if room_id: bookings = bookings.filter(room_id=room_id)
     events = [{'id': b.id, 'title': b.title, 'start': b.start_time.isoformat(), 'end': b.end_time.isoformat(), 'resourceId': b.room.id,
-               'extendedProps': { 'room_id': b.room.id, 'room_name': b.room.name, 'booked_by_username': b.booked_by.username, 'status': b.status }}
-              for b in bookings]
+                'extendedProps': { 
+                    'room_id': b.room.id, 
+                    'room_name': b.room.name, 
+                    'booked_by_username': b.booked_by.username, 
+                    'status': b.status,
+                    'user_id': b.booked_by.id  # <-- สำคัญมากสำหรับ eventClick
+                 }}
+                for b in bookings]
     return JsonResponse(events, safe=False)
 
 @login_required
 @require_POST
 def update_booking_time_api(request):
-    # ... (Keep as is - including approval check on update) ...
     try:
         data = json.loads(request.body)
         b_id = data.get('booking_id'); start_s = data.get('start_time'); end_s = data.get('end_time')
@@ -251,14 +249,35 @@ def update_booking_time_api(request):
         conflicts = Booking.objects.filter(room=booking.room, start_time__lt=new_e, end_time__gt=new_s).exclude(pk=booking.id).exclude(status__in=['REJECTED', 'CANCELLED'])
         if conflicts.exists(): return JsonResponse({'status': 'error', 'message': 'ช่วงเวลาทับซ้อน'}, status=400)
         booking.start_time, booking.end_time = new_s, new_e
-        # Check approval condition based on participant count (already stored in booking)
         if booking.participant_count >= 15 and booking.status != 'PENDING':
-             booking.status = 'PENDING'; messages.info(request, "การเปลี่ยนแปลงเวลาทำให้ต้องรอการอนุมัติใหม่") # Message will show on next page load
+             booking.status = 'PENDING'; messages.info(request, "การเปลี่ยนแปลงเวลาทำให้ต้องรอการอนุมัติใหม่")
         booking.save()
         return JsonResponse({'status': 'success', 'message': 'Booking time updated.'})
     except json.JSONDecodeError: return JsonResponse({'status': 'error', 'message': 'Invalid JSON.'}, status=400)
     except Booking.DoesNotExist: return JsonResponse({'status': 'error', 'message': 'Booking not found.'}, status=404)
     except Exception as e: print(f"Error update_booking_time_api: {e}"); return JsonResponse({'status': 'error', 'message': 'Server error.'}, status=500)
+
+@login_required
+@require_http_methods(["POST"]) # อนุญาตเฉพาะ POST
+def delete_booking_api(request, booking_id):
+    """
+    API View สำหรับลบ (ยกเลิก) การจอง (คืนค่า JSON)
+    """
+    try:
+        booking = get_object_or_404(Booking, pk=booking_id)
+        if booking.booked_by != request.user and not is_admin(request.user):
+            return JsonResponse({'success': False, 'error': 'ไม่มีสิทธิ์ยกเลิก'}, status=403)
+        if booking.status in ['CANCELLED', 'REJECTED']:
+            return JsonResponse({'success': False, 'error': 'การจองนี้ถูกยกเลิก/ปฏิเสธไปแล้ว'})
+        booking.status = 'CANCELLED'
+        booking.save()
+        return JsonResponse({'success': True, 'message': 'ยกเลิกการจองเรียบร้อย'})
+    except Booking.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'ไม่พบการจองนี้'}, status=404)
+    except Exception as e:
+        print(f"Error delete_booking_api: {e}")
+        return JsonResponse({'success': False, 'error': 'เกิดข้อผิดพลาดบนเซิร์ฟเวอร์'}, status=500)
+
 
 # --- Booking Actions (with participant count approval logic) ---
 @login_required
@@ -269,23 +288,19 @@ def create_booking_view(request, room_id):
     form = BookingForm(request.POST, request.FILES, instance=temp_booking)
     if form.is_valid():
         booking = form.save(commit=False); booking.booked_by = request.user
-        # --- *** APPROVAL LOGIC BASED ON PARTICIPANT COUNT *** ---
         participant_count = form.cleaned_data.get('participant_count', 1)
-        if participant_count >= 15: # <--- ใช้เงื่อนไขนี้
+        if participant_count >= 15: # <-- เงื่อนไขการอนุมัติ
             booking.status = 'PENDING'; messages.success(request, f"จอง '{booking.title}' ({room.name}) เรียบร้อย **รออนุมัติ** (ผู้เข้าร่วม {participant_count} คน)")
-            # Ensure email template exists at 'emails/new_booking_alert.txt' or similar path
             # send_booking_notification(booking, 'emails/new_booking_alert.txt', f"[จองใหม่-รออนุมัติ] {booking.title}")
         else:
             booking.status = 'APPROVED'; messages.success(request, f"จอง '{booking.title}' ({room.name}) **อนุมัติอัตโนมัติ** เรียบร้อยแล้ว")
-        # --- *** END APPROVAL LOGIC *** ---
-        booking.save(); form.save_m2m() # Save main obj before M2M
+        booking.save(); form.save_m2m() 
         return redirect('room_calendar', room_id=room.id)
     else: # Form invalid
-        # Simplified error reporting for now
         error_str = "; ".join([f"{f}: {', '.join(e)}" for f, e in form.errors.items()])
         messages.error(request, f"ไม่สามารถจองได้: {error_str}")
-        print("Booking form errors:", form.errors.as_json()) # Log detailed errors to console
-        return redirect('room_calendar', room_id=room.id) # Redirect back shows messages
+        print("Booking form errors:", form.errors.as_json())
+        return redirect('room_calendar', room_id=room.id) 
 
 
 @login_required
@@ -296,16 +311,12 @@ def edit_booking_view(request, booking_id):
         form = BookingForm(request.POST, request.FILES, instance=booking)
         if form.is_valid():
             updated = form.save(commit=False)
-            # --- *** APPROVAL LOGIC ON EDIT *** ---
             new_count = form.cleaned_data.get('participant_count', 1)
             changed = form.has_changed() and any(f in form.changed_data for f in ['start_time', 'end_time', 'participant_count'])
-            if new_count >= 15 and changed and updated.status not in ['PENDING', 'REJECTED', 'CANCELLED']: # Don't reset if already pending/rejected/cancelled
+            if new_count >= 15 and changed and updated.status not in ['PENDING', 'REJECTED', 'CANCELLED']: 
                  updated.status = 'PENDING'; messages.info(request, "การแก้ไขต้องรอการอนุมัติใหม่ (จำนวนผู้เข้าร่วม)")
-                 # Optional: Notify admins
-            # --- *** END APPROVAL LOGIC ON EDIT *** ---
             updated.save(); form.save_m2m()
             messages.success(request, "แก้ไขการจองเรียบร้อย"); return redirect('history')
-        # else: form errors will be displayed by re-rendering the template
     else: # GET
         form = BookingForm(instance=booking)
     return render(request, 'pages/edit_booking.html', {'form': form, 'booking': booking})
@@ -314,22 +325,18 @@ def edit_booking_view(request, booking_id):
 @login_required
 @require_POST
 def delete_booking_view(request, booking_id):
-    # --- Corrected logic: Set status to CANCELLED ---
+    # (View นี้สำหรับปุ่มลบในหน้า History - คืนค่า Redirect)
     booking = get_object_or_404(Booking, pk=booking_id)
     if booking.booked_by != request.user and not is_admin(request.user): messages.error(request, "ไม่มีสิทธิ์ยกเลิก"); return redirect('history')
     if booking.status in ['CANCELLED', 'REJECTED']: messages.warning(request, "ถูกยกเลิก/ปฏิเสธไปแล้ว"); return redirect('history')
     original = booking.status; booking.status = 'CANCELLED'; booking.save()
     messages.success(request, "ยกเลิกการจองเรียบร้อย")
-    # Optional: Notify if was APPROVED
-    # if original == 'APPROVED': send_booking_notification(...)
     return redirect('history')
-    # --- End corrected logic ---
 
 # --- Approvals ---
 @login_required
 @user_passes_test(is_approver_or_admin)
 def approvals_view(request):
-    # ... (Keep as is) ...
     pending = Booking.objects.filter(status='PENDING').select_related('room', 'booked_by', 'booked_by__profile').order_by('start_time')
     return render(request, 'pages/approvals.html', {'pending_bookings': pending})
 
@@ -337,11 +344,9 @@ def approvals_view(request):
 @user_passes_test(is_approver_or_admin)
 @require_POST
 def approve_booking_view(request, booking_id):
-    # ... (Keep as is) ...
-    booking = get_object_or_404(Booking, id=booking_id, status='PENDING') # Ensure pending
+    booking = get_object_or_404(Booking, id=booking_id, status='PENDING') 
     booking.status = 'APPROVED'; booking.save()
     messages.success(request, f"อนุมัติ '{booking.title}' เรียบร้อย")
-    # Ensure email template exists at 'emails/booking_status_update.txt'
     # if booking.booked_by.email: send_booking_notification(booking, 'emails/booking_status_update.txt', f"การจอง '{booking.title}' อนุมัติแล้ว", [booking.booked_by.email])
     return redirect('approvals')
 
@@ -349,11 +354,9 @@ def approve_booking_view(request, booking_id):
 @user_passes_test(is_approver_or_admin)
 @require_POST
 def reject_booking_view(request, booking_id):
-    # ... (Keep as is) ...
-    booking = get_object_or_404(Booking, id=booking_id, status='PENDING') # Ensure pending
+    booking = get_object_or_404(Booking, id=booking_id, status='PENDING')
     booking.status = 'REJECTED'; booking.save()
     messages.warning(request, f"ปฏิเสธ '{booking.title}'")
-    # Ensure email template exists
     # if booking.booked_by.email: send_booking_notification(booking, 'emails/booking_status_update.txt', f"การจอง '{booking.title}' ถูกปฏิเสธ", [booking.booked_by.email])
     return redirect('approvals')
 
@@ -361,14 +364,12 @@ def reject_booking_view(request, booking_id):
 @login_required
 @user_passes_test(is_admin)
 def user_management_view(request):
-    # ... (Keep as is) ...
     users = User.objects.all().order_by('username').prefetch_related('groups', 'profile')
     return render(request, 'pages/user_management.html', {'users': users})
 
 @login_required
 @user_passes_test(is_admin)
 def edit_user_roles_view(request, user_id):
-    # ... (Keep as is) ...
     user_edit = get_object_or_404(User, pk=user_id); all_groups = Group.objects.all()
     if request.method == 'POST':
         group_ids = request.POST.getlist('groups'); valid_groups = Group.objects.filter(pk__in=group_ids)
@@ -381,16 +382,14 @@ def edit_user_roles_view(request, user_id):
 @login_required
 @user_passes_test(is_admin)
 def room_management_view(request):
-    # ... (Keep as is) ...
     rooms = Room.objects.all().order_by('building', 'name')
     return render(request, 'pages/rooms.html', {'rooms': rooms})
 
 @login_required
 @user_passes_test(is_admin)
 def add_room_view(request):
-    # ... (Keep as is) ...
     if request.method == 'POST':
-        form = RoomForm(request.POST, request.FILES) # Add request.FILES for image uploads
+        form = RoomForm(request.POST, request.FILES) 
         if form.is_valid(): form.save(); messages.success(request, "เพิ่มห้องใหม่เรียบร้อย"); return redirect('rooms')
     else: form = RoomForm()
     return render(request, 'pages/room_form.html', {'form': form, 'title': 'เพิ่มห้องประชุมใหม่'})
@@ -398,10 +397,9 @@ def add_room_view(request):
 @login_required
 @user_passes_test(is_admin)
 def edit_room_view(request, room_id):
-    # ... (Keep as is) ...
     room = get_object_or_404(Room, pk=room_id)
     if request.method == 'POST':
-        form = RoomForm(request.POST, request.FILES, instance=room) # Add request.FILES
+        form = RoomForm(request.POST, request.FILES, instance=room)
         if form.is_valid(): form.save(); messages.success(request, "แก้ไขข้อมูลห้องเรียบร้อย"); return redirect('rooms')
     else: form = RoomForm(instance=room)
     return render(request, 'pages/room_form.html', {'form': form, 'title': f'แก้ไข: {room.name}'})
@@ -410,7 +408,6 @@ def edit_room_view(request, room_id):
 @user_passes_test(is_admin)
 @require_POST
 def delete_room_view(request, room_id):
-    # ... (Keep as is) ...
     room = get_object_or_404(Room, pk=room_id); name = room.name
     try: room.delete(); messages.success(request, f"ลบห้อง '{name}' เรียบร้อย")
     except Exception as e: messages.error(request, f"ไม่สามารถลบห้อง '{name}': {e}")
@@ -420,7 +417,6 @@ def delete_room_view(request, room_id):
 @login_required
 @user_passes_test(is_admin)
 def reports_view(request):
-    # ... (Keep as is) ...
     period = request.GET.get('period', 'monthly'); dept = request.GET.get('department', ''); today = timezone.now().date()
     try:
         if period == 'daily': start, title = today, f'รายวัน ({today:%d %b %Y})'
@@ -437,7 +433,6 @@ def reports_view(request):
 @login_required
 @user_passes_test(is_admin)
 def export_reports_excel(request):
-    # ... (Keep as is) ...
     if not OPENPYXL_AVAILABLE: messages.error(request, "ไม่ได้ติดตั้ง openpyxl"); return redirect('reports')
     period = request.GET.get('period', 'monthly'); dept = request.GET.get('department', '')
     today = timezone.now().date(); start = today - timedelta(days={'daily':0, 'weekly':6}.get(period, 29))
@@ -454,7 +449,6 @@ def export_reports_excel(request):
 @login_required
 @user_passes_test(is_admin)
 def export_reports_pdf(request):
-    # ... (Keep as is) ...
     if not WEASYPRINT_AVAILABLE: messages.error(request, "ไม่ได้ติดตั้ง WeasyPrint"); return redirect('reports')
     period = request.GET.get('period', 'monthly'); dept = request.GET.get('department', '')
     today = timezone.now().date()
@@ -465,11 +459,9 @@ def export_reports_pdf(request):
     if dept: recent = recent.filter(booked_by__profile__department=dept); title += f" (แผนก: {dept})"
     stats = Room.objects.annotate(count=Count('bookings', filter=Q(bookings__in=recent))).filter(count__gt=0).order_by('-count')
     context = { 'room_usage_stats': stats, 'report_title': title, 'today_date': today, 'base_url': request.build_absolute_uri('/') }
-    # --- Ensure template exists at 'reports/report_pdf.html' ---
     template_path = 'reports/report_pdf.html'
     try: template = get_template(template_path); html_string = template.render(context)
     except Exception as e: messages.error(request, f"Error loading PDF template '{template_path}': {e}"); return redirect('reports')
-    # --- --------------------------------------------------- ---
     try:
         html = HTML(string=html_string, base_url=request.build_absolute_uri('/')); pdf = html.write_pdf()
         response = HttpResponse(pdf, content_type='application/pdf')

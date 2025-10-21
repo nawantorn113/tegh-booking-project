@@ -50,6 +50,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth', # Adds user object to templates
                 'django.contrib.messages.context_processors.messages', # Adds messages framework to templates
                 'booking.context_processors.menu_context', # Your custom menu processor
+                'booking.context_processors.user_roles_processor',
             ],
         },
     },

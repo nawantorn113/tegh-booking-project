@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+
 {% block extra_head %}
 <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
@@ -9,13 +10,24 @@
   .fc-event.pending { background-color: #ffc107; }
   .room-card { border: 1px solid #ddd; padding:10px; margin-bottom:10px; border-radius:8px; display:flex; gap:10px; }
   .room-card img { width:120px; height:80px; object-fit:cover; border-radius:5px; }
+
+  /* Style สำหรับ Modal */
+  .modal {
+    display: none; position: fixed; z-index: 1000; left: 0; top: 0;
+    width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4);
+  }
+  .modal-content {
+    background-color: #fefefe; margin: 10% auto; padding: 20px;
+    border: 1px solid #888; width: 60%; border-radius: 8px;
+  }
+  .close { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
+
 </style>
 {% endblock %}
 
-{% block content %}
-<h3>ตารางห้อง: {{ room.name }}</h3>
 
-<!-- รูปตัวอย่างห้อง -->
+{% block content %}
+
 <div class="room-card">
   {% if room.image %}
     <img src="{{ room.image.url }}" alt="Room Image">
@@ -25,26 +37,91 @@
   <div>
     <p><strong>{{ room.name }}</strong></p>
     <p>รองรับ: {{ room.capacity }} คน</p>
-    <p>อุปกรณ์: {{ room.equipment }}</p>
+    <p>อุปกรณ์: {{ room.equipment_in_room|linebreaksbr }}</p>
   </div>
 </div>
 
 <div id='calendar'></div>
 
+
+<div id="bookingModal" class="modal">
+  <div class="modal-content">
+    <span class="close" id="closeModal">&times;</span>
+    <h4>กรอกข้อมูลการจอง</h4>
+    <p>ห้อง: <strong>{{ room.name }}</strong></p>
+    
+    <form action="{% url 'create_booking_for_room' room.id %}" method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        <div class="form-group" style="display:none;">
+            {{ form.room.label_tag }}
+            {{ form.room }}
+        </div>
+        <div class="form-group">
+            {{ form.title.label_tag }}
+            {{ form.title }}
+        </div>
+        <div class="form-group">
+            {{ form.start_time.label_tag }}
+            {{ form.start_time }}
+        </div>
+        <div class="form-group">
+            {{ form.end_time.label_tag }}
+            {{ form.end_time }}
+        </div>
+        <div class="form-group">
+            {{ form.participant_count.label_tag }}
+            {{ form.participant_count }}
+        </div>
+        <div class="form-group">
+            {{ form.participants.label_tag }}
+            {{ form.participants }}
+        </div>
+        
+        <br>
+        <button type="submit" class="btn btn-primary">ยืนยันการจอง</button>
+    </form>
+  </div>
+</div>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   let calendarEl = document.getElementById('calendar');
+  
+  // --- โค้ดสำหรับ Modal ---
+  let modal = document.getElementById("bookingModal");
+  let closeModalBtn = document.getElementById("closeModal");
+  
+  closeModalBtn.onclick = function() {
+    modal.style.display = "none";
+  }
+  window.onclick = function(event) {
+    if (event.target == modal) {
+      modal.style.display = "none";
+    }
+  }
+  // --- สิ้นสุดโค้ดสำหรับ Modal ---
+
+
   let calendar = new FullCalendar.Calendar(calendarEl, {
     initialView: 'timeGridWeek',
     selectable: true,
     selectMirror: true,
     timeZone: 'Asia/Bangkok',
+
+    // --- 🟢 START: แก้ไขตารางเวลา 🟢 ---
+    slotDuration: '01:00:00',  // บังคับตารางเป็นช่องละ 1 ชั่วโมง
+    slotMinTime: '08:00:00',   // เริ่มตารางเวลา 8 โมงเช้า
+    slotMaxTime: '18:00:00',   // สิ้นสุดตารางเวลา 6 โมงเย็น (แสดงช่อง 17:00-18:00 เป็นช่องสุดท้าย)
+    // --- 🟢 END: แก้ไขตารางเวลา 🟢 ---
+
     events: "{% url 'api_bookings' %}?room_id={{ room.id }}",
     eventClassNames: function(info) {
       if(info.event.extendedProps.status === 'APPROVED') return ['booked'];
       else if(info.event.extendedProps.status === 'PENDING') return ['pending'];
       else return ['vacant'];
     },
+    
+    // --- 'select' (สร้างการจอง) ---
     select: function(info) {
       let now = new Date();
       let start = info.start;
@@ -56,65 +133,83 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
       }
 
-      if(start.getHours() < 8 || end.getHours() > 18 || (end.getHours() === 18 && end.getMinutes() > 0)){
+      // --- ❌ ลบการตรวจสอบเวลา 8:00-18:00 ทิ้งไป (เพราะปฏิทินบังคับแล้ว) ❌ ---
+      /*
+      if(start.getHours() < 8 || end.getHours() > 18 || ...){
         alert("สามารถจองได้เฉพาะเวลา 08:00 - 18:00");
         calendar.unselect();
         return;
       }
+      */
+      // --- --------------------------------------------------------- ---
 
-      // ตรวจสอบการซ้อนทับ
       for(let ev of calendar.getEvents()){
-        if((start < ev.end) && (end > ev.start)){
-          alert("ช่วงเวลานี้ถูกจองแล้ว");
+        if( (start < ev.end) && (end > ev.start) && 
+            (ev.extendedProps.status === 'APPROVED' || ev.extendedProps.status === 'PENDING') 
+        ){
+          alert("ช่วงเวลานี้ถูกจองหรือรออนุมัติแล้ว");
           calendar.unselect();
           return;
         }
       }
 
-      // AJAX สร้างการจอง
-      fetch("{% url 'create_booking_for_room' room.id %}", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-CSRFToken": "{{ csrf_token }}",
-        },
-        body: JSON.stringify({
-          start_time: start.toISOString(),
-          end_time: end.toISOString()
-        })
-      })
-      .then(res => res.json())
-      .then(data => {
-        if(data.success){
-          alert("จองห้องเรียบร้อย!");
-          calendar.refetchEvents();
-        } else {
-          alert("ไม่สามารถจองได้: " + data.error);
-        }
-      });
+      // 1. ตั้งค่า field ใน Form Modal (ใช้ .slice(0, 16) เหมือนเดิม)
+      document.querySelector("#bookingModal [name='room']").value = {{ room.id }};
+      document.querySelector("#bookingModal [name='start_time']").value = info.startStr.slice(0, 16);
+      document.querySelector("#bookingModal [name='end_time']").value = info.endStr.slice(0, 16);
+      document.querySelector("#bookingModal [name='title']").value = ""; 
+      document.querySelector("#bookingModal [name='participant_count']").value = 1; 
+
+      // 2. แสดง Modal
+      modal.style.display = "block";
       calendar.unselect();
     },
+    // --- สิ้นสุด 'select' ---
+
+
+    // --- 'eventClick' (ยกเลิก / ดูรายละเอียด) ---
     eventClick: function(info){
+      
       if(info.event.extendedProps.user_id == {{ request.user.id }}){
+        
+        // ถ้าใช่: ถามเพื่อ "ยกเลิก"
         if(confirm("คุณต้องการยกเลิกการจองนี้หรือไม่?")){
-          fetch("{% url 'cancel_booking' %}" + info.event.id + "/", {
+          let urlTemplate = "{% url 'delete_booking_api' 0 %}";
+          let finalUrl = urlTemplate.replace('0', info.event.id);
+
+          fetch(finalUrl, {
             method: "POST",
-            headers: { "X-CSRFToken": "{{ csrf_token }}" },
+            headers: { 
+              "X-CSRFToken": "{{ csrf_token }}",
+              "Accept": "application/json"
+            },
           })
           .then(res => res.json())
           .then(data => {
             if(data.success){ 
               alert("ยกเลิกเรียบร้อย"); 
-              calendar.refetchEvents(); 
+              info.event.remove(); 
             } else { 
               alert("เกิดข้อผิดพลาด: " + data.error); 
             }
+          })
+          .catch(err => {
+            console.error(err);
+            alert("เกิดข้อผิดพลาดร้ายแรง ไม่สามารถติดต่อเซิร์ฟเวอร์ได้");
           });
         }
       } else {
-        alert("คุณไม่สามารถแก้ไขการจองของผู้อื่นได้");
+        
+        // ถ้าไม่ใช่: ถามเพื่อ "ดูรายละเอียด"
+        if(confirm("นี่คือการจองของผู้อื่น คุณต้องการดูรายละเอียดหรือไม่?")){
+            let detailUrlTemplate = "{% url 'booking_detail' 0 %}";
+            let detailFinalUrl = detailUrlTemplate.replace('0', info.event.id);
+            window.open(detailFinalUrl, '_blank'); // เปิดในแท็บใหม่
+        }
       }
     },
+    // --- สิ้นสุด 'eventClick' ---
+
     editable: false,
     headerToolbar: { left: 'prev,next today', center: 'title', right: 'timeGridDay,timeGridWeek,dayGridMonth' }
   });
