@@ -1,4 +1,4 @@
-{% extends 'base.html' %} {# หรือ base.html ถ้าใช้ layout หลัก #}
+{% extends 'base.html' %}
 {% load static %}
 
 {% block title %}เข้าสู่ระบบ{% endblock %}
@@ -20,10 +20,8 @@
                         {% endfor %}
                     {% endif %}
 
-                    <form method="post">
-                        {# --- เพิ่มบรรทัดนี้! --- #}
+                    <form method="post" action="{% url 'login' %}">
                         {% csrf_token %}
-                        {# --- ---------------- --- #}
 
                         <div class="mb-3">
                             <label for="username" class="form-label">ชื่อผู้ใช้</label>
@@ -33,19 +31,16 @@
                             <label for="password" class="form-label">รหัสผ่าน</label>
                             <input type="password" class="form-control" id="password" name="password" required>
                         </div>
-                        {# Optional: Remember me checkbox #}
-                        {# <div class="mb-3 form-check"> #}
-                        {#     <input type="checkbox" class="form-check-input" id="rememberMe"> #}
-                        {#     <label class="form-check-label" for="rememberMe">จำฉันไว้ในระบบ</label> #}
-                        {# </div> #}
+
                         <div class="d-grid">
                             <button type="submit" class="btn btn-primary">เข้าสู่ระบบ</button>
                         </div>
                     </form>
-                    {# Optional: Forgot password link #}
-                    {# <div class="text-center mt-3"> #}
-                    {#     <a href="#" class="text-decoration-none">ลืมรหัสผ่าน?</a> #}
-                    {# </div> #}
+
+                    {# Optional: ลิงก์ลืมรหัสผ่าน #}
+                    {# <div class="text-center mt-3">
+                        <a href="#" class="text-decoration-none">ลืมรหัสผ่าน?</a>
+                    </div> #}
                 </div>
             </div>
         </div>
@@ -55,9 +50,12 @@
 
 {% block extra_head %}
 <style>
-    /* Optional: Center the login card vertically */
-    /* html, body { height: 100%; } */
-    /* body { display: flex; align-items: center; padding-top: 40px; padding-bottom: 40px; } */
-    /* Adjust styling as needed */
+    /* ปรับการจัดวางให้สวยและเป็น modern */
+    body {
+        background-color: #f8f9fa;
+    }
+    .modern-card {
+        border-radius: 1rem;
+    }
 </style>
 {% endblock %}
