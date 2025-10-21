@@ -6,49 +6,46 @@
 {% block page_title %}Admin Dashboard{% endblock %}
 
 {% block extra_head %}
-{# extra_head ควรว่างเปล่า หรือมีเฉพาะ <link> / <script> ที่จำเป็นใน <head> #}
+{# ✅ ย้าย Style มาไว้ที่นี่ ✅ #}
+<style>
+    .kpi-card {
+        border: 1px solid #dee2e6;
+        border-left-width: 5px;
+        transition: all 0.2s ease-in-out;
+        border-radius: 0.5rem; /* Add rounding */
+        background-color: #fff; /* Ensure white background */
+        overflow: hidden; /* Prevent icon overflow */
+    }
+    .kpi-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+    }
+    .kpi-card-warning { border-left-color: var(--bs-warning); }
+    .kpi-card-primary { border-left-color: var(--bs-primary); }
+    .kpi-card-success { border-left-color: var(--bs-success); }
+    .kpi-card-info    { border-left-color: var(--bs-info); }
+
+    .kpi-icon {
+        font-size: 2.5rem;
+        opacity: 0.15; /* Slightly more visible */
+        position: absolute; /* Position icon */
+        right: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+    }
+    .kpi-card-warning .kpi-icon i { color: var(--bs-warning); }
+    .kpi-card-primary .kpi-icon i { color: var(--bs-primary); }
+    .kpi-card-success .kpi-icon i { color: var(--bs-success); }
+    .kpi-card-info    .kpi-icon i { color: var(--bs-info); }
+
+    .kpi-card .card-body { position: relative; } /* Needed for icon positioning */
+</style>
 {% endblock %}
 
 {% block content %}
 <div class="container-fluid py-4"> {# เพิ่ม container-fluid และ padding #}
 
-    {# ย้าย Style มาไว้ที่นี่แทน #}
-    <style>
-        .kpi-card {
-            border: 1px solid #dee2e6;
-            border-left-width: 5px;
-            transition: all 0.2s ease-in-out;
-            border-radius: 0.5rem; /* Add rounding */
-            background-color: #fff; /* Ensure white background */
-            overflow: hidden; /* Prevent icon overflow */
-        }
-        .kpi-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
-        }
-        .kpi-card-warning { border-left-color: var(--bs-warning); }
-        .kpi-card-primary { border-left-color: var(--bs-primary); }
-        .kpi-card-success { border-left-color: var(--bs-success); }
-        .kpi-card-info    { border-left-color: var(--bs-info); }
-
-        .kpi-icon {
-            font-size: 2.5rem;
-            opacity: 0.15; /* Slightly more visible */
-            position: absolute; /* Position icon */
-            right: 1rem;
-            top: 50%;
-            transform: translateY(-50%);
-        }
-        .kpi-card-warning .kpi-icon i { color: var(--bs-warning); }
-        .kpi-card-primary .kpi-icon i { color: var(--bs-primary); }
-        .kpi-card-success .kpi-icon i { color: var(--bs-success); }
-        .kpi-card-info    .kpi-icon i { color: var(--bs-info); }
-
-        .kpi-card .card-body { position: relative; } /* Needed for icon positioning */
-    </style>
-
-    {# ไม่ต้องมี h1 ซ้ำ เพราะใช้ page_title แล้ว #}
-    {# <h1 class="mb-4">Admin Dashboard</h1> #}
+    {# ❌ ลบ Style ออกจากตรงนี้ ❌ #}
 
     <div class="row g-4 mb-4">
         <div class="col-md-6 col-lg-3">

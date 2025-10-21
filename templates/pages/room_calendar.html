@@ -3,7 +3,7 @@
 
 {% block extra_head %}
 <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+{# ❌ ลบ <script src="...fullcalendar..."> ออกจากตรงนี้ ❌ #}
 <style>
   .fc-event.vacant { background-color: #28a745; }
   .fc-event.booked { background-color: #007bff; }
@@ -36,7 +36,6 @@
   <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content">
       <form action="{% url 'create_booking_for_room' room.id %}" method="POST" enctype="multipart/form-data" id="bookingForm">
-        
         {% csrf_token %}
         <div class="modal-header">
           <h5 class="modal-title" id="bookingModalLabel">กรอกข้อมูลการจอง</h5>
@@ -94,6 +93,12 @@
       </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_scripts %}
+{# ✅ ย้าย <script src="...fullcalendar..."> มาไว้ที่นี่ ✅ #}
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   let calendarEl = document.getElementById('calendar');
@@ -114,7 +119,7 @@ document.addEventListener('DOMContentLoaded', function() {
     timeZone: 'Asia/Bangkok',
     slotDuration: '01:00:00',
     slotMinTime: '08:00:00',
-    slotMaxTime: '18:00:00',
+    slotMaxTime: '19:00:00',
     allDaySlot: false,
     events: "{% url 'api_bookings' %}?room_id={{ room.id }}",
     eventClassNames: function(info) {
@@ -183,10 +188,7 @@ document.addEventListener('DOMContentLoaded', function() {
           fetch(finalUrl, {
             method: "POST",
             headers: {
-              // ====================================
-              // == CSRF Token Header for Fetch ==
-              "X-CSRFToken": "{{ csrf_token }}",
-              // ====================================
+              "X-CSRFToken": "{{ csrf_token }}", // CSRF Token for Fetch
               "Accept": "application/json"
             },
           })
