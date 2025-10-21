@@ -1,216 +1,178 @@
 {% extends 'base.html' %}
-{% block title %}Dashboard - {{ block.super }}{% endblock %}
+{% load static %}
 
-{% block content %}
-<div class="d-flex flex-column flex-sm-row align-items-start justify-content-between gap-4 mb-4">
-    <div>
-        <h1 class="mb-0">ระบบจองห้องประชุม</h1>
-        <p class="text-muted"><h5>TEGH</h5></p>
-    </div>
-    <div>
-        <!-- <a href="{% url 'master_calendar' %}" class="btn btn-primary">
-            <i class="bi bi-calendar3 me-1"></i> ตารางเวลารวม
-        </a> -->
-    </div>
-</div>
+{% block title %}Dashboard - TEGH Booking{% endblock %}
 
-<div class="row g-4 mb-4">
-    <div class="col-md-4">
-        <div class="card summary-card shadow-sm border-0">
-            <div class="card-body d-flex justify-content-between align-items-center">
-                <div>
-                    <h6 class="card-subtitle mb-2 text-muted">ห้องประชุมทั้งหมด</h6>
-                    <span class="h2 font-weight-bold mb-0 text-dark">{{ summary_cards.total_rooms }}</span>
-                </div>
-                <div class="summary-icon-wrapper bg-success-subtle">
-                    <i class="bi bi-door-open-fill h4 text-success m-0"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card summary-card shadow-sm border-0">
-            <div class="card-body d-flex justify-content-between align-items-center">
-                <div>
-                    <h6 class="card-subtitle mb-2 text-muted">การจองวันนี้</h6>
-                    <span class="h2 font-weight-bold mb-0 text-dark">{{ summary_cards.today_bookings }}</span>
-                </div>
-                <div class="summary-icon-wrapper bg-primary-subtle">
-                    <i class="bi bi-check-circle-fill h4 text-primary m-0"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card summary-card shadow-sm border-0">
-            <div class="card-body d-flex justify-content-between align-items-center">
-                <div>
-                    <h6 class="card-subtitle mb-2 text-muted">รออนุมัติ</h6>
-                    <span class="h2 font-weight-bold mb-0 text-dark">{{ summary_cards.pending_approvals }}</span>
-                </div>
-                <div class="summary-icon-wrapper bg-warning-subtle">
-                    <i class="bi bi-clock-fill h4 text-warning m-0"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<hr class="my-4">
-
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h3 class="mb-0">สถานะห้องประชุม</h3>
-    <form method="get" class="d-flex align-items-center gap-2">
-        <label for="sort-select" class="form-label mb-0 text-muted small">เรียงตาม:</label>
-        <select name="sort" id="sort-select" class="form-select form-select-sm" style="width: 150px;" onchange="this.form.submit()">
-            <option value="floor" {% if current_sort == 'floor' %}selected{% endif %}>ชั้น</option>
-            <option value="name" {% if current_sort == 'name' %}selected{% endif %}>ชื่อ</option>
-            <option value="capacity" {% if current_sort == 'capacity' %}selected{% endif %}>ความจุ</option>
-            <option value="status" {% if current_sort == 'status' %}selected{% endif %}>สถานะ</option>
-        </select>
-    </form>
-</div>
-
-<div class="d-flex flex-column gap-4">
-    {% for building_name, rooms_in_building in buildings.items %}
-    <div class="card shadow-sm building-block">
-        <div class="card-header bg-light">
-            <h5 class="mb-0"><i class="bi bi-building me-2"></i>{{ building_name|default:"(ไม่ได้ระบุอาคาร)" }}</h5>
-        </div>
-        <div class="card-body">
-            <div class="room-grid">
-                {% for room in rooms_in_building %}
-                <div class="card h-100 room-card">
-                    <div class="card-body d-flex flex-column">
-                        <div class="room-card-indicator {% if room.status == 'ว่าง' %}bg-success{% else %}bg-danger{% endif %}"></div>
-                        <div class="d-flex justify-content-between align-items-start">
-                            <h6 class="card-title room-name">{{ room.name }}</h6>
-                            {% if room.status == 'ว่าง' %}
-                                <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle">ว่าง</span>
-                            {% else %}
-                                <span class="badge bg-danger-subtle text-danger-emphasis border border-danger-subtle">ไม่ว่าง</span>
-                            {% endif %}
-                        </div>
-                        <p class="card-text text-muted small mb-2 room-meta">
-                            <i class="bi bi-people-fill"></i> {{ room.capacity }} คน | <i class="bi bi-layers-fill"></i> {{ room.floor }}
-                        </p>
-
-                        <div class="alert alert-secondary small p-2 mt-auto booking-info-box">
-                            {% if room.current_booking_info %}
-                                <strong class="text-danger">กำลังใช้งาน:</strong>
-                                <p class="mb-0 fw-bold truncate-text" title="{{ room.current_booking_info.title }}">{{ room.current_booking_info.title }}</p>
-                                <small>{{ room.current_booking_info.start_time|date:"H:i" }} - {{ room.current_booking_info.end_time|date:"H:i" }}</small>
-                            {% elif room.next_booking_info %}
-                                <strong class="text-primary">คิวถัดไป:</strong>
-                                <p class="mb-0 fw-bold truncate-text" title="{{ room.next_booking_info.title }}">{{ room.next_booking_info.title }}</p>
-                                <small>{{ room.next_booking_info.start_time|date:"H:i" }} - {{ room.next_booking_info.end_time|date:"H:i" }}</small>
-                            {% else %}
-                                <strong class="text-muted">ไม่มีการจองถัดไป</strong>
-                            {% endif %}
-                        </div>
-
-                        {% if room.equipment_list %}
-                        <div class="equipment-section">
-                            <small class="text-muted">อุปกรณ์:</small>
-                            <div class="d-flex flex-wrap gap-1 mt-1">
-                                {% for eq in room.equipment_list|slice:":2" %}
-                                <span class="badge bg-light text-dark border">{{ eq }}</span>
-                                {% endfor %}
-                                {% if room.equipment_list|length > 2 %}
-                                <span class="badge bg-light text-dark border">+{{ room.equipment_list|length|add:"-2" }}</span>
-                                {% endif %}
-                            </div>
-                        </div>
-                        {% endif %}
-                    </div>
-                    <div class="card-footer bg-white border-0 p-2">
-                        <a href="{% url 'room_calendar' room.id %}" class="btn btn-sm btn-outline-primary w-100">ดูตาราง / จอง</a>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-    </div>
-    {% empty %}
-    <div class="alert alert-info">
-        ไม่พบข้อมูลห้องประชุม กรุณาตรวจสอบให้แน่ใจว่าคุณได้เพิ่มข้อมูล "อาคาร" และ "ชั้น" ให้กับห้องประชุมในหน้า Admin แล้ว
-    </div>
-    {% endfor %}
-</div>
-{% endblock %}
-
+{% block page_title %}Dashboard สถานะห้องประชุม{% endblock %}
 
 {% block extra_head %}
+{# Custom CSS for hover effect and status dot #}
 <style>
-    /* Modern & Clean Theme */
-    body, .main-content {
-        background-color: #f8f9fa; /* Light gray background */
+    body {
+        background-color: #f8f9fa; /* Standard Bootstrap light gray */
     }
-    .navbar.bg-white {
-        background-color: #ffffff !important;
-    }
-
-    /* Summary Cards */
-    .summary-card {
-        transition: all 0.2s ease-in-out;
-        border-radius: 0.5rem;
-    }
-    .summary-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
-    }
-    .summary-icon-wrapper {
-        width: 48px; height: 48px; border-radius: 50%;
-        display: flex; align-items: center; justify-content: center;
-    }
-
-    /* Building Block */
-    .building-block {
-        border-radius: 0.75rem;
-    }
-    .room-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-        gap: 1rem;
-    }
-
-    /* Room Card Styling */
     .room-card {
-        border-radius: 0.5rem;
-        transition: all 0.2s ease-in-out;
-        box-shadow: 0 1px 3px rgba(0,0,0,.05);
-        position: relative;
-        overflow: hidden; /* Important for the indicator */
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        border-radius: 0.5rem; /* Standard Bootstrap rounding */
+        border-width: 2px !important; /* Make status border thicker */
+        background-color: #fff; /* Ensure card background is white */
     }
     .room-card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 4px 12px rgba(0,0,0,.1);
+        transform: translateY(-4px);
+        box-shadow: 0 0.5rem 1rem rgba(0,0,0,.15) !important; /* Standard hover shadow */
     }
-    .room-card-indicator {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 5px;
-        height: 100%;
+    .status-dot {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        margin-right: 0.5rem;
+        vertical-align: middle;
     }
-    .room-card .card-body {
-        padding-left: 1.5rem; /* Make space for indicator */
-    }
-    .room-name { font-weight: 600; color: #343a40; }
-    .room-meta { margin-bottom: 1rem !important; }
+    .status-available { background-color: var(--bs-success); }
+    .status-booked { background-color: var(--bs-danger); }
 
-    /* Booking Info Box */
-    .booking-info-box {
-        background-color: #f8f9fa !important;
-        border-radius: .375rem;
+    /* Summary card hover effect */
+    .card-summary-hover {
+        transition: box-shadow 0.2s ease-in-out, border-color 0.2s ease-in-out;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
     }
-    .truncate-text { 
-        white-space: nowrap; 
-        overflow: hidden; 
-        text-overflow: ellipsis; 
+    .card-summary-hover:hover {
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
     }
-    .equipment-section {
-        margin-top: 1rem;
+    .card-summary-hover.border-primary:hover { border-color: var(--bs-primary) !important; }
+    .card-summary-hover.border-success:hover { border-color: var(--bs-success) !important; }
+    .card-summary-hover.border-warning:hover { border-color: var(--bs-warning) !important; }
+    .card-summary-hover.border-info:hover { border-color: var(--bs-info) !important; }
+
+    /* Style for building header to have a border */
+    .building-header-frame {
+        border-radius: 0.5rem; /* Match card rounding */
     }
+
 </style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    {# Summary Cards Section - Keep the liked border style #}
+    {% if summary_cards %}
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4 mb-5">
+        {# (โค้ด Summary Cards ... เหมือนเดิม) #}
+        <div class="col"> <div class="card h-100 shadow-sm border border-primary border-2 rounded-4 card-summary-hover"> <div class="card-body p-3 d-flex align-items-center justify-content-between"> <div> <div class="text-primary fw-bold mb-1 small text-uppercase">ห้องประชุมทั้งหมด</div> <div class="h4 mb-0 text-gray-800 fw-bold">{{ summary_cards.total_rooms }} <span class="fs-6 fw-normal text-muted">ห้อง</span></div> </div> <i class="bi bi-building fs-2 text-primary opacity-75"></i> </div> </div> </div>
+        <div class="col"> <div class="card h-100 shadow-sm border border-success border-2 rounded-4 card-summary-hover"> <div class="card-body p-3 d-flex align-items-center justify-content-between"> <div> <div class="text-success fw-bold mb-1 small text-uppercase">การจองวันนี้ (อนุมัติแล้ว)</div> <div class="h4 mb-0 text-gray-800 fw-bold">{{ summary_cards.today_bookings }} <span class="fs-6 fw-normal text-muted">รายการ</span></div> </div> <i class="bi bi-calendar-check fs-2 text-success opacity-75"></i> </div> </div> </div>
+        <div class="col"> <div class="card h-100 shadow-sm border border-warning border-2 rounded-4 card-summary-hover"> <div class="card-body p-3 d-flex align-items-center justify-content-between"> <div> <div class="text-warning fw-bold mb-1 small text-uppercase">รออนุมัติ</div> <div class="h4 mb-0 text-gray-800 fw-bold">{{ summary_cards.pending_approvals }} <span class="fs-6 fw-normal text-muted">รายการ</span></div> </div> <i class="bi bi-hourglass-split fs-2 text-warning opacity-75"></i> </div> </div> </div>
+        <div class="col"> <div class="card h-100 shadow-sm border border-info border-2 rounded-4 card-summary-hover"> <div class="card-body p-3 d-flex align-items-center justify-content-between"> <div> <div class="text-info fw-bold mb-1 small text-uppercase">การจองของฉัน (วันนี้)</div> <div class="h4 mb-0 text-gray-800 fw-bold">{{ summary_cards.my_bookings_today|default:0 }} <span class="fs-6 fw-normal text-muted">รายการ</span></div> </div> <i class="bi bi-person-check fs-2 text-info opacity-75"></i> </div> </div> </div>
+    </div>
+    {% endif %}
+
+    {# Sort Option - Standard Bootstrap #}
+    <div class="d-flex justify-content-end mb-4">
+        <form method="get" class="d-inline-block">
+             <div class="input-group input-group-sm">
+                 <span class="input-group-text bg-light">เรียงตาม:</span>
+                <select name="sort" class="form-select form-select-sm shadow-sm" onchange="this.form.submit()">
+                    <option value="floor" {% if current_sort == 'floor' %}selected{% endif %}>อาคาร / ชั้น</option>
+                    <option value="status" {% if current_sort == 'status' %}selected{% endif %}>สถานะ</option>
+                    <option value="capacity" {% if current_sort == 'capacity' %}selected{% endif %}>ที่นั่ง</option>
+                    <option value="name" {% if current_sort == 'name' %}selected{% endif %}>ชื่อห้อง</option>
+                </select>
+            </div>
+        </form>
+    </div>
+
+    {# Room Cards Section #}
+    {% for building_name, rooms_in_building in buildings.items %}
+
+        {# --- ✅ แก้ไข Building Header ให้มีกรอบ ✅ --- #}
+        <div class="d-flex align-items-center bg-light p-3 border border-secondary-subtle mb-4 building-header-frame"> {# เปลี่ยนจาก rounded-top เป็น class ใหม่, เพิ่ม border, mb-4 #}
+             <i class="bi bi-building fs-4 me-3 text-secondary"></i>
+             <h2 class="h5 mb-0 fw-bold text-secondary">{{ building_name }}</h2>
+        </div>
+        {# --- ------------------------------------ --- #}
+
+        {# --- ❌ เอา bg-white และ rounded-bottom ออก ❌ --- #}
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4 g-4 mb-5">
+            {% for room in rooms_in_building %}
+                <div class="col">
+                    <div class="card h-100 shadow-sm border {% if room.status == 'ว่าง' %}border-success{% else %}border-danger{% endif %} border-2 room-card rounded-3">
+                        <div class="card-body d-flex flex-column p-3">
+
+                            {# Top Section: Name and Capacity #}
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="card-title mb-0 fs-6 fw-bold me-2">{{ room.name }}</h5>
+                                <span class="badge bg-light text-dark border rounded-pill flex-shrink-0 py-1 px-2 small">
+                                    <i class="bi bi-people-fill me-1 text-muted"></i>{{ room.capacity }}
+                                </span>
+                            </div>
+
+                            {# Status Section: Dot + Text #}
+                            <div class="mb-3 flex-grow-1">
+                                {% if room.status == 'ไม่ว่าง' %}
+                                    <div class="d-flex align-items-center mb-2">
+                                        <span class="status-dot status-booked"></span>
+                                        <span class="fw-bold text-danger small text-uppercase">กำลังใช้งาน</span>
+                                    </div>
+                                    {% with current=room.current_booking_info %}
+                                        <p class="mb-1 small"><strong>"{{ current.title }}"</strong></p>
+                                        <p class="mb-1 small text-muted"><i class="bi bi-clock me-1"></i> {{ current.start_time|date:"H:i" }} - {{ current.end_time|date:"H:i" }}</p>
+                                        <p class="mb-0 small text-muted"><i class="bi bi-person me-1"></i> {{ current.booked_by.get_full_name|default:current.booked_by.username }}</p>
+                                    {% endwith %}
+                                {% else %}
+                                    <div class="d-flex align-items-center mb-2">
+                                        <span class="status-dot status-available"></span>
+                                        <span class="fw-bold text-success small text-uppercase">ว่าง</span>
+                                    </div>
+                                    {% if room.next_booking_info %}
+                                        {% with next_b=room.next_booking_info %}
+                                            <p class="mb-1 small text-muted"><i class="bi bi-arrow-right-short"></i><strong>คิวถัดไป:</strong> "{{ next_b.title }}"</p>
+                                            <p class="mb-1 small text-muted"><i class="bi bi-clock me-1"></i> {{ next_b.start_time|date:"H:i" }} - {{ next_b.end_time|date:"H:i" }}</p>
+                                            <p class="mb-0 small text-muted"><i class="bi bi-person me-1"></i> {{ next_b.booked_by.get_full_name|default:next_b.booked_by.username }}</p>
+                                        {% endwith %}
+                                    {% else %}
+                                        <p class="mb-0 small text-muted text-center py-1 border rounded-pill bg-light"><em>-- ไม่มีคิวถัดไป --</em></p>
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+
+                            {# Footer Section: Equipment and Button #}
+                            <div class="mt-auto pt-2 border-top border-light-subtle">
+                                <p class="mb-1 small fw-bold text-uppercase text-secondary">อุปกรณ์:</p>
+                                {% if room.equipment_list %}
+                                <ul class="list-unstyled small mb-2 text-muted">
+                                   {% for eq in room.equipment_list|slice:":2" %}
+                                       <li><i class="bi bi-check-lg me-1 text-primary opacity-75"></i> {{ eq }}</li>
+                                   {% endfor %}
+                                   {% if room.equipment_list|length > 2 %}
+                                       <li><i class="bi bi-three-dots me-1"></i> <span class="text-muted">และอื่นๆ...</span></li>
+                                   {% endif %}
+                                </ul>
+                                {% else %}
+                                 <p class="small text-muted mb-2"><em>(ไม่มีข้อมูล)</em></p>
+                                {% endif %}
+
+                                {# Standard Bootstrap Button #}
+                                <a href="{% url 'room_calendar' room.id %}" class="btn btn-primary btn-sm w-100 rounded-pill mt-2 shadow-sm">
+                                   <i class="bi bi-calendar3 me-1"></i> ดูตาราง / จอง
+                                </a>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div> {# End row #}
+
+    {% empty %}
+        <div class="col-12">
+             <div class="alert alert-light text-center py-4 rounded-4 shadow-sm border-0" role="alert">
+                <i class="bi bi-info-circle fs-1 text-primary mb-3"></i>
+                <h4 class="alert-heading fw-bold">ยังไม่มีห้องประชุมในระบบ</h4>
+                <p class="mb-0 text-muted">กรุณาติดต่อผู้ดูแลระบบเพื่อเพิ่มข้อมูล</p>
+             </div>
+        </div>
+    {% endfor %}
+
+</div> {# End container-fluid #}
 {% endblock %}

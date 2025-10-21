@@ -1,16 +1,12 @@
-{% extends 'base.html' %}
-{% load static %}
-
-{% block title %}เข้าสู่ระบบ{% endblock %}
-
+{% extends 'base.html' %} {# ใช้ base template หลักของเว็บ #}
 {% block content %}
 <div class="container mt-5">
     <div class="row justify-content-center">
-        <div class="col-md-6 col-lg-4">
-            <div class="card shadow-sm modern-card">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
                 <div class="card-body p-4">
-                    <h3 class="card-title text-center mb-4">เข้าสู่ระบบ TEGH Booking</h3>
-
+                    <h2 class="card-title text-center mb-4">Login</h2>
+                    
                     {% if messages %}
                         {% for message in messages %}
                             <div class="alert alert-{{ message.tags|default:'danger' }} alert-dismissible fade show" role="alert">
@@ -21,41 +17,32 @@
                     {% endif %}
 
                     <form method="post" action="{% url 'login' %}">
+                        
                         {% csrf_token %}
-
-                        <div class="mb-3">
-                            <label for="username" class="form-label">ชื่อผู้ใช้</label>
-                            <input type="text" class="form-control" id="username" name="username" required autofocus>
-                        </div>
-                        <div class="mb-3">
-                            <label for="password" class="form-label">รหัสผ่าน</label>
-                            <input type="password" class="form-control" id="password" name="password" required>
-                        </div>
-
+                        {# Assuming you are using Django's AuthenticationForm #}
+                        {% for field in form %}
+                            <div class="mb-3">
+                                <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                                <input type="{{ field.field.widget.input_type }}" 
+                                       name="{{ field.name }}" 
+                                       id="{{ field.id_for_label }}" 
+                                       class="form-control {% if field.errors %}is-invalid{% endif %}" 
+                                       required>
+                                {% if field.errors %}
+                                    <div class="invalid-feedback">
+                                        {{ field.errors|first }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                        
                         <div class="d-grid">
-                            <button type="submit" class="btn btn-primary">เข้าสู่ระบบ</button>
+                           <button type="submit" class="btn btn-primary">Login</button>
                         </div>
                     </form>
-
-                    {# Optional: ลิงก์ลืมรหัสผ่าน #}
-                    {# <div class="text-center mt-3">
-                        <a href="#" class="text-decoration-none">ลืมรหัสผ่าน?</a>
-                    </div> #}
                 </div>
             </div>
         </div>
     </div>
 </div>
-{% endblock %}
-
-{% block extra_head %}
-<style>
-    /* ปรับการจัดวางให้สวยและเป็น modern */
-    body {
-        background-color: #f8f9fa;
-    }
-    .modern-card {
-        border-radius: 1rem;
-    }
-</style>
 {% endblock %}

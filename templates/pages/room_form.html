@@ -1,24 +1,175 @@
 {% extends 'base.html' %}
-{% block title %}{{ title }} - {{ block.super }}{% endblock %}
+{% load static %}
+
+{% block title %}{{ title }} - TEGH Booking{% endblock %}
+
+{% block page_title %}{{ title }}{% endblock %}
 
 {% block content %}
-<a href="{% url 'rooms' %}" class="btn btn-outline-secondary btn-sm mb-3"><i class="bi bi-arrow-left"></i> กลับไปหน้ารายการ</a>
-<h1 class="mb-4">{{ title }}</h1>
+<div class="container-fluid">
+    <div class="card shadow-sm border-0 rounded-3 mb-4"> {# เพิ่ม mb-4 เพื่อเว้นระยะห่าง #}
+        <div class="card-body p-4">
 
-<div class="card shadow-sm">
-    <div class="card-body">
-        <form method="post">
-            {% csrf_token %}
-            {% for field in form %}
-                <div class="mb-3">
-                    <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
-                    {{ field }}
-                    {% if field.errors %}<div class="invalid-feedback d-block">{{ field.errors|first }}</div>{% endif %}
+            {# แสดงข้อผิดพลาดทั่วไปของฟอร์ม (ถ้ามี) #}
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger" role="alert">
+                    {% for error in form.non_field_errors %}
+                        {{ error }}
+                    {% endfor %}
                 </div>
-            {% endfor %}
-            <hr>
-            <button type="submit" class="btn btn-primary">บันทึกข้อมูล</button>
-        </form>
+            {% endif %}
+
+            <form method="post" enctype="multipart/form-data" id="roomForm">
+                {% csrf_token %}
+
+                {# --- จัดกลุ่ม Field โดยใช้ Row --- #}
+
+                {# แถวที่ 1: ชื่อห้อง #}
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <label for="{{ form.name.id_for_label }}" class="form-label fw-bold {% if form.name.field.required %}required{% endif %}">
+                            {{ form.name.label }}
+                        </label>
+                        {{ form.name }}
+                        {% if form.name.errors %}<div class="invalid-feedback d-block">{{ form.name.errors|first }}</div>{% endif %}
+                        {% if form.name.help_text %}<div class="form-text">{{ form.name.help_text|safe }}</div>{% endif %}
+                    </div>
+                </div>
+
+                {# แถวที่ 2: ตึก และ ชั้น (ถ้ามี field เหล่านี้ใน Form) #}
+                <div class="row mb-3">
+                    {% if form.building %}
+                    <div class="col-md-6">
+                        <label for="{{ form.building.id_for_label }}" class="form-label fw-bold {% if form.building.field.required %}required{% endif %}">
+                            {{ form.building.label }}
+                        </label>
+                        {{ form.building }}
+                        {% if form.building.errors %}<div class="invalid-feedback d-block">{{ form.building.errors|first }}</div>{% endif %}
+                        {% if form.building.help_text %}<div class="form-text">{{ form.building.help_text|safe }}</div>{% endif %}
+                    </div>
+                    {% endif %}
+                    {% if form.floor %}
+                    <div class="col-md-6">
+                        <label for="{{ form.floor.id_for_label }}" class="form-label fw-bold {% if form.floor.field.required %}required{% endif %}">
+                            {{ form.floor.label }}
+                        </label>
+                        {{ form.floor }}
+                        {% if form.floor.errors %}<div class="invalid-feedback d-block">{{ form.floor.errors|first }}</div>{% endif %}
+                        {% if form.floor.help_text %}<div class="form-text">{{ form.floor.help_text|safe }}</div>{% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                {# แถวที่ 3: ความจุ #}
+                 <div class="row mb-3">
+                    <div class="col-md-6"> {# ปรับขนาดคอลัมน์ได้ตามต้องการ #}
+                        <label for="{{ form.capacity.id_for_label }}" class="form-label fw-bold {% if form.capacity.field.required %}required{% endif %}">
+                            {{ form.capacity.label }}
+                        </label>
+                        {{ form.capacity }}
+                        {% if form.capacity.errors %}<div class="invalid-feedback d-block">{{ form.capacity.errors|first }}</div>{% endif %}
+                        {% if form.capacity.help_text %}<div class="form-text">{{ form.capacity.help_text|safe }}</div>{% endif %}
+                    </div>
+                     {# เพิ่ม Field อื่นๆ ใน col-md-6 ได้ถ้าต้องการ #}
+                </div>
+
+                 {# แถวที่ 4: อุปกรณ์ (Textarea) #}
+                 <div class="row mb-3">
+                    <div class="col-12">
+                         <label for="{{ form.equipment_in_room.id_for_label }}" class="form-label fw-bold {% if form.equipment_in_room.field.required %}required{% endif %}">
+                            {{ form.equipment_in_room.label }}
+                        </label>
+                        {{ form.equipment_in_room }}
+                        {% if form.equipment_in_room.errors %}<div class="invalid-feedback d-block">{{ form.equipment_in_room.errors|first }}</div>{% endif %}
+                        {% if form.equipment_in_room.help_text %}<div class="form-text">{{ form.equipment_in_room.help_text|safe }}</div>{% endif %}
+                    </div>
+                 </div>
+
+                 {# แถวที่ 5: รูปภาพ #}
+                 <div class="row mb-3 align-items-center"> {# ใช้ align-items-center สำหรับการแสดงตัวอย่าง #}
+                    <div class="col-12">
+                        <label for="{{ form.image.id_for_label }}" class="form-label fw-bold {% if form.image.field.required %}required{% endif %}">
+                            {{ form.image.label }}
+                        </label>
+                        {{ form.image }}
+                        {% if form.image.errors %}<div class="invalid-feedback d-block">{{ form.image.errors|first }}</div>{% endif %}
+                        {% if form.image.help_text %}<div class="form-text">{{ form.image.help_text|safe }}</div>{% endif %}
+
+                        {# แสดงรูปภาพปัจจุบัน (สำหรับหน้าแก้ไข) #}
+                        {% if form.instance.pk and form.instance.image %} {# ตรวจสอบว่าเป็นการแก้ไขและมีรูปภาพหรือไม่ #}
+                             <div class="mt-3">
+                                <p class="mb-1 small text-muted">รูปปัจจุบัน:</p>
+                                <a href="{{ form.instance.image.url }}" target="_blank" class="d-inline-block border rounded p-1 bg-light">
+                                    <img src="{{ form.instance.image.url }}" alt="{{ form.instance.name }}" style="max-height: 80px; width: auto; display: block;">
+                                </a>
+                                {# ทางเลือก: เพิ่ม Checkbox สำหรับลบรูป ถ้าฟอร์มรองรับ
+                                {% if form.image.field.widget.template_name == 'django/forms/widgets/clearable_file_input.html' %}
+                                <div class="form-check mt-1">
+                                    <input type="checkbox" name="{{ form.image.html_name }}_clear" id="{{ form.image.id_for_label }}_clear" class="form-check-input">
+                                    <label for="{{ form.image.id_for_label }}_clear" class="form-check-label small text-danger">ลบรูปภาพปัจจุบัน</label>
+                                </div>
+                                {% endif %}
+                                #}
+                             </div>
+                        {% endif %}
+                    </div>
+                 </div>
+
+                {# --- สิ้นสุดการจัดกลุ่ม --- #}
+
+                <hr class="my-4">
+
+                <div class="d-flex justify-content-end">
+                     <a href="{% url 'rooms' %}" class="btn btn-outline-secondary me-2 rounded-pill px-3"> {# ปุ่มทรงแคปซูล #}
+                        <i class="bi bi-x-circle me-1"></i>ยกเลิก
+                    </a>
+                    <button type="submit" class="btn btn-primary px-4 rounded-pill"> {# ปุ่มทรงแคปซูล #}
+                        <i class="bi bi-save-fill me-2"></i>บันทึกข้อมูล
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_scripts %}
+{# โหลด JS ของ Widget (ถ้ามี เช่น Select2) #}
+{{ form.media.js }}
+
+<script>
+$(document).ready(function() {
+    // --- Script เพิ่ม Bootstrap Class ให้กับ Form ที่ Django สร้าง ---
+    const form = $('#roomForm');
+
+    // เพิ่ม 'form-control' ให้กับ input และ textarea มาตรฐาน
+    form.find('input[type="text"], input[type="number"], input[type="email"], input[type="url"], textarea').addClass('form-control');
+
+    // เพิ่ม 'form-control' สำหรับ input type file
+    form.find('input[type="file"]').addClass('form-control');
+
+    // เพิ่ม 'form-select' สำหรับ select dropdown
+    form.find('select').addClass('form-select');
+
+    // เพิ่ม 'form-check-input' สำหรับ checkbox
+    form.find('input[type="checkbox"]').addClass('form-check-input');
+
+    // เพิ่ม class 'is-invalid' ให้กับ field ที่มี error
+    form.find('.is-invalid').removeClass('is-invalid'); // ล้าง error เก่า (ถ้ามี)
+    {% for field in form %}
+        {% if field.errors %}
+            $('#{{ field.id_for_label }}').addClass('is-invalid');
+        {% endif %}
+    {% endfor %}
+
+    // ทางเลือก: แสดงชื่อไฟล์ใน input หลังจากเลือกไฟล์
+    form.find('input[type="file"]').on('change', function(event) {
+        var fileName = event.target.files[0] ? event.target.files[0].name : 'เลือกไฟล์';
+        // อาจจะต้องมีโครงสร้าง HTML พิเศษ หรือ label เพื่อแสดงชื่อไฟล์นี้
+        // ตัวอย่าง: หา label ที่อยู่ติดกันที่มี class ที่กำหนด แล้วเปลี่ยนข้อความ
+        // $(this).siblings('.custom-file-label').text(fileName);
+        console.log("ไฟล์ที่เลือก:", fileName); // สำหรับ debug
+    });
+});
+</script>
 {% endblock %}
