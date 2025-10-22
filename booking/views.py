@@ -149,13 +149,10 @@ def logout_view(request):
 @login_required
 def dashboard_view(request):
     now = timezone.now(); sort_by = request.GET.get('sort', 'floor')
-    # Use select_related/prefetch_related for efficiency if needed later
     all_rooms = Room.objects.all()
     if sort_by == 'status':
-        # Sort by status: Available rooms first
         all_rooms = sorted(all_rooms, key=lambda r: not r.bookings.filter(start_time__lte=now, end_time__gt=now, status='APPROVED').exists())
     elif sort_by == 'capacity':
-        # Sort by capacity: Descending order
          all_rooms = sorted(all_rooms, key=lambda r: r.capacity, reverse=True)
     elif sort_by == 'name':
         all_rooms = all_rooms.order_by('name')
@@ -164,23 +161,15 @@ def dashboard_view(request):
 
     buildings = defaultdict(list)
     for room in all_rooms:
-        # Optimize query by selecting related user for current booking
         current = room.bookings.filter(start_time__lte=now, end_time__gt=now, status='APPROVED').select_related('booked_by').first()
-
         room.status = 'ไม่ว่าง' if current else 'ว่าง'
         room.current_booking_info = current
-        # Only query next booking if room is currently available
         room.next_booking_info = None
         if not current:
-            # Optimize query by selecting related user for next booking
             room.next_booking_info = room.bookings.filter(start_time__gt=now, status='APPROVED').select_related('booked_by').order_by('start_time').first()
-
-        # Pre-process equipment list for template
         room.equipment_list = [eq.strip() for eq in (room.equipment_in_room or "").splitlines() if eq.strip()]
-
         buildings[room.building or "(ไม่ได้ระบุอาคาร)"].append(room)
 
-    # Calculate summary counts efficiently
     my_bookings_today_count = Booking.objects.filter(booked_by=request.user, start_time__date=now.date()).count()
     summary = {
         'total_rooms': Room.objects.count(),
@@ -188,14 +177,15 @@ def dashboard_view(request):
         'pending_approvals': Booking.objects.filter(status='PENDING').count(),
         'my_bookings_today': my_bookings_today_count,
     }
-    context = {'buildings': dict(buildings), 'summary_cards': summary, 'current_sort': sort_by, 'all_rooms': all_rooms} # Pass all_rooms for the non-grouped version
+    context = {'buildings': dict(buildings), 'summary_cards': summary, 'current_sort': sort_by, 'all_rooms': all_rooms}
     return render(request, 'pages/dashboard.html', context)
 
 
 @login_required
 def room_calendar_view(request, room_id):
-    room = get_object_or_404(Room, pk=room_id); form = BookingForm(initial={'room': room})
-    # context_processors.py will add 'is_admin_user'
+    room = get_object_or_404(Room, pk=room_id)
+    # ส่ง user เข้าไปใน Form constructor
+    form = BookingForm(initial={'room': room}, user=request.user)
     context = {'room': room, 'form': form}
     return render(request, 'pages/room_calendar.html', context)
 
@@ -205,38 +195,29 @@ def master_calendar_view(request):
 
 @login_required
 def history_view(request):
-    # Start with user's bookings, ordered
     bookings = Booking.objects.filter(booked_by=request.user).select_related('room').order_by('-start_time')
-
-    # Apply filters from GET parameters
     date_f = request.GET.get('date'); room_f = request.GET.get('room'); status_f = request.GET.get('status')
-
     try:
         if date_f: bookings = bookings.filter(start_time__date=datetime.strptime(date_f, '%Y-%m-%d').date())
     except ValueError:
         messages.warning(request, "รูปแบบวันที่ไม่ถูกต้อง กรุณาใช้ YYYY-MM-DD")
-        date_f = None # Reset invalid date filter
-
+        date_f = None
     if room_f:
         try:
-             # Ensure room_f is an integer
             room_id_int = int(room_f)
             bookings = bookings.filter(room_id=room_id_int)
         except (ValueError, TypeError):
              messages.warning(request, "Room ID ไม่ถูกต้อง")
-             room_f = None # Reset invalid room filter
-
-    if status_f and status_f in dict(Booking.STATUS_CHOICES): # Validate status choice
+             room_f = None
+    if status_f and status_f in dict(Booking.STATUS_CHOICES):
         bookings = bookings.filter(status=status_f)
     elif status_f:
         messages.warning(request, "สถานะการจองไม่ถูกต้อง")
-        status_f = None # Reset invalid status filter
-
+        status_f = None
     context = {
         'my_bookings': bookings,
         'all_rooms': Room.objects.all().order_by('name'),
         'status_choices': Booking.STATUS_CHOICES,
-        # Pass current filter values back to template for display
         'current_date': date_f,
         'current_room': room_f,
         'current_status': status_f,
@@ -245,73 +226,65 @@ def history_view(request):
 
 @login_required
 def booking_detail_view(request, booking_id):
-    # Optimized query with select_related and prefetch_related
     booking = get_object_or_404(
         Booking.objects.select_related('room', 'booked_by', 'booked_by__profile')
-                       .prefetch_related('participants'), # Prefetch M2M
+                       .prefetch_related('participants'),
         pk=booking_id
     )
-
-    # Check if the current user is a participant (more efficient after prefetch)
     is_participant = request.user in booking.participants.all()
-
-    # Access check: Owner, Admin, or Participant can view
     if (booking.booked_by != request.user and not is_admin(request.user) and not is_participant):
         messages.error(request, "คุณไม่มีสิทธิ์เข้าดูรายละเอียดการจองนี้");
-        return redirect('dashboard') # Or 'history'
-
-    context = {'booking': booking} # is_admin is added by context processor
+        return redirect('dashboard')
+    context = {'booking': booking}
     return render(request, 'pages/booking_detail.html', context)
 
 @login_required
 def edit_profile_view(request):
-    # Ensure profile exists or create it
     profile, created = Profile.objects.get_or_create(user=request.user)
-
     if request.method == 'POST':
-        # Check if it's a password change request
         if 'change_password' in request.POST:
             password_form = CustomPasswordChangeForm(request.user, request.POST)
-            # Instantiate profile form with current instance data for re-rendering if password fails
-            profile_form = ProfileForm(instance=profile)
+            profile_form = ProfileForm(instance=profile, initial={ # Pass initial user data for re-render
+                 'first_name': request.user.first_name, 'last_name': request.user.last_name, 'email': request.user.email,
+             })
             if password_form.is_valid():
                 user = password_form.save()
-                update_session_auth_hash(request, user) # Important! Keeps user logged in
+                update_session_auth_hash(request, user)
                 messages.success(request, 'เปลี่ยนรหัสผ่านเรียบร้อยแล้ว');
                 return redirect('edit_profile')
             else:
                  messages.error(request, 'ไม่สามารถเปลี่ยนรหัสผ่านได้ กรุณาตรวจสอบข้อผิดพลาด')
-        else: # Profile update request
+        else: # Profile update
             profile_form = ProfileForm(request.POST, request.FILES, instance=profile)
-            # Instantiate password form for re-rendering if profile update fails
             password_form = CustomPasswordChangeForm(request.user)
             if profile_form.is_valid():
-                profile_form.save()
-                # Update User model fields if they are submitted (optional, based on your form)
-                request.user.first_name = request.POST.get('first_name', request.user.first_name)
-                request.user.last_name = request.POST.get('last_name', request.user.last_name)
-                # Only update email if it's part of the form and validated, handle potential uniqueness issues
-                if 'email' in request.POST:
-                    # Basic check, consider more robust validation if email uniqueness is critical
-                    new_email = request.POST.get('email')
-                    if new_email and new_email != request.user.email:
-                        if not User.objects.filter(email=new_email).exclude(pk=request.user.pk).exists():
-                             request.user.email = new_email
-                        else:
-                             messages.warning(request, f"อีเมล '{new_email}' ถูกใช้งานแล้ว")
-                             # Add error to form? profile_form.add_error('email', 'Email already exists.')
+                # Save User fields from ProfileForm
+                user = request.user
+                user.first_name = profile_form.cleaned_data['first_name']
+                user.last_name = profile_form.cleaned_data['last_name']
+                new_email = profile_form.cleaned_data['email']
+                email_changed = new_email and new_email != user.email
+                email_exists = email_changed and User.objects.filter(email=new_email).exclude(pk=user.pk).exists()
 
-                request.user.save()
-                messages.success(request, 'อัปเดตโปรไฟล์เรียบร้อยแล้ว');
-                return redirect('edit_profile')
-            else:
+                if email_changed and email_exists:
+                     profile_form.add_error('email', f"อีเมล '{new_email}' ถูกใช้งานแล้ว")
+                     messages.error(request, f"อีเมล '{new_email}' ถูกใช้งานแล้ว ไม่สามารถอัปเดตโปรไฟล์ได้")
+                else:
+                    if email_changed:
+                         user.email = new_email
+                    user.save()
+                    # Save Profile fields (already done implicitly if commit=True wasn't used, but explicit is fine)
+                    profile_form.instance.user = user # Ensure user is linked correctly if created
+                    profile_form.save()
+                    messages.success(request, 'อัปเดตโปรไฟล์เรียบร้อยแล้ว');
+                    return redirect('edit_profile')
+            else: # Profile form invalid
                  messages.error(request, 'ไม่สามารถอัปเดตโปรไฟล์ได้ กรุณาตรวจสอบข้อผิดพลาด')
     else: # GET request
-        # Populate initial data for User fields in the profile form
         profile_form = ProfileForm(instance=profile, initial={
             'first_name': request.user.first_name,
             'last_name': request.user.last_name,
-            'email': request.user.email, # Assuming email is in ProfileForm or handled separately
+            'email': request.user.email,
         })
         password_form = CustomPasswordChangeForm(request.user)
 
@@ -326,29 +299,21 @@ def edit_profile_view(request):
 @user_passes_test(is_admin) # Ensures only Admins can access
 def admin_dashboard_view(request):
     thirty_days_ago = timezone.now() - timedelta(days=30)
-
-    # Bookings within the last 30 days for stats
     recent_approved = Booking.objects.filter(start_time__gte=thirty_days_ago, status='APPROVED')
 
-    # Room usage count (most used rooms)
     room_usage = Room.objects.annotate(
         booking_count=Count('bookings', filter=Q(bookings__in=recent_approved))
     ).order_by('-booking_count')
 
-    # --- 🟢 START: Corrected Department Usage Query 🟢 ---
-    # Department usage count (most active departments)
-    # Start from Booking, group by user's department
+    # --- Corrected Department Usage Query ---
     dept_usage_query = recent_approved.exclude(booked_by__profile__department__exact='') \
                                       .values('booked_by__profile__department') \
                                       .annotate(count=Count('id')) \
                                       .order_by('-count')
-
-    # Prepare data for charts (limit to top 10 for clarity)
     dept_usage_labels = [d['booked_by__profile__department'] for d in dept_usage_query[:10] if d.get('booked_by__profile__department')]
     dept_usage_data = [d['count'] for d in dept_usage_query[:10] if d.get('booked_by__profile__department')]
-    # --- 🟢 END: Corrected Department Usage Query 🟢 ---
+    # --- End Correction ---
 
-    # Prepare data for room usage chart
     room_usage_labels = [r.name for r in room_usage[:10]]
     room_usage_data = [r.booking_count for r in room_usage[:10]]
 
@@ -357,9 +322,7 @@ def admin_dashboard_view(request):
         'today_bookings_count': Booking.objects.filter(start_time__date=timezone.now().date(), status='APPROVED').count(),
         'total_users_count': User.objects.count(),
         'total_rooms_count': Room.objects.count(),
-        'login_history': LoginHistory.objects.select_related('user').order_by('-timestamp')[:7], # Recent logins
-
-        # Chart data
+        'login_history': LoginHistory.objects.select_related('user').order_by('-timestamp')[:7],
         'room_usage_labels': json.dumps(room_usage_labels),
         'room_usage_data': json.dumps(room_usage_data),
         'dept_usage_labels': json.dumps(dept_usage_labels),
@@ -372,7 +335,6 @@ def admin_dashboard_view(request):
 @login_required
 def rooms_api(request):
     rooms = Room.objects.all().order_by('building', 'name')
-    # Include necessary fields for calendar resource view
     resources = [{'id': r.id, 'title': r.name, 'building': r.building or ""} for r in rooms]
     return JsonResponse(resources, safe=False)
 
@@ -380,7 +342,6 @@ def rooms_api(request):
 def bookings_api(request):
     start_str = request.GET.get('start'); end_str = request.GET.get('end'); room_id = request.GET.get('room_id')
     try:
-        # Parse ISO format dates, handle timezone correctly
         start_dt = timezone.make_aware(datetime.fromisoformat(start_str.replace('Z', '+00:00'))) if start_str else None
         end_dt = timezone.make_aware(datetime.fromisoformat(end_str.replace('Z', '+00:00'))) if end_str else None
     except ValueError:
@@ -389,126 +350,86 @@ def bookings_api(request):
     if not start_dt or not end_dt:
         return JsonResponse({'error': 'Start and end dates are required.'}, status=400)
 
-    # Filter bookings overlapping the requested time range
     bookings = Booking.objects.filter(
-        start_time__lt=end_dt, # Starts before the range ends
-        end_time__gt=start_dt   # Ends after the range starts
-    ).select_related('room', 'booked_by') # Optimize query
+        start_time__lt=end_dt,
+        end_time__gt=start_dt
+    ).select_related('room', 'booked_by')
 
-    # Filter by room if room_id is provided
     if room_id:
         try:
             bookings = bookings.filter(room_id=int(room_id))
         except (ValueError, TypeError):
              return JsonResponse({'error': 'Invalid room ID.'}, status=400)
 
-    # Format events for FullCalendar
     events = []
     for b in bookings:
         events.append({
-            'id': b.id,
-            'title': b.title,
-            'start': b.start_time.isoformat(), # Use ISO format
-            'end': b.end_time.isoformat(),     # Use ISO format
-            'resourceId': b.room.id,
+            'id': b.id, 'title': b.title, 'start': b.start_time.isoformat(),
+            'end': b.end_time.isoformat(), 'resourceId': b.room.id,
             'extendedProps': {
-                'room_id': b.room.id,
-                'room_name': b.room.name,
-                'booked_by_username': b.booked_by.username,
-                'status': b.status,
-                'user_id': b.booked_by.id # Crucial for eventClick logic
+                'room_id': b.room.id, 'room_name': b.room.name,
+                'booked_by_username': b.booked_by.username, 'status': b.status,
+                'user_id': b.booked_by.id
             },
          })
-
     return JsonResponse(events, safe=False)
 
 
 @login_required
-@require_POST # Ensure only POST requests
+@require_POST
 def update_booking_time_api(request):
     try:
         data = json.loads(request.body)
-        booking_id = data.get('booking_id')
-        start_str = data.get('start_time')
-        end_str = data.get('end_time')
+        booking_id = data.get('booking_id'); start_str = data.get('start_time'); end_str = data.get('end_time')
 
-        if not all([booking_id, start_str, end_str]):
-            return JsonResponse({'status': 'error', 'message': 'Missing required data.'}, status=400)
+        if not all([booking_id, start_str, end_str]): return JsonResponse({'status': 'error', 'message': 'Missing required data.'}, status=400)
 
         booking = get_object_or_404(Booking, pk=booking_id)
 
-        # Permission check: Owner or Admin
-        if booking.booked_by != request.user and not is_admin(request.user):
-            return JsonResponse({'status': 'error', 'message': 'Permission denied.'}, status=403)
+        if booking.booked_by != request.user and not is_admin(request.user): return JsonResponse({'status': 'error', 'message': 'Permission denied.'}, status=403)
 
         try:
             new_start = timezone.make_aware(datetime.fromisoformat(start_str.replace('Z', '+00:00')))
             new_end = timezone.make_aware(datetime.fromisoformat(end_str.replace('Z', '+00:00')))
-        except ValueError:
-            return JsonResponse({'status': 'error', 'message': 'Invalid date format.'}, status=400)
+        except ValueError: return JsonResponse({'status': 'error', 'message': 'Invalid date format.'}, status=400)
 
-        # Basic validation
-        if new_end <= new_start:
-            return JsonResponse({'status': 'error', 'message': 'End time must be after start time.'}, status=400)
+        if new_end <= new_start: return JsonResponse({'status': 'error', 'message': 'End time must be after start time.'}, status=400)
 
-        # Check for conflicts with other bookings (excluding self and non-active statuses)
-        conflicts = Booking.objects.filter(
-            room=booking.room,
-            start_time__lt=new_end,
-            end_time__gt=new_start
-        ).exclude(pk=booking.id).exclude(status__in=['REJECTED', 'CANCELLED'])
+        conflicts = Booking.objects.filter( room=booking.room, start_time__lt=new_end, end_time__gt=new_start) \
+                                   .exclude(pk=booking.id).exclude(status__in=['REJECTED', 'CANCELLED'])
 
-        if conflicts.exists():
-            return JsonResponse({'status': 'error', 'message': 'เลือกช่วงเวลาใหม่ไม่ได้ เนื่องจากเวลาทับซ้อนกับการจองอื่น'}, status=400) # User-friendly message
+        if conflicts.exists(): return JsonResponse({'status': 'error', 'message': 'เลือกช่วงเวลาใหม่ไม่ได้ เนื่องจากเวลาทับซ้อนกับการจองอื่น'}, status=400)
 
-        # Update booking times
         booking.start_time = new_start
         booking.end_time = new_end
 
-        # Re-evaluate approval status if participant count requires it and status wasn't pending
+        status_message = "Booking time updated successfully."
         if booking.participant_count >= 15 and booking.status not in ['PENDING', 'REJECTED', 'CANCELLED']:
              booking.status = 'PENDING'
-             status_message = "Booking time updated. Approval now required due to participant count."
-        else:
-             status_message = "Booking time updated successfully."
+             status_message = "Booking time updated. Approval now required."
 
         booking.save()
-
-        # Return success with potentially updated status info
         return JsonResponse({'status': 'success', 'message': status_message, 'new_status': booking.status})
 
-    except json.JSONDecodeError:
-        return JsonResponse({'status': 'error', 'message': 'Invalid JSON data received.'}, status=400)
-    except Booking.DoesNotExist:
-        return JsonResponse({'status': 'error', 'message': 'Booking not found.'}, status=404)
+    except json.JSONDecodeError: return JsonResponse({'status': 'error', 'message': 'Invalid JSON data.'}, status=400)
+    except Booking.DoesNotExist: return JsonResponse({'status': 'error', 'message': 'Booking not found.'}, status=404)
     except Exception as e:
         print(f"Error in update_booking_time_api: {e}")
-        return JsonResponse({'status': 'error', 'message': 'An unexpected server error occurred.'}, status=500)
+        return JsonResponse({'status': 'error', 'message': 'Server error.'}, status=500)
 
 
 @login_required
-@require_http_methods(["POST"]) # API should be POST only
+@require_http_methods(["POST"])
 def delete_booking_api(request, booking_id):
     """ API View for cancelling a booking (returns JSON). """
     try:
         booking = get_object_or_404(Booking, pk=booking_id)
-
-        # Permission Check: Owner or Admin
-        if booking.booked_by != request.user and not is_admin(request.user):
-            return JsonResponse({'success': False, 'error': 'ไม่มีสิทธิ์ยกเลิก'}, status=403)
-
-        # Prevent cancelling already cancelled/rejected bookings
-        if booking.status in ['CANCELLED', 'REJECTED']:
-            return JsonResponse({'success': False, 'error': 'การจองนี้ถูกยกเลิกหรือปฏิเสธไปแล้ว'})
-
-        # Perform soft delete
+        if booking.booked_by != request.user and not is_admin(request.user): return JsonResponse({'success': False, 'error': 'ไม่มีสิทธิ์ยกเลิก'}, status=403)
+        if booking.status in ['CANCELLED', 'REJECTED']: return JsonResponse({'success': False, 'error': 'การจองนี้ถูกยกเลิกหรือปฏิเสธไปแล้ว'})
         booking.status = 'CANCELLED'
         booking.save()
-
         return JsonResponse({'success': True, 'message': 'ยกเลิกการจองเรียบร้อย'})
-
-    except Booking.DoesNotExist:
-        return JsonResponse({'success': False, 'error': 'ไม่พบการจองนี้'}, status=404)
+    except Booking.DoesNotExist: return JsonResponse({'success': False, 'error': 'ไม่พบการจองนี้'}, status=404)
     except Exception as e:
         print(f"Error in delete_booking_api for booking {booking_id}: {e}")
         return JsonResponse({'success': False, 'error': 'เกิดข้อผิดพลาดบนเซิร์ฟเวอร์'}, status=500)
@@ -516,17 +437,23 @@ def delete_booking_api(request, booking_id):
 
 # --- Booking Actions (Form submissions) ---
 @login_required
-@require_POST # Ensure this view only handles POST from the form
+@require_POST
 def create_booking_view(request, room_id):
     room = get_object_or_404(Room, pk=room_id)
-    form = BookingForm(request.POST, request.FILES)
+    # ส่ง user เข้าไปใน Form constructor
+    form = BookingForm(request.POST, request.FILES, user=request.user)
 
     if form.is_valid():
         booking = form.save(commit=False)
         booking.room = room
         booking.booked_by = request.user
+        # Logic ดึง Department มาใส่ ถ้า field ใน Model ยังว่าง (ทำหลังจาก is_valid)
+        if not booking.department and request.user.is_authenticated:
+            try:
+                booking.department = request.user.profile.department
+            except Profile.DoesNotExist:
+                 pass # ไม่มี profile ก็ไม่เป็นไร
 
-        # Approval Logic based on participant count
         participant_count = form.cleaned_data.get('participant_count', 1)
         if participant_count >= 15:
             booking.status = 'PENDING'
@@ -539,51 +466,45 @@ def create_booking_view(request, room_id):
         form.save_m2m()
 
         return redirect('room_calendar', room_id=room.id)
-    else:
-        # Form is invalid
+    else: # Form invalid
         error_list = []
         for field, errors in form.errors.items():
             field_label = form.fields.get(field).label if field != '__all__' and field in form.fields else (field if field != '__all__' else 'Form')
             error_list.append(f"{field_label}: {', '.join(errors)}")
         error_str = "; ".join(error_list)
-
         messages.error(request, f"ไม่สามารถสร้างการจองได้: {error_str}")
         print("Booking form errors (Create):", form.errors.as_json())
-
-        return redirect('room_calendar', room_id=room.id)
+        # Consider re-rendering with the invalid form instead of redirecting
+        # context = {'room': room, 'form': form}
+        # return render(request, 'pages/room_calendar.html', context)
+        return redirect('room_calendar', room_id=room.id) # Current simple redirect
 
 
 @login_required
 def edit_booking_view(request, booking_id):
     booking = get_object_or_404(Booking, pk=booking_id)
-
-    # Permission check: Owner or Admin
     if booking.booked_by != request.user and not is_admin(request.user):
         messages.error(request, "คุณไม่มีสิทธิ์แก้ไขการจองนี้")
         return redirect('history')
 
     if request.method == 'POST':
-        form = BookingForm(request.POST, request.FILES, instance=booking)
+        # ส่ง user เข้าไปเผื่อ Form ต้องการใช้ (เช่น ถ้าจะดึง department ใหม่)
+        form = BookingForm(request.POST, request.FILES, instance=booking, user=request.user)
         if form.is_valid():
             updated_booking = form.save(commit=False)
-
-            # Check if relevant fields changed and apply approval logic
             new_count = form.cleaned_data.get('participant_count', 1)
             changed_for_approval = any(f in form.changed_data for f in ['start_time', 'end_time', 'participant_count'])
-
             if new_count >= 15 and changed_for_approval and updated_booking.status not in ['PENDING', 'REJECTED', 'CANCELLED']:
                  updated_booking.status = 'PENDING'
-                 messages.info(request, "การแก้ไขต้องรอการอนุมัติใหม่ (เนื่องจากเวลาหรือจำนวนผู้เข้าร่วมเปลี่ยนไป)")
-
+                 messages.info(request, "การแก้ไขต้องรอการอนุมัติใหม่")
             updated_booking.save()
             form.save_m2m()
-
             messages.success(request, "แก้ไขข้อมูลการจองเรียบร้อยแล้ว")
             return redirect('history')
         else:
              messages.error(request, "ไม่สามารถบันทึกการแก้ไขได้ กรุณาตรวจสอบข้อผิดพลาด")
     else: # GET request
-        form = BookingForm(instance=booking)
+        form = BookingForm(instance=booking, user=request.user) # ส่ง user ไปด้วย
 
     return render(request, 'pages/edit_booking.html', {'form': form, 'booking': booking})
 
@@ -593,28 +514,22 @@ def edit_booking_view(request, booking_id):
 def delete_booking_view(request, booking_id):
     """ View for cancelling from History page (uses Redirect). """
     booking = get_object_or_404(Booking, pk=booking_id)
-
-    # Permission Check: Owner or Admin
     if booking.booked_by != request.user and not is_admin(request.user):
         messages.error(request, "ไม่มีสิทธิ์ยกเลิกการจองนี้")
         return redirect('history')
-
     if booking.status in ['CANCELLED', 'REJECTED']:
         messages.warning(request, "การจองนี้ถูกยกเลิกหรือปฏิเสธไปแล้ว")
         return redirect('history')
-
     booking.status = 'CANCELLED'
     booking.save()
-
     messages.success(request, f"ยกเลิกการจอง '{booking.title}' เรียบร้อย")
     return redirect('history')
 
 
 # --- Approvals ---
 @login_required
-@user_passes_test(is_approver_or_admin) # Approvers or Admins only
+@user_passes_test(is_approver_or_admin)
 def approvals_view(request):
-    # Get pending bookings, optimize with select_related
     pending_bookings = Booking.objects.filter(status='PENDING') \
                                       .select_related('room', 'booked_by', 'booked_by__profile') \
                                       .order_by('start_time')
@@ -628,7 +543,6 @@ def approve_booking_view(request, booking_id):
     booking.status = 'APPROVED'
     booking.save()
     messages.success(request, f"อนุมัติการจอง '{booking.title}' เรียบร้อย")
-    # Notify user (Placeholder)
     # if booking.booked_by.email: send_booking_notification(...)
     return redirect('approvals')
 
@@ -640,16 +554,14 @@ def reject_booking_view(request, booking_id):
     booking.status = 'REJECTED'
     booking.save()
     messages.warning(request, f"ปฏิเสธการจอง '{booking.title}' เรียบร้อย")
-    # Notify user (Placeholder)
     # if booking.booked_by.email: send_booking_notification(...)
     return redirect('approvals')
 
 
 # --- Management ---
 @login_required
-@user_passes_test(is_admin) # Admins only
+@user_passes_test(is_admin)
 def user_management_view(request):
-    # Optimize query by prefetching related groups and profile
     users = User.objects.all().order_by('username').prefetch_related('groups', 'profile')
     return render(request, 'pages/user_management.html', {'users': users})
 
@@ -658,7 +570,6 @@ def user_management_view(request):
 def edit_user_roles_view(request, user_id):
     user_to_edit = get_object_or_404(User, pk=user_id)
     all_groups = Group.objects.all()
-
     if request.method == 'POST':
         selected_group_ids = request.POST.getlist('groups')
         selected_groups = Group.objects.filter(pk__in=selected_group_ids)
@@ -667,8 +578,6 @@ def edit_user_roles_view(request, user_id):
         user_to_edit.save()
         messages.success(request, f"อัปเดตสิทธิ์ผู้ใช้ '{user_to_edit.username}' เรียบร้อย")
         return redirect('user_management')
-
-    # GET request
     context = {
         'user_to_edit': user_to_edit,
         'all_groups': all_groups,
