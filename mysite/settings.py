@@ -1,7 +1,7 @@
 # mysite/settings.py
 
 from pathlib import Path
-import os # <-- เพิ่ม os (ถ้ายังไม่มี)
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -12,7 +12,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 # (ใช้ SECRET_KEY เดิมของคุณ)
-SECRET_KEY = 'django-insecure-YOUR-SECRET-KEY' 
+SECRET_KEY = 'django-insecure-YOUR-SECRET-KEY'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -59,8 +59,9 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'booking.context_processors.menu_context',
-                # --- ✅ เพิ่มบรรทัดนี้เพื่อแก้ Error ZoneInfo ✅ ---
-                'django.template.context_processors.settings', 
+
+                # --- ❌ ลบบรรทัดนี้ออก ❌ ---
+                # 'django.template.context_processors.settings',
             ],
         },
     },
@@ -104,11 +105,9 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'th' # <-- ภาษาไทย
 
-# --- ✅ ตรวจสอบว่าตั้งค่า Timezone ถูกต้อง ✅ ---
 TIME_ZONE = 'Asia/Bangkok'
 USE_I18N = True
 USE_TZ = True # <-- ต้องเป็น True
-# --- ------------------------------------ ---
 
 
 # Static files (CSS, JavaScript, Images)
@@ -116,13 +115,9 @@ USE_TZ = True # <-- ต้องเป็น True
 
 STATIC_URL = 'static/'
 
-# เพิ่ม Path ไปยังโฟลเดอร์ static หลัก (ถ้ามี)
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
 ]
-# (STATIC_ROOT ใช้สำหรับ production ไม่ต้องยุ่งตอนนี้)
-# STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-
 
 # Media files (User uploaded files)
 # https://docs.djangoproject.com/en/5.2/topics/files/
