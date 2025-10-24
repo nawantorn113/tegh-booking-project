@@ -1,4 +1,3 @@
-<!-- templates/partials/_booking_form_modal.html -->
 <div class="modal fade" id="bookingModal" tabindex="-1" aria-labelledby="bookingModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -9,19 +8,67 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <div id="formErrors" class="alert alert-danger d-none" role="alert"></div>
-                    <input type="hidden" name="room" id="id_room_hidden_modal" value="">
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger" role="alert">
+                            {% for error in form.non_field_errors %} {{ error }} {% endfor %}
+                        </div>
+                    {% endif %}
+                    <div id="formErrors" class="alert alert-danger d-none" role="alert"></div> {# For JS errors #}
+
+                    <input type="hidden" name="room" id="id_room_hidden_modal" value=""> {# Value set by JS #}
 
                     <div class="row g-3">
-                        {% for field in form %}
-                            {% if field.name != 'room' %}
-                            <div class="col-md-{% if field.name == 'start_time' or field.name == 'end_time' or field.name == 'chairman' or field.name == 'participant_count' %}6{% else %}12{% endif %} mb-3">
-                                <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}{% if field.field.required %} <span class="text-danger">*</span>{% endif %}</label>
-                                {{ field }}
-                                {% if field.errors %}<div class="invalid-feedback d-block">{% for error in field.errors %} {{ error }} {% endfor %}</div>{% endif %}
-                            </div>
-                            {% endif %}
-                        {% endfor %}
+                        <div class="col-12">
+                            <label for="{{ form.title.id_for_label }}" class="form-label">{{ form.title.label }}</label>
+                            {{ form.title }}
+                            {% if form.title.errors %}<div class="invalid-feedback d-block">{{ form.title.errors|striptags }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.start_time.id_for_label }}" class="form-label">{{ form.start_time.label }}</label>
+                            {{ form.start_time }}
+                            {% if form.start_time.errors %}<div class="invalid-feedback d-block">{{ form.start_time.errors|striptags }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.end_time.id_for_label }}" class="form-label">{{ form.end_time.label }}</label>
+                            {{ form.end_time }}
+                            {% if form.end_time.errors %}<div class="invalid-feedback d-block">{{ form.end_time.errors|striptags }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.chairman.id_for_label }}" class="form-label">{{ form.chairman.label }}</label>
+                            {{ form.chairman }}
+                            {% if form.chairman.errors %}<div class="invalid-feedback d-block">{{ form.chairman.errors|striptags }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.participant_count.id_for_label }}" class="form-label">{{ form.participant_count.label }}</label>
+                            {{ form.participant_count }}
+                            {% if form.participant_count.errors %}<div class="invalid-feedback d-block">{{ form.participant_count.errors|striptags }}</div>{% endif %}
+                        </div>
+                         <div class="col-12">
+                            <label for="{{ form.department_meeting.id_for_label }}" class="form-label">{{ form.department_meeting.label }}</label>
+                            {{ form.department_meeting }}
+                            {% if form.department_meeting.errors %}<div class="invalid-feedback d-block">{{ form.department_meeting.errors|striptags }}</div>{% endif %}
+                        </div>
+                        <div class="col-12">
+                            <label for="{{ form.participants.id_for_label }}" class="form-label">{{ form.participants.label }}</label>
+                            {{ form.participants }} {# <-- Select2 Autocomplete Widget #}
+                            {% if form.participants.errors %}<div class="invalid-feedback d-block">{{ form.participants.errors|striptags }}</div>{% endif %}
+                            <small class="form-text text-muted">พิมพ์ชื่อหรืออีเมลเพื่อค้นหา</small>
+                        </div>
+                         <div class="col-12"> {# Additional Notes #}
+                            <label for="{{ form.additional_notes.id_for_label }}" class="form-label">{{ form.additional_notes.label }}</label>
+                            {{ form.additional_notes }}
+                            {% if form.additional_notes.errors %}<div class="invalid-feedback d-block">{{ form.additional_notes.errors|striptags }}</div>{% endif %}
+                        </div>
+                         <div class="col-12"> {# Additional Requests #}
+                            <label for="{{ form.additional_requests.id_for_label }}" class="form-label">{{ form.additional_requests.label }}</label>
+                            {{ form.additional_requests }}
+                            {% if form.additional_requests.errors %}<div class="invalid-feedback d-block">{{ form.additional_requests.errors|striptags }}</div>{% endif %}
+                        </div>
+                        <div class="col-12">
+                            <label for="{{ form.attachment.id_for_label }}" class="form-label">{{ form.attachment.label }}</label>
+                            {{ form.attachment }}
+                            {% if form.attachment.errors %}<div class="invalid-feedback d-block">{{ form.attachment.errors|striptags }}</div>{% endif %}
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -32,3 +79,28 @@
         </div>
     </div>
 </div>
+
+<script>
+// Initialize Select2 inside the modal after it's shown
+document.addEventListener('DOMContentLoaded', function() {
+    const bookingModalElement = document.getElementById('bookingModal');
+    if (bookingModalElement && typeof $ !== 'undefined' && $.fn.select2) {
+        $(bookingModalElement).on('shown.bs.modal', function () {
+            const participantsSelect = $(this).find('#id_participants');
+            // Check if it's already initialized to prevent duplicate initialization
+            if (participantsSelect.length && !participantsSelect.hasClass('select2-hidden-accessible')) {
+                console.log("Initializing Select2 inside modal.");
+                participantsSelect.select2({
+                    dropdownParent: $(this).find('.modal-body'), // Crucial
+                    width: '100%',
+                    theme: 'bootstrap-5',
+                    placeholder: 'เลือกผู้เข้าร่วม...',
+                    allowClear: true
+                });
+            }
+        });
+    } else {
+        console.warn("Could not initialize Select2 in modal.");
+    }
+});
+</script>

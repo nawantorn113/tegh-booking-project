@@ -18,7 +18,7 @@ class RoomAdmin(admin.ModelAdmin):
 
 @admin.register(Profile)
 class ProfileAdmin(admin.ModelAdmin):
-    list_display = ('user', 'department', 'phone')
+    list_display = ('user', 'department',)
 
 
 @admin.register(LoginHistory)
