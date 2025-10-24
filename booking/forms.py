@@ -3,26 +3,27 @@ from django import forms
 from django.contrib.auth.forms import PasswordChangeForm
 from .models import Booking, Profile, Room
 from django.contrib.auth.models import User
-from django.urls import reverse_lazy # 1. 🟢 เพิ่ม Import นี้ 🟢
+from django.urls import reverse_lazy
 
-# --- ❌ ลบ Import ของ dal ทั้งหมด ❌ ---
-# from dal_select2.widgets import ModelSelect2Multiple 
-# from dal import autocomplete
-# --- --------------------------------- ---
+# --- 1. ✅ Import Widget ที่ถูกต้องจาก dal_select2 ✅ ---
+from dal_select2.widgets import ModelSelect2Multiple 
+# --- ----------------------------------------------- ---
 
 class BookingForm(forms.ModelForm):
     
     class Meta:
         model = Booking
-        # ตรวจสอบว่า fields ตรงกับ Model ของคุณ
+        # --- 🟢 ลบ 'external_participants' ออกจาก fields 🟢 ---
         fields = [
             'room', 'title', 'chairman', 'department', 'start_time',
             'end_time', 'participant_count', 
             'participants', # <-- 1. ช่องค้นหา
-            'external_participants', # <-- 2. ช่องพิมพ์เอง
+            # 'external_participants', # <-- ลบออก
             'presentation_file',
             'additional_requests', 'attachment', 'description', 'additional_notes', 'status',
         ]
+        # --- ----------------------------------------------- ---
+        
         labels = {
             'room': 'ห้องประชุม',
             'title': 'หัวข้อการประชุม',
@@ -32,7 +33,7 @@ class BookingForm(forms.ModelForm):
             'end_time': 'วัน/เวลา สิ้นสุด',
             'participant_count': 'จำนวนผู้เข้าร่วม (โดยประมาณ)',
             'participants': 'รายชื่อผู้เข้าร่วม (ในระบบ)',
-            'external_participants': 'รายชื่อผู้เข้าร่วม (ภายนอก)',
+            # 'external_participants': 'รายชื่อผู้เข้าร่วม (ภายนอก)', # <-- ลบออก
             'presentation_file': 'ไฟล์นำเสนอ (ถ้ามี)',
             'additional_requests': 'คำขอเพิ่มเติม (เช่น กาแฟ, อุปกรณ์พิเศษ)',
             'attachment': 'ไฟล์แนบอื่นๆ (ถ้ามี)',
@@ -42,7 +43,7 @@ class BookingForm(forms.ModelForm):
         }
         help_texts = {
             'participants': 'พิมพ์ชื่อ, นามสกุล, หรือ username เพื่อค้นหา (ผู้ใช้ในระบบ)',
-            'external_participants': 'สำหรับแขก/คนนอก พิมพ์ชื่อ คั่นด้วยจุลภาค (,) หรือขึ้นบรรทัดใหม่',
+            # 'external_participants': 'สำหรับแขก/คนนอก...', # <-- ลบออก
             'presentation_file': 'ไฟล์ที่ต้องการเปิดขึ้นจอ (PDF, PPT, Word, Excel)',
             'attachment': 'เอกสารอื่นๆ ที่เกี่ยวข้อง',
             'participant_count': 'ระบุจำนวนคร่าวๆ สำหรับการเตรียมห้อง',
@@ -52,21 +53,19 @@ class BookingForm(forms.ModelForm):
             'status': forms.HiddenInput(),
             'start_time': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class':'form-control'}),
             'end_time': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class':'form-control'}),
-
-            # --- 2. 🟢 แก้ไข Widget: ใช้ SelectMultiple ธรรมดา 🟢 ---
-            # แต่เพิ่ม 'class' และ 'data-url' ให้ JS ของเรามาเรียกใช้
-            'participants': forms.SelectMultiple(
-                attrs={
-                    'class': 'form-control select2-ajax-users', # 👈 Class ใหม่
-                    'data-url': reverse_lazy('user-autocomplete'), # 👈 บอก JS ว่าจะค้นหาที่ไหน
-                    'data-theme': 'bootstrap-5',
-                }
+            
+            # (Widget 'participants' ถูกต้องแล้ว)
+            'participants': ModelSelect2Multiple(
+                url='user-autocomplete',
+                attrs={'data-placeholder': 'พิมพ์เพื่อค้นหา...', 'data-theme': 'bootstrap-5'}
             ),
+            
+            # --- 🟢 ลบ Widget ของ external_participants ออก 🟢 ---
+            # 'external_participants': forms.Textarea(
+            #     attrs={'rows': 3, 'class':'form-control', 'placeholder': 'คุณสมชาย (PTT)\nคุณสมหญิง (SCG)'}
+            # ),
             # --- -------------------------------------------- ---
 
-            'external_participants': forms.Textarea(
-                attrs={'rows': 3, 'class':'form-control', 'placeholder': 'คุณสมชาย (PTT)\nคุณสมหญิง (SCG)'}
-            ),
             'description': forms.Textarea(attrs={'rows': 3, 'class':'form-control'}),
             'additional_requests': forms.Textarea(attrs={'rows': 2, 'class':'form-control'}),
             'additional_notes': forms.Textarea(attrs={'rows': 2, 'class':'form-control'}),
