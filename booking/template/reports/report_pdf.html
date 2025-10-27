@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ report_title }}</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 1.5cm;
+        }
+        body {
+            font-family: 'Tahoma', 'Garuda', sans-serif; /* ใช้ Font ที่รองรับภาษาไทย */
+            font-size: 11pt;
+            color: #333;
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            font-size: 18pt;
+            border-bottom: 2px solid #bdc3c7;
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+        }
+        p.report-date {
+            text-align: center;
+            font-size: 10pt;
+            color: #7f8c8d;
+            margin-top: -10px;
+            margin-bottom: 25px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        th, td {
+            border: 1px solid #bdc3c7;
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #ecf0f1;
+            font-weight: bold;
+            color: #34495e;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        td.count-cell {
+            text-align: right;
+            font-weight: bold;
+            width: 120px;
+        }
+        .footer {
+            position: running(footer);
+            text-align: right;
+            font-size: 9pt;
+            color: #7f8c8d;
+        }
+        @page {
+             @bottom-right {
+                content: "หน้า " counter(page) " / " counter(pages);
+             }
+        }
+    </style>
+</head>
+<body>
+    
+    <h1>{{ report_title }}</h1>
+    <p class="report-date">รายงาน ณ วันที่: {{ today_date|date:"d F Y" }}</p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>ชื่อห้องประชุม</th>
+                <th style="text-align: right;">จำนวนครั้งที่ถูกใช้งาน</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for room_stat in room_usage_stats %}
+            <tr>
+                <td>{{ room_stat.name }}</td>
+                <td class="count-cell">{{ room_stat.booking_count }} ครั้ง</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="2" style="text-align: center; padding: 20px;">
+                    -- ไม่พบข้อมูลการใช้งาน --
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+</body>
+</html>

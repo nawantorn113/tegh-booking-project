@@ -1,6 +1,4 @@
 # booking/views.py
-# [ฉบับเต็ม - แก้ไข Logic การดึงค่า start/end ใน api_bookings]
-
 import json
 from datetime import datetime, timedelta
 from django.http import HttpResponse, JsonResponse
@@ -41,12 +39,12 @@ from django.utils import timezone
 from django.contrib.auth.signals import user_logged_in, user_logged_out
 from django.dispatch import receiver
 from django.contrib.auth.forms import AuthenticationForm
-from django.core.exceptions import ValidationError # <-- (อาจจะต้องใช้)
+from django.core.exceptions import ValidationError
 
-# --- 1. 🟢 แก้ไข Imports: ลบ Profile และ ProfileForm 🟢 ---
-from .models import Room, Booking, LoginHistory, Equipment # <-- เพิ่ม Equipment
+# --- 1. 🟢 แก้ไข Imports: (ลบ Profile) 🟢 ---
+from .models import Room, Booking, LoginHistory, Equipment 
 from .forms import BookingForm, CustomPasswordChangeForm, RoomForm 
-# --- --------------------------------------------- ---
+# --- ------------------------------------ ---
 
 
 # --- Login/Logout History ---
@@ -101,7 +99,8 @@ else:
     @login_required
     def UserAutocomplete(request): return JsonResponse({'error': 'Autocomplete unavailable.'}, status=501)
 
-# --- Auth ---
+# --- ✅ 2. START: Auth Views (Login/Logout) ✅ ---
+# (นี่คือ View ที่หายไป)
 def login_view(request):
     if request.user.is_authenticated: return redirect('dashboard')
     if request.method == 'POST':
@@ -133,6 +132,7 @@ def logout_view(request):
 
     messages.success(request, 'คุณได้ออกจากระบบเรียบร้อยแล้ว');
     return redirect('login')
+# --- ✅ END: Auth Views ✅ ---
 
 
 # --- Main Pages ---
@@ -174,8 +174,7 @@ def dashboard_view(request):
 @login_required
 def room_calendar_view(request, room_id):
     room = get_object_or_404(Room, pk=room_id)
-    # ส่ง user เข้าไป (สำหรับ Department)
-    form = BookingForm(initial={'room': room}, user=request.user)
+    form = BookingForm(initial={'room': room}, user=request.user) 
     context = {'room': room, 'form': form}
     return render(request, 'pages/room_calendar.html', context)
 
@@ -218,7 +217,7 @@ def history_view(request):
 def booking_detail_view(request, booking_id):
     booking = get_object_or_404(
         Booking.objects.select_related('room', 'booked_by')
-                       .prefetch_related('participants', 'equipment'), # <-- เพิ่ม equipment
+                       .prefetch_related('participants', 'equipment'),
         pk=booking_id
     )
     is_participant = request.user in booking.participants.all()
@@ -228,6 +227,7 @@ def booking_detail_view(request, booking_id):
     context = {'booking': booking}
     return render(request, 'pages/booking_detail.html', context)
 
+# --- 3. 🟢 START: View เปลี่ยนรหัสผ่าน 🟢 ---
 @login_required
 def change_password_view(request): # (View นี้คือ edit_profile_view เดิม)
     if request.method == 'POST':
@@ -236,7 +236,7 @@ def change_password_view(request): # (View นี้คือ edit_profile_view 
             user = password_form.save()
             update_session_auth_hash(request, user)
             messages.success(request, 'เปลี่ยนรหัสผ่านเรียบร้อยแล้ว');
-            return redirect('change_password')
+            return redirect('change_password') # <-- Redirect กลับมาหน้าเดิม
         else:
             messages.error(request, 'ไม่สามารถเปลี่ยนรหัสผ่านได้ กรุณาตรวจสอบข้อผิดพลาด')
     else: # GET request
@@ -244,42 +244,11 @@ def change_password_view(request): # (View นี้คือ edit_profile_view 
     return render(request, 'pages/change_password.html', {
         'password_form': password_form
     })
+# --- 🟢 END: View เปลี่ยนรหัสผ่าน 🟢 ---
 
 
 # --- Admin ---
-@login_required
-@user_passes_test(is_admin)
-def admin_dashboard_view(request):
-    thirty_days_ago = timezone.now() - timedelta(days=30)
-    recent_approved = Booking.objects.filter(start_time__gte=thirty_days_ago, status='APPROVED')
-
-    room_usage = Room.objects.annotate(
-        booking_count=Count('bookings', filter=Q(bookings__in=recent_approved))
-    ).order_by('-booking_count')
-
-    dept_usage_query = recent_approved.exclude(department__exact='') \
-                                      .values('department') \
-                                      .annotate(count=Count('id')) \
-                                      .order_by('-count')
-    
-    room_usage_labels = [r.name for r in room_usage[:10]]
-    room_usage_data = [r.booking_count for r in room_usage[:10]]
-
-    dept_usage_labels = [d['department'] for d in dept_usage_query[:10] if d.get('department')]
-    dept_usage_data = [d['count'] for d in dept_usage_query[:10] if d.get('department')]
-
-    context = {
-        'pending_count': Booking.objects.filter(status='PENDING').count(),
-        'today_bookings_count': Booking.objects.filter(start_time__date=timezone.now().date(), status='APPROVED').count(),
-        'total_users_count': User.objects.count(),
-        'total_rooms_count': Room.objects.count(),
-        'login_history': LoginHistory.objects.select_related('user').order_by('-timestamp')[:7],
-        'room_usage_labels': json.dumps(room_usage_labels),
-        'room_usage_data': json.dumps(room_usage_data),
-        'dept_usage_labels': json.dumps(dept_usage_labels),
-        'dept_usage_data': json.dumps(dept_usage_data),
-    }
-    return render(request, 'pages/admin_dashboard.html', context)
+# --- ❌ ลบ View `admin_dashboard_view` (ย้ายไปรวมกับ Reports) ❌ ---
 
 
 # --- APIs ---
@@ -289,30 +258,21 @@ def rooms_api(request):
     resources = [{'id': r.id, 'title': r.name, 'building': r.building or ""} for r in rooms]
     return JsonResponse(resources, safe=False)
 
-# --- 2. 🟢 START: แก้ไข api_bookings 🟢 ---
 @login_required
 def bookings_api(request):
-    # 1. ดึงค่า (ยังไม่ต้องแปลง)
     start_str = request.GET.get('start')
     end_str = request.GET.get('end')
     room_id = request.GET.get('room_id')
 
-    # 2. ตรวจสอบว่า start/end ส่งมา (ถ้าไม่ส่งมา ให้ส่ง Error 400)
     if not start_str or not end_str:
         return JsonResponse({'error': 'Missing required start/end parameters.'}, status=400)
 
-    # 3. แปลงค่า (ถ้ามีค่า)
     try:
-        # FullCalendar อาจส่ง Z (UTC) หรือ +07:00 (Timezone)
-        # .replace('Z', '+00:00') จะจัดการ 'Z'
-        # fromisoformat จะจัดการ +07:00 เอง
         start_dt = timezone.make_aware(datetime.fromisoformat(start_str.replace('Z', '+00:00')))
         end_dt = timezone.make_aware(datetime.fromisoformat(end_str.replace('Z', '+00:00')))
     except (ValueError, TypeError):
-        # ถ้าแปลงค่าวันที่ไม่ได้ (เช่น ส่งมาเป็น "" หรือรูปแบบผิด)
         return JsonResponse({'error': 'Invalid date format.'}, status=400)
     
-    # (โค้ดส่วนที่เหลือเหมือนเดิม)
     bookings = Booking.objects.filter(
         start_time__lt=end_dt,
         end_time__gt=start_dt
@@ -336,7 +296,6 @@ def bookings_api(request):
             },
          })
     return JsonResponse(events, safe=False)
-# --- 🟢 END: แก้ไข api_bookings 🟢 ---
 
 
 @login_required
@@ -394,21 +353,38 @@ def create_booking_view(request, room_id):
     form = BookingForm(request.POST, request.FILES, user=request.user)
     
     if form.is_valid():
-        booking = form.save(commit=False)
-        booking.room = room
-        booking.booked_by = request.user
-        
-        participant_count = form.cleaned_data.get('participant_count', 1)
-        if participant_count >= 15:
-            booking.status = 'PENDING'
-            messages.success(request, f"จอง '{booking.title}' ({room.name}) เรียบร้อย **รออนุมัติ** (ผู้เข้าร่วม {participant_count} คน)")
-        else:
-            booking.status = 'APPROVED'
-            messages.success(request, f"จอง '{booking.title}' ({room.name}) **อนุมัติอัตโนมัติ** เรียบร้อยแล้ว")
-        
-        booking.save()
-        form.save_m2m()
-        return redirect('room_calendar', room_id=room.id)
+        try:
+            booking = form.save(commit=False)
+            booking.room = room
+            booking.booked_by = request.user
+            
+            booking.clean() 
+
+            participant_count = form.cleaned_data.get('participant_count', 1)
+            if participant_count >= 15:
+                booking.status = 'PENDING'
+                messages.success(request, f"จอง '{booking.title}' ({room.name}) เรียบร้อย **รออนุมัติ** (ผู้เข้าร่วม {participant_count} คน)")
+            else:
+                booking.status = 'APPROVED'
+                messages.success(request, f"จอง '{booking.title}' ({room.name}) **อนุมัติอัตโนมัติ** เรียบร้อยแล้ว")
+            
+            booking.save()
+            form.save_m2m() 
+            
+            # (ส่งอีเมลแจ้งเตือน)
+            if booking.status == 'PENDING':
+                send_booking_notification(booking, 'emails/new_booking_pending.html', 'โปรดอนุมัติ')
+            else:
+                send_booking_notification(booking, 'emails/new_booking_approved.html', 'จองสำเร็จ')
+
+            return redirect('room_calendar', room_id=room.id)
+
+        except ValidationError as e:
+            error_str = ", ".join(e.messages)
+            messages.error(request, f"ไม่สามารถสร้างการจองได้: {error_str}")
+            print("Booking validation error (Create):", error_str)
+            return redirect('room_calendar', room_id=room.id)
+            
     else: # Form invalid
         error_list = []
         for field, errors in form.errors.items():
@@ -430,17 +406,33 @@ def edit_booking_view(request, booking_id):
     if request.method == 'POST':
         form = BookingForm(request.POST, request.FILES, instance=booking, user=request.user)
         if form.is_valid():
-            updated_booking = form.save(commit=False)
-            new_count = form.cleaned_data.get('participant_count', 1)
-            changed_for_approval = any(f in form.changed_data for f in ['start_time', 'end_time', 'participant_count'])
-            if new_count >= 15 and changed_for_approval and updated_booking.status not in ['PENDING', 'REJECTED', 'CANCELLED']:
-                 updated_booking.status = 'PENDING'
-                 messages.info(request, "การแก้ไขต้องรอการอนุมัติใหม่")
-            updated_booking.save()
-            form.save_m2m()
-            messages.success(request, "แก้ไขข้อมูลการจองเรียบร้อยแล้ว")
-            return redirect('history')
-        else:
+            try:
+                updated_booking = form.save(commit=False)
+                
+                updated_booking.clean() 
+
+                new_count = form.cleaned_data.get('participant_count', 1)
+                changed_for_approval = any(f in form.changed_data for f in ['start_time', 'end_time', 'participant_count'])
+                
+                if new_count >= 15 and changed_for_approval and updated_booking.status not in ['PENDING', 'REJECTED', 'CANCELLED']:
+                     updated_booking.status = 'PENDING'
+                     messages.info(request, "การแก้ไขต้องรอการอนุมัติใหม่")
+                
+                updated_booking.save()
+                form.save_m2m()
+                messages.success(request, "แก้ไขข้อมูลการจองเรียบร้อยแล้ว")
+
+                if updated_booking.status == 'PENDING' and changed_for_approval:
+                     send_booking_notification(updated_booking, 'emails/new_booking_pending.html', 'โปรดอนุมัติ (แก้ไข)')
+
+                return redirect('history')
+
+            except ValidationError as e:
+                error_str = ", ".join(e.messages)
+                form.add_error(None, e)
+                messages.error(request, f"ไม่สามารถบันทึกได้: {error_str}")
+
+        else: # Form invalid
              messages.error(request, "ไม่สามารถบันทึกการแก้ไขได้ กรุณาตรวจสอบข้อผิดพลาด")
     else: # GET request
         form = BookingForm(instance=booking, user=request.user)
@@ -605,17 +597,36 @@ def reports_view(request):
     room_usage_stats = Room.objects.annotate(
         booking_count=Count('bookings', filter=Q(bookings__in=recent_bookings))
     ).filter(booking_count__gt=0).order_by('-booking_count')
+    
+    room_usage_labels = [r.name for r in room_usage_stats[:10]]
+    room_usage_data = [r.booking_count for r in room_usage_stats[:10]]
 
-    departments = Booking.objects.exclude(department__exact='').exclude(department__isnull=True) \
+    dept_usage_query = recent_bookings.exclude(department__exact='').exclude(department__isnull=True) \
+                                      .values('department') \
+                                      .annotate(count=Count('id')) \
+                                      .order_by('-count')
+    dept_usage_labels = [d['department'] for d in dept_usage_query[:10] if d.get('department')]
+    dept_usage_data = [d['count'] for d in dept_usage_query[:10] if d.get('department')]
+    
+    departments_dropdown = Booking.objects.exclude(department__exact='').exclude(department__isnull=True) \
                                  .values_list('department', flat=True) \
                                  .distinct().order_by('department')
 
     context = {
-        'room_usage_stats': room_usage_stats,
+        'room_usage_stats': room_usage_stats, 
         'report_title': report_title,
+        'all_departments': departments_dropdown, 
         'current_period': period,
-        'all_departments': departments,
         'current_department': department,
+        'room_usage_labels': json.dumps(room_usage_labels),
+        'room_usage_data': json.dumps(room_usage_data),
+        'dept_usage_labels': json.dumps(dept_usage_labels),
+        'dept_usage_data': json.dumps(dept_usage_data),
+        'pending_count': Booking.objects.filter(status='PENDING').count(),
+        'today_bookings_count': Booking.objects.filter(start_time__date=timezone.now().date(), status='APPROVED').count(),
+        'total_users_count': User.objects.count(),
+        'total_rooms_count': Room.objects.count(),
+        'login_history': LoginHistory.objects.select_related('user').order_by('-timestamp')[:7],
      }
     return render(request, 'pages/reports.html', context)
 

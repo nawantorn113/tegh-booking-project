@@ -4,7 +4,7 @@
 {% block title %}เข้าสู่ระบบ - TEGH Booking{% endblock %}
 
 {% block extra_head %}
-{# --- 1. 🟢 START: CSS สำหรับจัดกลางและแต่งฟอร์ม 🟢 --- #}
+{# สไตล์สำหรับจัดหน้า Login ให้อยู่ตรงกลาง #}
 <style>
     body {
         display: flex;
@@ -16,22 +16,20 @@
     .login-card {
         width: 100%;
         max-width: 420px;
-        border-radius: 1rem; /* ขอบโค้งมน */
-        box-shadow: 0 0.5rem 1.5rem rgba(0,0,0,.1); /* เงา */
+        border-radius: 1rem;
+        box-shadow: 0 0.5rem 1.5rem rgba(0,0,0,.1);
         border: 0;
     }
     
-    /* ซ่อน Label (Username:, Password:) ที่ Django สร้าง */
+    /* --- CSS สำหรับ Form (โมเดิร์น) --- */
     #loginForm label {
         display: none;
     }
-    
-    /* จัดการช่อง Input ให้เต็มความกว้างและสวยงาม */
     #loginForm input[type="text"],
     #loginForm input[type="password"] {
         display: block;
         width: 100%;
-        padding: 0.85rem 1.1rem; /* ขนาดช่อง */
+        padding: 0.85rem 1.1rem;
         font-size: 1rem;
         font-weight: 400;
         line-height: 1.5;
@@ -42,7 +40,6 @@
         appearance: none;
         transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
     }
-    /* กรอบสีฟ้าตอนคลิก */
     #loginForm input[type="text"]:focus,
     #loginForm input[type="password"]:focus {
         color: #212529;
@@ -51,15 +48,12 @@
         outline: 0;
         box-shadow: 0 0 0 0.25rem rgba(13,110,253,.25);
     }
-    
-    /* จัดการช่อง Username (ช่องบน) */
     #loginForm #id_username {
         border-bottom-left-radius: 0;
         border-bottom-right-radius: 0;
-        margin-bottom: -1px; /* ทำให้ขอบชนกัน */
+        margin-bottom: -1px; /* ขอบชนกัน */
         border-radius: 0.5rem 0.5rem 0 0;
     }
-    /* จัดการช่อง Password (ช่องล่าง) */
     #loginForm #id_password {
         border-top-left-radius: 0;
         border-top-right-radius: 0;
@@ -67,7 +61,6 @@
         border-radius: 0 0 0.5rem 0.5rem;
     }
 </style>
-{# --- 1. 🟢 END: CSS 🟢 --- #}
 {% endblock %}
 
 {% block content %}
@@ -80,7 +73,7 @@
             <p class="text-muted">ระบบจองห้องประชุม</p>
         </div>
 
-        {# แสดง Error (ถ้า Login ผิด) #}
+        {# แสดงข้อความ Error (ถ้า Login ผิด) #}
         {% if form.non_field_errors %}
              <div class="alert alert-danger small p-2" role="alert">
                 {% for error in form.non_field_errors %}
@@ -89,18 +82,33 @@
             </div>
         {% endif %}
 
-        <form method="post" action="{% url 'login' %}" id="loginForm">
+
+        {# --- 1. นี่คือฟอร์มล็อกอิน --- #}
+        <form method="post" action="{% url 'login' %}">
             
-            {# --- 2. ✅ เพิ่มบรรทัดนี้ (แก้ Error 403) ✅ --- #}
+            {# --- 2. ✅ ต้องมีบรรทัดนี้! ✅ --- #}
             {% csrf_token %}
             
+            {# (ถ้ามี next URL ซ่อนไว้) #}
             <input type="hidden" name="next" value="{{ next|default:'/' }}">
 
-            {# Django จะ Render <input id="id_username" ...> #}
-            {{ form.username }}
+            {# ช่อง Username #}
+            <div class="form-floating mb-3">
+                {{ form.username }}
+                <label for="{{ form.username.id_for_label }}">ชื่อผู้ใช้ (Username)</label>
+                 {% if form.username.errors %}
+                    <div class="invalid-feedback d-block">{{ form.username.errors|first }}</div>
+                 {% endif %}
+            </div>
             
-            {# Django จะ Render <input id="id_password" ...> #}
-            {{ form.password }}
+            {# ช่อง Password #}
+            <div class="form-floating mb-3">
+                {{ form.password }}
+                <label for="{{ form.password.id_for_label }}">รหัสผ่าน</label>
+                 {% if form.password.errors %}
+                    <div class="invalid-feedback d-block">{{ form.password.errors|first }}</div>
+                 {% endif %}
+            </div>
 
             <div class="d-grid">
                 <button class="btn btn-primary btn-lg rounded-pill" type="submit">
@@ -109,26 +117,18 @@
             </div>
             
         </form>
+        {# --- สิ้นสุดฟอร์ม --- #}
     </div>
 </div>
 {% endblock %}
 
 
 {% block extra_scripts %}
-{# 3. 🟢 เพิ่ม Script นี้เพื่อใส่ Placeholder 🟢 #}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // ใส่ Placeholder
-    document.getElementById("id_username").placeholder = "ชื่อผู้ใช้ (Username)";
-    document.getElementById("id_password").placeholder = "รหัสผ่าน";
-
-    // เพิ่ม class 'is-invalid' ถ้าช่องนั้นกรอกผิด (สำหรับ CSS)
-    {% if form.username.errors %}
-        document.getElementById("id_username").classList.add("is-invalid");
-    {% endif %}
-    {% if form.password.errors %}
-        document.getElementById("id_password").classList.add("is-invalid");
-    {% endif %}
+$(document).ready(function() {
+    // เพิ่ม Bootstrap class ให้ช่องกรอกของ Django
+    $("#{{ form.username.id_for_label }}").addClass("form-control {% if form.username.errors %}is-invalid{% endif %}");
+    $("#{{ form.password.id_for_label }}").addClass("form-control {% if form.password.errors %}is-invalid{% endif %}");
 });
 </script>
 {% endblock %}

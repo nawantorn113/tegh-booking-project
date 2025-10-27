@@ -6,132 +6,89 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}TEGH Booking{% endblock %}</title>
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" ...>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
-
     <link rel="stylesheet" href="{% static 'css/theme.css' %}">
 
     <style>
-        body {
-            display: flex;
-            min-height: 100vh;
-            background-color: #f8f9fa; 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
-        }
-        .sidebar {
-            width: 260px;
-            min-height: 100vh;
-            background-color: #4338ca; /* สี Indigo เข้ม */
-            color: #c7d2fe; 
-            position: fixed;
-            top: 0;
-            left: 0;
-            bottom: 0;
-            z-index: 100;
-            padding: 0.75rem; 
-            box-shadow: 0 0.5rem 1.5rem rgba(0,0,0,.1); 
-        }
-        .sidebar .sidebar-header {
-            padding: 1rem 1rem 1.25rem 1rem;
-            margin-bottom: 0.5rem;
-            color: #fff;
-            text-align: center;
-            border-bottom: 1px solid #4f46e5; 
-        }
+        body { display: flex; min-height: 100vh; background-color: #f8f9fa; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif; }
+        .sidebar { width: 260px; min-height: 100vh; background-color: #4338ca; color: #c7d2fe; position: fixed; top: 0; left: 0; bottom: 0; z-index: 100; padding: 0.75rem; box-shadow: 0 0.5rem 1.5rem rgba(0,0,0,.1); }
+        .sidebar .sidebar-header { padding: 1rem 1rem 1.25rem 1rem; margin-bottom: 0.5rem; color: #fff; text-align: center; border-bottom: 1px solid #4f46e5; }
         .sidebar .sidebar-header h5 { margin-bottom: 0.25rem; }
         .sidebar .sidebar-header small { font-size: 0.8rem; color: #c7d2fe !important; } 
-        .sidebar .nav-link {
-            color: #c7d2fe; 
-            padding: 0.6rem 1rem; 
-            font-size: 0.95rem;
-            font-weight: 500; 
-            border-radius: 0.5rem; 
-            margin-bottom: 0.25rem; 
-            transition: background-color 0.2s ease, color 0.2s ease; 
-        }
-        .sidebar .nav-link i {
-            margin-right: 0.75rem;
-            width: 22px; 
-            text-align: center;
-            font-size: 1.1rem; 
-        }
-        .sidebar .nav-link:hover {
-            color: #fff;
-            background-color: #4f46e5; 
-        }
-        .sidebar .nav-link.active {
-            color: #4338ca; 
-            font-weight: 600; 
-            background-color: #ffffff; 
-        }
-        .sidebar .nav-link.active i {
-            color: #4338ca !important;
-        }
-        .sidebar .sidebar-footer {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            padding: 1rem 0.75rem;
-            border-top: 1px solid #4f46e5; 
-            background-color: #4338ca; 
-        }
-        .sidebar-footer .dropdown-toggle {
-            display: flex;
-            align-items: center;
-            width: 100%;
-            padding: 0.5rem 0.75rem;
-            border-radius: 0.5rem;
-            transition: background-color 0.2s ease;
-            color: #fff !important; 
-        }
-         .sidebar-footer .dropdown-toggle:hover {
-             background-color: #4f46e5; 
-         }
-         .sidebar-footer .dropdown-toggle .small {
-             color: #c7d2fe !important; 
-         }
-        .sidebar-footer .dropdown-menu {
-            border-radius: 0.5rem;
-            box-shadow: 0 0.5rem 1rem rgba(0,0,0,.15);
-            border: 1px solid rgba(0,0,0,.05);
-        }
-        .main-content-wrapper {
-            margin-left: 260px; 
-            padding: 1.5rem;
-            width: calc(100% - 260px);
-            flex-grow: 1;
-        }
-        .page-header {
-             background-color: #fff;
-             padding: 1rem 1.5rem;
-             margin-bottom: 1.5rem;
-             border-radius: 0.75rem; 
-             box-shadow: 0 0.125rem 0.5rem rgba(0, 0, 0, 0.05); 
-             border: 1px solid #e9ecef;
-             display: flex;
-             justify-content: space-between;
-             align-items: center;
-        }
+        .sidebar .nav-link { color: #c7d2fe; padding: 0.6rem 1rem; font-size: 0.95rem; font-weight: 500; border-radius: 0.5rem; margin-bottom: 0.25rem; transition: background-color 0.2s ease, color 0.2s ease; }
+        .sidebar .nav-link i { margin-right: 0.75rem; width: 22px; text-align: center; font-size: 1.1rem; }
+        .sidebar .nav-link:hover { color: #fff; background-color: #4f46e5; }
+        .sidebar .nav-link.active { color: #4338ca; font-weight: 600; background-color: #ffffff; }
+        .sidebar .nav-link.active i { color: #4338ca !important; }
+        .sidebar .sidebar-footer { position: absolute; bottom: 0; left: 0; width: 100%; padding: 1rem 0.75rem; border-top: 1px solid #4f46e5; background-color: #4338ca; }
+        .sidebar-footer .dropdown-toggle { display: flex; align-items: center; width: 100%; padding: 0.5rem 0.75rem; border-radius: 0.5rem; transition: background-color 0.2s ease; color: #fff !important; }
+         .sidebar-footer .dropdown-toggle:hover { background-color: #4f46e5; }
+         .sidebar-footer .dropdown-toggle .small { color: #c7d2fe !important; }
+        .sidebar-footer .dropdown-menu { border-radius: 0.5rem; box-shadow: 0 0.5rem 1rem rgba(0,0,0,.15); border: 1px solid rgba(0,0,0,.05); }
+        .main-content-wrapper { margin-left: 260px; padding: 1.5rem; width: calc(100% - 260px); flex-grow: 1; }
+        .page-header { background-color: #fff; padding: 1rem 1.5rem; margin-bottom: 1.5rem; border-radius: 0.75rem; box-shadow: 0 0.125rem 0.5rem rgba(0, 0, 0, 0.05); border: 1px solid #e9ecef; display: flex; justify-content: space-between; align-items: center; }
         .page-header h5 { margin-bottom: 0; color: #495057; font-weight: 600;} 
-        .dropdown-item-form button {
-            padding: 0.25rem 1rem; 
-            color: #dc3545;
-            background: none; border: none;
-            width: 100%; text-align: left;
+        .dropdown-item-form button { padding: 0.25rem 1rem; color: #dc3545; background: none; border: none; width: 100%; text-align: left; }
+        .dropdown-item-form button:hover { color: #fff; background-color: #dc3545; }
+        .sidebar .nav-link .badge { font-size: 0.7em; padding: 0.3em 0.5em; vertical-align: middle; }
+        
+        /* --- 1. 🟢 START: CSS สำหรับ "กระดิ่ง" (Header) 🟢 --- */
+        .header-notification-bell {
+            font-size: 1.4rem;
+            color: #6c757d; /* สีเทา */
+            position: relative;
+            text-decoration: none;
+            transition: color 0.2s ease;
         }
-        .dropdown-item-form button:hover {
-            color: #fff; background-color: #dc3545;
+        .header-notification-bell:hover {
+            color: #0d6efd; /* สีฟ้าตอน Hover */
         }
-    </style>
+        .header-notification-bell .badge {
+            position: absolute;
+            top: -5px; 
+            right: -10px;
+            font-size: 0.6em;
+            padding: 0.25em 0.45em;
+            font-weight: bold;
+        }
+        /* (CSS สำหรับ Dropdown ของกระดิ่ง) */
+        .notification-dropdown {
+            width: 350px; /* ทำให้กล่องกว้างขึ้น */
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .notification-dropdown-item {
+            padding: 0.75rem 1rem;
+            display: block;
+            text-decoration: none;
+            color: #212529;
+            border-bottom: 1px solid #f0f0f0;
+            white-space: normal; /* อนุญาตให้ข้อความตัดบรรทัด */
+        }
+        .notification-dropdown-item:hover {
+            background-color: #f8f9fa;
+        }
+        .notification-dropdown-item .fw-bold {
+            font-size: 0.9rem;
+        }
+        .notification-dropdown-item .text-muted {
+            font-size: 0.8rem;
+        }
+        .notification-dropdown-footer {
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        /* --- 1. 🟢 END: CSS 🟢 --- */
 
+    </style>
     {% block extra_head %}{% endblock %}
 </head>
 <body>
     <nav class="sidebar">
+        {# (Sidebar Header ... เหมือนเดิม) #}
         <div class="sidebar-header">
             <h5 class="fw-bold"><i class="bi bi-calendar-week-fill me-2"></i>TEGH Booking</h5>
             <small class="text-muted">ระบบจองห้องประชุม</small>
@@ -142,8 +99,17 @@
                  {% for item in menu_items %}
                     {% if item.show %}
                         <li class="nav-item">
-                            <a class="nav-link {% if item.active %}active{% endif %}" href="{% url item.url_name %}">
-                                <i class="{{ item.icon }}"></i> {{ item.label }}
+                            <a class="nav-link {% if item.active %}active{% endif %} d-flex justify-content-between align-items-center" href="{% url item.url_name %}">
+                                <span>
+                                    <i class="{{ item.icon }}"></i> {{ item.label }}
+                                </span>
+                                
+                                {# (Badge แจ้งเตือนบนเมนู "รออนุมัติ") #}
+                                {% if item.url_name == 'approvals' and pending_count > 0 %}
+                                    <span class="badge bg-danger rounded-pill">
+                                        {{ pending_count }}
+                                    </span>
+                                {% endif %}
                             </a>
                         </li>
                      {% endif %}
@@ -151,7 +117,7 @@
             </ul>
         </div>
 
-        {# Footer with User Info and Logout #}
+        {# (Footer ... เหมือนเดิม) #}
         <div class="sidebar-footer">
             {% if user.is_authenticated %}
             <div class="dropdown">
@@ -163,7 +129,6 @@
                     </div>
                 </a>
                 <ul class="dropdown-menu dropdown-menu-dark text-small shadow" aria-labelledby="dropdownUser1">
-                    
                     <li><a class="dropdown-item" href="{% url 'change_password' %}"><i class="bi bi-key-fill me-2"></i>เปลี่ยนรหัสผ่าน</a></li>
                     <li><hr class="dropdown-divider"></li>
                     <li>
@@ -184,10 +149,66 @@
         
         {# ส่วนหัว (Page Title) #}
         <div class="page-header">
-            {# --- ✅ นี่คือจุดที่แก้ไข ✅ --- #}
-            <h5 class="mb-0">{% block page_title %}<span class="text-primary">หน้าจองห้องประชุม</span>{% endblock %}</h5>
-            {# --- ------------------- --- #}
-            <div></div>
+            <h5 class="mb-0">{% block page_title %}หน้าจองห้องประชุม{% endblock %}</h5>
+            
+            {# --- 2. 🟢 START: แก้ไข HTML กระดิ่ง (ให้เป็น Dropdown) 🟢 --- #}
+            <div>
+                {% if user.is_authenticated and is_admin_user %} {# (is_admin_user มาจาก context_processor) #}
+                
+                <div class="dropdown">
+                    {# 2.1 - ปุ่ม Trigger (กระดิ่ง) #}
+                    <a href="#" class="header-notification-bell" 
+                       id="notificationBell"
+                       data-bs-toggle="dropdown" 
+                       aria-expanded="false"
+                       title="รายการแจ้งเตือน"> 
+                        
+                        <i class="bi bi-bell-fill"></i>
+                        
+                        {% if pending_count > 0 %}
+                        <span class="badge rounded-pill bg-danger">
+                            {{ pending_count }}
+                            <span class="visually-hidden">รายการรออนุมัติ</span>
+                        </span>
+                        {% endif %}
+                    </a>
+
+                    {# 2.2 - กล่อง Dropdown แจ้งเตือน #}
+                    <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 notification-dropdown" aria-labelledby="notificationBell">
+                        <li class="px-3 py-2">
+                            <h6 class="mb-0 fw-bold">รายการแจ้งเตือน ({{ pending_count }})</h6>
+                        </li>
+                        <li><hr class="dropdown-divider my-0"></li>
+                        
+                        {# 2.3 - วนลูปแสดง 5 รายการล่าสุด #}
+                        {% for booking in pending_notifications %}
+                            <li>
+                                <a class="notification-dropdown-item" href="{% url 'booking_detail' booking.id %}">
+                                    <div class="fw-bold">{{ booking.title|truncatechars:40 }}</div>
+                                    <div class="text-muted">{{ booking.room.name }}</div>
+                                    <div class="text-muted small">{{ booking.start_time|date:"d M Y, H:i" }}</div>
+                                </a>
+                            </li>
+                        {% empty %}
+                            <li>
+                                <a class="notification-dropdown-item text-center text-muted" href="#">
+                                    (ไม่มีรายการแจ้งเตือนใหม่)
+                                </a>
+                            </li>
+                        {% endfor %}
+                        
+                        <li><hr class="dropdown-divider my-0"></li>
+                        <li>
+                            <a class="dropdown-item text-center notification-dropdown-footer text-primary" href="{% url 'approvals' %}">
+                                ดูรายการรออนุมัติทั้งหมด
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                
+                {% endif %}
+            </div>
+            {# --- 2. 🟢 END: แก้ไข HTML กระดิ่ง 🟢 --- #}
         </div>
 
         {% if messages %}
@@ -205,18 +226,22 @@
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
-    {# jQuery (needed for Select2) #}
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    {# Select2 JS (needed for Autocomplete) #}
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
 
-    {# Script เริ่มต้น Select2 #}
     <script>
     $(document).ready(function() {
-        // ตั้งค่า Default theme ให้ Select2
         if ($.fn.select2) {
             $.fn.select2.defaults.set("theme", "bootstrap-5");
         }
+        
+        // --- 3. 🟢 START: เปิดใช้งาน Tooltips (สำหรับกระดิ่ง) 🟢 ---
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+          return new bootstrap.Tooltip(tooltipTriggerEl)
+        })
+        // --- 3. 🟢 END: Tooltips 🟢 ---
     });
     </script>
     
