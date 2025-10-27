@@ -3,25 +3,26 @@ from django import forms
 from django.contrib.auth.forms import PasswordChangeForm
 from .models import Booking, Profile, Room
 from django.contrib.auth.models import User
-from django.urls import reverse_lazy
+from django.urls import reverse_lazy # 1. 🟢 เพิ่ม Import นี้ 🟢
 
-# --- 1. ✅ Import Widget ที่ถูกต้องจาก dal_select2 ✅ ---
-from dal_select2.widgets import ModelSelect2Multiple 
-# --- ----------------------------------------------- ---
+# --- ❌ ลบ Import ของ dal ทั้งหมด ❌ ---
+# from dal_select2.widgets import ModelSelect2Multiple 
+# from dal import autocomplete
+# --- --------------------------------- ---
 
 class BookingForm(forms.ModelForm):
     
     class Meta:
         model = Booking
-        # --- (ลบ 'external_participants' ออกแล้ว) ---
+        # ตรวจสอบว่า fields ตรงกับ Model ของคุณ
         fields = [
             'room', 'title', 'chairman', 'department', 'start_time',
             'end_time', 'participant_count', 
-            'participants',
+            'participants', # <-- 1. ช่องค้นหา
+            'external_participants', # <-- 2. ช่องพิมพ์เอง
             'presentation_file',
             'additional_requests', 'attachment', 'description', 'additional_notes', 'status',
         ]
-        
         labels = {
             'room': 'ห้องประชุม',
             'title': 'หัวข้อการประชุม',
@@ -31,8 +32,9 @@ class BookingForm(forms.ModelForm):
             'end_time': 'วัน/เวลา สิ้นสุด',
             'participant_count': 'จำนวนผู้เข้าร่วม (โดยประมาณ)',
             'participants': 'รายชื่อผู้เข้าร่วม (ในระบบ)',
+            'external_participants': 'รายชื่อผู้เข้าร่วม (ภายนอก)',
             'presentation_file': 'ไฟล์นำเสนอ (ถ้ามี)',
-            'additional_requests': 'คำขอเพิ่มเติม (เช่น อุปกรณ์พิเศษ)',
+            'additional_requests': 'คำขอเพิ่มเติม (เช่น กาแฟ, อุปกรณ์พิเศษ)',
             'attachment': 'ไฟล์แนบอื่นๆ (ถ้ามี)',
             'description': 'รายละเอียด/วาระการประชุม',
             'additional_notes': 'หมายเหตุเพิ่มเติม',
@@ -40,6 +42,7 @@ class BookingForm(forms.ModelForm):
         }
         help_texts = {
             'participants': 'พิมพ์ชื่อ, นามสกุล, หรือ username เพื่อค้นหา (ผู้ใช้ในระบบ)',
+            'external_participants': 'สำหรับแขก/คนนอก พิมพ์ชื่อ คั่นด้วยจุลภาค (,) หรือขึ้นบรรทัดใหม่',
             'presentation_file': 'ไฟล์ที่ต้องการเปิดขึ้นจอ (PDF, PPT, Word, Excel)',
             'attachment': 'เอกสารอื่นๆ ที่เกี่ยวข้อง',
             'participant_count': 'ระบุจำนวนคร่าวๆ สำหรับการเตรียมห้อง',
@@ -49,12 +52,21 @@ class BookingForm(forms.ModelForm):
             'status': forms.HiddenInput(),
             'start_time': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class':'form-control'}),
             'end_time': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class':'form-control'}),
-            
-            'participants': ModelSelect2Multiple(
-                url='user-autocomplete',
-                attrs={'data-placeholder': 'พิมพ์เพื่อค้นหา...', 'data-theme': 'bootstrap-5'}
+
+            # --- 2. 🟢 แก้ไข Widget: ใช้ SelectMultiple ธรรมดา 🟢 ---
+            # แต่เพิ่ม 'class' และ 'data-url' ให้ JS ของเรามาเรียกใช้
+            'participants': forms.SelectMultiple(
+                attrs={
+                    'class': 'form-control select2-ajax-users', # 👈 Class ใหม่
+                    'data-url': reverse_lazy('user-autocomplete'), # 👈 บอก JS ว่าจะค้นหาที่ไหน
+                    'data-theme': 'bootstrap-5',
+                }
             ),
-            
+            # --- -------------------------------------------- ---
+
+            'external_participants': forms.Textarea(
+                attrs={'rows': 3, 'class':'form-control', 'placeholder': 'คุณสมชาย (PTT)\nคุณสมหญิง (SCG)'}
+            ),
             'description': forms.Textarea(attrs={'rows': 3, 'class':'form-control'}),
             'additional_requests': forms.Textarea(attrs={'rows': 2, 'class':'form-control'}),
             'additional_notes': forms.Textarea(attrs={'rows': 2, 'class':'form-control'}),
@@ -72,13 +84,11 @@ class BookingForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         if user and 'department' in self.fields:
              try:
-                 # ✅ แก้ไข: ตรวจสอบว่า Profile model ยังอยู่หรือไม่
-                 if hasattr(user, 'profile'):
-                     profile = user.profile
-                     if profile.department:
-                         self.fields['department'].initial = profile.department
-                         self.fields['department'].widget.attrs['readonly'] = True
-                         self.fields['department'].widget.attrs['class'] = 'form-control bg-light'
+                 profile = Profile.objects.get(user=user)
+                 if profile.department:
+                     self.fields['department'].initial = profile.department
+                     self.fields['department'].widget.attrs['readonly'] = True
+                     self.fields['department'].widget.attrs['class'] = 'form-control bg-light'
              except Profile.DoesNotExist:
                  pass
 
@@ -124,9 +134,7 @@ class CustomPasswordChangeForm(PasswordChangeForm):
 class RoomForm(forms.ModelForm):
     class Meta:
         model = Room
-        # --- 🟢 ลบ 'location' ออกจาก fields 🟢 ---
         fields = ['name', 'building', 'floor', 'capacity', 'equipment_in_room', 'image']
-        # --- --------------------------------- ---
         labels = {
             'name': 'ชื่อห้องประชุม', 'building': 'อาคาร', 'floor': 'ชั้น',
             'capacity': 'ความจุ (คน)', 'equipment_in_room': 'อุปกรณ์ภายในห้อง',

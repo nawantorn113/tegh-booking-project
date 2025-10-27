@@ -182,8 +182,11 @@
 
     <main class="main-content-wrapper flex-grow-1">
         
+        {# ส่วนหัว (Page Title) #}
         <div class="page-header">
-            <h5 class="mb-0">{% block page_title %}Page Title{% endblock %}</h5>
+            {# --- ✅ นี่คือจุดที่แก้ไข ✅ --- #}
+            <h5 class="mb-0">{% block page_title %}<span class="text-primary">หน้าจองห้องประชุม</span>{% endblock %}</h5>
+            {# --- ------------------- --- #}
             <div></div>
         </div>
 
@@ -206,11 +209,6 @@
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     {# Select2 JS (needed for Autocomplete) #}
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-
-    {# --- 2. 🟢 START: เพิ่ม FullCalendar JS (แก้ Error) 🟢 --- #}
-    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
-    {# --- ----------------------------------------------- --- #}
-
 
     {# Script เริ่มต้น Select2 #}
     <script>
