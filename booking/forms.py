@@ -32,7 +32,7 @@ class BookingForm(forms.ModelForm):
             'participant_count': 'จำนวนผู้เข้าร่วม (โดยประมาณ)',
             'participants': 'รายชื่อผู้เข้าร่วม (ในระบบ)',
             'presentation_file': 'ไฟล์นำเสนอ (ถ้ามี)',
-            'additional_requests': 'คำขอเพิ่มเติม (เช่น กาแฟ, อุปกรณ์พิเศษ)',
+            'additional_requests': 'คำขอเพิ่มเติม (เช่น อุปกรณ์พิเศษ)',
             'attachment': 'ไฟล์แนบอื่นๆ (ถ้ามี)',
             'description': 'รายละเอียด/วาระการประชุม',
             'additional_notes': 'หมายเหตุเพิ่มเติม',

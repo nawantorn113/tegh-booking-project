@@ -1,33 +1,18 @@
-{% extends "base.html" %}
+{% extends "base_minimal.html" %}
 {% load static %}
 
 {% block title %}เข้าสู่ระบบ - TEGH Booking{% endblock %}
 
 {% block extra_head %}
-{# --- 1. 🟢 START: CSS สำหรับซ่อน Sidebar และจัดกลาง 🟢 --- #}
+{# --- 1. 🟢 START: CSS สำหรับจัดกลางและแต่งฟอร์ม 🟢 --- #}
 <style>
-    /* ซ่อน Sidebar */
-    .sidebar {
-        display: none !important; 
-    }
-    
-    /* ขยับเนื้อหาหลัก (main) ให้เต็มจอ */
-    .main-content-wrapper {
-        margin-left: 0 !important; /* ลบระยะห่าง 260px ของ Sidebar ออก */
-        padding: 0; /* เอา padding ปกติออก */
-        height: 100vh; /* เต็มความสูงจอ */
+    body {
         display: flex;
         align-items: center;
         justify-content: center;
-        background-color: #f8f9fa; /* สีพื้นหลังเทาอ่อน */
+        min-height: 100vh;
+        background-color: #f8f9fa;
     }
-    
-    /* ซ่อน Header ของหน้า (ที่มี Title) */
-    .page-header {
-        display: none !important;
-    }
-    
-    /* สไตล์ Card Login */
     .login-card {
         width: 100%;
         max-width: 420px;
@@ -36,31 +21,45 @@
         border: 0;
     }
     
-    /* --- CSS สำหรับจัดฟอร์ม (เหมือนใน Figma) --- */
+    /* ซ่อน Label (Username:, Password:) ที่ Django สร้าง */
     #loginForm label {
-        display: none; /* ซ่อน Label (Username:, Password:) */
+        display: none;
     }
+    
+    /* จัดการช่อง Input ให้เต็มความกว้างและสวยงาม */
     #loginForm input[type="text"],
     #loginForm input[type="password"] {
         display: block;
         width: 100%;
-        padding: 0.85rem 1.1rem;
+        padding: 0.85rem 1.1rem; /* ขนาดช่อง */
         font-size: 1rem;
+        font-weight: 400;
+        line-height: 1.5;
+        color: #212529;
+        background-color: #fff;
+        background-clip: padding-box;
         border: 1px solid #ced4da;
         appearance: none;
+        transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
     }
+    /* กรอบสีฟ้าตอนคลิก */
     #loginForm input[type="text"]:focus,
     #loginForm input[type="password"]:focus {
+        color: #212529;
+        background-color: #fff;
         border-color: #86b7fe; 
         outline: 0;
         box-shadow: 0 0 0 0.25rem rgba(13,110,253,.25);
     }
+    
+    /* จัดการช่อง Username (ช่องบน) */
     #loginForm #id_username {
         border-bottom-left-radius: 0;
         border-bottom-right-radius: 0;
-        margin-bottom: -1px; /* ขอบชนกัน */
+        margin-bottom: -1px; /* ทำให้ขอบชนกัน */
         border-radius: 0.5rem 0.5rem 0 0;
     }
+    /* จัดการช่อง Password (ช่องล่าง) */
     #loginForm #id_password {
         border-top-left-radius: 0;
         border-top-right-radius: 0;
@@ -81,7 +80,7 @@
             <p class="text-muted">ระบบจองห้องประชุม</p>
         </div>
 
-        {# แสดงข้อความ Error (ถ้า Login ผิด) #}
+        {# แสดง Error (ถ้า Login ผิด) #}
         {% if form.non_field_errors %}
              <div class="alert alert-danger small p-2" role="alert">
                 {% for error in form.non_field_errors %}
@@ -97,10 +96,10 @@
             
             <input type="hidden" name="next" value="{{ next|default:'/' }}">
 
-            {# ช่อง Username #}
+            {# Django จะ Render <input id="id_username" ...> #}
             {{ form.username }}
             
-            {# ช่อง Password #}
+            {# Django จะ Render <input id="id_password" ...> #}
             {{ form.password }}
 
             <div class="d-grid">
@@ -119,8 +118,6 @@
 {# 3. 🟢 เพิ่ม Script นี้เพื่อใส่ Placeholder 🟢 #}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // (Script นี้จะทำงานเฉพาะหน้า Login)
-    
     // ใส่ Placeholder
     document.getElementById("id_username").placeholder = "ชื่อผู้ใช้ (Username)";
     document.getElementById("id_password").placeholder = "รหัสผ่าน";
