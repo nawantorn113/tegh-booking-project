@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 {% block title %}Dashboard - TEGH Booking{% endblock %}
-{% block page_title %}Dashboard สถานะห้องประชุม{% endblock %}
+{% block page_title %}หน้าหลัก{% endblock %}
 
 {% block extra_head %}
 <style>
@@ -82,7 +82,7 @@
 
     {# --- ส่วนแสดงลิสต์ห้อง --- #}
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h3 class="mb-0">ภาพรวมห้องประชุม</h3>
+        <h3 class="mb-0">สถานะห้องประชุม</h3>
         <div class="d-flex align-items-center">
             <label for="sortSelect" class="form-label me-2 mb-0 small text-muted">เรียงตาม:</label>
             <select class="form-select form-select-sm" id="sortSelect" style="width: auto;" onchange="window.location.href='?sort='+this.value">
