@@ -1,48 +1,137 @@
-{% extends 'base.html' %} {# ใช้ base template หลักของเว็บ #}
-{% block content %}
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card shadow-sm">
-                <div class="card-body p-4">
-                    <h2 class="card-title text-center mb-4">Login</h2>
-                    
-                    {% if messages %}
-                        {% for message in messages %}
-                            <div class="alert alert-{{ message.tags|default:'danger' }} alert-dismissible fade show" role="alert">
-                                {{ message }}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                            </div>
-                        {% endfor %}
-                    {% endif %}
+{% extends "base.html" %}
+{% load static %}
 
-                    <form method="post" action="{% url 'login' %}">
-                        
-                        {% csrf_token %}
-                        {# Assuming you are using Django's AuthenticationForm #}
-                        {% for field in form %}
-                            <div class="mb-3">
-                                <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
-                                <input type="{{ field.field.widget.input_type }}" 
-                                       name="{{ field.name }}" 
-                                       id="{{ field.id_for_label }}" 
-                                       class="form-control {% if field.errors %}is-invalid{% endif %}" 
-                                       required>
-                                {% if field.errors %}
-                                    <div class="invalid-feedback">
-                                        {{ field.errors|first }}
-                                    </div>
-                                {% endif %}
-                            </div>
-                        {% endfor %}
-                        
-                        <div class="d-grid">
-                           <button type="submit" class="btn btn-primary">Login</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
+{% block title %}เข้าสู่ระบบ - TEGH Booking{% endblock %}
+
+{% block extra_head %}
+{# --- 1. 🟢 START: CSS สำหรับซ่อน Sidebar และจัดกลาง 🟢 --- #}
+<style>
+    /* ซ่อน Sidebar */
+    .sidebar {
+        display: none !important; 
+    }
+    
+    /* ขยับเนื้อหาหลัก (main) ให้เต็มจอ */
+    .main-content-wrapper {
+        margin-left: 0 !important; /* ลบระยะห่าง 260px ของ Sidebar ออก */
+        padding: 0; /* เอา padding ปกติออก */
+        height: 100vh; /* เต็มความสูงจอ */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #f8f9fa; /* สีพื้นหลังเทาอ่อน */
+    }
+    
+    /* ซ่อน Header ของหน้า (ที่มี Title) */
+    .page-header {
+        display: none !important;
+    }
+    
+    /* สไตล์ Card Login */
+    .login-card {
+        width: 100%;
+        max-width: 420px;
+        border-radius: 1rem; /* ขอบโค้งมน */
+        box-shadow: 0 0.5rem 1.5rem rgba(0,0,0,.1); /* เงา */
+        border: 0;
+    }
+    
+    /* --- CSS สำหรับจัดฟอร์ม (เหมือนใน Figma) --- */
+    #loginForm label {
+        display: none; /* ซ่อน Label (Username:, Password:) */
+    }
+    #loginForm input[type="text"],
+    #loginForm input[type="password"] {
+        display: block;
+        width: 100%;
+        padding: 0.85rem 1.1rem;
+        font-size: 1rem;
+        border: 1px solid #ced4da;
+        appearance: none;
+    }
+    #loginForm input[type="text"]:focus,
+    #loginForm input[type="password"]:focus {
+        border-color: #86b7fe; 
+        outline: 0;
+        box-shadow: 0 0 0 0.25rem rgba(13,110,253,.25);
+    }
+    #loginForm #id_username {
+        border-bottom-left-radius: 0;
+        border-bottom-right-radius: 0;
+        margin-bottom: -1px; /* ขอบชนกัน */
+        border-radius: 0.5rem 0.5rem 0 0;
+    }
+    #loginForm #id_password {
+        border-top-left-radius: 0;
+        border-top-right-radius: 0;
+        margin-bottom: 1.5rem; /* เว้นที่ก่อนปุ่ม */
+        border-radius: 0 0 0.5rem 0.5rem;
+    }
+</style>
+{# --- 1. 🟢 END: CSS 🟢 --- #}
+{% endblock %}
+
+{% block content %}
+<div class="login-card">
+    <div class="card-body p-4 p-md-5">
+        
+        <div class="text-center mb-4">
+            <i class="bi bi-calendar-week-fill fs-1 text-primary"></i>
+            <h3 class="fw-bold mt-2 mb-0">TEGH Booking</h3>
+            <p class="text-muted">ระบบจองห้องประชุม</p>
         </div>
+
+        {# แสดงข้อความ Error (ถ้า Login ผิด) #}
+        {% if form.non_field_errors %}
+             <div class="alert alert-danger small p-2" role="alert">
+                {% for error in form.non_field_errors %}
+                    {{ error }}
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <form method="post" action="{% url 'login' %}" id="loginForm">
+            
+            {# --- 2. ✅ เพิ่มบรรทัดนี้ (แก้ Error 403) ✅ --- #}
+            {% csrf_token %}
+            
+            <input type="hidden" name="next" value="{{ next|default:'/' }}">
+
+            {# ช่อง Username #}
+            {{ form.username }}
+            
+            {# ช่อง Password #}
+            {{ form.password }}
+
+            <div class="d-grid">
+                <button class="btn btn-primary btn-lg rounded-pill" type="submit">
+                    <i class="bi bi-box-arrow-in-right me-2"></i>เข้าสู่ระบบ
+                </button>
+            </div>
+            
+        </form>
     </div>
 </div>
+{% endblock %}
+
+
+{% block extra_scripts %}
+{# 3. 🟢 เพิ่ม Script นี้เพื่อใส่ Placeholder 🟢 #}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // (Script นี้จะทำงานเฉพาะหน้า Login)
+    
+    // ใส่ Placeholder
+    document.getElementById("id_username").placeholder = "ชื่อผู้ใช้ (Username)";
+    document.getElementById("id_password").placeholder = "รหัสผ่าน";
+
+    // เพิ่ม class 'is-invalid' ถ้าช่องนั้นกรอกผิด (สำหรับ CSS)
+    {% if form.username.errors %}
+        document.getElementById("id_username").classList.add("is-invalid");
+    {% endif %}
+    {% if form.password.errors %}
+        document.getElementById("id_password").classList.add("is-invalid");
+    {% endif %}
+});
+</script>
 {% endblock %}

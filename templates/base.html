@@ -1,113 +1,238 @@
 {% load static %}
-{% load auth_extras %}
 <!DOCTYPE html>
 <html lang="th">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}TEGH Booking{% endblock %}</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
+
     <link rel="stylesheet" href="{% static 'css/theme.css' %}">
+
+    <style>
+        /* --- 1.1 Font & Body --- */
+        body {
+            display: flex;
+            min-height: 100vh;
+            background-color: #f8f9fa; /* พื้นหลังเทาอ่อน */
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+        }
+
+        /* --- 1.2 Sidebar (แถบเมนู) --- */
+        .sidebar {
+            width: 260px;
+            min-height: 100vh;
+            background-color: #212529; /* 👈 กลับมาใช้สีดำ (Dark) */
+            color: #adb5bd; 
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            z-index: 100;
+            padding: 0.75rem;
+            box-shadow: 0 0.5rem 1.5rem rgba(0,0,0,.1); 
+        }
+        
+        .sidebar .sidebar-header {
+            padding: 1rem 1rem 1.25rem 1rem;
+            margin-bottom: 0.5rem;
+            color: #fff;
+            text-align: center;
+            border-bottom: 1px solid #495057;
+        }
+        .sidebar .sidebar-header h5 { margin-bottom: 0.25rem; }
+        .sidebar .sidebar-header small { font-size: 0.8rem; }
+
+        /* --- 1.3 Links (ปุ่มเมนู) --- */
+        .sidebar .nav-link {
+            color: #adb5bd;
+            padding: 0.6rem 1rem; 
+            font-size: 0.95rem;
+            font-weight: 500; 
+            border-radius: 0.5rem; /* 👈 ทำให้ขอบโค้งมน (Pill) */
+            margin-bottom: 0.25rem; 
+            transition: background-color 0.2s ease, color 0.2s ease; 
+        }
+        .sidebar .nav-link i {
+            margin-right: 0.75rem;
+            width: 22px; 
+            text-align: center;
+            font-size: 1.1rem; 
+        }
+        
+        /* ตอนเอาเมาส์ชี้ */
+        .sidebar .nav-link:hover {
+            color: #fff;
+            background-color: #343a40; /* 👈 สี Hover (เทาเข้ม) */
+        }
+        
+        /* * ✅✅✅ นี่คือการเปลี่ยนแปลง ✅✅✅
+         * ปุ่มที่ Active (หน้าที่เลือกอยู่) 
+         */
+        .sidebar .nav-link.active {
+            color: #000; /* 👈 ตัวอักษรสีดำ (ชัดเจน) */
+            font-weight: 600; 
+            background-color: #ffc107; /* 👈 สี Active (สีเหลืองทอง/Amber) */
+        }
+        /* (ทำให้ไอคอนเป็นสีเดียวกับตัวอักษร) */
+        .sidebar .nav-link.active i {
+            color: #000 !important;
+        }
+
+
+        /* --- 1.4 Footer (ส่วน User) --- */
+        .sidebar .sidebar-footer {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            padding: 1rem 0.75rem;
+            border-top: 1px solid #495057; 
+            background-color: #212529; 
+        }
+        .sidebar-footer .dropdown-toggle {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.5rem;
+            transition: background-color 0.2s ease;
+        }
+         .sidebar-footer .dropdown-toggle:hover {
+             background-color: #343a40; 
+         }
+        .sidebar-footer .dropdown-menu {
+            border-radius: 0.5rem;
+            box-shadow: 0 0.5rem 1rem rgba(0,0,0,.15);
+            border: 1px solid rgba(0,0,0,.05);
+        }
+
+        /* --- 1.5 Main Content (เนื้อหาหลัก) --- */
+        .main-content-wrapper {
+            margin-left: 260px; /* เท่าความกว้าง Sidebar */
+            padding: 1.5rem;
+            width: calc(100% - 260px);
+            flex-grow: 1;
+        }
+        .page-header {
+             background-color: #fff;
+             padding: 1rem 1.5rem;
+             margin-bottom: 1.5rem;
+             border-radius: 0.75rem; /* โค้งมน */
+             box-shadow: 0 0.125rem 0.5rem rgba(0, 0, 0, 0.05); /* เงาจางๆ */
+             border: 1px solid #e9ecef;
+             display: flex;
+             justify-content: space-between;
+             align-items: center;
+        }
+        .page-header h5 { margin-bottom: 0; color: #495057; font-weight: 600;} /* หนาขึ้น */
+        
+        /* ปุ่ม Logout (แก้ CSRF) */
+        .dropdown-item-form button {
+            padding: 0.25rem 1rem; 
+            color: #dc3545;
+            background: none; border: none;
+            width: 100%; text-align: left;
+        }
+        .dropdown-item-form button:hover {
+            color: #fff; background-color: #dc3545;
+        }
+
+    </style>
     {% block extra_head %}{% endblock %}
 </head>
-<body> {# --- ใช้ d-flex ที่ body --- #}
-    <nav class="sidebar d-flex flex-column flex-shrink-0">
-        {# ... Sidebar content ... #}
-         <div class="sidebar-header p-4 border-bottom">
-            <a href="{% url 'dashboard' %}" class="d-flex align-items-center gap-3 text-decoration-none">
-                <div class="d-flex align-items-center justify-content-center rounded-lg" style="background-color: rgba(255,255,255,0.2); width: 40px; height: 40px;">
-                    <i class="bi bi-calendar2-heart-fill fs-5 text-white"></i>
-                </div>
-                <div>
-                    <h2 class="h5 text-white mb-0">TEGH Booking</h2>
-                    <p class="small text-white-50 mb-0">ระบบจองห้องประชุม</p>
-                </div>
-            </a>
+<body>
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <h5 class="fw-bold"><i class="bi bi-calendar-week-fill me-2"></i>TEGH Booking</h5>
+            <small class="text-muted">ระบบจองห้องประชุม</small>
         </div>
-        <div class="flex-grow-1 p-2 overflow-auto">
-            <a href="{% url 'dashboard' %}" class="sidebar-menu-button {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"><i class="bi bi-grid-1x2-fill fs-5"></i><span>ภาพรวมห้องประชุม</span></a>
-            <a href="{% url 'master_calendar' %}" class="sidebar-menu-button {% if request.resolver_match.url_name == 'master_calendar' %}active{% endif %}"><i class="bi bi-calendar3 fs-5"></i><span>ปฏิทินรวม</span></a>
-            <a href="{% url 'history' %}" class="sidebar-menu-button {% if request.resolver_match.url_name == 'history' %}active{% endif %}"><i class="bi bi-clock-history fs-5"></i><span>ประวัติการจอง</span></a>
-            {% if user|is_approver_or_admin %}
-                <hr class="border-white/20 my-2"><small class="px-3 text-white/50 text-uppercase">สำหรับผู้ดูแล</small>
-                <a href="{% url 'approvals' %}" class="sidebar-menu-button {% if request.resolver_match.url_name == 'approvals' %}active{% endif %}"><i class="bi bi-check2-square fs-5"></i><span>รายการรออนุมัติ</span></a>
-            {% endif %}
-            {% if user|is_admin %}
-                 <a href="{% url 'admin_dashboard' %}" class="sidebar-menu-button {% if request.resolver_match.url_name == 'admin_dashboard' %}active{% endif %}"><i class="bi bi-speedometer2 fs-5"></i><span>Admin Dashboard</span></a>
-                 <a href="{% url 'user_management' %}" class="sidebar-menu-button {% if request.resolver_match.url_name == 'user_management' or request.resolver_match.url_name == 'edit_user_roles' %}active{% endif %}"><i class="bi bi-people-fill fs-5"></i><span>จัดการผู้ใช้งาน</span></a>
-                 <a href="{% url 'rooms' %}" class="sidebar-menu-button {% if request.resolver_match.url_name == 'rooms' or request.resolver_match.url_name == 'add_room' or request.resolver_match.url_name == 'edit_room' %}active{% endif %}"><i class="bi bi-door-open-fill fs-5"></i><span>จัดการห้องประชุม</span></a>
-                  <a href="{% url 'reports' %}" class="sidebar-menu-button {% if request.resolver_match.url_name == 'reports' %}active{% endif %}"><i class="bi bi-bar-chart-line-fill fs-5"></i><span>รายงาน</span></a>
-            {% endif %}
+        
+        <div class="flex-grow-1" style="overflow-y: auto;">
+            <ul class="nav flex-column p-2">
+                 {% for item in menu_items %}
+                    {% if item.show %}
+                        <li class="nav-item">
+                            <a class="nav-link {% if item.active %}active{% endif %}" href="{% url item.url_name %}">
+                                <i class="{{ item.icon }}"></i> {{ item.label }}
+                            </a>
+                        </li>
+                     {% endif %}
+                {% endfor %}
+            </ul>
         </div>
-        <div class="sidebar-footer p-4 border-top mt-auto">
+
+        {# Footer with User Info and Logout #}
+        <div class="sidebar-footer">
             {% if user.is_authenticated %}
             <div class="dropdown">
-                <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                <a href="#" class="text-white text-decoration-none dropdown-toggle" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
                     <i class="bi bi-person-circle fs-4 me-2"></i>
                     <div class="text-start">
                         <strong>{{ user.get_full_name|default:user.username }}</strong>
-                        <div class="small text-white-50">{{ user.profile.department|default:"-" }}</div>
+                        <div class="small text-white-50">{{ user.email|default:"-" }}</div>
                     </div>
                 </a>
-                <ul class="dropdown-menu dropdown-menu-dark">
+                <ul class="dropdown-menu dropdown-menu-dark text-small shadow" aria-labelledby="dropdownUser1">
+                    
                     <li><a class="dropdown-item" href="{% url 'change_password' %}"><i class="bi bi-key-fill me-2"></i>เปลี่ยนรหัสผ่าน</a></li>
                     <li><hr class="dropdown-divider"></li>
-                    <li><a class="dropdown-item text-danger" href="{% url 'logout' %}"><i class="bi bi-box-arrow-right me-2"></i>ออกจากระบบ</a></li>
+                    <li>
+                        <form action="{% url 'logout' %}" method="post" class="dropdown-item-form">
+                            {% csrf_token %} 
+                            <button type="submit" class="dropdown-item text-danger">
+                                <i class="bi bi-box-arrow-right me-2"></i>ออกจากระบบ
+                            </button>
+                        </form>
+                    </li>
                 </ul>
             </div>
             {% endif %}
         </div>
     </nav>
 
-    {# --- Content Area --- #}
-    <div class="main-content-area flex-grow-1 d-flex flex-column">
-        {# --- Header ต้องมี sticky-top --- #}
-        <header class="sticky-top bg-white p-3 border-bottom shadow-sm d-flex justify-content-between align-items-center flex-shrink-0">
-             <button id="sidebar-toggle" class="btn btn-light d-lg-none me-2"> <i class="bi bi-list"></i> </button>
-             <h5 class="mb-0 flex-grow-1">{% block page_title %}{% endblock %}</h5>
-             <div></div>
-        </header>
-        {# --- Main Content --- #}
-        <main class="flex-grow-1 overflow-auto p-4"> {# <-- มี p-4 ที่นี่ #}
-            {% if messages %}
-            <div class="position-fixed top-0 end-0 p-3" style="z-index: 1100;">
-                {% for message in messages %}
-                <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show shadow-sm" role="alert">
-                    {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-                {% endfor %}
-            </div>
-            {% endif %}
-            {% block content %}{% endblock %}
-        </main>
-    </div>
+    <main class="main-content-wrapper flex-grow-1">
+        
+        <div class="page-header">
+            <h5 class="mb-0">{% block page_title %}Page Title{% endblock %}</h5>
+            <div></div>
+        </div>
 
-    {# ... Scripts ... #}
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %} alert-dismissible fade show shadow-sm rounded-3 border-0 mb-4" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close btn-sm" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        {% block content %}
+        {# Page-specific content goes here #}
+        {% endblock %}
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    {# jQuery (needed for Select2) #}
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    {# Select2 JS (needed for Autocomplete) #}
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.14/index.global.min.js"></script>
-    {% if form %}{{ form.media.js }}{% endif %}
+
+    {# Script เริ่มต้น Select2 #}
     <script>
-        $(document).ready(function() {
-            if ($.fn.select2) { $.fn.select2.defaults.set("theme", "bootstrap-5"); }
-            $('.alert:not(.alert-danger)').delay(5000).fadeOut(300, function() { $(this).alert('close'); });
-            $('.alert.alert-danger').delay(10000).fadeOut(300, function() { $(this).alert('close'); });
-            const $toggle = $("#sidebar-toggle"); const $sidebar = $(".sidebar"); const $overlay = $('<div class="sidebar-overlay d-lg-none"></div>');
-            if ($toggle.length && $sidebar.length) {
-                $toggle.on("click", function(event) {
-                    $sidebar.toggleClass("active");
-                    if ($sidebar.hasClass("active")) { $('body').append($overlay); } else { $overlay.remove(); }
-                });
-                $(document).on('click', '.sidebar-overlay', function() { $sidebar.removeClass('active'); $(this).remove(); });
-            }
-            $('.modal').on('shown.bs.modal', function() { $(this).find('.select2-basic:not(.select2-hidden-accessible)').select2({ dropdownParent: $(this).find('.modal-body'), width: '100%' }); });
-        });
+    $(document).ready(function() {
+        // ตั้งค่า Default theme ให้ Select2
+        if ($.fn.select2) {
+            $.fn.select2.defaults.set("theme", "bootstrap-5");
+        }
+    });
     </script>
+    
     {% block extra_scripts %}{% endblock %}
 </body>
 </html>
