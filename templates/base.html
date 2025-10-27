@@ -27,14 +27,15 @@
         .sidebar {
             width: 260px;
             min-height: 100vh;
-            background-color: #212529; /* 👈 กลับมาใช้สีดำ (Dark) */
-            color: #adb5bd; 
+            /* ✅ แก้ไขสีพื้นหลัง ✅ */
+            background-color: #4338ca; /* สี Indigo เข้ม */
+            color: #c7d2fe; /* สี Indigo อ่อน (สำหรับตัวอักษร) */
             position: fixed;
             top: 0;
             left: 0;
             bottom: 0;
             z-index: 100;
-            padding: 0.75rem;
+            padding: 0.75rem; 
             box-shadow: 0 0.5rem 1.5rem rgba(0,0,0,.1); 
         }
         
@@ -43,14 +44,14 @@
             margin-bottom: 0.5rem;
             color: #fff;
             text-align: center;
-            border-bottom: 1px solid #495057;
+            border-bottom: 1px solid #4f46e5; /* ✅ แก้ไขสีเส้นคั่น ✅ */
         }
         .sidebar .sidebar-header h5 { margin-bottom: 0.25rem; }
-        .sidebar .sidebar-header small { font-size: 0.8rem; }
+        .sidebar .sidebar-header small { font-size: 0.8rem; color: #c7d2fe !important; } /* ✅ แก้ไขสี text-muted ✅ */
 
         /* --- 1.3 Links (ปุ่มเมนู) --- */
         .sidebar .nav-link {
-            color: #adb5bd;
+            color: #c7d2fe; /* ✅ แก้ไขสีตัวอักษร ✅ */
             padding: 0.6rem 1rem; 
             font-size: 0.95rem;
             font-weight: 500; 
@@ -68,22 +69,20 @@
         /* ตอนเอาเมาส์ชี้ */
         .sidebar .nav-link:hover {
             color: #fff;
-            background-color: #343a40; /* 👈 สี Hover (เทาเข้ม) */
+            background-color: #4f46e5; /* ✅ แก้ไขสี Hover (Indigo เข้มขึ้น) ✅ */
         }
         
         /* * ✅✅✅ นี่คือการเปลี่ยนแปลง ✅✅✅
          * ปุ่มที่ Active (หน้าที่เลือกอยู่) 
          */
         .sidebar .nav-link.active {
-            color: #000; /* 👈 ตัวอักษรสีดำ (ชัดเจน) */
+            color: #4338ca; /* 👈 ตัวอักษรสี Indigo เข้ม (ตัดกัน) */
             font-weight: 600; 
-            background-color: #ffc107; /* 👈 สี Active (สีเหลืองทอง/Amber) */
+            background-color: #ffffff; /* 👈 สี Active (สีขาว) */
         }
-        /* (ทำให้ไอคอนเป็นสีเดียวกับตัวอักษร) */
         .sidebar .nav-link.active i {
-            color: #000 !important;
+            color: #4338ca !important;
         }
-
 
         /* --- 1.4 Footer (ส่วน User) --- */
         .sidebar .sidebar-footer {
@@ -92,8 +91,8 @@
             left: 0;
             width: 100%;
             padding: 1rem 0.75rem;
-            border-top: 1px solid #495057; 
-            background-color: #212529; 
+            border-top: 1px solid #4f46e5; /* ✅ แก้ไขสีเส้นคั่น ✅ */
+            background-color: #4338ca; /* ✅ แก้ไขสีพื้นหลัง ✅ */
         }
         .sidebar-footer .dropdown-toggle {
             display: flex;
@@ -102,9 +101,13 @@
             padding: 0.5rem 0.75rem;
             border-radius: 0.5rem;
             transition: background-color 0.2s ease;
+            color: #fff !important; /* ✅ แก้ไขสีตัวอักษร User ✅ */
         }
          .sidebar-footer .dropdown-toggle:hover {
-             background-color: #343a40; 
+             background-color: #4f46e5; /* ✅ แก้ไขสี Hover ✅ */
+         }
+         .sidebar-footer .dropdown-toggle .small {
+             color: #c7d2fe !important; /* ✅ แก้ไขสี Email ✅ */
          }
         .sidebar-footer .dropdown-menu {
             border-radius: 0.5rem;
@@ -175,7 +178,7 @@
                     <i class="bi bi-person-circle fs-4 me-2"></i>
                     <div class="text-start">
                         <strong>{{ user.get_full_name|default:user.username }}</strong>
-                        <div class="small text-white-50">{{ user.email|default:"-" }}</div>
+                        <div class="small">{{ user.email|default:"-" }}</div>
                     </div>
                 </a>
                 <ul class="dropdown-menu dropdown-menu-dark text-small shadow" aria-labelledby="dropdownUser1">
