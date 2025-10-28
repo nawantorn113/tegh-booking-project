@@ -32,18 +32,18 @@ class BookingForm(forms.ModelForm):
             'department': 'แผนกผู้จอง',
             'start_time': 'วัน/เวลา เริ่มต้น',
             'end_time': 'วัน/เวลา สิ้นสุด',
-            'participant_count': 'จำนวนผู้เข้าร่วม (โดยประมาณ)',
-            'participants': 'รายชื่อผู้เข้าร่วม (ในระบบ)',
+            'participant_count': 'จำนวนผู้เข้าร่วม',
+            'participants': 'รายชื่อผู้เข้าร่วม',
             'presentation_file': 'ไฟล์นำเสนอ (ถ้ามี)',
             'description': 'รายละเอียด/วาระการประชุม',
-            'additional_requests': 'คำขอเพิ่มเติม (เช่น กาแฟ, อุปกรณ์พิเศษ)',
+            'additional_requests': 'คำขอเพิ่มเติม (เช่น อุปกรณ์พิเศษ)',
             'additional_notes': 'หมายเหตุเพิ่มเติม',
             'status': 'สถานะ',
         }
         help_texts = {
             'participants': 'พิมพ์ชื่อ, นามสกุล, หรือ username เพื่อค้นหา (ผู้ใช้ในระบบ)',
-            'participant_count': 'ระบุจำนวนคร่าวๆ สำหรับการเตรียมห้อง',
-            'presentation_file': 'ไฟล์ที่ต้องการเปิดขึ้นจอ (PDF, PPT, Word, Video, etc.)',
+            'participant_count': '',
+            'presentation_file': 'ไฟล์ที่ต้องการนำเสนอ (PDF, PPT, Word, Video, etc.)',
         }
         widgets = {
             'room': forms.HiddenInput(),
