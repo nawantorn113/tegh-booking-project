@@ -1,28 +1,35 @@
 # booking/forms.py
 from django import forms
 from django.contrib.auth.forms import PasswordChangeForm
-from .models import Booking, Profile, Room
+# 1. ลบ 'Profile' และ 'Equipment' ออกจาก import นี้
+from .models import Booking, Room 
 from django.contrib.auth.models import User
-from django.urls import reverse_lazy # 1.  เพิ่ม Import นี้ 
+from django.urls import reverse_lazy 
 
-# ---  ลบ Import ของ dal ทั้งหมด  ---
-# from dal_select2.widgets import ModelSelect2Multiple 
-# from dal import autocomplete
-# --- --------------------------------- ---
+# 2. เพิ่ม Import นี้ (สำหรับช่องค้นหา)
+from dal import autocomplete
 
 class BookingForm(forms.ModelForm):
     
+    # 3. เพิ่ม Field ใหม่ (สำหรับอัปโหลดหลายไฟล์)
+    attachments = forms.FileField(
+        label="ไฟล์แนบ (สูงสุด 8 ไฟล์)",
+        required=False,
+        widget=forms.ClearableFileInput(attrs={ # 👈 ใช้ ClearableFileInput
+            'class': 'form-control'
+        })
+    )
+
     class Meta:
         model = Booking
-        # ตรวจสอบว่า fields ตรงกับ Model ของคุณ
+        # 4. ลบ 'equipment' และ 'external_participants'
         fields = [
             'room', 'title', 'chairman', 'department', 'start_time',
             'end_time', 'participant_count', 
-            'participants', # <-- 1. ช่องค้นหา
-            'external_participants', # <-- 2. ช่องพิมพ์เอง
-            'presentation_file',
-            'additional_requests', 'attachment', 'description', 'additional_notes', 'status',
+            'participants', 
+            'description', 'additional_requests', 'additional_notes', 'status',
         ]
+        
         labels = {
             'room': 'ห้องประชุม',
             'title': 'หัวข้อการประชุม',
@@ -31,18 +38,15 @@ class BookingForm(forms.ModelForm):
             'start_time': 'วัน/เวลา เริ่มต้น',
             'end_time': 'วัน/เวลา สิ้นสุด',
             'participant_count': 'จำนวนผู้เข้าร่วม (โดยประมาณ)',
-            'participants': 'รายชื่อผู้เข้าร่วม',
+            'participants': 'รายชื่อผู้เข้าร่วม (ในระบบ)',
             'presentation_file': 'ไฟล์นำเสนอ (ถ้ามี)',
-            'additional_requests': 'คำขอเพิ่มเติม (เช่น อุปกรณ์พิเศษ)',
-            'attachment': 'ไฟล์แนบอื่นๆ (ถ้ามี)',
             'description': 'รายละเอียด/วาระการประชุม',
+            'additional_requests': 'คำขอเพิ่มเติม (เช่น กาแฟ, อุปกรณ์พิเศษ)',
             'additional_notes': 'หมายเหตุเพิ่มเติม',
             'status': 'สถานะ',
         }
         help_texts = {
             'participants': 'พิมพ์ชื่อ, นามสกุล, หรือ username เพื่อค้นหา (ผู้ใช้ในระบบ)',
-            'presentation_file': 'ไฟล์ที่ต้องการเปิดขึ้นจอ (PDF, PPT, Word, Excel)',
-            'attachment': 'เอกสารอื่นๆ ที่เกี่ยวข้อง',
             'participant_count': 'ระบุจำนวนคร่าวๆ สำหรับการเตรียมห้อง',
         }
         widgets = {
@@ -51,77 +55,34 @@ class BookingForm(forms.ModelForm):
             'start_time': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class':'form-control'}),
             'end_time': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class':'form-control'}),
 
-            # --- 2. 🟢 แก้ไข Widget: ใช้ SelectMultiple ธรรมดา 🟢 ---
-            # แต่เพิ่ม 'class' และ 'data-url' ให้ JS ของเรามาเรียกใช้
-            'participants': forms.SelectMultiple(
-                attrs={
-                    'class': 'form-control select2-ajax-users', # 👈 Class ใหม่
-                    'data-url': reverse_lazy('user-autocomplete'), # 👈 บอก JS ว่าจะค้นหาที่ไหน
-                    'data-theme': 'bootstrap-5',
-                }
+            # 5. ใช้ Widget ของ 'dal' (django-autocomplete-light)
+            'participants': autocomplete.ModelSelect2Multiple(
+                url='user-autocomplete',
+                attrs={'data-placeholder': 'พิมพ์เพื่อค้นหา...', 'data-theme': 'bootstrap-5'}
             ),
-            # --- -------------------------------------------- ---
+            
+            # (ลบ Widget ของ equipment ออก)
 
-            'external_participants': forms.Textarea(
-                attrs={'rows': 3, 'class':'form-control', 'placeholder': 'คุณสมชาย (PTT)\nคุณสมหญิง (SCG)'}
-            ),
             'description': forms.Textarea(attrs={'rows': 3, 'class':'form-control'}),
             'additional_requests': forms.Textarea(attrs={'rows': 2, 'class':'form-control'}),
             'additional_notes': forms.Textarea(attrs={'rows': 2, 'class':'form-control'}),
-            'presentation_file': forms.ClearableFileInput(attrs={'class':'form-control'}),
-            'attachment': forms.ClearableFileInput(attrs={'class':'form-control'}),
             'title': forms.TextInput(attrs={'class':'form-control'}),
             'chairman': forms.TextInput(attrs={'class':'form-control'}),
-            'department': forms.TextInput(attrs={'class':'form-control', 'readonly': True}),
+            
+            # 6. ทำให้ช่อง Department กรอกได้เอง
+            'department': forms.TextInput(attrs={'class':'form-control', 'placeholder': 'เช่น IT, HR, บัญชี'}),
+            
             'participant_count': forms.NumberInput(attrs={'min': '1', 'class':'form-control'}),
         }
 
-    # (โค้ด __init__ ... เหมือนเดิม)
+    # 7. ลบ __init__ ที่ผูกกับ Profile/Equipment ออก
     def __init__(self, *args, **kwargs):
-        user = kwargs.pop('user', None)
+        # (ลบ user = kwargs.pop('user', None))
         super().__init__(*args, **kwargs)
-        if user and 'department' in self.fields:
-             try:
-                 profile = Profile.objects.get(user=user)
-                 if profile.department:
-                     self.fields['department'].initial = profile.department
-                     self.fields['department'].widget.attrs['readonly'] = True
-                     self.fields['department'].widget.attrs['class'] = 'form-control bg-light'
-             except Profile.DoesNotExist:
-                 pass
+        # (ลบ Logic ที่เกี่ยวกับ Profile/Department/Equipment ออก)
 
 
-class ProfileForm(forms.ModelForm):
-     first_name = forms.CharField(label='ชื่อจริง', max_length=150, required=False)
-     last_name = forms.CharField(label='นามสกุล', max_length=150, required=False)
-     email = forms.EmailField(label='อีเมล', required=False)
-     class Meta:
-        model = Profile
-        fields = ['first_name', 'last_name', 'email', 'department', 'phone', ]
-        labels = { 'department': 'แผนก/ฝ่าย', 'phone': 'เบอร์โทรศัพท์ติดต่อ',  }
-        widgets = {
-            'phone': forms.TextInput(attrs={'placeholder': 'เช่น 081-XXX-XXXX'}),
-            'first_name': forms.TextInput(attrs={'class':'form-control'}),
-            'last_name': forms.TextInput(attrs={'class':'form-control'}),
-            'email': forms.EmailInput(attrs={'class':'form-control'}),
-            'department': forms.TextInput(attrs={'class':'form-control'}),
-        }
-     def __init__(self, *args, **kwargs):
-         super().__init__(*args, **kwargs)
-         if self.instance and self.instance.user:
-             self.fields['first_name'].initial = self.instance.user.first_name
-             self.fields['last_name'].initial = self.instance.user.last_name
-             self.fields['email'].initial = self.instance.user.email
-     def save(self, commit=True):
-         profile = super().save(commit=False)
-         user = profile.user
-         user.first_name = self.cleaned_data['first_name']
-         user.last_name = self.cleaned_data['last_name']
-         user.email = self.cleaned_data['email']
-         if commit:
-             user.save()
-             profile.save()
-         return profile
+# (ลบ Class ProfileForm ทั้งหมด)
 
 class CustomPasswordChangeForm(PasswordChangeForm):
      old_password = forms.CharField( label="รหัสผ่านเก่า", strip=False, widget=forms.PasswordInput(attrs={'autocomplete': 'current-password', 'autofocus': True, 'class':'form-control'}), )

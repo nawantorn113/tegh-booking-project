@@ -2,30 +2,17 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
-from django.core.exceptions import ValidationError # Import ValidationError
+from django.core.exceptions import ValidationError
 import os
 
-# --- 1. 🟢 START: เพิ่ม Class Equipment (ที่หายไป) 🟢 ---
-class Equipment(models.Model):
-    name = models.CharField("ชื่ออุปกรณ์", max_length=100, unique=True)
+# (ลบ Class Equipment)
 
-    class Meta:
-        verbose_name = "อุปกรณ์"
-        verbose_name_plural = "อุปกรณ์"
-        ordering = ['name']
-
-    def __str__(self):
-        return self.name
-# --- 1. 🟢 END: เพิ่ม Class Equipment 🟢 ---
-
-
-# --- 2. Model สำหรับห้อง ---
 class Room(models.Model):
     name = models.CharField("ชื่อห้องประชุม", max_length=100, unique=True)
     capacity = models.PositiveIntegerField("ความจุ (คน)", default=1)
     building = models.CharField("อาคาร", max_length=50, blank=True, null=True)
     floor = models.CharField("ชั้น", max_length=20, blank=True, null=True)
-    equipment_in_room = models.TextField("อุปกรณ์ภายในห้อง (อื่นๆ)", blank=True, null=True) # Field สำหรับพิมพ์อุปกรณ์อื่นๆ
+    equipment_in_room = models.TextField("อุปกรณ์ภายในห้อง (อื่นๆ)", blank=True, null=True, help_text="อุปกรณ์ที่มีให้ในห้อง (เช่น โปรเจคเตอร์, ไวท์บอร์ด)")
     image = models.ImageField("รูปภาพห้องประชุม", upload_to='room_images/', blank=True, null=True)
 
     class Meta:
@@ -36,7 +23,6 @@ class Room(models.Model):
     def __str__(self):
         return self.name
 
-# --- 3. Model สำหรับการจอง ---
 class Booking(models.Model):
     STATUS_CHOICES = [
         ('PENDING', 'รออนุมัติ'), ('APPROVED', 'อนุมัติแล้ว'),
@@ -51,7 +37,6 @@ class Booking(models.Model):
     
     participant_count = models.PositiveIntegerField("จำนวนผู้เข้าร่วม (ตัวเลข)", default=1)
     
-    # 1. สำหรับค้นหา (AD/User)
     participants = models.ManyToManyField(
         User, 
         verbose_name="ผู้เข้าร่วม (จาก AD/User)",
@@ -59,36 +44,19 @@ class Booking(models.Model):
         blank=True
     )
     
-    # 2. ✅ Field นี้ต้องมี (สำหรับพิมพ์ชื่อแขก) ✅
-    external_participants = models.TextField(
-        "รายชื่อผู้เข้าร่วม (ภายนอก)",
-        blank=True, null=True,
-        help_text="สำหรับแขก หรือผู้ที่ไม่มีบัญชีในระบบ (พิมพ์ชื่อ คั่นด้วยจุลภาค หรือขึ้นบรรทัดใหม่)"
-    )
-
-    # 3. สำหรับเลือกอุปกรณ์
-    equipment = models.ManyToManyField(
-        Equipment, 
-        verbose_name="อุปกรณ์ที่ต้องการ",
-        blank=True
-    )
-    
-    # 4. สำหรับแนบไฟล์
-    attachment = models.FileField(
-        "ไฟล์แนบประกอบ", 
-        upload_to='booking_attachments/%Y/%m/', 
-        blank=True, null=True
-    )
+    # (ลบ external_participants ออก)
+    # (ลบ equipment (m2m) ออก)
     
     status = models.CharField("สถานะ", max_length=10, choices=STATUS_CHOICES, default='PENDING')
     created_at = models.DateTimeField(auto_now_add=True)
     
-    # (Fields อื่นๆ ที่คุณอาจจะมี)
     chairman = models.CharField("ประธานในที่ประชุม", max_length=150, blank=True, null=True)
     department = models.CharField("แผนกผู้จอง", max_length=100, blank=True, null=True)
     description = models.TextField("รายละเอียด/วาระ", blank=True, null=True)
-    presentation_file = models.FileField("ไฟล์นำเสนอ", upload_to='presentation_files/', blank=True, null=True)
-    additional_requests = models.TextField("คำขอเพิ่มเติม", blank=True, null=True)
+    
+    # (นี่คือ Field ที่ผู้ใช้จะพิมพ์เอง)
+    additional_requests = models.TextField("คำขอเพิ่มเติม (เช่น กาแฟ, อุปกรณ์พิเศษ)", blank=True, null=True)
+    
     additional_notes = models.TextField("หมายเหตุ", blank=True, null=True)
 
 
@@ -100,7 +68,6 @@ class Booking(models.Model):
     def __str__(self):
         return f"{self.title} ({self.room.name})"
 
-    # --- ✅ ระบบตรวจสอบการจองซ้ำอัตโนมัติ ✅ ---
     def clean(self):
         super().clean()
         if self.start_time and self.end_time and self.end_time <= self.start_time:
@@ -121,14 +88,21 @@ class Booking(models.Model):
                     f'ห้อง "{self.room.name}" ไม่ว่างในช่วงเวลานี้แล้ว'
                 )
 
-# (Model Profile และ LoginHistory ... ถ้ามี ก็ใส่ไว้ต่อจากนี้)
-class Profile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, verbose_name="ผู้ใช้")
-    department = models.CharField("แผนก/ฝ่าย", max_length=100, blank=True, null=True)
-    phone = models.CharField("เบอร์โทรศัพท์", max_length=20, blank=True, null=True)
-    avatar = models.ImageField("รูปโปรไฟล์", upload_to='avatars/', default='avatars/default.png', blank=True, null=True)
+# --- เพิ่ม Model ใหม่สำหรับเก็บไฟล์ (รองรับหลายไฟล์) ---
+def get_booking_upload_path(instance, filename):
+    return f'booking_files/booking_{instance.booking.id}/{filename}'
+
+class BookingFile(models.Model):
+    booking = models.ForeignKey(Booking, on_delete=models.CASCADE, related_name='files')
+    file = models.FileField("ไฟล์", upload_to=get_booking_upload_path)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
     def __str__(self):
-        return f"Profile ของ {self.user.username}"
+        return f"{self.booking.title} - {os.path.basename(self.file.name)}"
+# --- -------------------------------------------------- ---
+
+
+# --- (ลบ Model Profile ทั้งหมด) ---
 
 class LoginHistory(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="ผู้ใช้")
