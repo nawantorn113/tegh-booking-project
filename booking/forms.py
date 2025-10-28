@@ -67,7 +67,7 @@ class BookingForm(forms.ModelForm):
             'chairman': forms.TextInput(attrs={'class':'form-control'}),
             
             # 6. ทำให้ช่อง Department กรอกได้เอง
-            'department': forms.TextInput(attrs={'class':'form-control', 'placeholder': 'เช่น IT, HR, บัญชี'}),
+            'department': forms.TextInput(attrs={'class':'form-control', 'placeholder': ''}),
             
             'participant_count': forms.NumberInput(attrs={'min': '1', 'class':'form-control'}),
         }

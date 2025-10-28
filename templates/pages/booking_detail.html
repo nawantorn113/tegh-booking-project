@@ -20,10 +20,10 @@
     <div class="card shadow-sm border-0 rounded-3">
         <div class="card-body p-4">
             <div class="d-flex justify-content-between align-items-center mb-3">
-                 <h4 class="mb-0 text-primary"><i class="bi bi-calendar-event me-2"></i>{{ booking.title }}</h4>
-                 <a href="javascript:history.back()" class="btn btn-outline-secondary btn-sm rounded-pill">
-                     <i class="bi bi-arrow-left me-1"></i> กลับ
-                 </a>
+                <h4 class="mb-0 text-primary"><i class="bi bi-calendar-event me-2"></i>{{ booking.title }}</h4>
+                <a href="javascript:history.back()" class="btn btn-outline-secondary btn-sm rounded-pill">
+                    <i class="bi bi-arrow-left me-1"></i> กลับ
+                </a>
             </div>
             <hr class="mb-4">
 
@@ -35,7 +35,10 @@
                     </p>
                     <p class="mb-3">
                         <span class="detail-label"><i class="bi bi-person-fill me-1"></i>ผู้จอง:</span>
-                        {{ booking.booked_by.get_full_name|default:booking.booked_by.username }} ({{ booking.department|default:"-" }})
+                        {{ booking.booked_by.get_full_name|default:booking.booked_by.username }} 
+                        
+                        ({{ booking.department|default:"-" }})
+                        
                     </p>
                     {% if booking.chairman %}
                         <p class="mb-3">
@@ -43,8 +46,8 @@
                             {{ booking.chairman }}
                         </p>
                     {% endif %}
-                 </div>
-                 <div class="col-md-6">
+                </div>
+                <div class="col-md-6">
                     <p class="mb-3">
                         <span class="detail-label"><i class="bi bi-clock-fill me-1"></i>วัน/เวลา:</span>
                         {{ booking.start_time|date:"d M Y H:i" }} - {{ booking.end_time|date:"H:i" }}
@@ -82,37 +85,32 @@
                 {% endif %}
                  {% if booking.additional_requests %}
                  <div class="col-12">
-                    <p class="mb-3">
-                        <span class="detail-label"><i class="bi bi-chat-dots-fill me-1"></i>คำขอเพิ่มเติม:</span>
-                         {{ booking.additional_requests|linebreaksbr }}
-                    </p>
+                     <p class="mb-3">
+                         <span class="detail-label"><i class="bi bi-chat-dots-fill me-1"></i>คำขอเพิ่มเติม:</span>
+                          {{ booking.additional_requests|linebreaksbr }}
+                     </p>
                  </div>
                  {% endif %}
-                 {% if booking.presentation_file or booking.attachment %}
+                 
+                 {% if booking.files.exists %}
                  <div class="col-12">
-                     <p class="detail-label"><i class="bi bi-paperclip me-1"></i>ไฟล์แนบ:</p>
-                     <ul class="list-unstyled">
-                        {% if booking.presentation_file %}
-                        <li class="mb-1">
-                            <i class="bi bi-file-earmark-slides-fill me-1 text-danger"></i>
-                            <a href="{{ booking.presentation_file.url }}" class="link-dark">ไฟล์นำเสนอ</a> {# ✅ ลบ target="_blank" ✅ #}
-                        </li>
-                        {% endif %}
-                        {% if booking.attachment %}
+                      <p class="detail-label"><i class="bi bi-paperclip me-1"></i>ไฟล์แนบ ({{ booking.files.count }} ไฟล์):</p>
+                      <ul class="list-unstyled">
+                         {% for file in booking.files.all %}
                          <li class="mb-1">
-                            <i class="bi bi-file-earmark-fill me-1 text-primary"></i>
-                            <a href="{{ booking.attachment.url }}" class="link-dark">ไฟล์แนบอื่นๆ</a> {# ✅ ลบ target="_blank" ✅ #}
-                        </li>
-                        {% endif %}
-                    </ul>
+                             <i class="bi bi-file-earmark-fill me-1 text-primary"></i>
+                             <a href="{{ file.file.url }}" class="link-dark">{{ file.file.name|cut:"booking_files/"|cut:booking.id|cut:"/" }}</a>
+                         </li>
+                         {% endfor %}
+                     </ul>
                  </div>
                  {% endif %}
                  {% if booking.additional_notes %}
                  <div class="col-12">
-                    <p class="mb-3">
-                        <span class="detail-label"><i class="bi bi-journal-text me-1"></i>หมายเหตุ:</span>
+                     <p class="mb-3">
+                         <span class="detail-label"><i class="bi bi-journal-text me-1"></i>หมายเหตุ:</span>
                          {{ booking.additional_notes|linebreaksbr }}
-                    </p>
+                     </p>
                  </div>
                  {% endif %}
             </div>

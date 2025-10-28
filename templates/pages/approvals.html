@@ -40,36 +40,35 @@
                         <td>
                             {{ booking.booked_by.get_full_name|default:booking.booked_by.username }}
                             <br>
-                            <span class="text-muted small">{{ booking.department|default:booking.booked_by.profile.department|default:"-" }}</span>
+                            
+                            <span class="text-muted small">{{ booking.department|default:"-" }}</span>
+                            
                         </td>
                         <td class="text-center">{{ booking.participant_count }}</td>
                         
-                        {# --- START: แก้ไขส่วนปุ่ม Actions --- #}
                         <td class="text-center">
-                            {# เปลี่ยนจาก btn-group เป็น d-inline-flex gap-1 #}
                             <div class="d-inline-flex gap-1" role="group">
                                 
-                                <a href="{% url 'booking_detail' booking.id %}" class="btn btn-sm btn-outline-primary" title="ดูรายละเอียด"> {# เพิ่ม btn-sm #}
+                                <a href="{% url 'booking_detail' booking.id %}" class="btn btn-sm btn-outline-primary" title="ดูรายละเอียด">
                                     <i class="bi bi-info-circle-fill"></i>
                                 </a>
                                 
                                 <form action="{% url 'approve_booking' booking.id %}" method="post" class="d-inline" onsubmit="return confirm('ยืนยันการอนุมัติ \"{{ booking.title|escapejs }}\" ?');">
                                     {% csrf_token %}
-                                    <button type="submit" class="btn btn-sm btn-outline-success" title="อนุมัติ"> {# เพิ่ม btn-sm #}
+                                    <button type="submit" class="btn btn-sm btn-outline-success" title="อนุมัติ">
                                         <i class="bi bi-check-lg"></i>
                                     </button>
                                 </form>
                                 
                                 <form action="{% url 'reject_booking' booking.id %}" method="post" class="d-inline" onsubmit="return confirm('ยืนยันการปฏิเสธ \"{{ booking.title|escapejs }}\" ?');">
                                     {% csrf_token %}
-                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="ปฏิเสธ"> {# เพิ่ม btn-sm #}
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="ปฏิเสธ">
                                         <i class="bi bi-x-lg"></i>
                                     </button>
                                 </form>
                                 
                             </div>
                         </td>
-                         {# --- END: แก้ไขส่วนปุ่ม Actions --- #}
                     </tr>
                     {% empty %}
                     <tr>

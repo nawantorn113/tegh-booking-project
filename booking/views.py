@@ -40,7 +40,7 @@ from django.dispatch import receiver
 from django.contrib.auth.forms import AuthenticationForm
 from django.core.exceptions import ValidationError
 
-# 1. แก้ไข Imports (ลบ Profile และ Equipment และ BookingFile)
+# 1. แก้ไข Imports (ลบ Profile, Equipment, และ BookingFile)
 from .models import Room, Booking, LoginHistory
 from .forms import BookingForm, CustomPasswordChangeForm, RoomForm 
 # (ลบ ProfileForm)
@@ -361,14 +361,15 @@ def create_booking_view(request, room_id):
 # --- 5. START: แก้ไข edit_booking_view (ลบ user=... และ equipment) ---
 @login_required
 def edit_booking_view(request, booking_id):
-    booking = get_object_or_404(Booking.objects.prefetch_related('files'), pk=booking_id)
+    # 5.1 ลบ prefetch_related('files') ออก
+    booking = get_object_or_404(Booking, pk=booking_id)
     
     if booking.booked_by != request.user and not is_admin(request.user):
         messages.error(request, "คุณไม่มีสิทธิ์แก้ไขการจองนี้")
         return redirect('history')
 
     if request.method == 'POST':
-        form = BookingForm(request.POST, request.FILES, instance=booking) # 5.1 ลบ user=...
+        form = BookingForm(request.POST, request.FILES, instance=booking) # 5.2 ลบ user=...
         
         # (ลบ Logic การดึงไฟล์)
         
@@ -407,7 +408,7 @@ def edit_booking_view(request, booking_id):
         else: 
              messages.error(request, "ไม่สามารถบันทึกการแก้ไขได้ กรุณาตรวจสอบข้อผิดพลาด")
     else: 
-        form = BookingForm(instance=booking) # 5.2 ลบ user=...
+        form = BookingForm(instance=booking) # 5.3 ลบ user=...
 
     return render(request, 'pages/edit_booking.html', {'form': form, 'booking': booking})
 # --- 5. END: แก้ไข edit_booking_view ---
