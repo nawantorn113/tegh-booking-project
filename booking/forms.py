@@ -11,22 +11,17 @@ from dal import autocomplete
 
 class BookingForm(forms.ModelForm):
     
-    # 3. เพิ่ม Field ใหม่ (สำหรับอัปโหลดหลายไฟล์)
-    attachments = forms.FileField(
-        label="ไฟล์แนบ (สูงสุด 8 ไฟล์)",
-        required=False,
-        widget=forms.ClearableFileInput(attrs={ # 👈 ใช้ ClearableFileInput
-            'class': 'form-control'
-        })
-    )
+    # (ลบ Field 'attachments' (หลายไฟล์) ออก)
 
     class Meta:
         model = Booking
-        # 4. ลบ 'equipment' และ 'external_participants'
+        # 3. ลบ 'equipment' และ 'external_participants'
+        #    เพิ่ม 'presentation_file'
         fields = [
             'room', 'title', 'chairman', 'department', 'start_time',
             'end_time', 'participant_count', 
             'participants', 
+            'presentation_file', # <-- เพิ่มช่องนี้
             'description', 'additional_requests', 'additional_notes', 'status',
         ]
         
@@ -48,6 +43,7 @@ class BookingForm(forms.ModelForm):
         help_texts = {
             'participants': 'พิมพ์ชื่อ, นามสกุล, หรือ username เพื่อค้นหา (ผู้ใช้ในระบบ)',
             'participant_count': 'ระบุจำนวนคร่าวๆ สำหรับการเตรียมห้อง',
+            'presentation_file': 'ไฟล์ที่ต้องการเปิดขึ้นจอ (PDF, PPT, Word, Video, etc.)',
         }
         widgets = {
             'room': forms.HiddenInput(),
@@ -55,13 +51,14 @@ class BookingForm(forms.ModelForm):
             'start_time': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class':'form-control'}),
             'end_time': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class':'form-control'}),
 
-            # 5. ใช้ Widget ของ 'dal' (django-autocomplete-light)
+            # 4. ใช้ Widget ของ 'dal' (django-autocomplete-light)
             'participants': autocomplete.ModelSelect2Multiple(
                 url='user-autocomplete',
                 attrs={'data-placeholder': 'พิมพ์เพื่อค้นหา...', 'data-theme': 'bootstrap-5'}
             ),
             
-            # (ลบ Widget ของ equipment ออก)
+            # 5. เพิ่ม Widget สำหรับ 'presentation_file'
+            'presentation_file': forms.ClearableFileInput(attrs={'class':'form-control'}),
 
             'description': forms.Textarea(attrs={'rows': 3, 'class':'form-control'}),
             'additional_requests': forms.Textarea(attrs={'rows': 2, 'class':'form-control'}),

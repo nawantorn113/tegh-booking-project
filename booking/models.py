@@ -59,6 +59,16 @@ class Booking(models.Model):
     
     additional_notes = models.TextField("หมายเหตุ", blank=True, null=True)
 
+    # --- 1. เพิ่ม Field ไฟล์นำเสนอ (ไฟล์เดียว) ---
+    presentation_file = models.FileField(
+        "ไฟล์นำเสนอ", 
+        upload_to='presentation_files/%Y/%m/', 
+        blank=True, 
+        null=True,
+        help_text="ไฟล์ที่ต้องการเปิดขึ้นจอ (PDF, PPT, Word, Excel)"
+    )
+    # --- ------------------------------------- ---
+
 
     class Meta:
         ordering = ['-start_time']
@@ -88,21 +98,9 @@ class Booking(models.Model):
                     f'ห้อง "{self.room.name}" ไม่ว่างในช่วงเวลานี้แล้ว'
                 )
 
-# --- เพิ่ม Model ใหม่สำหรับเก็บไฟล์ (รองรับหลายไฟล์) ---
-def get_booking_upload_path(instance, filename):
-    return f'booking_files/booking_{instance.booking.id}/{filename}'
+# (ลบ BookingFile ออก)
 
-class BookingFile(models.Model):
-    booking = models.ForeignKey(Booking, on_delete=models.CASCADE, related_name='files')
-    file = models.FileField("ไฟล์", upload_to=get_booking_upload_path)
-    uploaded_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"{self.booking.title} - {os.path.basename(self.file.name)}"
-# --- -------------------------------------------------- ---
-
-
-# --- (ลบ Model Profile ทั้งหมด) ---
+# (ลบ Model Profile ทั้งหมด)
 
 class LoginHistory(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="ผู้ใช้")

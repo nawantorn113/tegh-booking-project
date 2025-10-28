@@ -40,8 +40,8 @@ from django.dispatch import receiver
 from django.contrib.auth.forms import AuthenticationForm
 from django.core.exceptions import ValidationError
 
-# 1. แก้ไข Imports (ลบ Profile และ Equipment)
-from .models import Room, Booking, LoginHistory, BookingFile
+# 1. แก้ไข Imports (ลบ Profile และ Equipment และ BookingFile)
+from .models import Room, Booking, LoginHistory
 from .forms import BookingForm, CustomPasswordChangeForm, RoomForm 
 # (ลบ ProfileForm)
 
@@ -52,7 +52,7 @@ def is_admin(user):
 def is_approver_or_admin(user):
     return user.is_authenticated and (user.is_superuser or user.groups.filter(name__in=['Approver', 'Admin']).exists())
 
-# (Login/Logout History ... Email Functions ... เหมือนเดิม)
+# (Login/Logout History ... Auth Views ... Email Functions ... Autocomplete ... เหมือนเดิม)
 @receiver(user_logged_in)
 def user_logged_in_callback(sender, request, user, **kwargs):
     ip_address = request.META.get('REMOTE_ADDR')
@@ -78,8 +78,6 @@ def send_booking_notification(booking, template_name, subject_prefix):
             print(f"Email '{subject}' sent to: {', '.join(recipients)}")
         else: print(f"--- (Email Simulation) ---\nSubject: {subject}\nTo: {', '.join(recipients)}\n--- End Sim ---")
     except Exception as e: print(f"Error preparing/sending email '{subject}': {e}")
-
-# --- Autocomplete (จำเป็นสำหรับ 'dal') ---
 if DAL_AVAILABLE:
     class UserAutocomplete(Select2QuerySetView):
         def get_queryset(self):
@@ -91,8 +89,6 @@ if DAL_AVAILABLE:
 else: 
     @login_required
     def UserAutocomplete(request): return JsonResponse({'error': 'Autocomplete unavailable.'}, status=501)
-
-# --- Auth Views (Login/Logout) ---
 def login_view(request):
     if request.user.is_authenticated: return redirect('dashboard')
     if request.method == 'POST':
@@ -167,6 +163,7 @@ def master_calendar_view(request):
 @login_required
 def history_view(request):
     bookings = Booking.objects.filter(booked_by=request.user).select_related('room').order_by('-start_time')
+    # (Filter logic ... เหมือนเดิม)
     date_f = request.GET.get('date'); room_f = request.GET.get('room'); status_f = request.GET.get('status')
     try:
         if date_f: bookings = bookings.filter(start_time__date=datetime.strptime(date_f, '%Y-%m-%d').date())
@@ -199,7 +196,7 @@ def history_view(request):
 def booking_detail_view(request, booking_id):
     booking = get_object_or_404(
         Booking.objects.select_related('room', 'booked_by')
-                       .prefetch_related('participants', 'files'), # 3. ลบ 'equipment'
+                       .prefetch_related('participants'), # 3. ลบ 'equipment' และ 'files'
         pk=booking_id
     )
     is_participant = request.user in booking.participants.all()
@@ -232,6 +229,7 @@ def change_password_view(request):
 
 
 # --- APIs ---
+# (rooms_api, bookings_api, update_booking_time_api, delete_booking_api ... เหมือนเดิม)
 @login_required
 def rooms_api(request):
     rooms = Room.objects.all().order_by('building', 'name')
@@ -308,14 +306,12 @@ def create_booking_view(request, room_id):
     room = get_object_or_404(Room, pk=room_id)
     form = BookingForm(request.POST, request.FILES) # 4.1 ลบ user=...
     
-    uploaded_files = request.FILES.getlist('attachments')
+    # 4.2 ลบ Logic ของ 'attachments' (หลายไฟล์) ออก
+    # uploaded_files = request.FILES.getlist('attachments')
 
     if form.is_valid():
         
-        if len(uploaded_files) > 8:
-            messages.error(request, f"ไม่สามารถอัปโหลดไฟล์ได้เกิน 8 ไฟล์ (คุณเลือก {len(uploaded_files)} ไฟล์)")
-            context = {'room': room, 'form': form}
-            return render(request, 'pages/room_calendar.html', context) 
+        # (ลบ Check 8 ไฟล์)
             
         try:
             booking = form.save(commit=False)
@@ -335,8 +331,7 @@ def create_booking_view(request, room_id):
             booking.save() 
             form.save_m2m() # (บันทึก participants)
             
-            for f in uploaded_files:
-                BookingFile.objects.create(booking=booking, file=f)
+            # (ลบ Logic การ save หลายไฟล์)
             
             if booking.status == 'PENDING':
                 send_booking_notification(booking, 'emails/new_booking_pending.html', 'โปรดอนุมัติ')
@@ -375,14 +370,11 @@ def edit_booking_view(request, booking_id):
     if request.method == 'POST':
         form = BookingForm(request.POST, request.FILES, instance=booking) # 5.1 ลบ user=...
         
-        uploaded_files = request.FILES.getlist('attachments')
+        # (ลบ Logic การดึงไฟล์)
         
         if form.is_valid():
             
-            current_file_count = booking.files.count()
-            if (current_file_count + len(uploaded_files)) > 8:
-                messages.error(request, f"ไม่สามารถบันทึกได้: คุณมีไฟล์อยู่แล้ว {current_file_count} ไฟล์ และกำลังอัปโหลดเพิ่ม {len(uploaded_files)} ไฟล์ (สูงสุด 8 ไฟล์)")
-                return render(request, 'pages/edit_booking.html', {'form': form, 'booking': booking})
+            # (ลบ Logic การนับไฟล์)
             
             try:
                 updated_booking = form.save(commit=False)
@@ -398,8 +390,7 @@ def edit_booking_view(request, booking_id):
                 updated_booking.save()
                 form.save_m2m() # (บันทึก participants)
                 
-                for f in uploaded_files:
-                    BookingFile.objects.create(booking=updated_booking, file=f)
+                # (ลบ Logic การ save หลายไฟล์)
                 
                 messages.success(request, "แก้ไขข้อมูลการจองเรียบร้อยแล้ว")
 

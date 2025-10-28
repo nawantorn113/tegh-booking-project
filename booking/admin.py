@@ -1,7 +1,7 @@
 # booking/admin.py
 from django.contrib import admin
-# 1. ลบ Profile และ Equipment ออกจาก import นี้
-from .models import Booking, Room, BookingFile, LoginHistory 
+# 1. ลบ Profile, Equipment, BookingFile ออกจาก import นี้
+from .models import Booking, Room, LoginHistory 
 
 @admin.register(Room)
 class RoomAdmin(admin.ModelAdmin):
@@ -9,10 +9,7 @@ class RoomAdmin(admin.ModelAdmin):
     list_filter = ('building', 'floor')
     search_fields = ('name', 'building')
 
-# 2. เพิ่ม Inline นี้สำหรับแสดงไฟล์ในหน้า Booking
-class BookingFileInline(admin.TabularInline):
-    model = BookingFile
-    extra = 1 # จำนวนช่องอัปโหลดไฟล์ใหม่ที่จะแสดง
+# (ลบ BookingFileInline ออก)
 
 @admin.register(Booking)
 class BookingAdmin(admin.ModelAdmin):
@@ -21,7 +18,7 @@ class BookingAdmin(admin.ModelAdmin):
     search_fields = ('title', 'booked_by__username', 'room__name')
     list_editable = ('status',)
     autocomplete_fields = ['participants', 'booked_by'] 
-    inlines = [BookingFileInline] # 3. เพิ่ม Inline ที่นี่
+    # (ลบ inlines ออก)
 
 # (ลบ EquipmentAdmin ออก)
 
