@@ -3,9 +3,9 @@ from django import forms
 from django.contrib.auth.forms import PasswordChangeForm
 from .models import Booking, Profile, Room
 from django.contrib.auth.models import User
-from django.urls import reverse_lazy # 1. 🟢 เพิ่ม Import นี้ 🟢
+from django.urls import reverse_lazy # 1.  เพิ่ม Import นี้ 
 
-# --- ❌ ลบ Import ของ dal ทั้งหมด ❌ ---
+# ---  ลบ Import ของ dal ทั้งหมด  ---
 # from dal_select2.widgets import ModelSelect2Multiple 
 # from dal import autocomplete
 # --- --------------------------------- ---
@@ -31,10 +31,9 @@ class BookingForm(forms.ModelForm):
             'start_time': 'วัน/เวลา เริ่มต้น',
             'end_time': 'วัน/เวลา สิ้นสุด',
             'participant_count': 'จำนวนผู้เข้าร่วม (โดยประมาณ)',
-            'participants': 'รายชื่อผู้เข้าร่วม (ในระบบ)',
-            'external_participants': 'รายชื่อผู้เข้าร่วม (ภายนอก)',
+            'participants': 'รายชื่อผู้เข้าร่วม',
             'presentation_file': 'ไฟล์นำเสนอ (ถ้ามี)',
-            'additional_requests': 'คำขอเพิ่มเติม (เช่น กาแฟ, อุปกรณ์พิเศษ)',
+            'additional_requests': 'คำขอเพิ่มเติม (เช่น อุปกรณ์พิเศษ)',
             'attachment': 'ไฟล์แนบอื่นๆ (ถ้ามี)',
             'description': 'รายละเอียด/วาระการประชุม',
             'additional_notes': 'หมายเหตุเพิ่มเติม',
@@ -42,7 +41,6 @@ class BookingForm(forms.ModelForm):
         }
         help_texts = {
             'participants': 'พิมพ์ชื่อ, นามสกุล, หรือ username เพื่อค้นหา (ผู้ใช้ในระบบ)',
-            'external_participants': 'สำหรับแขก/คนนอก พิมพ์ชื่อ คั่นด้วยจุลภาค (,) หรือขึ้นบรรทัดใหม่',
             'presentation_file': 'ไฟล์ที่ต้องการเปิดขึ้นจอ (PDF, PPT, Word, Excel)',
             'attachment': 'เอกสารอื่นๆ ที่เกี่ยวข้อง',
             'participant_count': 'ระบุจำนวนคร่าวๆ สำหรับการเตรียมห้อง',
@@ -99,15 +97,14 @@ class ProfileForm(forms.ModelForm):
      email = forms.EmailField(label='อีเมล', required=False)
      class Meta:
         model = Profile
-        fields = ['first_name', 'last_name', 'email', 'department', 'phone', 'avatar']
-        labels = { 'department': 'แผนก/ฝ่าย', 'phone': 'เบอร์โทรศัพท์ติดต่อ', 'avatar': 'รูปโปรไฟล์', }
+        fields = ['first_name', 'last_name', 'email', 'department', 'phone', ]
+        labels = { 'department': 'แผนก/ฝ่าย', 'phone': 'เบอร์โทรศัพท์ติดต่อ',  }
         widgets = {
             'phone': forms.TextInput(attrs={'placeholder': 'เช่น 081-XXX-XXXX'}),
             'first_name': forms.TextInput(attrs={'class':'form-control'}),
             'last_name': forms.TextInput(attrs={'class':'form-control'}),
             'email': forms.EmailInput(attrs={'class':'form-control'}),
             'department': forms.TextInput(attrs={'class':'form-control'}),
-            'avatar': forms.ClearableFileInput(attrs={'class':'form-control'}),
         }
      def __init__(self, *args, **kwargs):
          super().__init__(*args, **kwargs)

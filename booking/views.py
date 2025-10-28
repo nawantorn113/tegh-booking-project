@@ -41,7 +41,7 @@ from django.dispatch import receiver
 from django.contrib.auth.forms import AuthenticationForm
 from django.core.exceptions import ValidationError
 
-# --- 1. 🟢 แก้ไข Imports: (ลบ Profile) 🟢 ---
+# --- 1.  แก้ไข Imports: (ลบ Profile)  ---
 from .models import Room, Booking, LoginHistory, Equipment 
 from .forms import BookingForm, CustomPasswordChangeForm, RoomForm 
 # --- ------------------------------------ ---
@@ -99,7 +99,7 @@ else:
     @login_required
     def UserAutocomplete(request): return JsonResponse({'error': 'Autocomplete unavailable.'}, status=501)
 
-# --- ✅ 2. START: Auth Views (Login/Logout) ✅ ---
+# ---  2. START: Auth Views (Login/Logout)  ---
 # (นี่คือ View ที่หายไป)
 def login_view(request):
     if request.user.is_authenticated: return redirect('dashboard')
@@ -132,7 +132,7 @@ def logout_view(request):
 
     messages.success(request, 'คุณได้ออกจากระบบเรียบร้อยแล้ว');
     return redirect('login')
-# --- ✅ END: Auth Views ✅ ---
+# ---  END: Auth Views  ---
 
 
 # --- Main Pages ---
@@ -227,7 +227,7 @@ def booking_detail_view(request, booking_id):
     context = {'booking': booking}
     return render(request, 'pages/booking_detail.html', context)
 
-# --- 3. 🟢 START: View เปลี่ยนรหัสผ่าน 🟢 ---
+# --- 3.  START: View เปลี่ยนรหัสผ่าน  ---
 @login_required
 def change_password_view(request): # (View นี้คือ edit_profile_view เดิม)
     if request.method == 'POST':
@@ -244,11 +244,10 @@ def change_password_view(request): # (View นี้คือ edit_profile_view 
     return render(request, 'pages/change_password.html', {
         'password_form': password_form
     })
-# --- 🟢 END: View เปลี่ยนรหัสผ่าน 🟢 ---
+# ---  END: View เปลี่ยนรหัสผ่าน  ---
 
 
 # --- Admin ---
-# --- ❌ ลบ View `admin_dashboard_view` (ย้ายไปรวมกับ Reports) ❌ ---
 
 
 # --- APIs ---
