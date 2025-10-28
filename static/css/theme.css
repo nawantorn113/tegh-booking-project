@@ -4,8 +4,6 @@
 body {
     background-color: #f8fafc;
     font-family: 'Prompt', sans-serif;
-    /* --- [แก้ไข] ลบ padding-top และ padding-left ออก --- */
-    /* padding-left: 260px; */
     min-height: 100vh;
     /* padding-top: 64px; */
     display: flex; /* ยังคงใช้ flexbox */
@@ -73,8 +71,7 @@ main.flex-grow-1 {
 /* --- Responsive --- */
 @media (max-width: 991.98px) {
     body {
-        /* padding-left: 0; Removed */
-        /* padding-top: 0; Removed */
+        background-color: #f8fafc;
     }
     .sidebar {
         margin-left: -260px;
