@@ -31,14 +31,14 @@
         .main-content-wrapper { margin-left: 260px; padding: 1.5rem; width: calc(100% - 260px); flex-grow: 1; }
         .page-header { background-color: #fff; padding: 1rem 1.5rem; margin-bottom: 1.5rem; border-radius: 0.75rem; box-shadow: 0 0.125rem 0.5rem rgba(0, 0, 0, 0.05); border: 1px solid #e9ecef; display: flex; justify-content: space-between; align-items: center; }
         .page-header h5 { margin-bottom: 0; color: #495057; font-weight: 600;} 
-        .dropdown-item-form button { padding: 0.25rem 1rem; color: #dc3545; background: none; border: none; width: 100%; text-align: left; }
+        .dropdown-item-form button { padding: 0.25rem 1rem; color: #d43232; background: none; border: none; width: 100%; text-align: left; }
         .dropdown-item-form button:hover { color: #fff; background-color: #dc3545; }
         .sidebar .nav-link .badge { font-size: 0.7em; padding: 0.3em 0.5em; vertical-align: middle; }
         
         /* --- 1. 🟢 START: CSS สำหรับ "กระดิ่ง" (Header) 🟢 --- */
         .header-notification-bell {
             font-size: 1.4rem;
-            color: #6c757d; /* สีเทา */
+            color: #004888; /* สีเทา */
             position: relative;
             text-decoration: none;
             transition: color 0.2s ease;
@@ -88,7 +88,7 @@
 </head>
 <body>
     <nav class="sidebar">
-        {# (Sidebar Header ... เหมือนเดิม) #}
+        {# (Sidebar Header) #}
         <div class="sidebar-header">
             <h5 class="fw-bold"><i class="bi bi-calendar-week-fill me-2"></i>TEGH Booking</h5>
             <small class="text-muted">ระบบจองห้องประชุม</small>
@@ -117,7 +117,7 @@
             </ul>
         </div>
 
-        {# (Footer ... เหมือนเดิม) #}
+        {# (Footer) #}
         <div class="sidebar-footer">
             {% if user.is_authenticated %}
             <div class="dropdown">
@@ -129,8 +129,8 @@
                     </div>
                 </a>
                 <ul class="dropdown-menu dropdown-menu-dark text-small shadow" aria-labelledby="dropdownUser1">
-                    <li><a class="dropdown-item" href="{% url 'change_password' %}"><i class="bi bi-key-fill me-2"></i>เปลี่ยนรหัสผ่าน</a></li>
-                    <li><hr class="dropdown-divider"></li>
+                    <!-- <li><a class="dropdown-item" href="{% url 'change_password' %}"><i class="bi bi-key-fill me-2"></i>เปลี่ยนรหัสผ่าน</a></li>
+                    <li><hr class="dropdown-divider"></li> -->
                     <li>
                         <form action="{% url 'logout' %}" method="post" class="dropdown-item-form">
                             {% csrf_token %} 

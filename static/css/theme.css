@@ -92,3 +92,11 @@ main.flex-grow-1 {
 .fc .fc-toolbar-title { font-size: 1.5rem; }
 .fc .fc-button { text-transform: capitalize; }
 .fc-theme-standard .fc-list-day-cushion { background-color: #f8f9fa; }
+
+/* --- สไตล์ปุ่ม Logout เมื่อ Hover/Active --- */
+.dropdown-item.text-danger:hover,
+.dropdown-item.text-danger:active,
+.dropdown-item.text-danger:focus {
+    color: #fff;                /* ตัวหนังสือสีขาว */
+    background-color: #dc3545;  /* พื้นหลังสีแดง (สี $danger ของ Bootstrap) */
+}
