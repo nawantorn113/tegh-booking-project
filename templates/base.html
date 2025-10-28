@@ -32,7 +32,7 @@
         .page-header { background-color: #fff; padding: 1rem 1.5rem; margin-bottom: 1.5rem; border-radius: 0.75rem; box-shadow: 0 0.125rem 0.5rem rgba(0, 0, 0, 0.05); border: 1px solid #e9ecef; display: flex; justify-content: space-between; align-items: center; }
         .page-header h5 { margin-bottom: 0; color: #495057; font-weight: 600;} 
         .dropdown-item-form button { padding: 0.25rem 1rem; color: #d43232; background: none; border: none; width: 100%; text-align: left; }
-        .dropdown-item-form button:hover { color: #fff; background-color: #dc3545; }
+        .dropdown-item-form button:hover { color: #d30d0d; background-color: #ffffff; }
         .sidebar .nav-link .badge { font-size: 0.7em; padding: 0.3em 0.5em; vertical-align: middle; }
         
         /* --- 1. 🟢 START: CSS สำหรับ "กระดิ่ง" (Header) 🟢 --- */
@@ -81,7 +81,7 @@
             font-size: 0.9rem;
             font-weight: 500;
         }
-        /* --- 1. 🟢 END: CSS 🟢 --- */
+        /* --- 1.  END: CSS  --- */
 
     </style>
     {% block extra_head %}{% endblock %}
@@ -151,7 +151,7 @@
         <div class="page-header">
             <h5 class="mb-0">{% block page_title %}หน้าจองห้องประชุม{% endblock %}</h5>
             
-            {# --- 2. 🟢 START: แก้ไข HTML กระดิ่ง (ให้เป็น Dropdown) 🟢 --- #}
+            {# --- 2.  START: แก้ไข HTML กระดิ่ง (ให้เป็น Dropdown)  --- #}
             <div>
                 {% if user.is_authenticated and is_admin_user %} {# (is_admin_user มาจาก context_processor) #}
                 
@@ -208,7 +208,7 @@
                 
                 {% endif %}
             </div>
-            {# --- 2. 🟢 END: แก้ไข HTML กระดิ่ง 🟢 --- #}
+            {# --- 2.  END: แก้ไข HTML กระดิ่ง  --- #}
         </div>
 
         {% if messages %}
@@ -235,13 +235,13 @@
         if ($.fn.select2) {
             $.fn.select2.defaults.set("theme", "bootstrap-5");
         }
-        
-        // --- 3. 🟢 START: เปิดใช้งาน Tooltips (สำหรับกระดิ่ง) 🟢 ---
+
+        // --- 3.  START: เปิดใช้งาน Tooltips (สำหรับกระดิ่ง)  ---
         var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
         var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
           return new bootstrap.Tooltip(tooltipTriggerEl)
         })
-        // --- 3. 🟢 END: Tooltips 🟢 ---
+        // --- 3.  END: Tooltips  ---
     });
     </script>
     
