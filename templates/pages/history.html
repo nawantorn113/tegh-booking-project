@@ -66,9 +66,13 @@
                             {% else %}<span class="badge bg-secondary">{{ booking.get_status_display }}</span>
                             {% endif %}
                         </td>
+                        {% if is_admin_user %}
                         <td class="text-end">
                             <a href="{% url 'edit_booking' booking.id %}" class="btn btn-sm btn-outline-primary">แก้ไข</a>
                         </td>
+                        {% else %}
+                        <td></td>
+                        {% endif %}
                     </tr>
                     {% empty %}
                     <tr>
