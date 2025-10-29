@@ -19,23 +19,22 @@
         opacity: 0.2;
     }
 
-    /* --- 1. START: แก้ไขสไตล์ "เส้นแบ่ง" (เข้มขึ้น) --- */
+    /* (สไตล์เส้นแบ่ง ... เหมือนเดิม) */
     .section-divider {
         margin-top: 2rem;    
         margin-bottom: 2rem; 
-        border-color: #adb5bd; /* 👈 สีเทาเข้ม (มองเห็นชัด) */
-        border-top-width: 1px; /* 👈 ทำให้เส้นหนาขึ้นเล็กน้อย (ถ้าต้องการ) */
-        opacity: 1; /* 👈 ทำให้ไม่จาง */
+        border-color: #adb5bd; 
+        border-top-width: 1px; 
+        opacity: 1; 
     }
-    /* --- 1. END: สไตล์สำหรับ "เส้นแบ่ง" --- */
-
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="container-fluid">
 
-    <div class="card shadow-sm border-0 rounded-3 mb-4">
+    {# --- Smart Search Box (กล่องค้นหา) --- #}
+    <div class="">
         <div class="card-body p-4">
             <form action="{% url 'smart_search' %}" method="get">
                 <label for="smartSearchInput" class="form-label h5 fw-bold text-primary"><h5>ค้นหาห้องว่าง</h5></label>
@@ -50,15 +49,15 @@
                         <i class="bi bi-search me-1"></i> ค้นหา
                     </button>
                 </div>
-                <div class="form-text">
-                    <!-- ลองใช้คำว่า: <strong>เช้านี้</strong> (9:00-12:00), <strong>บ่ายนี้</strong> (13:00-17:00), <strong>วันนี้</strong>, <strong>พรุ่งนี้</strong> -->
-                </div>
+                {# --- ลบบล็อก form-text ที่เป็นคำแนะนำออกแล้ว --- #}
             </form>
         </div>
     </div>
-    <hr class="section-divider">
+    
+    <hr class="section-divider"> {# เส้นแบ่ง #}
+
     <div class="row g-4 mb-4">
-        {# (การ์ด 1: ห้องทั้งหมด) #}
+        {# --- การ์ด 1: ห้องทั้งหมด (สีน้ำเงิน) --- #}
         <div class="col-md-6 col-lg-3">
             <div class="card kpi-card border-start border-primary border-2 shadow-sm h-100">
                 <div class="card-body d-flex justify-content-between align-items-center">
@@ -70,7 +69,7 @@
                 </div>
             </div>
         </div>
-        {# (การ์ด 2: การจองวันนี้) #}
+        {# --- การ์ด 2: การจองวันนี้ (สีเขียว) --- #}
         <div class="col-md-6 col-lg-3">
             <div class="card kpi-card border-start border-success border-2 shadow-sm h-100">
                 <div class="card-body d-flex justify-content-between align-items-center">
@@ -82,7 +81,7 @@
                 </div>
             </div>
         </div>
-        {# (การ์ด 3: รออนุมัติ) #}
+        {# --- การ์ด 3: รออนุมัติ (สีเหลือง) --- #}
         <div class="col-md-6 col-lg-3">
             <div class="card kpi-card border-start border-warning border-2 shadow-sm h-100">
                 <div class="card-body d-flex justify-content-between align-items-center">
@@ -94,7 +93,7 @@
                 </div>
             </div>
         </div>
-        {# (การ์ด 4: การจองของฉัน) #}
+        {# --- การ์ด 4: การจองของฉัน (วันนี้) (สีฟ้า) --- #}
         <div class="col-md-6 col-lg-3">
             <div class="card kpi-card border-start border-info border-2 shadow-sm h-100">
                  <div class="card-body d-flex justify-content-between align-items-center">
@@ -109,7 +108,8 @@
     </div>
     <hr class="section-divider">
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h1 class="mb-0">สถานะห้องประชุม</h1>
+        <h2 class="mb-0 fw-bold text-primary">สถานะห้องประชุม</h2>
+        
         <div class="d-flex align-items-center">
             <label for="sortSelect" class="form-label me-2 mb-0 small text-muted">เรียงตาม:</label>
             <select class="form-select form-select-sm" id="sortSelect" style="width: auto;" onchange="window.location.href='?sort='+this.value">
@@ -184,3 +184,4 @@
     {% endfor %}
     </div> {# End container-fluid #}
 {% endblock %}
+

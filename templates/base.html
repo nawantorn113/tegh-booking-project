@@ -209,7 +209,7 @@
                             <span class="d-none d-lg-inline">{{ user.get_full_name|default:user.username }}</span>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end shadow border-0" aria-labelledby="navbarUserDropdown">
-                            <li><a class="dropdown-item" href="{% url 'change_password' %}"><i class="bi bi-key-fill me-2"></i>เปลี่ยนรหัสผ่าน</a></li>
+                            <!-- <li><a class="dropdown-item" href="{% url 'change_password' %}"><i class="bi bi-key-fill me-2"></i>เปลี่ยนรหัสผ่าน</a></li> -->
                             <li><hr class="dropdown-divider"></li>
                             <li>
                                 <form action="{% url 'logout' %}" method="post" class="dropdown-item-form">
@@ -269,7 +269,28 @@
         })
     });
     </script>
+
     
-    {% block extra_scripts %}{% endblock %}
+     <script>
+            document.addEventListener('DOMContentLoaded', (event) => {
+    // 1. ค้นหา Alert ที่เป็นประเภท "success" (สีเขียว)
+             const successAlerts = document.querySelectorAll('.alert-success');
+    
+    successAlerts.forEach(function(alert) {
+        
+        // 2. ตั้งเวลา 5 วินาที (5000 มิลลิวินาที)
+        setTimeout(function() {
+            
+            // 3. สั่งให้ Bootstrap Alert ปิดตัวเอง (มันจะ fade-out หายไป)
+            const bsAlert = new bootstrap.Alert(alert);
+            if (bsAlert) {
+                bsAlert.close();
+            }
+
+        }, 5000); // 👈 5 วินาที
+    });
+});
+</script>
+{% block extra_scripts %}{% endblock %}
 </body>
 </html>
