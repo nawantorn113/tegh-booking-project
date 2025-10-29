@@ -11,7 +11,6 @@ from dal import autocomplete
 
 class BookingForm(forms.ModelForm):
     
-    # (ลบ Field 'attachments' (หลายไฟล์) ออก)
 
     class Meta:
         model = Booking
@@ -43,7 +42,7 @@ class BookingForm(forms.ModelForm):
         help_texts = {
             'participants': 'พิมพ์ชื่อ, นามสกุล, หรือ username เพื่อค้นหา (ผู้ใช้ในระบบ)',
             'participant_count': '',
-            'presentation_file': 'ไฟล์ที่ต้องการนำเสนอ (PDF, PPT, Word, Video, etc.)',
+            'presentation_file': 'ไฟล์ที่ต้องการนำเสนอ',
         }
         widgets = {
             'room': forms.HiddenInput(),
