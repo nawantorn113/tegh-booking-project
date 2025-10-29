@@ -68,7 +68,8 @@
                         </td>
                         {% if is_admin_user %}
                         <td class="text-end">
-                            <a href="{% url 'edit_booking' booking.id %}" class="btn btn-sm btn-outline-primary">แก้ไข</a>
+                            <a href="{% url 'edit_booking' booking.id %}" class="btn btn-sm btn-outline-primary">แก้ไข</a> 
+                            <!-- #สำหรับแอดมินเท่านั้น -->
                         </td>
                         {% else %}
                         <td></td>
