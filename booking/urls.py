@@ -12,6 +12,10 @@ urlpatterns = [
     path('master-calendar/', views.master_calendar_view, name='master_calendar'),
     path('history/', views.history_view, name='history'),
     path('change-password/', views.change_password_view, name='change_password'),
+    
+    # --- 1. เพิ่ม URL นี้สำหรับหน้าผลการค้นหา ---
+    path('search/', views.smart_search_view, name='smart_search'),
+    # --- --------------------------------- ---
 
     # Booking Process
     path('room/<int:room_id>/calendar/', views.room_calendar_view, name='room_calendar'),
@@ -35,8 +39,6 @@ urlpatterns = [
     path('approvals/<int:booking_id>/reject/', views.reject_booking_view, name='reject_booking'),
 
     # Management
-    # --- ❌ ลบ URL นี้ออก ❌ ---
-    # path('management/dashboard/', views.admin_dashboard_view, name='admin_dashboard'),
     path('management/users/', views.user_management_view, name='user_management'),
     path('management/users/<int:user_id>/edit/', views.edit_user_roles_view, name='edit_user_roles'),
     path('management/rooms/', views.room_management_view, name='rooms'),
@@ -45,7 +47,7 @@ urlpatterns = [
     path('management/rooms/<int:room_id>/delete/', views.delete_room_view, name='delete_room'),
 
     # Reports
-    path('reports/', views.reports_view, name='reports'), # <-- (หน้านี้จะรวมทุกอย่าง)
+    path('reports/', views.reports_view, name='reports'),
     path('reports/export/excel/', views.export_reports_excel, name='export_reports_excel'),
     path('reports/export/pdf/', views.export_reports_pdf, name='export_reports_pdf'),
 ]

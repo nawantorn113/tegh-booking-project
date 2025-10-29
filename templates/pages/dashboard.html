@@ -5,30 +5,61 @@
 
 {% block extra_head %}
 <style>
-    /* Optional: เพิ่มสไตล์ให้เงาเด่นขึ้นเมื่อ hover */
+    /* (สไตล์ Hover และ KPI ... เหมือนเดิม) */
     .kpi-card:hover, .room-card-hover:hover {
         transform: translateY(-3px);
         box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1) !important;
         transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
     }
     .kpi-card .card-body, .room-card .card-body {
-         padding: 1.25rem; /* เพิ่ม padding ภายในการ์ด */
+         padding: 1.25rem; 
     }
     .kpi-icon {
         font-size: 2.5rem;
         opacity: 0.2;
     }
+
+    /* --- 1. START: แก้ไขสไตล์ "เส้นแบ่ง" (เข้มขึ้น) --- */
+    .section-divider {
+        margin-top: 2rem;    
+        margin-bottom: 2rem; 
+        border-color: #adb5bd; /* 👈 สีเทาเข้ม (มองเห็นชัด) */
+        border-top-width: 1px; /* 👈 ทำให้เส้นหนาขึ้นเล็กน้อย (ถ้าต้องการ) */
+        opacity: 1; /* 👈 ทำให้ไม่จาง */
+    }
+    /* --- 1. END: สไตล์สำหรับ "เส้นแบ่ง" --- */
+
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="container-fluid">
 
-    <!-- KPI Cards -->
+    <div class="card shadow-sm border-0 rounded-3 mb-4">
+        <div class="card-body p-4">
+            <form action="{% url 'smart_search' %}" method="get">
+                <label for="smartSearchInput" class="form-label h5 fw-bold text-primary">ค้นหาห้องว่าง</label>
+                <div class="input-group">
+                    
+                    <input type="text" class="form-control rounded-start-pill" 
+                           name="q" id="smartSearchInput" 
+                           placeholder=""
+                           value="{{ query_text|default:'' }}">
+                    
+                    <button class="btn btn-primary rounded-end-pill px-4" type="submit">
+                        <i class="bi bi-search me-1"></i> ค้นหา
+                    </button>
+                </div>
+                <div class="form-text">
+                    <!-- ลองใช้คำว่า: <strong>เช้านี้</strong> (9:00-12:00), <strong>บ่ายนี้</strong> (13:00-17:00), <strong>วันนี้</strong>, <strong>พรุ่งนี้</strong> -->
+                </div>
+            </form>
+        </div>
+    </div>
+    <hr class="section-divider">
     <div class="row g-4 mb-4">
-        {# --- การ์ด 1: ห้องทั้งหมด (สีน้ำเงิน) --- #}
+        {# (การ์ด 1: ห้องทั้งหมด) #}
         <div class="col-md-6 col-lg-3">
-            {# --- [แก้ไข] เปลี่ยนจาก border-4 เป็น border-3 --- #}
             <div class="card kpi-card border-start border-primary border-2 shadow-sm h-100">
                 <div class="card-body d-flex justify-content-between align-items-center">
                     <div>
@@ -39,9 +70,8 @@
                 </div>
             </div>
         </div>
-        {# --- การ์ด 2: การจองวันนี้ (สีเขียว) --- #}
+        {# (การ์ด 2: การจองวันนี้) #}
         <div class="col-md-6 col-lg-3">
-            {# --- [แก้ไข] เปลี่ยนจาก border-4 เป็น border-3 --- #}
             <div class="card kpi-card border-start border-success border-2 shadow-sm h-100">
                 <div class="card-body d-flex justify-content-between align-items-center">
                     <div>
@@ -52,12 +82,11 @@
                 </div>
             </div>
         </div>
-        {# --- การ์ด 3: รออนุมัติ (สีเหลือง) --- #}
+        {# (การ์ด 3: รออนุมัติ) #}
         <div class="col-md-6 col-lg-3">
-            {# --- [แก้ไข] เปลี่ยนจาก border-4 เป็น border-3 --- #}
             <div class="card kpi-card border-start border-warning border-2 shadow-sm h-100">
                 <div class="card-body d-flex justify-content-between align-items-center">
-                     <div>
+                    <div>
                         <h6 class="card-subtitle text-muted mb-1">รออนุมัติ</h6>
                         <h2 class="card-title fw-bold mb-0">{{ summary_cards.pending_approvals }} <small class="text-muted fs-6">รายการ</small></h2>
                     </div>
@@ -65,9 +94,8 @@
                 </div>
             </div>
         </div>
-        {# --- การ์ด 4: การจองของฉัน (วันนี้) (สีฟ้า) --- #}
+        {# (การ์ด 4: การจองของฉัน) #}
         <div class="col-md-6 col-lg-3">
-            {# --- [แก้ไข] เปลี่ยนจาก border-4 เป็น border-3 --- #}
             <div class="card kpi-card border-start border-info border-2 shadow-sm h-100">
                  <div class="card-body d-flex justify-content-between align-items-center">
                     <div>
@@ -79,8 +107,7 @@
             </div>
         </div>
     </div>
-
-    {# --- ส่วนแสดงลิสต์ห้อง --- #}
+    <hr class="section-divider">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h3 class="mb-0">สถานะห้องประชุม</h3>
         <div class="d-flex align-items-center">
@@ -95,12 +122,15 @@
     </div>
 
     {% for building_name, rooms_in_building in buildings.items %}
+        
+        {% if not forloop.first %}
+            <hr class="section-divider my-4">
+        {% endif %}
         <div class="mb-4">
             <h4 class="mb-3 text-muted"><i class="bi bi-building me-2"></i>{{ building_name }}</h4>
-            <div class="row g-4">
+            <div class="row g-4 row-cols-1 row-cols-md-2 row-cols-lg-3">
                 {% for room in rooms_in_building %}
-                <div class="col-md-6 col-lg-4 col-xl-3">
-                    {# --- [แก้ไข] เปลี่ยนจาก border-4 เป็น border-3 --- #}
+                <div class="col">
                     <div class="card room-card-hover border-start border-2 {% if room.status == 'ว่าง' %}border-success{% else %}border-danger{% endif %} shadow-sm h-100">
                         <div class="card-body d-flex flex-column">
                             <div class="d-flex justify-content-between align-items-start mb-2">
@@ -110,19 +140,14 @@
                                 </span>
                             </div>
                             <p class="card-subtitle mb-2 text-muted small">
-                                ชั้น {{ room.floor|default:"-" }} {{ room.location|default:"" }}
+                                ชั้น {{ room.floor|default:"-" }}
                             </p>
                             <p class="card-text small mb-1"><i class="bi bi-people-fill me-1"></i>{{ room.capacity }} คน</p>
                             <p class="card-text small mb-3">
                                 <i class="bi bi-tools me-1"></i>
-                                {% if room.equipment_list %}
-                                    {{ room.equipment_list|slice:":2"|join:", " }}{% if room.equipment_list|length > 2 %}...{% endif %}
-                                {% else %}
-                                    -
-                                {% endif %}
+                                {{ room.equipment_in_room|truncatewords:4|default:"-" }}
                             </p>
 
-                            {# --- แสดงข้อมูลการจองปัจจุบัน หรือ การจองถัดไป --- #}
                             <div class="mt-auto border-top pt-2">
                                 {% if room.current_booking_info %}
                                     <p class="small mb-1 text-danger">
@@ -133,11 +158,11 @@
                                     </p>
                                 {% elif room.next_booking_info %}
                                      <p class="small mb-1 text-primary">
-                                         <i class="bi bi-calendar-plus"></i> <strong>จองถัดไป:</strong> {{ room.next_booking_info.start_time|date:"H:i" }} น.
+                                          <i class="bi bi-calendar-plus"></i> <strong>จองถัดไป:</strong> {{ room.next_booking_info.start_time|date:"H:i" }} น.
                                      </p>
                                       <p class="small mb-1 text-muted">
-                                         <i class="bi bi-person"></i> โดย: {{ room.next_booking_info.booked_by.get_full_name|default:room.next_booking_info.booked_by.username }}
-                                      </p>
+                                           <i class="bi bi-person"></i> โดย: {{ room.next_booking_info.booked_by.get_full_name|default:room.next_booking_info.booked_by.username }}
+                                       </p>
                                 {% else %}
                                     <p class="small mb-1 text-success"><i class="bi bi-calendar-check"></i> ว่างตลอด</p>
                                     <p class="small mb-1 text-muted">&nbsp;</p> {# Placeholder for consistent height #}
@@ -157,6 +182,5 @@
             <i class="bi bi-exclamation-triangle-fill me-2"></i> ยังไม่มีห้องประชุมในระบบ
         </div>
     {% endfor %}
-
-</div> {# End container-fluid #}
+    </div> {# End container-fluid #}
 {% endblock %}

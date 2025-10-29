@@ -1,5 +1,6 @@
 # booking/views.py
 import json
+import re # 1. เพิ่ม import นี้
 from datetime import datetime, timedelta
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
@@ -40,7 +41,7 @@ from django.dispatch import receiver
 from django.contrib.auth.forms import AuthenticationForm
 from django.core.exceptions import ValidationError
 
-# 1. แก้ไข Imports (ลบ Profile, Equipment, และ BookingFile)
+# 2. แก้ไข Imports (ลบ Profile, Equipment, และ BookingFile)
 from .models import Room, Booking, LoginHistory
 from .forms import BookingForm, CustomPasswordChangeForm, RoomForm 
 # (ลบ ProfileForm)
@@ -115,6 +116,89 @@ def logout_view(request):
     messages.success(request, 'คุณได้ออกจากระบบเรียบร้อยแล้ว');
     return redirect('login')
 
+# --- 3. START: เพิ่มฟังก์ชัน Smart Search (ใหม่) ---
+def parse_search_query(query_text):
+    capacity = None
+    start_time = None
+    end_time = None
+    now = timezone.now()
+    today = now.date()
+
+    capacity_match = re.search(r'(\d+)\s*คน', query_text)
+    if capacity_match:
+        capacity = int(capacity_match.group(1))
+
+    if "บ่ายนี้" in query_text:
+        start_time = timezone.make_aware(datetime.combine(today, datetime.time(13, 0)))
+        end_time = timezone.make_aware(datetime.combine(today, datetime.time(17, 0)))
+        if now > end_time:
+            start_time, end_time = None, None 
+            
+    elif "เช้านี้" in query_text:
+        start_time = timezone.make_aware(datetime.combine(today, datetime.time(9, 0)))
+        end_time = timezone.make_aware(datetime.combine(today, datetime.time(12, 0)))
+        if now > end_time:
+            start_time, end_time = None, None
+
+    elif "พรุ่งนี้เช้า" in query_text:
+        tomorrow = today + timedelta(days=1)
+        start_time = timezone.make_aware(datetime.combine(tomorrow, datetime.time(9, 0)))
+        end_time = timezone.make_aware(datetime.combine(tomorrow, datetime.time(12, 0)))
+        
+    elif "พรุ่งนี้บ่าย" in query_text:
+        tomorrow = today + timedelta(days=1)
+        start_time = timezone.make_aware(datetime.combine(tomorrow, datetime.time(13, 0)))
+        end_time = timezone.make_aware(datetime.combine(tomorrow, datetime.time(17, 0)))
+
+    elif "พรุ่งนี้" in query_text:
+        tomorrow = today + timedelta(days=1)
+        start_time = timezone.make_aware(datetime.combine(tomorrow, datetime.time(9, 0)))
+        end_time = timezone.make_aware(datetime.combine(tomorrow, datetime.time(17, 0)))
+
+    elif "วันนี้" in query_text:
+        start_time = timezone.make_aware(datetime.combine(today, datetime.time(9, 0)))
+        end_time = timezone.make_aware(datetime.combine(today, datetime.time(17, 0)))
+        if now > end_time:
+            start_time, end_time = None, None
+            
+    return capacity, start_time, end_time
+
+@login_required
+def smart_search_view(request):
+    query_text = request.GET.get('q', '')
+    available_rooms = Room.objects.all()
+    search_params = {}
+
+    if not query_text:
+        available_rooms = Room.objects.none()
+    else:
+        capacity, start_time, end_time = parse_search_query(query_text)
+        
+        search_params['capacity'] = capacity
+        search_params['start_time'] = start_time
+        search_params['end_time'] = end_time
+
+        if capacity:
+            available_rooms = available_rooms.filter(capacity__gte=capacity)
+
+        if start_time and end_time:
+            conflicting_room_ids = Booking.objects.filter(
+                status__in=['APPROVED', 'PENDING'],
+                start_time__lt=end_time,
+                end_time__gt=start_time
+            ).values_list('room_id', flat=True).distinct()
+            
+            available_rooms = available_rooms.exclude(id__in=conflicting_room_ids)
+
+    context = {
+        'query_text': query_text,
+        'search_params': search_params,
+        'available_rooms': available_rooms.order_by('capacity'),
+    }
+    return render(request, 'pages/search_results.html', context)
+# --- 3. END: เพิ่มฟังก์ชัน Smart Search ---
+
+
 # --- Main Pages ---
 @login_required
 def dashboard_view(request):
@@ -152,7 +236,7 @@ def dashboard_view(request):
 @login_required
 def room_calendar_view(request, room_id):
     room = get_object_or_404(Room, pk=room_id)
-    form = BookingForm(initial={'room': room}) # 2. ลบ user=request.user
+    form = BookingForm(initial={'room': room}) 
     context = {'room': room, 'form': form}
     return render(request, 'pages/room_calendar.html', context)
 
@@ -163,7 +247,6 @@ def master_calendar_view(request):
 @login_required
 def history_view(request):
     bookings = Booking.objects.filter(booked_by=request.user).select_related('room').order_by('-start_time')
-    # (Filter logic ... เหมือนเดิม)
     date_f = request.GET.get('date'); room_f = request.GET.get('room'); status_f = request.GET.get('status')
     try:
         if date_f: bookings = bookings.filter(start_time__date=datetime.strptime(date_f, '%Y-%m-%d').date())
@@ -196,7 +279,7 @@ def history_view(request):
 def booking_detail_view(request, booking_id):
     booking = get_object_or_404(
         Booking.objects.select_related('room', 'booked_by')
-                       .prefetch_related('participants'), # 3. ลบ 'equipment' และ 'files'
+                       .prefetch_related('participants'), # 4. ลบ 'equipment' และ 'files'
         pk=booking_id
     )
     is_participant = request.user in booking.participants.all()
@@ -299,14 +382,14 @@ def delete_booking_api(request, booking_id):
         print(f"Error in delete_booking_api for booking {booking_id}: {e}")
         return JsonResponse({'success': False, 'error': 'เกิดข้อผิดพลาดบนเซิร์ฟเวอร์'}, status=500)
 
-# --- 4. START: แก้ไข create_booking_view (ลบ user=... และ equipment) ---
+# --- 5. START: แก้ไข create_booking_view (ลบ user=... และ equipment) ---
 @login_required
 @require_POST
 def create_booking_view(request, room_id):
     room = get_object_or_404(Room, pk=room_id)
-    form = BookingForm(request.POST, request.FILES) # 4.1 ลบ user=...
+    form = BookingForm(request.POST, request.FILES) 
     
-    # 4.2 ลบ Logic ของ 'attachments' (หลายไฟล์) ออก
+    # (ลบ Logic ของ 'attachments' (หลายไฟล์) ออก)
     # uploaded_files = request.FILES.getlist('attachments')
 
     if form.is_valid():
@@ -355,13 +438,13 @@ def create_booking_view(request, room_id):
         messages.error(request, f"ไม่สามารถสร้างการจองได้: {error_str}")
         context = {'room': room, 'form': form}
         return render(request, 'pages/room_calendar.html', context)
-# --- 4. END: แก้ไข create_booking_view ---
+# --- 5. END: แก้ไข create_booking_view ---
 
 
-# --- 5. START: แก้ไข edit_booking_view (ลบ user=... และ equipment) ---
+# --- 6. START: แก้ไข edit_booking_view (ลบ user=... และ equipment) ---
 @login_required
 def edit_booking_view(request, booking_id):
-    # 5.1 ลบ prefetch_related('files') ออก
+    # 6.1 ลบ prefetch_related('files') ออก
     booking = get_object_or_404(Booking, pk=booking_id)
     
     if booking.booked_by != request.user and not is_admin(request.user):
@@ -369,7 +452,7 @@ def edit_booking_view(request, booking_id):
         return redirect('history')
 
     if request.method == 'POST':
-        form = BookingForm(request.POST, request.FILES, instance=booking) # 5.2 ลบ user=...
+        form = BookingForm(request.POST, request.FILES, instance=booking) # 6.2 ลบ user=...
         
         # (ลบ Logic การดึงไฟล์)
         
@@ -408,10 +491,10 @@ def edit_booking_view(request, booking_id):
         else: 
              messages.error(request, "ไม่สามารถบันทึกการแก้ไขได้ กรุณาตรวจสอบข้อผิดพลาด")
     else: 
-        form = BookingForm(instance=booking) # 5.3 ลบ user=...
+        form = BookingForm(instance=booking) # 6.3 ลบ user=...
 
     return render(request, 'pages/edit_booking.html', {'form': form, 'booking': booking})
-# --- 5. END: แก้ไข edit_booking_view ---
+# --- 6. END: แก้ไข edit_booking_view ---
 
 
 @login_required
