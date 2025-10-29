@@ -1,14 +1,19 @@
 {% extends 'base.html' %}
 {% load static %}
-{% load booking_tags %} {% block title %}ประวัติการจอง{% endblock %}
+{% block title %}ประวัติการจอง{% endblock %}
 
 {% block content %}
-<div class="container main-content-wrapper">
+    <!-- 
+    (ลบ <div class="container main-content-wrapper"> ที่ซ้ำซ้อนออกแล้ว) 
+    (การทำเช่นนี้จะแก้ปัญหา "ช่องว่าง" ด้านบนที่กว้างเกินไป)
+    -->
     
+    <!-- === 1. หัวข้อหน้า === -->
     <div class="page-header">
         <h5 class="mb-0">ประวัติการจองของคุณ</h5>
-        </div>
+    </div>
 
+    <!-- === 2. รายการจอง (ตารางที่ถูกต้อง) === -->
     <div class="content-card shadow-sm border">
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
@@ -34,6 +39,7 @@
                             <small class="text-muted">{{ booking.start_time|date:"H:i" }} - {{ booking.end_time|date:"H:i" }} น.</small>
                         </td>
                         <td>
+                            <!-- (ป้ายสถานะ) -->
                             {% if booking.status == 'APPROVED' %}
                                 <span class="badge bg-success-subtle text-success-emphasis rounded-pill">อนุมัติแล้ว</span>
                             {% elif booking.status == 'PENDING' %}
@@ -45,16 +51,21 @@
                             {% endif %}
                         </td>
                         
+                        <!-- (ส่วนจัดการ ที่มี Logic ตรวจสอบเวลา) -->
                         <td class="text-end">
                             
+                            <!-- 1. ปุ่ม "ดูรายละเอียด" (แสดงตลอด) -->
                             <a href="{% url 'booking_detail' booking.id %}" class="btn btn-sm btn-outline-info px-3">
                                 <i class="bi bi-search me-1"></i> รายละเอียด
                             </a>
                             
+                            <!-- 2. เช็คว่าสถานะยัง Active (PENDING หรือ APPROVED) -->
                             {% if booking.status == 'PENDING' or booking.status == 'APPROVED' %}
                                 
+                                <!-- 3. (ใหม่!) เช็คว่า (ยังไม่จบ) หรือ (เป็นแอดมิน) -->
                                 {% if booking.end_time > now_time or is_admin_user %}
                                     
+                                    <!-- ปุ่ม "ยกเลิก" -->
                                     <form action="{% url 'delete_booking_view' booking.id %}" method="POST" class="d-inline ms-1" 
                                           onsubmit="return confirm('คุณต้องการยกเลิกการจองนี้ใช่หรือไม่?');">
                                         {% csrf_token %}
@@ -64,9 +75,9 @@
                                     </form>
 
                                 {% endif %}
-                                {% endif %}
-                            </td>
-                        </tr>
+                            {% endif %}
+                        </td>
+                    </tr>
                     {% empty %}
                     <tr>
                         <td colspan="5" class="text-center text-muted py-4">
@@ -78,5 +89,6 @@
                 </tbody>
             </table>
         </div>
-    </div> </div>
+    </div> <!-- .content-card -->
+
 {% endblock %}

@@ -1,255 +1,141 @@
 {% extends 'base.html' %}
 {% load static %}
-{% load i18n %}
+
+{% block title %}ปฏิทินห้อง: {{ room.name }}{% endblock %}
 
 {% block extra_head %}
-<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/main.min.css" rel="stylesheet" />
 <style>
-  .fc-event.vacant { background-color: #28a745; border-color: #28a745;}
-  .fc-event.booked { background-color: #007bff; border-color: #007bff;}
-  .fc-event.pending { background-color: #ffc107; border-color: #ffc107; color: #212529 !important;}
-  .room-card { border: 1px solid #dee2e6; padding:1rem; margin-bottom:1.5rem; border-radius:0.75rem; display:flex; gap:1rem; background-color: #fff; box-shadow: 0 .125rem .25rem rgba(0,0,0,.075); }
-  .room-card img { width:150px; height:100px; object-fit:cover; border-radius:0.5rem; }
-  
-  /* CSS สำหรับ Autocomplete Widget (ต้องมี) */
-  .select2-container--open { z-index: 1060; } 
-  {{ form.media.css }} 
+    /* (ปรับแต่งปฏิทินเล็กน้อย) */
+    :root {
+        --fc-border-color: #e9ecef;
+        --fc-today-bg-color: #f8f9fa;
+        --fc-button-active-bg-color: #4338ca;
+        --fc-button-active-border-color: #4338ca;
+    }
+    .fc {
+        font-family: 'Kanit', sans-serif;
+    }
+    .fc .fc-toolbar-title {
+        font-size: 1.25rem;
+        font-weight: 500;
+    }
 </style>
 {% endblock %}
 
 
 {% block content %}
-
-{# (ส่วน HTML แสดง room-card, calendar ... เหมือนเดิม) #}
-<div class="room-card align-items-center">
-  {% if room.image %} <img src="{{ room.image.url }}" alt="รูปภาพ {{ room.name }}"> {% else %} <div class="bg-light d-flex align-items-center justify-content-center rounded" style="width:150px; height:100px;"> <i class="bi bi-image text-muted fs-1"></i> </div> {% endif %}
-  <div> <h4 class="mb-1">{{ room.name }}</h4> <p class="mb-1 text-muted"><i class="bi bi-people-fill me-1"></i>รองรับ: {{ room.capacity }} คน</p> <p class="mb-0 text-muted small"><i class="bi bi-tools me-1"></i>อุปกรณ์: {{ room.equipment_in_room|default:"-"|linebreaksbr }}</p> </div>
+<div class="page-header">
+    <h5 class="mb-0">ห้องประชุม: {{ room.name }}</h5>
 </div>
-<div id='calendar' class="bg-white p-3 rounded shadow-sm"></div>
 
-{# (Modal "สร้าง" การจอง) #}
-<div class="modal fade" id="bookingModal" tabindex="-1" aria-labelledby="bookingModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered modal-lg">
-    <div class="modal-content rounded-3">
-      <form action="{% url 'create_booking_for_room' room.id %}" method="POST" enctype="multipart/form-data" id="bookingForm">
-        {% csrf_token %}
-        <div class="modal-header border-bottom-0">
-          <h5 class="modal-title" id="bookingModalLabel"><i class="bi bi-calendar-plus-fill me-2 text-primary"></i>กรอกข้อมูลการจอง</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+<div class="row g-4">
+
+    <div class="col-lg-8">
+        <div class="content-card shadow-sm border p-3 p-md-4">
+            <div id="calendar"></div>
         </div>
-        <div class="modal-body py-4 px-4">
-            {% if form.non_field_errors %} <div class="alert alert-danger small p-2" role="alert"> {% for error in form.non_field_errors %} {{ error }} {% endfor %} </div> {% endif %}
-            <p class="mb-3 small text-muted">ห้อง: <strong>{{ room.name }}</strong></p>
-            <div style="display:none;">{{ form.room }}{{ form.status }}</div>
-            <div class="row g-3">
-                <div class="col-12"> <label for="{{ form.title.id_for_label }}" class="form-label small fw-bold">{{ form.title.label }}</label> {{ form.title }} {% if form.title.errors %}<div class="invalid-feedback d-block small">{{ form.title.errors|first }}</div>{% endif %} </div>
-                <div class="col-md-6"> <label for="{{ form.chairman.id_for_label }}" class="form-label small fw-bold">{{ form.chairman.label }}</label> {{ form.chairman }} {% if form.chairman.errors %}<div class="invalid-feedback d-block small">{{ form.chairman.errors|first }}</div>{% endif %} </div>
-                 <div class="col-md-6"> <label for="{{ form.department.id_for_label }}" class="form-label small fw-bold">{{ form.department.label }}</label> {{ form.department }} {% if form.department.errors %}<div class="invalid-feedback d-block small">{{ form.department.errors|first }}</div>{% endif %} </div>
-                <div class="col-md-6"> <label for="{{ form.start_time.id_for_label }}" class="form-label small fw-bold">{{ form.start_time.label }}</label> {{ form.start_time }} {% if form.start_time.errors %}<div class="invalid-feedback d-block small">{{ form.start_time.errors|first }}</div>{% endif %} </div>
-                <div class="col-md-6"> <label for="{{ form.end_time.id_for_label }}" class="form-label small fw-bold">{{ form.end_time.label }}</label> {{ form.end_time }} {% if form.end_time.errors %}<div class="invalid-feedback d-block small">{{ form.end_time.errors|first }}</div>{% endif %} </div>
-                <div class="col-md-6"> <label for="{{ form.participant_count.id_for_label }}" class="form-label small fw-bold">{{ form.participant_count.label }}</label> {{ form.participant_count }} {% if form.participant_count.errors %}<div class="invalid-feedback d-block small">{{ form.participant_count.errors|first }}</div>{% endif %} {% if form.participant_count.help_text %}<div class="form-text small">{{ form.participant_count.help_text|safe }}</div>{% endif %} </div>
-                 <div class="col-md-6"></div>
-                 
-                 <div class="col-12"> <label for="{{ form.participants.id_for_label }}" class="form-label small fw-bold">{{ form.participants.label }}</label> 
-                    {{ form.participants }} {# <-- 1. ช่องค้นหา #}
-                    {% if form.participants.errors %}<div class="invalid-feedback d-block small">{{ form.participants.errors|first }}</div>{% endif %} 
-                    {% if form.participants.help_text %}<div class="form-text small">{{ form.participants.help_text|safe }}</div>{% endif %} 
-                 </div>
-                 
-                <div class="col-12"> <label for="{{ form.description.id_for_label }}" class="form-label small fw-bold">{{ form.description.label }}</label> {{ form.description }} {% if form.description.errors %}<div class="invalid-feedback d-block small">{{ form.description.errors|first }}</div>{% endif %} </div>
-                 <div class="col-md-6"> <label for="{{ form.presentation_file.id_for_label }}" class="form-label small fw-bold">{{ form.presentation_file.label }}</label> {{ form.presentation_file }} {% if form.presentation_file.errors %}<div class="invalid-feedback d-block small">{{ form.presentation_file.errors|first }}</div>{% endif %} {% if form.presentation_file.help_text %}<div class="form-text small">{{ form.presentation_file.help_text|safe }}</div>{% endif %} </div>
-                 <div class="col-md-6"> <label for="{{ form.attachment.id_for_label }}" class="form-label small fw-bold">{{ form.attachment.label }}</label> {{ form.attachment }} {% if form.attachment.errors %}<div class="invalid-feedback d-block small">{{ form.attachment.errors|first }}</div>{% endif %} {% if form.attachment.help_text %}<div class="form-text small">{{ form.attachment.help_text|safe }}</div>{% endif %} </div>
-                <div class="col-12"> <label for="{{ form.additional_requests.id_for_label }}" class="form-label small fw-bold">{{ form.additional_requests.label }}</label> {{ form.additional_requests }} {% if form.additional_requests.errors %}<div class="invalid-feedback d-block small">{{ form.additional_requests.errors|first }}</div>{% endif %} </div>
-                <div class="col-12"> <label for="{{ form.additional_notes.id_for_label }}" class="form-label small fw-bold">{{ form.additional_notes.label }}</label> {{ form.additional_notes }} {% if form.additional_notes.errors %}<div class="invalid-feedback d-block small">{{ form.additional_notes.errors|first }}</div>{% endif %} </div>
-            </div>
-        </div>
-        <div class="modal-footer border-top-0">
-          <button type="button" class="btn btn-outline-secondary rounded-pill" data-bs-dismiss="modal">ยกเลิก</button>
-          <button type="submit" class="btn btn-primary rounded-pill px-4">ยืนยันการจอง</button>
-        </div>
-      </form>
     </div>
-  </div>
-</div>
 
-{# (Modal "Event Action") #}
-<div class="modal fade" id="eventActionModal" tabindex="-1" aria-labelledby="eventActionModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content rounded-3">
-        <div class="modal-header border-bottom-0">
-          <h5 class="modal-title" id="eventActionModalLabel">ตัวเลือกการจอง</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    <div class="col-lg-4">
+        <div class="content-card shadow-sm border">
+            <h5 class="mb-3">จองห้องนี้</h5>
+            
+            <form action="{% url 'create_booking' room.id %}" method="post">
+                {% csrf_token %}
+                
+                {{ form.as_p }}
+
+                <button type="submit" class="btn btn-primary w-100 mt-3">
+                    <i class="bi bi-calendar-check-fill me-1"></i> ยืนยันการจอง
+                </button>
+            </form>
         </div>
-        <div class="modal-body py-4 px-4">
-          <p class="mb-3 text-center"><strong id="eventActionModalTitle" class="fs-5"></strong></p>
-          <div class="d-grid gap-3">
-            <button type="button" class="btn btn-outline-primary rounded-pill py-2" id="btnViewDetails"><i class="bi bi-info-circle-fill me-2"></i>ดูรายละเอียด</button>
-            <button type="button" class="btn btn-outline-warning rounded-pill py-2" id="btnEditBooking"><i class="bi bi-pencil-fill me-2"></i>แก้ไขข้อมูล</button>
-            <button type="button" class="btn btn-outline-danger rounded-pill py-2" id="btnCancelBooking"><i class="bi bi-trash3-fill me-2"></i>ยกเลิกการจอง</button>
-          </div>
+        
+        <div class="content-card shadow-sm border mt-4">
+            <h5 class="mb-3">รายละเอียดห้อง</h5>
+            <p class="mb-2">
+                <i class="bi bi-people-fill me-2 text-muted"></i> 
+                <strong>ความจุ:</strong> {{ room.capacity }} คน
+            </p>
+            <p class="mb-2">
+                <i class="bi bi-building me-2 text-muted"></i> 
+                <strong>อาคาร:</strong> {{ room.building|default:"-" }} (ชั้น {{ room.floor|default:"-" }})
+            </p>
+            <p class="mb-0">
+                <i class="bi bi-tools me-2 text-muted"></i> 
+                <strong>อุปกรณ์:</strong>
+            </p>
+            <ul class="small text-muted ps-4 mt-1">
+                {% for item in room.equipment_list %}
+                    <li>{{ item }}</li>
+                {% empty %}
+                    <li>(ไม่มีข้อมูล)</li>
+                {% endfor %}
+            </ul>
         </div>
-      </div>
+
     </div>
 </div>
 {% endblock %}
 
 
 {% block extra_scripts %}
-<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/main.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/locales/th.global.min.js"></script>
 
-{# JS ของ Autocomplete Widget (ต้องมี) #}
-{{ form.media.js }}
-
-{# --- 1. 🟢 START: ฟังก์ชันดึง CSRF Token 🟢 --- #}
-<script>
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
-    }
-    const csrfToken = getCookie('csrftoken'); // <-- ดึง Token จากคุกกี้
-</script>
-{# --- 🟢 END: ฟังก์ชันดึง CSRF Token 🟢 --- #}
-
-{# บล็อกสำหรับส่งค่า Django ให้ JavaScript #}
-<script>
-    const currentUserId = {{ request.user.id }};
-    
-    // --- 2. 🟢 START: แก้ไขการตรวจสอบ Admin 🟢 ---
-    // ตรวจสอบว่าเป็นสมาชิกกลุ่ม "Admin" (จาก context_processor)
-    const isAdminGroup = {{ is_admin_user|yesno:"true,false" }}; 
-    // ตรวจสอบว่าเป็น "Superuser" (สิทธิ์สูงสุดของ Django)
-    const isSuperuser = {{ request.user.is_superuser|yesno:"true,false" }};
-    // Admin คือ: คนที่อยู่ในกลุ่ม Admin "หรือ" เป็น Superuser
-    const isAdminUser = (isAdminGroup || isSuperuser);
-    // --- 🟢 END: แก้ไขการตรวจสอบ Admin 🟢 ---
-
-    const roomId = {{ room.id }};
-    const bookingsApiUrl = "{% url 'api_bookings' %}?room_id=" + roomId;
-    const deleteApiUrlTemplate = "{% url 'delete_booking_api' 0 %}".replace('/0/', '/__EVENT_ID__/');
-    const detailUrlTemplate = "{% url 'booking_detail' 0 %}".replace('/0/', '/__EVENT_ID__/');
-    const editUrlTemplate = "{% url 'edit_booking' 0 %}".replace('/0/', '/__EVENT_ID__/');
-</script>
-
-{# บล็อก JavaScript หลัก #}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-  let calendarEl = document.getElementById('calendar');
-  let createModalEl = document.getElementById("bookingModal");
-  let createBookingModal = new bootstrap.Modal(createModalEl);
-  let actionModalEl = document.getElementById("eventActionModal");
-  let eventActionModal = new bootstrap.Modal(actionModalEl);
-  
-  // 3. ✅ ใช้ค่า isAdminUser ที่ถูกต้องจากด้านบน
-  const isAdmin = isAdminUser;
-
-  // (Script เพิ่ม Class ให้ Form)
-  $('#bookingForm').find('input[type="text"], input[type="number"], input[type="datetime-local"], textarea').addClass('form-control form-control-sm');
-  $('#bookingForm').find('select:not(.select2)').addClass('form-select form-select-sm'); 
-  $('#bookingForm').find('input[type="file"]').addClass('form-control form-control-sm');
-
-  let calendar = new FullCalendar.Calendar(calendarEl, {
-    // (โค้ด FullCalendar ... เหมือนเดิม) ...
-    initialView: 'timeGridWeek',
-    selectable: true,
-    selectMirror: true,
-    timeZone: 'Asia/Bangkok',
-    slotDuration: '01:00:00',
-    slotMinTime: '08:00:00',
-    slotMaxTime: '19:00:00',
-    allDaySlot: false,
-    events: bookingsApiUrl,
-    eventClassNames: function(info) {
-      if(info.event.extendedProps.status === 'APPROVED') return ['booked'];
-      else if(info.event.extendedProps.status === 'PENDING') return ['pending'];
-      else return ['vacant'];
-    },
-    select: function(info) {
-      // (โค้ด select ... เหมือนเดิม) ...
-      let now = new Date();
-      let start = info.start;
-      if(start < now){ alert("ไม่สามารถจองย้อนหลังได้"); calendar.unselect(); return; }
-      for(let ev of calendar.getEvents()){
-        if( (start < ev.end) && (info.end > ev.start) && (ev.extendedProps.status === 'APPROVED' || ev.extendedProps.status === 'PENDING') ){
-          alert("ช่วงเวลานี้ถูกจองหรือรออนุมัติแล้ว"); calendar.unselect(); return;
-        }
-      }
-      $('#bookingForm').trigger("reset");
-      $('#bookingForm').find('.is-invalid').removeClass('is-invalid');
-      try {
-           $('#bookingForm [name="participants"]').val(null).trigger('change'); 
-      } catch(e) {
-           console.log("Could not reset select2:", e);
-      }
-      $("#bookingModal [name='room']").val(roomId);
-      $("#bookingModal [name='start_time']").val(info.startStr.slice(0, 16));
-      $("#bookingModal [name='end_time']").val(info.endStr.slice(0, 16));
-      createBookingModal.show();
-      calendar.unselect();
-    },
-    eventClick: function(info){
-        let eventId = info.event.id;
-        let eventTitle = info.event.title;
-        let isOwner = (info.event.extendedProps.user_id == currentUserId);
+    var calendarEl = document.getElementById('calendar');
+    
+    var calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth', // (มุมมองเริ่มต้น)
+        locale: 'th', // (ภาษาไทย)
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,timeGridDay'
+        },
+        buttonText: {
+            today: 'วันนี้',
+            month: 'เดือน',
+            week: 'สัปดาห์',
+            day: 'วัน'
+        },
+        allDaySlot: false, // (ไม่แสดงช่อง "ตลอดวัน")
+        slotMinTime: '08:00:00', // (เริ่ม 8 โมง)
+        slotMaxTime: '19:00:00', // (ถึง 1 ทุ่ม)
         
-        // --- 4. ✅ ใช้ 'isAdmin' ที่ถูกต้องจากด้านบน ✅ ---
-        let canModify = (isOwner || isAdmin); 
+        // (ดึงข้อมูลการจองจาก API ที่คุณสร้างไว้)
+        events: "{% url 'bookings_api' %}?room_id={{ room.id }}",
 
-        $('#eventActionModalTitle').text(eventTitle);
-        $('#eventActionModalLabel').text("ตัวเลือกการจอง");
-        $(actionModalEl).data('eventId', eventId);
-        
-        $('#btnViewDetails').show(); // แสดง "ดูรายละเอียด" เสมอ
-        $('#btnEditBooking').toggle(canModify); // ✅ จะเป็น true ถ้าเป็น Admin
-        $('#btnCancelBooking').toggle(canModify); // ✅ จะเป็น true ถ้าเป็น Admin
-        
-        eventActionModal.show();
-    },
-    editable: false,
-    headerToolbar: { left: 'prev,next today', center: 'title', right: 'timeGridDay,timeGridWeek,dayGridMonth' }
-  });
-  calendar.render();
+        // (ปรับสีตามสถานะ)
+        eventDataTransform: function(eventData) {
+            let props = eventData.extendedProps || {};
+            if (props.status === 'PENDING') {
+                eventData.backgroundColor = '#ffc107'; // สีเหลือง (รออนุมัติ)
+                eventData.borderColor = '#ffc107';
+            } else if (props.status === 'APPROVED') {
+                eventData.backgroundColor = '#198754'; // สีเขียว (อนุมัติ)
+                eventData.borderColor = '#198754';
+            } else {
+                eventData.display = 'none'; // (ไม่แสดงสถานะอื่น เช่น Cancelled)
+            }
+            return eventData;
+        },
 
-  // --- (Event Listeners for Action Modal Buttons) ---
-  $('#btnViewDetails').on('click', function() { let eventId = $(actionModalEl).data('eventId'); let url = detailUrlTemplate.replace('__EVENT_ID__', eventId); window.location.href = url; eventActionModal.hide(); });
-  
-  // --- 5. ✅ แก้ไข Typo: actionSodalEl -> actionModalEl ✅ ---
-  $('#btnEditBooking').on('click', function() { let eventId = $(actionModalEl).data('eventId'); let url = editUrlTemplate.replace('__EVENT_ID__', eventId); window.open(url, '_self'); eventActionModal.hide(); });
-  // --- -------------------------------------------- ---
-  
-  $('#btnCancelBooking').on('click', function() { 
-      let eventId = $(actionModalEl).data('eventId'); 
-      if(confirm("คุณต้องการยืนยันการยกเลิกการจองนี้ใช่หรือไม่?")){ 
-          let finalUrl = deleteApiUrlTemplate.replace('__EVENT_ID__', eventId); 
-          fetch(finalUrl, { 
-              method: "POST", 
-              headers: { 
-                  "X-CSRFToken": csrfToken, // <-- (ใช้ Token ที่ดึงจาก Cookie)
-                  "Accept": "application/json" 
-              }, 
-          }).then(res => res.json()).then(data => { 
-              if(data.success){ 
-                  alert("ยกเลิกเรียบร้อย"); 
-                  calendar.getEventById(eventId)?.remove(); 
-              } else { 
-                  alert("เกิดข้อผิดพลาด: " + data.error); 
-              } 
-          }).catch(err => { 
-              console.error(err); 
-              alert("เกิดข้อผิดพลาดร้ายแรง ไม่สามารถติดต่อเซิร์ฟเวอร์ได้"); 
-          }); 
-      } 
-      eventActionModal.hide(); 
-  });
+        // (เมื่อคลิกที่ Event)
+        eventClick: function(info) {
+            // (ไปที่หน้า booking_detail)
+            window.location.href = "{% url 'booking_detail' 0 %}".replace('0', info.event.id);
+        },
+
+        // (เมื่อลาก Event (ถ้าต้องการ))
+        // editable: true, 
+        // eventDrop: function(info) { ... (เรียก API update_booking_time_api) ... }
+    });
+    
+    calendar.render();
 });
 </script>
 {% endblock %}

@@ -1,53 +1,54 @@
-# booking/urls.py
 from django.urls import path
 from . import views
 
 urlpatterns = [
-    # Auth
+    # --- Authentication ---
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
+    path('password/', views.change_password_view, name='change_password'),
 
-    # Main Pages
+    # --- Main Pages ---
     path('', views.dashboard_view, name='dashboard'),
-    path('master-calendar/', views.master_calendar_view, name='master_calendar'),
-    path('history/', views.history_view, name='history'),
-    path('change-password/', views.change_password_view, name='change_password'),
-    
-    # --- 1. เพิ่ม URL นี้สำหรับหน้าผลการค้นหา ---
     path('search/', views.smart_search_view, name='smart_search'),
-    # --- --------------------------------- ---
+    path('calendar/', views.master_calendar_view, name='master_calendar'),
+    path('history/', views.history_view, name='history'),
 
-    # Booking Process
-    path('room/<int:room_id>/calendar/', views.room_calendar_view, name='room_calendar'),
-    path('booking/<int:room_id>/create/', views.create_booking_view, name='create_booking_for_room'),
+    # --- Booking & Rooms ---
+    path('room/<int:room_id>/', views.room_calendar_view, name='room_calendar'),
+    path('room/<int:room_id>/book/', views.create_booking_view, name='create_booking'),
     path('booking/<int:booking_id>/', views.booking_detail_view, name='booking_detail'),
-    path('booking/<int:booking_id>/edit/', views.edit_booking_view, name='edit_booking'),
-    path('booking/<int:booking_id>/delete/', views.delete_booking_view, name='delete_booking'),
+    path('booking/<int:booking_id>/edit/', views.edit_booking_view, name='edit_booking_view'),
+    path('booking/<int:booking_id>/delete/', views.delete_booking_view, name='delete_booking_view'),
 
-    # APIs
-    path('api/bookings/', views.bookings_api, name='api_bookings'),
-    path('api/rooms/', views.rooms_api, name='api_rooms'),
-    path('api/booking/update-time/', views.update_booking_time_api, name='api_update_booking_time'),
-    path('api/booking/delete/<int:booking_id>/', views.delete_booking_api, name='delete_booking_api'),
-
-    # Autocomplete
-    path('user-autocomplete/', views.UserAutocomplete.as_view(), name='user-autocomplete'),
-
-    # Approvals
+    # --- Approvals (Admin/Approver) ---
     path('approvals/', views.approvals_view, name='approvals'),
     path('approvals/<int:booking_id>/approve/', views.approve_booking_view, name='approve_booking'),
     path('approvals/<int:booking_id>/reject/', views.reject_booking_view, name='reject_booking'),
 
-    # Management
+    # --- Management (Admin) ---
     path('management/users/', views.user_management_view, name='user_management'),
     path('management/users/<int:user_id>/edit/', views.edit_user_roles_view, name='edit_user_roles'),
-    path('management/rooms/', views.room_management_view, name='rooms'),
+    path('management/rooms/', views.room_management_view, name='rooms'), # (แก้ไข 'name_static' เป็น 'name' แล้ว)
     path('management/rooms/add/', views.add_room_view, name='add_room'),
     path('management/rooms/<int:room_id>/edit/', views.edit_room_view, name='edit_room'),
     path('management/rooms/<int:room_id>/delete/', views.delete_room_view, name='delete_room'),
 
-    # Reports
+    # --- Reports (Admin) ---
     path('reports/', views.reports_view, name='reports'),
     path('reports/export/excel/', views.export_reports_excel, name='export_reports_excel'),
-    path('reports/export/pdf/', views.export_reports_pdf, name='export_reports_pdf'),
+    # (เราคอมเมนต์ PDF ไว้ เพราะฟังก์ชันใน views.py ยังไม่พร้อม)
+    # path('reports/export/pdf/', views.export_reports_pdf, name='export_reports_pdf'),
+
+    # --- APIs (for FullCalendar / Select2) ---
+    path('api/rooms/', views.rooms_api, name='rooms_api'),
+    path('api/bookings/', views.bookings_api, name='bookings_api'),
+    path('api/bookings/update/', views.update_booking_time_api, name='update_booking_time_api'),
+    path('api/bookings/<int:booking_id>/delete/', views.delete_booking_api, name='delete_booking_api'),
 ]
+
+# --- ⬇️ นี่คือส่วนที่เพิ่มเข้ามาเพื่อแก้ Error ล่าสุด ⬇️ ---
+# (เพิ่ม Autocomplete URL ถ้า django-autocomplete-light ถูกติดตั้งไว้)
+if views.DAL_AVAILABLE:
+    urlpatterns.append(
+        path('api/user-autocomplete/', views.UserAutocomplete.as_view(), name='user_autocomplete')
+    )
