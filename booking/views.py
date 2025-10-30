@@ -1,5 +1,5 @@
 import json
-import re # 1. เพิ่ม import นี้
+import re
 from datetime import datetime, timedelta
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
@@ -9,14 +9,13 @@ from django.contrib import messages
 from django.db.models import Count, Q
 from django.views.decorators.http import require_POST, require_http_methods
 from django.contrib.auth.models import User, Group
-# --- DAL ---
-try:
-    from dal_select2.views import Select2QuerySetView
-    DAL_AVAILABLE = True
-except ImportError:
-    DAL_AVAILABLE = False
-    class Select2QuerySetView: pass
-# --- End DAL ---
+
+# --- ⬇️ (แก้ไขส่วนนี้) ⬇️ ---
+# (ลบ try...except ออก บังคับ import เลย)
+from dal_select2.views import Select2QuerySetView
+DAL_AVAILABLE = True # (ตั้งค่านี้ไว้เผื่อโค้ดส่วนอื่นเรียกใช้)
+# --- ⬆️ (แก้ไขส่วนนี้) ⬆️ ---
+
 from django.core.mail import send_mail
 from django.template.loader import render_to_string, get_template
 from django.conf import settings
@@ -34,17 +33,14 @@ except ImportError:
     WEASYPRINT_AVAILABLE = False
 # --- End Libs ---
 from collections import defaultdict
-from django.utils import timezone # 👈 (เพิ่มอันนี้)
+from django.utils import timezone
 from django.contrib.auth.signals import user_logged_in, user_logged_out
 from django.dispatch import receiver
 from django.contrib.auth.forms import AuthenticationForm
 from django.core.exceptions import ValidationError
 
-# 2. แก้ไข Imports (ลบ Profile, Equipment, และ BookingFile)
 from .models import Room, Booking, LoginHistory
-from .forms import BookingForm, CustomPasswordChangeForm, RoomForm 
-# (ลบ ProfileForm)
-
+from .forms import BookingForm, CustomPasswordChangeForm, RoomForm
 
 # --- Helper Functions ---
 def is_admin(user):
@@ -52,7 +48,7 @@ def is_admin(user):
 def is_approver_or_admin(user):
     return user.is_authenticated and (user.is_superuser or user.groups.filter(name__in=['Approver', 'Admin']).exists())
 
-# (Login/Logout History ... Auth Views ... Email Functions ... Autocomplete ... เหมือนเดิม)
+# --- Callbacks / Email / Autocomplete ---
 @receiver(user_logged_in)
 def user_logged_in_callback(sender, request, user, **kwargs):
     ip_address = request.META.get('REMOTE_ADDR')
@@ -70,10 +66,7 @@ def send_booking_notification(booking, template_name, subject_prefix):
     recipients = get_admin_emails()
     if not recipients: print(f"Skipping email '{subject_prefix}': No recipients found."); return
     if not isinstance(recipients, list): recipients = [recipients]
-    
-    # (แก้ไข: สร้าง Subject ที่นี่)
     subject = f"[{subject_prefix}] การจองห้อง: {booking.title} ({booking.room.name})"
-    
     context = {'booking': booking, 'settings': settings}
     try:
         message_html = render_to_string(template_name, context)
@@ -82,17 +75,19 @@ def send_booking_notification(booking, template_name, subject_prefix):
             print(f"Email '{subject}' sent to: {', '.join(recipients)}")
         else: print(f"--- (Email Simulation) ---\nSubject: {subject}\nTo: {', '.join(recipients)}\n--- End Sim ---")
     except Exception as e: print(f"Error preparing/sending email '{subject}': {e}")
-if DAL_AVAILABLE:
-    class UserAutocomplete(Select2QuerySetView):
-        def get_queryset(self):
-            if not self.request.user.is_authenticated: return User.objects.none()
-            qs = User.objects.filter(is_active=True).order_by('first_name', 'last_name', 'username')
-            if self.q: qs = qs.filter( Q(username__icontains=self.q) | Q(first_name__icontains=self.q) | Q(last_name__icontains=self.q) | Q(email__icontains=self.q) )
-            return qs[:15]
-        def get_result_label(self, item): return f"{item.get_full_name() or item.username} ({item.email or 'No email'})"
-else: 
-    @login_required
-    def UserAutocomplete(request): return JsonResponse({'error': 'Autocomplete unavailable.'}, status=501)
+
+# --- ⬇️ (แก้ไขส่วนนี้) ⬇️ ---
+# (ลบ if DAL_AVAILABLE: และ else: ออก)
+class UserAutocomplete(Select2QuerySetView):
+    def get_queryset(self):
+        if not self.request.user.is_authenticated: return User.objects.none()
+        qs = User.objects.filter(is_active=True).order_by('first_name', 'last_name', 'username')
+        if self.q: qs = qs.filter( Q(username__icontains=self.q) | Q(first_name__icontains=self.q) | Q(last_name__icontains=self.q) | Q(email__icontains=self.q) )
+        return qs[:15]
+    def get_result_label(self, item): return f"{item.get_full_name() or item.username} ({item.email or 'No email'})"
+# --- ⬆️ (แก้ไขส่วนนี้) ⬆️ ---
+
+# --- Auth Views ---
 def login_view(request):
     if request.user.is_authenticated: return redirect('dashboard')
     if request.method == 'POST':
@@ -119,88 +114,68 @@ def logout_view(request):
     messages.success(request, 'คุณได้ออกจากระบบเรียบร้อยแล้ว');
     return redirect('login')
 
-# --- 3. START: เพิ่มฟังก์ชัน Smart Search (ใหม่) ---
+# --- Smart Search ---
 def parse_search_query(query_text):
     capacity = None
     start_time = None
     end_time = None
     now = timezone.now()
     today = now.date()
-
     capacity_match = re.search(r'(\d+)\s*คน', query_text)
     if capacity_match:
         capacity = int(capacity_match.group(1))
-
     if "บ่ายนี้" in query_text:
         start_time = timezone.make_aware(datetime.combine(today, datetime.time(13, 0)))
         end_time = timezone.make_aware(datetime.combine(today, datetime.time(17, 0)))
-        if now > end_time:
-            start_time, end_time = None, None 
-            
+        if now > end_time: start_time, end_time = None, None 
     elif "เช้านี้" in query_text:
         start_time = timezone.make_aware(datetime.combine(today, datetime.time(9, 0)))
         end_time = timezone.make_aware(datetime.combine(today, datetime.time(12, 0)))
-        if now > end_time:
-            start_time, end_time = None, None
-
+        if now > end_time: start_time, end_time = None, None
     elif "พรุ่งนี้เช้า" in query_text:
         tomorrow = today + timedelta(days=1)
         start_time = timezone.make_aware(datetime.combine(tomorrow, datetime.time(9, 0)))
         end_time = timezone.make_aware(datetime.combine(tomorrow, datetime.time(12, 0)))
-        
     elif "พรุ่งนี้บ่าย" in query_text:
         tomorrow = today + timedelta(days=1)
         start_time = timezone.make_aware(datetime.combine(tomorrow, datetime.time(13, 0)))
         end_time = timezone.make_aware(datetime.combine(tomorrow, datetime.time(17, 0)))
-
     elif "พรุ่งนี้" in query_text:
         tomorrow = today + timedelta(days=1)
         start_time = timezone.make_aware(datetime.combine(tomorrow, datetime.time(9, 0)))
         end_time = timezone.make_aware(datetime.combine(tomorrow, datetime.time(17, 0)))
-
     elif "วันนี้" in query_text:
         start_time = timezone.make_aware(datetime.combine(today, datetime.time(9, 0)))
         end_time = timezone.make_aware(datetime.combine(today, datetime.time(17, 0)))
-        if now > end_time:
-            start_time, end_time = None, None
-            
+        if now > end_time: start_time, end_time = None, None
     return capacity, start_time, end_time
-
 @login_required
 def smart_search_view(request):
     query_text = request.GET.get('q', '')
     available_rooms = Room.objects.all()
     search_params = {}
-
     if not query_text:
         available_rooms = Room.objects.none()
     else:
         capacity, start_time, end_time = parse_search_query(query_text)
-        
         search_params['capacity'] = capacity
         search_params['start_time'] = start_time
         search_params['end_time'] = end_time
-
         if capacity:
             available_rooms = available_rooms.filter(capacity__gte=capacity)
-
         if start_time and end_time:
             conflicting_room_ids = Booking.objects.filter(
                 status__in=['APPROVED', 'PENDING'],
                 start_time__lt=end_time,
                 end_time__gt=start_time
             ).values_list('room_id', flat=True).distinct()
-            
             available_rooms = available_rooms.exclude(id__in=conflicting_room_ids)
-
     context = {
         'query_text': query_text,
         'search_params': search_params,
         'available_rooms': available_rooms.order_by('capacity'),
     }
     return render(request, 'pages/search_results.html', context)
-# --- 3. END: เพิ่มฟังก์ชัน Smart Search ---
-
 
 # --- Main Pages ---
 @login_required
@@ -234,19 +209,15 @@ def dashboard_view(request):
     }
     context = {'buildings': dict(buildings), 'summary_cards': summary, 'current_sort': sort_by, 'all_rooms': all_rooms}
     return render(request, 'pages/dashboard.html', context)
-
-
 @login_required
 def room_calendar_view(request, room_id):
     room = get_object_or_404(Room, pk=room_id)
     form = BookingForm(initial={'room': room}) 
     context = {'room': room, 'form': form}
     return render(request, 'pages/room_calendar.html', context)
-
 @login_required
 def master_calendar_view(request):
     return render(request, 'pages/master_calendar.html')
-
 @login_required
 def history_view(request):
     bookings = Booking.objects.filter(booked_by=request.user).select_related('room').order_by('-start_time')
@@ -275,17 +246,14 @@ def history_view(request):
         'current_date': date_f,
         'current_room': room_f,
         'current_status': status_f,
-        
-        # --- ⬇️ (แก้ไขตามคำขอ) ⬇️ ---
         'now_time': timezone.now()
     }
     return render(request, 'pages/history.html', context)
-
 @login_required
 def booking_detail_view(request, booking_id):
     booking = get_object_or_404(
         Booking.objects.select_related('room', 'booked_by')
-                        .prefetch_related('participants'), # 4. ลบ 'equipment' และ 'files'
+                        .prefetch_related('participants'),
         pk=booking_id
     )
     is_participant = request.user in booking.participants.all()
@@ -294,7 +262,6 @@ def booking_detail_view(request, booking_id):
         return redirect('dashboard')
     context = {'booking': booking}
     return render(request, 'pages/booking_detail.html', context)
-
 @login_required
 def change_password_view(request): 
     if request.method == 'POST':
@@ -312,13 +279,7 @@ def change_password_view(request):
         'password_form': password_form
     })
 
-
-# --- Admin ---
-# (ลบ admin_dashboard_view)
-
-
 # --- APIs ---
-# (rooms_api, bookings_api, update_booking_time_api, delete_booking_api ... เหมือนเดิม)
 @login_required
 def rooms_api(request):
     rooms = Room.objects.all().order_by('building', 'name')
@@ -388,27 +349,18 @@ def delete_booking_api(request, booking_id):
         print(f"Error in delete_booking_api for booking {booking_id}: {e}")
         return JsonResponse({'success': False, 'error': 'เกิดข้อผิดพลาดบนเซิร์ฟเวอร์'}, status=500)
 
-# --- 5. START: แก้ไข create_booking_view (ลบ user=... และ equipment) ---
+# --- Booking Views ---
 @login_required
 @require_POST
 def create_booking_view(request, room_id):
     room = get_object_or_404(Room, pk=room_id)
     form = BookingForm(request.POST, request.FILES) 
-    
-    # (ลบ Logic ของ 'attachments' (หลายไฟล์) ออก)
-    # uploaded_files = request.FILES.getlist('attachments')
-
     if form.is_valid():
-        
-        # (ลบ Check 8 ไฟล์)
-            
         try:
             booking = form.save(commit=False)
             booking.room = room
             booking.booked_by = request.user
-            
             booking.clean() 
-
             participant_count = form.cleaned_data.get('participant_count', 1)
             if participant_count >= 15:
                 booking.status = 'PENDING'
@@ -416,26 +368,19 @@ def create_booking_view(request, room_id):
             else:
                 booking.status = 'APPROVED'
                 messages.success(request, f"จอง '{booking.title}' ({room.name}) **อนุมัติอัตโนมัติ**")
-            
             booking.save() 
-            form.save_m2m() # (บันทึก participants)
-            
-            # (ลบ Logic การ save หลายไฟล์)
-            
+            form.save_m2m() 
             if booking.status == 'PENDING':
                 send_booking_notification(booking, 'emails/new_booking_pending.html', 'โปรดอนุมัติ')
             else:
                 send_booking_notification(booking, 'emails/new_booking_approved.html', 'จองสำเร็จ')
-
             return redirect('room_calendar', room_id=room.id)
-
         except ValidationError as e:
             error_str = ", ".join(e.messages)
             messages.error(request, f"ไม่สามารถสร้างการจองได้: {error_str}")
             context = {'room': room, 'form': form}
             return render(request, 'pages/room_calendar.html', context)
-            
-    else: # Form invalid
+    else: 
         error_list = []
         for field, errors in form.errors.items():
             field_label = form.fields.get(field).label if field != '__all__' and field in form.fields else (field if field != '__all__' else 'Form')
@@ -444,65 +389,38 @@ def create_booking_view(request, room_id):
         messages.error(request, f"ไม่สามารถสร้างการจองได้: {error_str}")
         context = {'room': room, 'form': form}
         return render(request, 'pages/room_calendar.html', context)
-# --- 5. END: แก้ไข create_booking_view ---
-
-
-# --- 6. START: แก้ไข edit_booking_view (ลบ user=... และ equipment) ---
 @login_required
 def edit_booking_view(request, booking_id):
-    # 6.1 ลบ prefetch_related('files') ออก
     booking = get_object_or_404(Booking, pk=booking_id)
-    
     if booking.booked_by != request.user and not is_admin(request.user):
         messages.error(request, "คุณไม่มีสิทธิ์แก้ไขการจองนี้")
         return redirect('history')
-
     if request.method == 'POST':
-        form = BookingForm(request.POST, request.FILES, instance=booking) # 6.2 ลบ user=...
-        
-        # (ลบ Logic การดึงไฟล์)
-        
+        form = BookingForm(request.POST, request.FILES, instance=booking)
         if form.is_valid():
-            
-            # (ลบ Logic การนับไฟล์)
-            
             try:
                 updated_booking = form.save(commit=False)
                 updated_booking.clean() 
-
                 new_count = form.cleaned_data.get('participant_count', 1)
                 changed_for_approval = any(f in form.changed_data for f in ['start_time', 'end_time', 'participant_count'])
-                
                 if new_count >= 15 and changed_for_approval and updated_booking.status not in ['PENDING', 'REJECTED', 'CANCELLED']:
                        updated_booking.status = 'PENDING'
                        messages.info(request, "การแก้ไขต้องรอการอนุมัติใหม่")
-                
                 updated_booking.save()
-                form.save_m2m() # (บันทึก participants)
-                
-                # (ลบ Logic การ save หลายไฟล์)
-                
+                form.save_m2m() 
                 messages.success(request, "แก้ไขข้อมูลการจองเรียบร้อยแล้ว")
-
                 if updated_booking.status == 'PENDING' and changed_for_approval:
                        send_booking_notification(updated_booking, 'emails/new_booking_pending.html', 'โปรดอนุมัติ (แก้ไข)')
-
                 return redirect('history')
-
             except ValidationError as e:
                 error_str = ", ".join(e.messages)
                 form.add_error(None, e)
                 messages.error(request, f"ไม่สามารถบันทึกได้: {error_str}")
-
         else: 
              messages.error(request, "ไม่สามารถบันทึกการแก้ไขได้ กรุณาตรวจสอบข้อผิดพลาด")
     else: 
-        form = BookingForm(instance=booking) # 6.3 ลบ user=...
-
+        form = BookingForm(instance=booking)
     return render(request, 'pages/edit_booking.html', {'form': form, 'booking': booking})
-# --- 6. END: แก้ไข edit_booking_view ---
-
-
 @login_required
 @require_POST
 def delete_booking_view(request, booking_id):
@@ -518,7 +436,6 @@ def delete_booking_view(request, booking_id):
     messages.success(request, f"ยกเลิกการจอง '{booking.title}' เรียบร้อย")
     return redirect('history')
 
-
 # --- Approvals ---
 @login_required
 @user_passes_test(is_approver_or_admin)
@@ -527,7 +444,6 @@ def approvals_view(request):
                                        .select_related('room', 'booked_by') \
                                        .order_by('start_time')
     return render(request, 'pages/approvals.html', {'pending_bookings': pending_bookings})
-
 @login_required
 @user_passes_test(is_approver_or_admin)
 @require_POST
@@ -537,7 +453,6 @@ def approve_booking_view(request, booking_id):
     booking.save()
     messages.success(request, f"อนุมัติการจอง '{booking.title}' เรียบร้อย")
     return redirect('approvals')
-
 @login_required
 @user_passes_test(is_approver_or_admin)
 @require_POST
@@ -548,14 +463,12 @@ def reject_booking_view(request, booking_id):
     messages.warning(request, f"ปฏิเสธการจอง '{booking.title}' เรียบร้อย")
     return redirect('approvals')
 
-
 # --- Management ---
 @login_required
 @user_passes_test(is_admin)
 def user_management_view(request):
     users = User.objects.all().order_by('username').prefetch_related('groups')
     return render(request, 'pages/user_management.html', {'users': users})
-
 @login_required
 @user_passes_test(is_admin)
 def edit_user_roles_view(request, user_id):
@@ -575,13 +488,11 @@ def edit_user_roles_view(request, user_id):
         'user_group_pks': list(user_to_edit.groups.values_list('pk', flat=True))
      }
     return render(request, 'pages/edit_user_roles.html', context)
-
 @login_required
 @user_passes_test(is_admin)
 def room_management_view(request):
     rooms = Room.objects.all().order_by('building', 'name')
     return render(request, 'pages/rooms.html', {'rooms': rooms})
-
 @login_required
 @user_passes_test(is_admin)
 def add_room_view(request):
@@ -596,7 +507,6 @@ def add_room_view(request):
     else: 
         form = RoomForm()
     return render(request, 'pages/room_form.html', {'form': form, 'title': 'เพิ่มห้องประชุมใหม่'})
-
 @login_required
 @user_passes_test(is_admin)
 def edit_room_view(request, room_id):
@@ -612,7 +522,6 @@ def edit_room_view(request, room_id):
     else: 
         form = RoomForm(instance=room)
     return render(request, 'pages/room_form.html', {'form': form, 'title': f'แก้ไขข้อมูลห้อง: {room.name}'})
-
 @login_required
 @user_passes_test(is_admin)
 @require_POST
@@ -626,7 +535,6 @@ def delete_room_view(request, room_id):
         messages.error(request, f"ไม่สามารถลบห้อง '{room_name}' ได้: {e}")
     return redirect('rooms')
 
-
 # --- Reports ---
 @login_required
 @user_passes_test(is_admin)
@@ -635,7 +543,6 @@ def reports_view(request):
     department = request.GET.get('department', '')
     today = timezone.now().date()
     start_date = today
-
     if period == 'daily':
         start_date = today
         report_title = f'รายงานการใช้งานรายวัน ({today:%d %b %Y})'
@@ -646,35 +553,28 @@ def reports_view(request):
         period = 'monthly'
         start_date = today - timedelta(days=29)
         report_title = f'รายงานการใช้งานรายเดือน ({start_date:%d %b} - {today:%d %b %Y})'
-
     recent_bookings = Booking.objects.filter(
         start_time__date__gte=start_date,
         start_time__date__lte=today,
         status='APPROVED'
     )
-
     if department:
         recent_bookings = recent_bookings.filter(department=department)
         report_title += f" (แผนก: {department})"
-
     room_usage_stats = Room.objects.annotate(
         booking_count=Count('bookings', filter=Q(bookings__in=recent_bookings))
     ).filter(booking_count__gt=0).order_by('-booking_count')
-    
     room_usage_labels = [r.name for r in room_usage_stats[:10]]
     room_usage_data = [r.booking_count for r in room_usage_stats[:10]]
-
     dept_usage_query = recent_bookings.exclude(department__exact='').exclude(department__isnull=True) \
                                        .values('department') \
                                        .annotate(count=Count('id')) \
                                        .order_by('-count')
     dept_usage_labels = [d['department'] for d in dept_usage_query[:10] if d.get('department')]
     dept_usage_data = [d['count'] for d in dept_usage_query[:10] if d.get('department')]
-    
     departments_dropdown = Booking.objects.exclude(department__exact='').exclude(department__isnull=True) \
                                    .values_list('department', flat=True) \
                                    .distinct().order_by('department')
-
     context = {
         'room_usage_stats': room_usage_stats, 
         'report_title': report_title,
@@ -692,18 +592,15 @@ def reports_view(request):
         'login_history': LoginHistory.objects.select_related('user').order_by('-timestamp')[:7],
      }
     return render(request, 'pages/reports.html', context)
-
 @login_required
 @user_passes_test(is_admin)
 def export_reports_excel(request):
     if not OPENPYXL_AVAILABLE:
         messages.error(request, "ไม่สามารถส่งออกเป็น Excel ได้: ไม่ได้ติดตั้งไลบรารี openpyxl")
         return redirect('reports')
-    
     period = request.GET.get('period', 'monthly'); department = request.GET.get('department', '')
     today = timezone.now().date()
     start_date = today
-
     if period == 'daily':
         start_date = today
     elif period == 'weekly':
@@ -711,26 +608,21 @@ def export_reports_excel(request):
     else:
         period = 'monthly'
         start_date = today - timedelta(days=29)
-
     bookings = Booking.objects.filter(
         start_time__date__gte=start_date,
         start_time__date__lte=today,
         status='APPROVED'
     ).select_related('room', 'booked_by').order_by('start_time')
-
     if department:
         bookings = bookings.filter(department=department)
-
     wb = Workbook()
     ws = wb.active
     ws.title = f"Report {start_date} to {today}"
-    
     headers = [
         "ID", "Title", "Room", "Booked By", "Department", 
         "Start Time", "End Time", "Participants"
     ]
     ws.append(headers)
-
     for b in bookings:
         ws.append([
             b.id, b.title, b.room.name, b.booked_by.get_full_name() or b.booked_by.username,
@@ -739,23 +631,14 @@ def export_reports_excel(request):
             b.end_time.strftime('%Y-%m-%d %H:%M'),
             b.participant_count
         ])
-    
     response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     response['Content-Disposition'] = f'attachment; filename=booking_report_{today}.xlsx'
     wb.save(response)
     return response
 
-# ... (โค้ด export_reports_excel) ...
-    wb.save(response)
-    return response
-
-# --- ⬇️ เพิ่มฟังก์ชันนี้เข้าไป ⬇️ ---
+# (ฟังก์ชัน PDF เปล่า (ถ้าคุณยังต้องการ))
 @login_required
 @user_passes_test(is_admin)
 def export_reports_pdf(request):
-    # (โค้ดสำหรับสร้าง PDF ยังไม่ได้เขียน)
-    # เราใส่แค่หน้าเปล่าๆ ไว้ก่อนเพื่อไม่ให้ Error
     messages.error(request, "ฟังก์ชัน Export PDF ยังไม่พร้อมใช้งาน")
     return redirect('reports')
-
-# (เพิ่มโค้ด PDF ที่นี่ ถ้าคุณต้องการ)

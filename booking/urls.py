@@ -28,7 +28,7 @@ urlpatterns = [
     # --- Management (Admin) ---
     path('management/users/', views.user_management_view, name='user_management'),
     path('management/users/<int:user_id>/edit/', views.edit_user_roles_view, name='edit_user_roles'),
-    path('management/rooms/', views.room_management_view, name='rooms'), # (แก้ไข 'name_static' เป็น 'name' แล้ว)
+    path('management/rooms/', views.room_management_view, name='rooms'), 
     path('management/rooms/add/', views.add_room_view, name='add_room'),
     path('management/rooms/<int:room_id>/edit/', views.edit_room_view, name='edit_room'),
     path('management/rooms/<int:room_id>/delete/', views.delete_room_view, name='delete_room'),
@@ -36,7 +36,7 @@ urlpatterns = [
     # --- Reports (Admin) ---
     path('reports/', views.reports_view, name='reports'),
     path('reports/export/excel/', views.export_reports_excel, name='export_reports_excel'),
-    # (เราคอมเมนต์ PDF ไว้ เพราะฟังก์ชันใน views.py ยังไม่พร้อม)
+    # (ถ้าคุณอยากเปิด PDF ให้ลบ # ออก และไปแก้ใน views.py)
     # path('reports/export/pdf/', views.export_reports_pdf, name='export_reports_pdf'),
 
     # --- APIs (for FullCalendar / Select2) ---
@@ -44,11 +44,9 @@ urlpatterns = [
     path('api/bookings/', views.bookings_api, name='bookings_api'),
     path('api/bookings/update/', views.update_booking_time_api, name='update_booking_time_api'),
     path('api/bookings/<int:booking_id>/delete/', views.delete_booking_api, name='delete_booking_api'),
+
+    # --- ⬇️ (แก้ไข!) ย้าย Path มาไว้ข้างในลิสต์นี้ ⬇️ ---
+    path('api/user-autocomplete/', views.UserAutocomplete.as_view(), name='user_autocomplete')
 ]
 
-# --- ⬇️ นี่คือส่วนที่เพิ่มเข้ามาเพื่อแก้ Error ล่าสุด ⬇️ ---
-# (เพิ่ม Autocomplete URL ถ้า django-autocomplete-light ถูกติดตั้งไว้)
-if views.DAL_AVAILABLE:
-    urlpatterns.append(
-        path('api/user-autocomplete/', views.UserAutocomplete.as_view(), name='user_autocomplete')
-    )
+# --- ⬆️ (ลบ .append() ที่อยู่ท้ายไฟล์ทิ้ง) ⬆️ ---
