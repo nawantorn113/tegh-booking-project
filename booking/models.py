@@ -1,5 +1,4 @@
-# booking/models.py
-# [ฉบับสมบูรณ์ - มี Profile และ LoginHistory]
+# booking/models.py (ฉบับเต็ม)
 
 from django.db import models
 from django.contrib.auth.models import User
@@ -27,6 +26,12 @@ class Room(models.Model):
 
 class Booking(models.Model):
     STATUS_CHOICES = [('PENDING', 'รออนุมัติ'), ('APPROVED', 'อนุมัติแล้ว'), ('REJECTED', 'ถูกปฏิเสธ'), ('CANCELLED', 'ยกเลิกแล้ว')]
+    RECURRENCE_CHOICES = [
+        ('NONE', 'ไม่ซ้ำ'), 
+        ('WEEKLY', 'รายสัปดาห์'), 
+        ('MONTHLY', 'รายเดือน'),
+    ]
+    
     room = models.ForeignKey(Room, on_delete=models.CASCADE, related_name='bookings', verbose_name="ห้องประชุม")
     booked_by = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="ผู้ขอใช้", related_name='bookings_made')
     title = models.CharField(max_length=255, verbose_name="หัวข้อการประชุม")
@@ -43,6 +48,13 @@ class Booking(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="สร้างเมื่อ")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="อัปเดตเมื่อ")
 
+    # ⬇️ [Fields สำหรับ Recurring Booking ที่เพิ่มเข้ามา] ⬇️
+    recurrence_type = models.CharField(max_length=10, choices=RECURRENCE_CHOICES, default='NONE', verbose_name="การจองซ้ำ")
+    repeat_until = models.DateField(blank=True, null=True, verbose_name="ซ้ำจนถึงวันที่")
+    parent_booking = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='recurring_instances', verbose_name="รายการแม่ (ถ้ามีการจองซ้ำ)")
+    # ⬆️ [Fields สำหรับ Recurring Booking ที่เพิ่มเข้ามา] ⬆️
+
+
     def __str__(self):
         return f"'{self.title}' ในห้อง {self.room.name}"
     class Meta:
@@ -50,7 +62,6 @@ class Booking(models.Model):
         verbose_name = "การจอง"
         verbose_name_plural = "การจองทั้งหมด"
 
-# --- [สำคัญ] คลาส Profile ที่หายไป ---
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     department = models.CharField(max_length=100, blank=True, null=True, verbose_name="แผนก")
@@ -60,9 +71,7 @@ class Profile(models.Model):
     class Meta:
         verbose_name = "โปรไฟล์ผู้ใช้"
         verbose_name_plural = "โปรไฟล์ผู้ใช้"
-# --- --------------------------- ---
 
-# --- [สำคัญ] คลาส LoginHistory ที่หายไป ---
 class LoginHistory(models.Model):
     ACTION_CHOICES = [('LOGIN', 'เข้าสู่ระบบ'), ('LOGOUT', 'ออกจากระบบ')]
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='login_history')
@@ -76,7 +85,6 @@ class LoginHistory(models.Model):
         ordering = ['-timestamp']
         verbose_name = "ประวัติการเข้าสู่ระบบ"
         verbose_name_plural = "ประวัติการเข้าสู่ระบบ"
-# --- --------------------------------- ---
 
 @receiver(post_save, sender=User)
 def create_or_update_user_profile(sender, instance, created, **kwargs):

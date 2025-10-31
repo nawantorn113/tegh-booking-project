@@ -156,15 +156,9 @@
 document.addEventListener('DOMContentLoaded', function() {
     var calendarEl = document.getElementById('calendar');
     
-    // 1. [สำคัญ] ตรวจสอบ Bootstrap และสร้าง Modal
-    if (typeof FullCalendar === 'undefined') {
-        console.error("FullCalendar JS not loaded. Cannot initialize.");
-        alert("Error: FullCalendar JS ไม่ถูกโหลด กรุณาตรวจสอบ main.min.js");
-        return; 
-    }
-    if (typeof bootstrap === 'undefined') {
-        console.error("Bootstrap JS not loaded. Cannot initialize Modal.");
-        alert("Error: Bootstrap JS ไม่ถูกโหลด กรุณาตรวจสอบไฟล์ bootstrap.bundle.min.js ใน base.html");
+    // 1. [สำคัญ] ตรวจสอบ Library ก่อน
+    if (typeof FullCalendar === 'undefined' || typeof bootstrap === 'undefined') {
+        console.error("Required JS libraries not loaded.");
         return; 
     }
     
@@ -177,17 +171,31 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // 2. Initial Calendar
     var calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: 'timeGridWeek', // มุมมองรายสัปดาห์
+        initialView: 'dayGridWeek', // ⬅️ มุมมองเริ่มต้นเป็น Week (รายการวัน)
         locale: 'th',
+        
+        // ⬇️ กำหนดให้สัปดาห์เริ่มที่วันอาทิตย์ (0)
+        firstDay: 0, // 0 = Sunday (อาทิตย์)
+        
+        // การตั้งค่า Toolbar (ปุ่ม เดือน/สัปดาห์/วัน)
         headerToolbar: {
             left: 'prev,next today',
             center: 'title',
-            right: 'dayGridMonth,timeGridWeek,timeGridDay'
+            // ⬅️ มุมมอง Month, Week (รายการวัน), Day (ตารางชั่วโมง)
+            right: 'dayGridMonth,dayGridWeek,timeGridDay' 
         },
         buttonText: { today: 'วันนี้', month: 'เดือน', week: 'สัปดาห์', day: 'วัน' },
+        
+        // การตั้งค่ามุมมองสัปดาห์/วัน (TimeGrid) - มีผลกับ timeGridDay
         allDaySlot: false, 
-        slotMinTime: '08:00:00',
+        slotMinTime: '08:00:00', 
         slotMaxTime: '19:00:00',
+        slotLabelFormat: { 
+            hour: 'numeric',
+            minute: '2-digit',
+            omitZeroMinute: false,
+            meridiem: 'short' 
+        },
         
         selectable: true, // ⬅️ เปิดใช้งานการคลิกเลือกช่วงเวลา (สำหรับทุกมุมมอง)
         selectMirror: true, 
@@ -203,35 +211,44 @@ document.addEventListener('DOMContentLoaded', function() {
         },
 
         select: function(info) {
-            // เมื่อเลือกช่วงเวลาสำเร็จ (คลิกแล้วปล่อยเมาส์)
-            
-            // 💡 [DEBUG] ตรวจสอบว่าโค้ดถูกรันถึงตรงนี้หรือไม่
-            console.log("--- Select event triggered ---");
-            console.log("Start time:", info.start.toISOString());
-            
             var now = new Date();
-            if (info.start < now) {
+            var start = info.start;
+            var end = info.end;
+
+            // 1. ตรวจสอบว่าเลือกย้อนหลังหรือไม่ 
+            if (start < now) {
                 alert("ไม่สามารถจองย้อนหลังได้");
                 calendar.unselect();
                 return;
             }
 
-            // 1. Format เวลา
-            var startStr = info.start.toISOString().substring(0, 16);
-            var endStr = info.end.toISOString().substring(0, 16);
+            // 2. จัดการกับการเลือกในมุมมอง DayGrid (Month และ DayGridWeek)
+            if (info.view.type.includes('dayGrid')) { 
+                
+                // กำหนดเวลาเริ่มต้น 08:00
+                start.setHours(8, 0, 0, 0); 
+                
+                // สร้าง end date ใหม่จาก start date เพื่อคำนวณ end time ที่ 18:00
+                end = new Date(info.end.getTime()); 
+                
+                // ถ้าเป็นการเลือกวันเดียว (ใน Month/Week View) ให้ end เป็น 18:00 ของวันนั้น
+                if (info.start.getDate() !== info.end.getDate() || info.start.getMonth() !== info.end.getMonth()) {
+                    end.setDate(end.getDate() - 1); 
+                } 
+                
+                end.setHours(18, 0, 0, 0); // กำหนดเวลาสิ้นสุดเป็น 18:00 น.
+            }
             
-            // 2. ย้ายฟอร์มเข้า Modal, ตั้งค่าเวลา, แล้วเปิด Modal
+            // 3. Format เวลา
+            var startStr = start.toISOString().substring(0, 16);
+            var endStr = end.toISOString().substring(0, 16);
+            
+            // 4. ย้ายฟอร์มเข้า Modal, ตั้งค่าเวลา, แล้วเปิด Modal
             modalBody.appendChild(hiddenForm); 
             startTimeField.value = startStr;
             endTimeField.value = endStr;
             
-            // 3. แสดง Modal
-            if (bookingModal) {
-                 bookingModal.show();
-            } else {
-                 // 🚨 [DEBUG ALERT] ถ้า Modal ยังไม่แสดง ให้แจ้งเตือนทันที
-                 alert("Error: Modal object หายไป อาจเกิดจากปัญหาการโหลด Bootstrap JS");
-            }
+            bookingModal.show();
         },
         
         // --- ดึงข้อมูลการจองที่มีอยู่ ---
@@ -239,11 +256,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
         eventDataTransform: function(eventData) {
             let props = eventData.extendedProps || {};
+            // กำหนดสีตามสถานะ
             if (props.status === 'PENDING') {
-                eventData.backgroundColor = '#ffc107';
+                eventData.backgroundColor = '#ffc107'; 
                 eventData.borderColor = '#ffc107';
             } else if (props.status === 'APPROVED') {
-                eventData.backgroundColor = '#198754';
+                eventData.backgroundColor = '#198754'; 
                 eventData.borderColor = '#198754';
             } else {
                 eventData.display = 'none';
@@ -271,11 +289,13 @@ document.addEventListener('DOMContentLoaded', function() {
 $(document).ready(function() {
     // ใช้ delegated event เพื่อให้ Select2 ทำงานใน Modal
     $('#bookingModal').on('shown.bs.modal', function () {
-        // [สำคัญ] เราต้องเช็คก่อนว่า JQuery ถูกโหลดแล้ว
         if (typeof $ !== 'undefined' && $.fn.select2) {
-            $('#id_participants').select2({
-                dropdownParent: $('#bookingModal')
-            });
+            var participantsField = $('#id_participants');
+            if (participantsField.length) {
+                participantsField.select2({
+                    dropdownParent: $('#bookingModal')
+                });
+            }
         }
     });
 });

@@ -1,5 +1,4 @@
-# booking/forms.py
-# [ฉบับสมบูรณ์ - แก้ไข FieldError]
+# booking/forms.py (ฉบับเต็ม)
 
 from django import forms
 from django.contrib.auth.models import User
@@ -45,6 +44,20 @@ class RoomForm(forms.ModelForm):
         }
 
 class BookingForm(forms.ModelForm):
+    # ⬇️ [Fields ที่เพิ่มเข้ามาสำหรับ Recurrence] ⬇️
+    recurrence_type = forms.ChoiceField(
+        choices=Booking.RECURRENCE_CHOICES, 
+        initial='NONE', 
+        required=True,
+        label="การจองซ้ำ",
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+    repeat_until = forms.DateField(
+        required=False,
+        label="ซ้ำจนถึงวันที่",
+        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'})
+    )
+    
     # นิยาม Field 'participants' แยกต่างหาก
     participants = forms.ModelMultipleChoiceField(
         queryset=User.objects.filter(is_active=True).order_by('first_name', 'last_name', 'username'),
@@ -54,9 +67,14 @@ class BookingForm(forms.ModelForm):
 
     class Meta:
         model = Booking
-        # --- [แก้ไข] ใช้ 'exclude' เพื่อให้ฟอร์มดึง Field ที่เหลือจาก Model อัตโนมัติ ---
-        # Field ที่ Model มี แต่เราไม่ต้องการให้ User กรอก
-        exclude = ['room', 'booked_by', 'status', 'created_at', 'updated_at']
+        # ⬇️ [แก้ไข] fields ต้องรวม Field ที่เพิ่มใหม่ (recurrence_type, repeat_until) ⬇️
+        fields = [
+            'title', 'start_time', 'end_time', 
+            'recurrence_type', 'repeat_until', 
+            'chairman', 'participant_count', 'participants', 
+            'department_meeting', 'additional_requests', 
+            'additional_notes', 'attachment',
+        ]
         
         # --- กำหนด Widgets ให้ตรงกับ Field ที่มีใน Model ---
         widgets = {
@@ -65,9 +83,9 @@ class BookingForm(forms.ModelForm):
             'end_time': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'form-control'}),
             'chairman': forms.TextInput(attrs={'class': 'form-control'}),
             'participant_count': forms.NumberInput(attrs={'class': 'form-control', 'min': '1'}),
-            'department_meeting': forms.TextInput(attrs={'class': 'form-control'}), # <--- (ไม่ใช่ department)
-            'attachment': forms.ClearableFileInput(attrs={'class': 'form-control'}), # <--- (ไม่ใช่ presentation_file)
-            'additional_notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}), # <--- (ไม่ใช่ description)
+            'department_meeting': forms.TextInput(attrs={'class': 'form-control'}), 
+            'attachment': forms.ClearableFileInput(attrs={'class': 'form-control'}), 
+            'additional_notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}), 
             'additional_requests': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
         }
         labels = {
@@ -85,22 +103,35 @@ class BookingForm(forms.ModelForm):
 
     def clean(self):
         cleaned_data = super().clean()
-        start = cleaned_data.get("start_time"); end = cleaned_data.get("end_time")
+        start = cleaned_data.get("start_time")
+        end = cleaned_data.get("end_time")
         room = self.initial.get('room') or (self.instance.pk and self.instance.room)
         count = cleaned_data.get("participant_count")
+        
+        # ⬇️ [Logic สำหรับ Recurring] ตรวจสอบเงื่อนไขการจองซ้ำ
+        recurrence = cleaned_data.get("recurrence_type")
+        repeat_until = cleaned_data.get("repeat_until")
+        
+        if recurrence != 'NONE' and not repeat_until:
+            raise ValidationError("หากเลือกการจองซ้ำ ต้องระบุ 'ซ้ำจนถึงวันที่'")
+        
+        if repeat_until and start and repeat_until < start.date():
+            raise ValidationError("วันที่สิ้นสุดการซ้ำต้องไม่ย้อนหลังกว่าวันที่เริ่มต้นการจอง")
+        # ⬆️ [Logic สำหรับ Recurring] ⬆️
 
         if room and count and count > room.capacity:
              raise ValidationError(f"จำนวนผู้เข้าร่วม ({count}) เกินความจุห้อง '{room.name}' ({room.capacity})")
 
         if start and end:
-            if self.instance.pk is None and start < timezone.now(): raise ValidationError("ไม่สามารถจองเวลาย้อนหลัง")
-            if end <= start: raise ValidationError("เวลาสิ้นสุดต้องหลังเวลาเริ่ม")
-            if room:
-                conflicts = Booking.objects.filter( room=room, start_time__lt=end, end_time__gt=start ).exclude(status__in=['REJECTED', 'CANCELLED'])
-                if self.instance.pk: conflicts = conflicts.exclude(pk=self.instance.pk)
-                if conflicts.exists():
-                    c = conflicts.first(); c_time = f"{c.start_time:%H:%M}-{c.end_time:%H:%M}"
-                    raise ValidationError(f"ห้อง '{room.name}' ไม่ว่าง มีการจอง '{c.title}' ({c_time}) อยู่แล้ว")
+             if self.instance.pk is None and start < timezone.now(): raise ValidationError("ไม่สามารถจองเวลาย้อนหลัง")
+             if end <= start: raise ValidationError("เวลาสิ้นสุดต้องหลังเวลาเริ่ม")
+             if room:
+                 # Check current conflicts (ไม่ซ้ำซ้อน)
+                 conflicts = Booking.objects.filter( room=room, start_time__lt=end, end_time__gt=start ).exclude(status__in=['REJECTED', 'CANCELLED'])
+                 if self.instance.pk: conflicts = conflicts.exclude(pk=self.instance.pk)
+                 if conflicts.exists():
+                     c = conflicts.first(); c_time = f"{c.start_time:%H:%M}-{c.end_time:%H:%M}"
+                     raise ValidationError(f"ห้อง '{room.name}' ไม่ว่าง มีการจอง '{c.title}' ({c_time}) อยู่แล้ว")
         return cleaned_data
 
 class CustomPasswordChangeForm(PasswordChangeForm):
