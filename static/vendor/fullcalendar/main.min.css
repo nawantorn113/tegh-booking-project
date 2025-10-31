@@ -1,0 +1,611 @@
+/*!
+FullCalendar v6.1.15
+Docs & License: https://fullcalendar.io/
+(c) 2023 Adam Shaw
+*/
+.fc {
+    direction: ltr
+}
+
+.fc-theme-standard {
+    --fc-border-color: #ddd;
+    --fc-page-bg-color: #fff;
+    --fc-non-business-color: #f7f7f7;
+    --fc-bg-event-opacity: .2
+}
+
+.fc-scrollgrid {
+    border: 1px solid var(--fc-border-color)
+}
+
+.fc-scrollgrid table {
+    border-top: none;
+    border-left: none;
+    font-size: 1em
+}
+
+.fc-scrollgrid-liquid {
+    height: 100%
+}
+
+.fc-scrollgrid-section {
+    border-left: 1px solid var(--fc-border-color)
+}
+
+.fc-scrollgrid-section table {
+    margin: 0 !important;
+    font-size: inherit
+}
+
+.fc-scrollgrid-section-header > td {
+    border-bottom: 0
+}
+
+.fc-scrollgrid-section-body > td {
+    border-top: 0
+}
+
+.fc-scrollgrid-section-footer > td {
+    border-top: 0
+}
+
+.fc-scrollgrid-sync-inner {
+    width: 1px;
+    height: 1px
+}
+
+.fc-scrollgrid-sync-table {
+    width: 100%;
+    box-sizing: border-box;
+    table-layout: fixed
+}
+
+.fc-scrollgrid-section-header .fc-scrollgrid-sync-table {
+    height: 100%
+}
+
+.fc-scrollgrid-section-header:not(.fc-scrollgrid-section-liquid) {
+    height: 1px
+}
+
+.fc-scrollgrid-section-header table {
+    height: 1px
+}
+
+.fc-scrollgrid-section-body:not(.fc-scrollgrid-section-liquid) {
+    height: 1px
+}
+
+.fc-scrollgrid-section-body table {
+    height: 1px
+}
+
+.fc-scrollgrid-section-footer:not(.fc-scrollgrid-section-liquid) {
+    height: 1px
+}
+
+.fc-scrollgrid-section-footer table {
+    height: 1px
+}
+
+.fc-scroller-harness {
+    overflow-x: hidden;
+    overflow-y: hidden
+}
+
+.fc-scroller-harness-auto {
+    overflow-y: auto
+}
+
+.fc-scroller-harness-liquid {
+    height: 100%
+}
+
+.fc-scroller {
+    overflow-x: hidden;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    position: relative
+}
+
+.fc-scroller-h {
+    overflow-x: auto;
+    overflow-y: hidden
+}
+
+.fc-scroller-v {
+    overflow-x: hidden;
+    overflow-y: auto
+}
+
+.fc-scroller-hv {
+    overflow-x: auto;
+    overflow-y: auto
+}
+
+.fc-scroller-clip {
+    overflow: clip
+}
+
+.fc-scroller-harness-liquid > .fc-scroller {
+    height: 100%
+}
+
+.fc-view-harness {
+    position: relative;
+    flex-grow: 1
+}
+
+.fc-view-harness-passive {
+    min-height: 1px
+}
+
+.fc-view-harness-active {
+    height: 100%
+}
+
+.fc-view {
+    width: 100%;
+    height: 100%
+}
+
+.fc-license-message {
+    margin: 1em 4px;
+    padding: 1em 6px;
+    background: #eee;
+    border-radius: 3px;
+    border: 1px solid #ddd;
+    color: #444
+}
+
+.fc-unselectable {
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    user-select: none
+}
+
+.fc-non-editable {
+    cursor: default
+}
+
+.fc-draggable {
+    cursor: move
+}
+
+.fc-resizable {
+    cursor: e-resize
+}
+
+.fc-day-other .fc-daygrid-day-number {
+    opacity: .3
+}
+
+.fc-icon {
+    display: inline-block;
+    width: 1em;
+    height: 1em;
+    font-size: 1em;
+    line-height: 1em;
+    text-align: center
+}
+
+.fc-icon::before {
+    font-family: "bootstrap-icons", serif;
+    font-size: 1em;
+    line-height: 1em;
+    display: inline-block
+}
+
+.fc-icon-left-single-arrow::before {
+    content: "\F257"
+}
+
+.fc-icon-right-single-arrow::before {
+    content: "\F25C"
+}
+
+.fc-icon-left-double-arrow::before {
+    content: "\F257\F257"
+}
+
+.fc-icon-right-double-arrow::before {
+    content: "\F25C\F25C"
+}
+
+.fc-icon-x::before {
+    content: "\F62A"
+}
+
+.fc-button {
+    display: inline-block;
+    cursor: pointer;
+    text-align: center;
+    border: 1px solid #999;
+    padding: 4px 6px;
+    background-color: #fff;
+    white-space: nowrap;
+    border-radius: 4px;
+    box-shadow: 0 1px 0 rgba(0, 0, 0, .05)
+}
+
+.fc-button:hover:not(:disabled) {
+    background-color: #e6e6e6
+}
+
+.fc-button:active:not(:disabled) {
+    background-color: #ccc;
+    box-shadow: inset 0 1px 1px rgba(0, 0, 0, .1)
+}
+
+.fc-button:focus {
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, .25)
+}
+
+.fc-button:disabled {
+    opacity: .65;
+    cursor: not-allowed
+}
+
+.fc-button .fc-icon {
+    vertical-align: top
+}
+
+.fc-button-primary {
+    background-color: #007bff;
+    color: #fff
+}
+
+.fc-button-primary:hover:not(:disabled) {
+    background-color: #0069d9
+}
+
+.fc-button-primary:active:not(:disabled) {
+    background-color: #0062cc
+}
+
+.fc-button-group {
+    display: inline-flex
+}
+
+.fc-button-group > .fc-button {
+    border-radius: 0;
+    margin-left: -1px
+}
+
+.fc-button-group > .fc-button:first-child {
+    border-top-left-radius: 4px;
+    border-bottom-left-radius: 4px;
+    margin-left: 0
+}
+
+.fc-button-group > .fc-button:last-child {
+    border-top-right-radius: 4px;
+    border-bottom-right-radius: 4px
+}
+
+.fc-button-group > .fc-button:focus,
+.fc-button-group > .fc-button:hover,
+.fc-button-group > .fc-button:active {
+    z-index: 2
+}
+
+.fc-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1em;
+    line-height: 1.5
+}
+
+.fc-toolbar .fc-toolbar-title {
+    font-size: 1.75em;
+    margin: 0
+}
+
+.fc-toolbar .fc-button {
+    vertical-align: middle
+}
+
+.fc-toolbar-chunk {
+    display: flex
+}
+
+.fc-daygrid-body {
+    position: relative;
+    z-index: 1
+}
+
+.fc-daygrid-body-unbalanced .fc-daygrid-day-events {
+    min-height: 1.5em
+}
+
+.fc-daygrid-body-balanced .fc-daygrid-body-row {
+    height: 100%
+}
+
+.fc-daygrid-body-balanced table {
+    height: 100%
+}
+
+.fc-daygrid-row {
+    border-bottom: 1px solid var(--fc-border-color)
+}
+
+.fc-daygrid-row:last-child {
+    border-bottom: 0
+}
+
+.fc-daygrid-day-frame {
+    min-height: 1.5em;
+    position: relative
+}
+
+.fc-daygrid-day-frame:after {
+    content: "";
+    clear: both;
+    display: block
+}
+
+.fc-daygrid-day:not(.fc-day-other) {
+    cursor: pointer
+}
+
+.fc-daygrid-day-top {
+    display: flex;
+    align-items: center
+}
+
+.fc-daygrid-day-number {
+    padding: 4px
+}
+
+.fc-daygrid-day-number:after {
+    content: "";
+    clear: both;
+    display: block
+}
+
+.fc-daygrid-event-harness {
+    position: relative
+}
+
+.fc-daygrid-event {
+    margin: 1px 2px;
+    display: flex;
+    align-items: center
+}
+
+.fc-daygrid-event-dot {
+    background: #007bff;
+    width: 6px;
+    height: 6px;
+    border-radius: 3px;
+    margin-right: 4px
+}
+
+.fc-daygrid-event-time {
+    font-weight: 700;
+    padding: 0 2px
+}
+
+.fc-daygrid-event-title {
+    padding: 0 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis
+}
+
+.fc-daygrid-event-title:before {
+    content: "";
+    clear: both;
+    display: block
+}
+
+.fc-daygrid-block-event {
+    color: #fff;
+    background: #3788d8;
+    padding: 4px;
+    margin: 1px 2px;
+    border-radius: 3px;
+    box-sizing: border-box
+}
+
+.fc-daygrid-block-event:hover {
+    opacity: .8
+}
+
+.fc-daygrid-block-event .fc-daygrid-event-time {
+    font-weight: 700;
+    margin-right: 4px
+}
+
+.fc-daygrid-more-link {
+    font-size: .85em;
+    padding: 1px 4px;
+    margin: 1px 2px;
+    border-radius: 3px
+}
+
+.fc-daygrid-more-link:hover {
+    text-decoration: underline
+}
+
+.fc-daygrid-more-popover {
+    position: absolute;
+    z-index: 1000;
+    padding: 10px;
+    border: 1px solid #ccc;
+    background: #fff;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, .15);
+    border-radius: 3px
+}
+
+.fc-daygrid-more-popover .fc-daygrid-day-frame {
+    margin-bottom: 10px
+}
+
+.fc-daygrid-more-popover .fc-daygrid-day-events {
+    margin-top: 10px
+}
+
+.fc-daygrid-more-popover .fc-daygrid-event-harness {
+    margin-bottom: 2px
+}
+
+.fc-daygrid-event-harness-abs {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0
+}
+
+.fc-timegrid-slots {
+    position: relative
+}
+
+.fc-timegrid-slot {
+    height: 30px;
+    border-bottom: 1px solid var(--fc-border-color)
+}
+
+.fc-timegrid-slot-label {
+    vertical-align: middle;
+    padding: 0 6px
+}
+
+.fc-timegrid-slot-lane {
+    width: 100%;
+    height: 100%
+}
+
+.fc-timegrid-slot-lane:before {
+    content: "";
+    clear: both;
+    display: block
+}
+
+.fc-timegrid-slot-label-frame {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    height: 100%;
+    overflow: hidden
+}
+
+.fc-timegrid-slot-label-cushion {
+    font-weight: 700;
+    font-size: .85em
+}
+
+.fc-timegrid-divider {
+    border-bottom: 1px solid var(--fc-border-color)
+}
+
+.fc-timegrid-business-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0
+}
+
+.fc-timegrid-business {
+    background: var(--fc-non-business-color);
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    opacity: var(--fc-bg-event-opacity)
+}
+
+.fc-timegrid-now-indicator-line {
+    border-top: 2px solid #f00;
+    position: absolute;
+    left: 0;
+    right: 0
+}
+
+.fc-timegrid-now-indicator-arrow {
+    margin-left: -5px;
+    border: 5px solid transparent;
+    border-left-color: #f00;
+    border-right: 0;
+    width: 0;
+    height: 0;
+    position: absolute
+}
+
+.fc-timegrid-event-harness {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 1;
+    width: 100%;
+    box-sizing: border-box
+}
+
+.fc-timegrid-event-harness-abs {
+    left: 0;
+    right: 0
+}
+
+.fc-timegrid-event-harness-abs > .fc-timegrid-event {
+    height: 100%
+}
+
+.fc-timegrid-event-harness-abs.fc-timegrid-event-harness-abs-dir-btr {
+    direction: rtl
+}
+
+.fc-timegrid-event {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 100%;
+    color: #fff;
+    background: #3788d8;
+    padding: 2px 2px 0 2px;
+    border-radius: 3px;
+    box-sizing: border-box
+}
+
+.fc-timegrid-event:hover {
+    opacity: .8
+}
+
+.fc-timegrid-event-short {
+    overflow: hidden
+}
+
+.fc-timegrid-event-time {
+    font-weight: 700
+}
+
+.fc-timegrid-event-title {
+    font-size: .85em
+}
+
+.fc-timegrid-col-frame {
+    position: relative;
+    z-index: 1
+}
+
+.fc-timegrid-col-frame:after {
+    content: "";
+    clear: both;
+    display: block
+}
+
+.fc-timegrid-col-frame > .fc-timegrid-business-container {
+    z-index: 2
+}
+
+.fc-timegrid-col-frame > .fc-timegrid-now-indicator-line {
+    z-index: 3
+}
+
+.fc-timegrid-col-frame > .fc-timegrid-event-harness {
+    z-index: 4
+}

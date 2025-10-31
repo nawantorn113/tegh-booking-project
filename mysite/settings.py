@@ -84,9 +84,11 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# ⬇️ ⬇️ ⬇️ [โค้ดส่วนนี้ถูกต้อง 100%] ⬇️ ⬇️ ⬇️
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'dashboard'
 LOGOUT_REDIRECT_URL = 'login'
+# ⬆️ ⬆️ ⬆️ [โค้ดส่วนนี้ถูกต้อง 100%] ⬆️ ⬆️ ⬆️
 
 # --- Email (Console Backend for Testing) ---
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'

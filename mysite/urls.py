@@ -5,13 +5,10 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('select2/', include('django_select2.urls')), # สำหรับ Autocomplete
-    path('', include('booking.urls')), # URL ของแอป booking
+    path('select2/', include('django_select2.urls')), 
+    path('', include('booking.urls')), 
 ]
 
-# --- เพิ่มการเสิร์ฟ Static/Media ตอน DEBUG=True ---
+# [แก้ไข] ตอน DEBUG=True, ให้ Django เสิร์ฟเฉพาะ Media Files
 if settings.DEBUG:
-    # Use STATICFILES_DIRS if it exists
-    static_root = settings.STATICFILES_DIRS[0] if settings.STATICFILES_DIRS else settings.STATIC_ROOT
-    urlpatterns += static(settings.STATIC_URL, document_root=static_root)
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
