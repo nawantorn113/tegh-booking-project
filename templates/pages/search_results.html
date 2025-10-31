@@ -1,86 +1,58 @@
-{% extends 'base.html' %}
+{% extends 'base.html' %} 
 {% load static %}
 
-{% block title %}ผลการค้นหา{% endblock %}
-{% block page_title %}<h6>ผลการค้นหาอัจฉริยะ</h6>{% endblock %}
+{% block title %}ผลการค้นหา: {{ query }}{% endblock %}
 
 {% block content %}
+<div class="container mt-4">
+    
+    <div class="page-header mb-3">
+        <h3>ผลการค้นหาสำหรับ: "{{ query }}"</h3>
 
-<div class="card shadow-sm border-0 rounded-3 mb-4">
-    <div class="card-body p-4">
-        <form action="{% url 'smart_search' %}" method="get">
-            <label for="smartSearchInput" class="form-label h5 fw-bold text-primary">ค้นหาอีกครั้ง</label>
-            <div class="input-group">
-                
-                {# เพิ่ม class rounded-pill ที่นี่ #}
-                <input type="text" class="form-control rounded-start-pill" 
-                       name="q" id="smartSearchInput" 
-                       placeholder=""
-                       value="{{ query_text|default:'' }}">
-                
-                {# เพิ่ม class rounded-end-pill ที่นี่ #}
-                <button class="btn btn-primary rounded-end-pill px-4" type="submit">
-                    <i class="bi bi-search me-1"></i> ค้นหา
-                </button>
-            </div>
+        <form class="d-flex mt-3" method="GET" action="{% url 'search_results' %}">
+            <input class="form-control me-2" 
+                   type="search" 
+                   placeholder="ค้นหาอีกครั้ง..." 
+                   aria-label="Search"
+                   name="q"
+                   value="{{ query|default:'' }}">
+            <button class="btn btn-primary" type="submit">
+                <i class="bi bi-search"></i> ค้นหา
+            </button>
         </form>
+        
     </div>
-</div>
 
-<div class="alert alert-info border-0 shadow-sm">
-    <h5 class="alert-heading">ผลการค้นหาสำหรับ: "{{ query_text }}"</h5>
-    <p class="mb-0">
-        ระบบพบห้องว่าง <strong>{{ available_rooms.count }} ห้อง</strong> ที่ตรงตามเงื่อนไข:
-        <ul class="mb-0">
-            {% if search_params.capacity %}
-                <li>ความจุอย่างน้อย <strong>{{ search_params.capacity }} คน</strong></li>
-            {% endif %}
-            {% if search_params.start_time %}
-                <li>ว่างในช่วงเวลา <strong>{{ search_params.start_time|date:"d M Y, H:i" }}</strong> - <strong>{{ search_params.end_time|date:"H:i" }}</strong></li>
-            {% endif %}
-            {% if not search_params.capacity and not search_params.start_time %}
-                <li>(ไม่พบคำสั่งค้นหาที่เฉพาะเจาะจง)</li>
-            {% endif %}
-        </ul>
-    </p>
-</div>
+    <div class="content-card">
+        {% if results %}
+            <p>พบ {{ results.count }} รายการที่ตรงกัน</p>
 
-<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-    {% for room in available_rooms %}
-    <div class="col">
-        <div class="card h-100 shadow-sm border-0 rounded-3 overflow-hidden">
-            {% if room.image %}
-                <img src="{{ room.image.url }}" class="card-img-top" alt="{{ room.name }}" style="height: 180px; object-fit: cover;">
-            {% else %}
-                <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 180px;">
-                    <i class="bi bi-image fs-1 text-secondary opacity-25"></i>
-                </div>
-            {% endif %}
-            
-            <div class="card-body">
-                <h5 class="card-title">{{ room.name }}</h5>
-                <p class="card-text small text-muted mb-2">
-                    <i class="bi bi-people-fill me-1"></i> รองรับ {{ room.capacity }} คน
-                    <span class="mx-2">|</span>
-                    <i class="bi bi-building me-1"></i> {{ room.building|default:"-" }} (ชั้น {{ room.floor|default:"-" }})
-                </p>
+            <div class="list-group">
+                
+                {% for room in results %}
+                    <a href="{% url 'room_calendar' room.id %}" class="list-group-item list-group-item-action mb-2 border rounded">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h5 class="mb-1 text-primary">{{ room.name }}</h5>
+                            <small>ความจุ: {{ room.capacity }} คน</small>
+                        </div>
+                        <p class="mb-1">
+                            {{ room.location|default:"(ไม่ระบุสถานที่)" }}
+                        </p>
+                    </a>
+                {% endfor %}
+                
             </div>
-            <div class="card-footer bg-white border-0 p-3">
-                <a href="{% url 'room_calendar' room.id %}" class="btn btn-primary w-100 rounded-pill">
-                    <i class="bi bi-calendar-plus me-1"></i> ดูตาราง / จอง
-                </a>
-            </div>
-        </div>
-    </div>
-    {% empty %}
-    <div class="col-12">
-        <div class="alert alert-warning text-center">
-            <i class="bi bi-emoji-frown fs-1 d-block mb-2"></i>
-            <h5>ไม่พบห้องว่าง</h5>
-            <p class="mb-0">ไม่พบห้องประชุมที่ว่างตามเงื่อนไขที่คุณค้นหา (เช่น จำนวนคนไม่พอ หรือเวลาทับซ้อน)</p>
-        </div>
-    </div>
-    {% endfor %}
-</div>
 
+        {% else %}
+            <div class="alert alert-warning" role="alert">
+                ไม่พบห้องประชุมที่ตรงกับคำค้นหา "{{ query }}"
+            </div>
+        {% endif %}
+
+        <div class="mt-4">
+            <a href="{% url 'dashboard' %}" class="btn btn-secondary">
+                &laquo; กลับหน้าหลัก
+            </a>
+        </div>
+    </div> </div>
 {% endblock %}

@@ -1,108 +1,111 @@
 # booking/forms.py
+# [ฉบับสมบูรณ์ - แก้ไข FieldError]
+
 from django import forms
-from django.contrib.auth.forms import PasswordChangeForm
-# 1. ลบ 'Profile' และ 'Equipment' ออกจาก import นี้
-from .models import Booking, Room 
 from django.contrib.auth.models import User
-from django.urls import reverse_lazy 
+from .models import Room, Booking, Profile
+from django.contrib.auth.forms import PasswordChangeForm
+from django.utils import timezone
+from django.core.exceptions import ValidationError
 
-# 2. เพิ่ม Import นี้ (สำหรับช่องค้นหา)
-from dal import autocomplete
-
-class BookingForm(forms.ModelForm):
-    
-
-    class Meta:
-        model = Booking
-        # 3. ลบ 'equipment' และ 'external_participants'
-        #    เพิ่ม 'presentation_file'
-        fields = [
-            'room', 'title', 'chairman', 'department', 'start_time',
-            'end_time', 'participant_count', 
-            'participants', 
-            'presentation_file', # <-- เพิ่มช่องนี้
-            'description', 'additional_requests', 'additional_notes', 'status',
-        ]
-        
-        labels = {
-            'room': 'ห้องประชุม',
-            'title': 'หัวข้อการประชุม',
-            'chairman': 'ประธานในที่ประชุม (ถ้ามี)',
-            'department': 'แผนกผู้จอง',
-            'start_time': 'วัน/เวลา เริ่มต้น',
-            'end_time': 'วัน/เวลา สิ้นสุด',
-            'participant_count': 'จำนวนผู้เข้าร่วม',
-            'participants': 'รายชื่อผู้เข้าร่วม',
-            'presentation_file': 'ไฟล์นำเสนอ (ถ้ามี)',
-            'description': 'รายละเอียด/วาระการประชุม',
-            'additional_requests': 'คำขอเพิ่มเติม (เช่น อุปกรณ์พิเศษ)',
-            'additional_notes': 'หมายเหตุเพิ่มเติม',
-            'status': 'สถานะ',
-        }
-        help_texts = {
-            'participants': 'พิมพ์ชื่อ, นามสกุล, หรือ username เพื่อค้นหา (ผู้ใช้ในระบบ)',
-            'participant_count': '',
-            'presentation_file': 'ไฟล์ที่ต้องการนำเสนอ',
-        }
-        widgets = {
-            'room': forms.HiddenInput(),
-            'status': forms.HiddenInput(),
-            'start_time': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class':'form-control'}),
-            'end_time': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class':'form-control'}),
-
-            # 4. ใช้ Widget ของ 'dal' (django-autocomplete-light)
-            'participants': autocomplete.ModelSelect2Multiple(
-                url='user-autocomplete',
-                attrs={'data-placeholder': 'พิมพ์เพื่อค้นหา...', 'data-theme': 'bootstrap-5'}
-            ),
-            
-            # 5. เพิ่ม Widget สำหรับ 'presentation_file'
-            'presentation_file': forms.ClearableFileInput(attrs={'class':'form-control'}),
-
-            'description': forms.Textarea(attrs={'rows': 3, 'class':'form-control'}),
-            'additional_requests': forms.Textarea(attrs={'rows': 2, 'class':'form-control'}),
-            'additional_notes': forms.Textarea(attrs={'rows': 2, 'class':'form-control'}),
-            'title': forms.TextInput(attrs={'class':'form-control'}),
-            'chairman': forms.TextInput(attrs={'class':'form-control'}),
-            
-            # 6. ทำให้ช่อง Department กรอกได้เอง
-            'department': forms.TextInput(attrs={'class':'form-control', 'placeholder': ''}),
-            
-            'participant_count': forms.NumberInput(attrs={'min': '1', 'class':'form-control'}),
-        }
-
-    # 7. ลบ __init__ ที่ผูกกับ Profile/Equipment ออก
-    def __init__(self, *args, **kwargs):
-        # (ลบ user = kwargs.pop('user', None))
-        super().__init__(*args, **kwargs)
-        # (ลบ Logic ที่เกี่ยวกับ Profile/Department/Equipment ออก)
-
-
-# (ลบ Class ProfileForm ทั้งหมด)
-
-class CustomPasswordChangeForm(PasswordChangeForm):
-     old_password = forms.CharField( label="รหัสผ่านเก่า", strip=False, widget=forms.PasswordInput(attrs={'autocomplete': 'current-password', 'autofocus': True, 'class':'form-control'}), )
-     new_password1 = forms.CharField( label="รหัสผ่านใหม่", widget=forms.PasswordInput(attrs={'autocomplete': 'new-password', 'class':'form-control'}), strip=False, )
-     new_password2 = forms.CharField( label="ยืนยันรหัสผ่านใหม่", strip=False, widget=forms.PasswordInput(attrs={'autocomplete': 'new-password', 'class':'form-control'}), )
+# --- try...except สำหรับ dal_select2 ---
+try:
+    from dal import autocomplete
+    DAL_AVAILABLE = True
+except ImportError:
+    print("WARNING: dal_select2 (django-autocomplete-light) not installed. Participant autocomplete will not work.")
+    DAL_AVAILABLE = False
+    # Placeholder widget
+    class FakeAutocompleteWidget:
+        def __init__(self, url=None, **kwargs): pass
+        def render(self, name, value, attrs=None, renderer=None): return f'<input type="text" name="{name}" value="{value or ""}" class="form-control" placeholder="Autocomplete not available">'
+    autocomplete = type('obj', (object,), {'SelectMultiple': FakeAutocompleteWidget})()
+# --- ----------------------------- ---
 
 class RoomForm(forms.ModelForm):
     class Meta:
         model = Room
-        fields = ['name', 'building', 'floor', 'capacity', 'equipment_in_room', 'image']
+        # Fields ต้องตรงกับ Model
+        fields = ['name', 'building', 'floor', 'location', 'capacity', 'equipment_in_room', 'image1', 'image2', 'image3']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'building': forms.TextInput(attrs={'class': 'form-control'}),
+            'floor': forms.TextInput(attrs={'class': 'form-control'}),
+            'location': forms.TextInput(attrs={'class': 'form-control'}),
+            'capacity': forms.NumberInput(attrs={'class': 'form-control', 'min': '1'}),
+            'equipment_in_room': forms.Textarea(attrs={'class': 'form-control', 'rows': 4, 'placeholder': 'ระบุอุปกรณ์ทีละรายการ ขึ้นบรรทัดใหม่'}),
+            'image1': forms.ClearableFileInput(attrs={'class': 'form-control'}),
+            'image2': forms.ClearableFileInput(attrs={'class': 'form-control'}),
+            'image3': forms.ClearableFileInput(attrs={'class': 'form-control'}),
+        }
         labels = {
             'name': 'ชื่อห้องประชุม', 'building': 'อาคาร', 'floor': 'ชั้น',
-            'capacity': 'ความจุ (คน)', 'equipment_in_room': 'อุปกรณ์ภายในห้อง',
-            'image': 'รูปภาพห้องประชุม (ถ้ามี)',
+            'location': 'โซน/สถานที่', 'capacity': 'ความจุ (คน)', 'equipment_in_room': 'อุปกรณ์ในห้อง',
+            'image1': 'รูปภาพ 1', 'image2': 'รูปภาพ 2', 'image3': 'รูปภาพ 3',
         }
-        help_texts = {
-            'equipment_in_room': 'ระบุอุปกรณ์แต่ละอย่างในบรรทัดใหม่ เช่น โปรเจคเตอร์, ไวท์บอร์ด',
-            'image': 'เลือกไฟล์รูปภาพ .jpg, .png', 'capacity': 'ระบุเป็นตัวเลขเท่านั้น',
-        }
+
+class BookingForm(forms.ModelForm):
+    # นิยาม Field 'participants' แยกต่างหาก
+    participants = forms.ModelMultipleChoiceField(
+        queryset=User.objects.filter(is_active=True).order_by('first_name', 'last_name', 'username'),
+        widget=autocomplete.SelectMultiple(url='user-autocomplete') if DAL_AVAILABLE else forms.SelectMultiple(attrs={'class': 'form-control select2'}),
+        required=False, label="ผู้เข้าร่วม (เลือกได้หลายคน)"
+    )
+
+    class Meta:
+        model = Booking
+        # --- [แก้ไข] ใช้ 'exclude' เพื่อให้ฟอร์มดึง Field ที่เหลือจาก Model อัตโนมัติ ---
+        # Field ที่ Model มี แต่เราไม่ต้องการให้ User กรอก
+        exclude = ['room', 'booked_by', 'status', 'created_at', 'updated_at']
+        
+        # --- กำหนด Widgets ให้ตรงกับ Field ที่มีใน Model ---
         widgets = {
-            'name': forms.TextInput(attrs={'placeholder': 'เช่น ห้องประชุม O1-1', 'class':'form-control'}),
-            'building': forms.TextInput(attrs={'placeholder': 'เช่น สำนักงาน 1, อาคาร R&D', 'class':'form-control'}),
-            'floor': forms.TextInput(attrs={'placeholder': 'เช่น ชั้น 1, ชั้น 5', 'class':'form-control'}),
-            'capacity': forms.NumberInput(attrs={'min': '1', 'class':'form-control'}),
-            'equipment_in_room': forms.Textarea(attrs={'rows': 5, 'placeholder': 'โปรเจคเตอร์\nไวท์บอร์ด\nชุดเครื่องเสียง\nปลั๊กไฟ', 'class':'form-control'}),
-            'image': forms.ClearableFileInput(attrs={'accept': 'image/*', 'class':'form-control'}),
+            'title': forms.TextInput(attrs={'class': 'form-control'}),
+            'start_time': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'form-control'}),
+            'end_time': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'form-control'}),
+            'chairman': forms.TextInput(attrs={'class': 'form-control'}),
+            'participant_count': forms.NumberInput(attrs={'class': 'form-control', 'min': '1'}),
+            'department_meeting': forms.TextInput(attrs={'class': 'form-control'}), # <--- (ไม่ใช่ department)
+            'attachment': forms.ClearableFileInput(attrs={'class': 'form-control'}), # <--- (ไม่ใช่ presentation_file)
+            'additional_notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}), # <--- (ไม่ใช่ description)
+            'additional_requests': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
         }
+        labels = {
+            'title': 'หัวข้อ/วาระการประชุม',
+            'start_time': 'เวลาเริ่มต้น',
+            'end_time': 'เวลาสิ้นสุด',
+            'chairman': 'ประธานการประชุม (ถ้ามี)',
+            'participant_count': 'จำนวนผู้เข้าร่วม',
+            'participants': 'รายชื่อผู้เข้าร่วม (ค้นหาชื่อ)',
+            'department_meeting': 'แผนก (สำหรับการประชุม)',
+            'attachment': 'ไฟล์เอกสารนำเสนอ',
+            'additional_notes': 'หมายเหตุเพิ่มเติม',
+            'additional_requests': 'คำขออุปกรณ์/บริการเพิ่มเติม',
+        }
+
+    def clean(self):
+        cleaned_data = super().clean()
+        start = cleaned_data.get("start_time"); end = cleaned_data.get("end_time")
+        room = self.initial.get('room') or (self.instance.pk and self.instance.room)
+        count = cleaned_data.get("participant_count")
+
+        if room and count and count > room.capacity:
+             raise ValidationError(f"จำนวนผู้เข้าร่วม ({count}) เกินความจุห้อง '{room.name}' ({room.capacity})")
+
+        if start and end:
+            if self.instance.pk is None and start < timezone.now(): raise ValidationError("ไม่สามารถจองเวลาย้อนหลัง")
+            if end <= start: raise ValidationError("เวลาสิ้นสุดต้องหลังเวลาเริ่ม")
+            if room:
+                conflicts = Booking.objects.filter( room=room, start_time__lt=end, end_time__gt=start ).exclude(status__in=['REJECTED', 'CANCELLED'])
+                if self.instance.pk: conflicts = conflicts.exclude(pk=self.instance.pk)
+                if conflicts.exists():
+                    c = conflicts.first(); c_time = f"{c.start_time:%H:%M}-{c.end_time:%H:%M}"
+                    raise ValidationError(f"ห้อง '{room.name}' ไม่ว่าง มีการจอง '{c.title}' ({c_time}) อยู่แล้ว")
+        return cleaned_data
+
+class CustomPasswordChangeForm(PasswordChangeForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['old_password'].widget = forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'รหัสผ่านปัจจุบัน'})
+        self.fields['new_password1'].widget = forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'รหัสผ่านใหม่'})
+        self.fields['new_password2'].widget = forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'ยืนยันรหัสผ่านใหม่'})
