@@ -1,4 +1,3 @@
-# booking/forms.py
 from django import forms
 from django.contrib.auth.forms import PasswordChangeForm
 from .models import Booking, Room 
@@ -37,8 +36,6 @@ class BookingForm(forms.ModelForm):
             'additional_notes': 'หมายเหตุเพิ่มเติม',
         }
         
-        # --- 💡 [แก้ไขจุดที่ 1] 💡 ---
-        # (ลบ 'participants' ออกจาก help_texts เพื่อไม่ให้มันแสดงข้างนอก)
         help_texts = {
             'participant_count': '',
             'presentation_file': 'ไฟล์ที่ต้องการนำเสนอ',
@@ -46,14 +43,10 @@ class BookingForm(forms.ModelForm):
         
         widgets = {
             'room': forms.HiddenInput(),
-            
-            # --- 💡 [แก้ไขจุดที่ 2] 💡 ---
-            # (ย้ายข้อความจาก help_texts มาใส่ใน 'data-placeholder' แทน)
             'participants': autocomplete.ModelSelect2Multiple(
                 url='user-autocomplete',
                 attrs={'data-placeholder': 'พิมพ์ชื่อ, นามสกุล, หรือ username เพื่อค้นหา...', 'data-theme': 'bootstrap-5'}
             ),
-
             'presentation_file': forms.ClearableFileInput(attrs={'class':'form-control'}),
             'description': forms.Textarea(attrs={'rows': 3, 'class':'form-control'}),
             'additional_requests': forms.Textarea(attrs={'rows': 2, 'class':'form-control'}),
@@ -64,7 +57,6 @@ class BookingForm(forms.ModelForm):
             'participant_count': forms.NumberInput(attrs={'min': '1', 'class':'form-control'}),
         }
 
-    # (โค้ด __init__ นี้ถูกต้องแล้ว ทำให้ช่องเวลาแสดงผล)
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         

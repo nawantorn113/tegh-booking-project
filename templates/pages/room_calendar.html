@@ -21,7 +21,7 @@
     #calendar { margin-top: 1.5rem; }
     #bookingFormContainer { display: none; }
     
-    /* [แก้ไข] ทำให้ Select2 สวยงามใน Modal */
+    /* (แก้ปัญหา Select2 ใน Modal) */
     .select2-container { z-index: 1056; } 
     .select2-container--bootstrap-5 .select2-selection {
         width: 100% !important;
@@ -98,9 +98,9 @@
 <script>
 window.onload = function() {
     
-    // (ตรวจสอบครั้งสุดท้าย)
-    if (typeof FullCalendar === 'undefined' || typeof bootstrap === 'undefined' || typeof $ === 'undefined') {
-        console.error("Required JS libraries not loaded (jQuery, FullCalendar or Bootstrap).");
+    // (ตรวจสอบไลบรารี)
+    if (typeof FullCalendar === 'undefined' || typeof bootstrap === 'undefined' || typeof $ === 'undefined' || typeof yl === 'undefined') {
+        console.error("Required JS libraries not loaded (jQuery, Bootstrap, FullCalendar, or DAL/yl).");
         document.getElementById('calendar').innerHTML = '<div class="alert alert-danger">เกิดข้อผิดพลาด: โหลดไลบรารีไม่สำเร็จ กรุณาล้างแคช (Ctrl+Shift+R)</div>';
         return; 
     }
@@ -110,7 +110,8 @@ window.onload = function() {
     var modalBody = document.getElementById('modalBookingBody');
     var startTimeField = document.getElementById('id_start_time');
     var endTimeField = document.getElementById('id_end_time');
-    var bookingModal = new bootstrap.Modal(document.getElementById('bookingModal'));
+    var bookingModalEl = document.getElementById('bookingModal'); 
+    var bookingModal = new bootstrap.Modal(bookingModalEl);
     
     if (!startTimeField || !endTimeField) {
         console.error("ไม่พบช่อง input #id_start_time หรือ #id_end_time");
@@ -129,7 +130,7 @@ window.onload = function() {
         buttonText: { today: 'วันนี้', month: 'เดือน', week: 'สัปดาห์', day: 'วัน' },
         
         allDaySlot: false, 
-        slotMinTime: '07:30:00', // (จองล่วงหน้า 30 นาที)
+        slotMinTime: '07:30:00', 
         slotMaxTime: '18:00:00',
         businessHours: {
             daysOfWeek: [ 0, 1, 2, 3, 4, 5, 6 ],
@@ -149,40 +150,49 @@ window.onload = function() {
 
         select: function(info) {
             var now = new Date();
-            var start = info.start;
-            var end = info.end;
-
-            if (start < now) {
+            if (info.start < now) {
                 alert("ไม่สามารถจองย้อนหลังได้");
                 calendar.unselect();
                 return;
             }
 
             if (info.view.type.includes('dayGrid')) { 
-                start.setHours(8, 0, 0, 0); 
-                end = new Date(info.end.getTime()); 
+                info.start.setHours(8, 0, 0, 0); 
+                var end = new Date(info.end.getTime()); 
                 if (info.end.getDate() !== info.start.getDate()) {
                     end.setDate(end.getDate() - 1); 
                 } 
                 end.setHours(18, 0, 0, 0);
+                info.end = end;
             }
             
-            var startStr = new Date(start.getTime() - (start.getTimezoneOffset() * 60000)).toISOString().substring(0, 16);
-            var endStr = new Date(end.getTime() - (end.getTimezoneOffset() * 60000)).toISOString().substring(0, 16);
+            var startStr = new Date(info.start.getTime() - (info.start.getTimezoneOffset() * 60000)).toISOString().substring(0, 16);
+            var endStr = new Date(info.end.getTime() - (info.end.getTimezoneOffset() * 60000)).toISOString().substring(0, 16);
             
             modalBody.appendChild(hiddenForm); 
             startTimeField.value = startStr;
             endTimeField.value = endStr;
             
-            // (เรียกใช้ Select2 *ก่อน* เปิด Modal)
+            
+            // --- 💡💡💡 [นี่คือ "วิธีแก้ที่ได้ผลเลย"] 💡💡💡 ---
+            // (เราจะลบ 'yl.register' (ที่พัง)
+            // และใช้ '$.fn.select2' (ที่ถูกต้อง) แทน)
+            
             if ($.fn.select2) {
                 var participantsField = $('#id_participants');
-                // (ต้อง re-initialize ทุกครั้งที่เปิด modal)
+                
+                // (1. ทำลายของเก่าที่อาจค้างอยู่)
+                if (participantsField.hasClass('select2-hidden-accessible')) {
+                    participantsField.select2('destroy');
+                }
+                
+                // (2. สร้าง Select2 ใหม่ โดยใช้ฟังก์ชันของ jQuery)
                 participantsField.select2({
                     dropdownParent: $('#bookingModal'), 
                     width: '100%'
                 });
             }
+            // --- 💡💡💡 [สิ้นสุดการแก้ไข] 💡💡💡 ---
 
             bookingModal.show();
         },
@@ -191,26 +201,38 @@ window.onload = function() {
 
         eventDataTransform: function(eventData) {
             let props = eventData.extendedProps || {};
+            var now = new Date();
+            var eventStart = new Date(eventData.start);
+            var eventEnd = new Date(eventData.end);
+
             if (props.status === 'PENDING') {
                 eventData.backgroundColor = '#ffc107'; 
                 eventData.borderColor = '#ffc107';
+                eventData.title = `[รออนุมัติ] ${eventData.title}`;
             } else if (props.status === 'APPROVED') {
-                eventData.backgroundColor = '#198754'; 
-                eventData.borderColor = '#198754';
-            } else {
+                if (now >= eventStart && now < eventEnd) {
+                    eventData.backgroundColor = '#dc3545'; 
+                    eventData.borderColor = '#dc3545';
+                    eventData.title = `[กำลังใช้งาน] ${eventData.title}`;
+                } else {
+                    eventData.backgroundColor = '#198754'; 
+                    eventData.borderColor = '#198754';
+                    eventData.title = `[จองแล้ว] ${eventData.title}`;
+                }
+            } else if (eventData.display !== 'background') {
                 eventData.display = 'none';
             }
             return eventData;
         },
 
         eventClick: function(info) {
+            if (info.event.display === 'background') { return false; }
             window.location.href = "{% url 'booking_detail' 0 %}".replace('0', info.event.id);
         },
         
         viewDidMount: function() {
-            bookingModal._element.addEventListener('hidden.bs.modal', function () {
+            bookingModalEl.addEventListener('hidden.bs.modal', function () {
                 document.getElementById('bookingFormContainer').appendChild(hiddenForm);
-                // (ทำลาย Select2 เมื่อปิด Modal เพื่อป้องกัน Error)
                 if ($.fn.select2) {
                     $('#id_participants').select2('destroy');
                 }

@@ -1,10 +1,8 @@
-# booking/urls.py
 from django.urls import path
 from . import views
 
 urlpatterns = [
-    # --- 💡💡💡 [นี่คือจุดที่แก้ไข] 💡💡💡 ---
-    # (เพิ่ม 2 บรรทัดนี้สำหรับ Login / Logout)
+    # --- Auth ---
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
     
@@ -28,7 +26,7 @@ urlpatterns = [
     path('api/update-time/', views.update_booking_time_api, name='update_booking_time'),
     path('api/delete-booking/<int:booking_id>/', views.delete_booking_api, name='delete_booking_api'),
 
-    # --- (URL สำหรับ Autocomplete) ---
+    # --- Autocomplete ---
     path('user-autocomplete/', views.UserAutocomplete.as_view(), name='user-autocomplete'),
 
     # --- Admin / Approvals ---
