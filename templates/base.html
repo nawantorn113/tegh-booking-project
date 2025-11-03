@@ -12,8 +12,6 @@
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
 
-    {{ form.media.css }}
-
     <link rel="stylesheet" href="{% static 'css/theme.css' %}">
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -21,129 +19,36 @@
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;500;600&display=swap" rel="stylesheet">
 
     <style>
-        /* (ใหม่) --- 0. START: การตั้งค่าฟอนต์ --- */
-        body {
-            background-color: #f8f9fa; /* พื้นหลังเทาอ่อน */
-            font-family: 'Kanit', sans-serif; /* (ใหม่) ใช้ฟอนต์ Kanit */
-            font-weight: 400; 
-        }
-        /* --- 0. END: การตั้งค่าฟอนต์ --- */
-
-        /* --- 1. START: สไตล์สำหรับ Navbar (ปรับปรุง) --- */
-        .navbar {
-            box-shadow: none; /* (ปรับ) ลบเงา */
-            background-color: #fff; 
-            padding-top: 0.75rem;
-            padding-bottom: 0.75rem;
-            border-bottom: 1px solid #e9ecef; /* (ใหม่) เพิ่มเส้นขอบบางๆ */
-        }
-        .navbar-brand {
-            color: #4338ca !important; 
-            font-weight: 600; /* (ปรับ) น้ำหนัก 600 */
-        }
-        .navbar .nav-link {
-            color: #495057;
-            font-weight: 500; /* (ปรับ) น้ำหนัก 500 */
-            padding-left: 0.75rem;
-            padding-right: 0.75rem;
-            transition: color 0.2s ease-in-out; /* (ใหม่) เพิ่ม transition */
-        }
-        .navbar .nav-link:hover {
-             color: #4338ca;
-        }
-        .navbar .nav-link.active {
-            color: #4338ca; 
-            font-weight: 600; /* (ปรับ) น้ำหนัก 600 */
-        }
-        /* --- 1. END: สไตล์สำหรับ Navbar --- */
-        
-        /* --- 2. START: สไตล์สำหรับเนื้อหา (ปรับปรุง) --- */
-        .main-content-wrapper {
-            padding-top: 5.5rem; /* (คงเดิม) สำหรับ fixed-top navbar */
-            padding-bottom: 1.5rem;
-        }
-
-        /* (ปรับปรุง) Page Header แบบคลีน */
-        .page-header {
-             background-color: transparent; /* (ปรับ) โปร่งใส */
-             padding: 1rem 0rem; 
-             margin-bottom: 1rem; 
-             border-radius: 0; 
-             box-shadow: none; /* (ปรับ) เอาเงาออก */
-             border: none; /* (ปรับ) เอาขอบออก */
-             display: flex;
-             justify-content: space-between;
-             align-items: center;
-        }
-       .page-header h5 { 
-           margin-bottom: 0; 
-           color: #212529; /* (ปรับ) เข้มขึ้น */
-           font-weight: 600; /* (ปรับ) น้ำหนัก 600 */
-           font-size: 1.5rem; /* (ใหม่) ขยายขนาด */
-       }
-       
-       /* (สไตล์สำหรับปุ่ม Logout) */
-        .dropdown-item-form button {
-            padding: 0.25rem 1rem; 
-            color: #ff0000;
-            background: none; border: none;
-            width: 100%; text-align: left;
-        }
-        .dropdown-item-form button:hover {
-            color: #fff; background-color: #ffedf0;
-        }
-
-        /* (สไตล์สำหรับกระดิ่ง) */
-        .notification-dropdown {
-            width: 350px; 
-            max-height: 400px;
-            overflow-y: auto;
-        }
-        .notification-dropdown-item {
-            padding: 0.75rem 1rem;
-            display: block;
-            text-decoration: none;
-            color: #212529;
-            border-bottom: 1px solid #f0f0f0;
-            white-space: normal; 
-        }
-        .notification-dropdown-item:hover {
-            background-color: #f8f9fa;
-        }
-        .notification-dropdown-footer {
-            font-size: 0.9rem;
-            font-weight: 500;
-        }
-        /* --- 2. END: สไตล์สำหรับเนื้อหา --- */
-
-        /* (ใหม่!) --- 3. START: สไตล์การ์ดเนื้อหา (Gen Z) --- */
-        .content-card {
-            background-color: #ffffff; 
-            padding: 1.5rem 2rem; 
-            border-radius: 1rem; /* ขอบมน */
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); /* เงานุ่ม */
-            border: 1px solid #e9ecef; 
-        }
-        /* --- 3. END: สไตล์การ์ดเนื้อหา --- */
-
+        /* (สไตล์ทั้งหมดของคุณ ... ) */
+        body { background-color: #f8f9fa; font-family: 'Kanit', sans-serif; font-weight: 400; }
+        .navbar { box-shadow: none; background-color: #fff; padding-top: 0.75rem; padding-bottom: 0.75rem; border-bottom: 1px solid #e9ecef; }
+        .navbar-brand { color: #4338ca !important; font-weight: 600; }
+        .navbar .nav-link { color: #495057; font-weight: 500; padding-left: 0.75rem; padding-right: 0.75rem; transition: color 0.2s ease-in-out; }
+        .navbar .nav-link:hover { color: #4338ca; }
+        .navbar .nav-link.active { color: #4338ca; font-weight: 600; }
+        .main-content-wrapper { padding-top: 5.5rem; padding-bottom: 1.5rem; }
+        .page-header { background-color: transparent; padding: 1rem 0rem; margin-bottom: 1rem; border-radius: 0; box-shadow: none; border: none; display: flex; justify-content: space-between; align-items: center; }
+        .page-header h5 { margin-bottom: 0; color: #212529; font-weight: 600; font-size: 1.5rem; }
+        .dropdown-item-form button { padding: 0.25rem 1rem; color: #ff0000; background: none; border: none; width: 100%; text-align: left; }
+        .dropdown-item-form button:hover { color: #fff; background-color: #ffedf0; }
+        .notification-dropdown { width: 350px; max-height: 400px; overflow-y: auto; }
+        .notification-dropdown-item { padding: 0.75rem 1rem; display: block; text-decoration: none; color: #212529; border-bottom: 1px solid #f0f0f0; white-space: normal; }
+        .notification-dropdown-item:hover { background-color: #f8f9fa; }
+        .notification-dropdown-footer { font-size: 0.9rem; font-weight: 500; }
+        .content-card { background-color: #ffffff; padding: 1.5rem 2rem; border-radius: 1rem; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); border: 1px solid #e9ecef; }
     </style>
 
     {% block extra_head %}{% endblock %}
 </head>
 <body>
 
-    <nav class="navbar navbar-expand-lg fixed-top">
-        <div class="container">
-            
+    <nav class="navbar navbar-expand-lg fixed-top" id="main-navbar"> <div class="container">
             <a class="navbar-brand" href="{% url 'dashboard' %}">
-                <i class="bi bi-calendar-week-fill me-2"></i>
-                TEGH Booking
+                <i class="bi bi-calendar-week-fill me-2"></i> TEGH Booking
             </a>
-            
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar" aria-controls="mainNavbar" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
-
             <div class="collapse navbar-collapse" id="mainNavbar">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     {% for item in menu_items %}
@@ -163,15 +68,12 @@
                         {% endif %}
                     {% endfor %}
                 </ul>
-
                 <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
                     {% if user.is_authenticated %}
-                    
                     {% if is_admin_user %}
                     <li class="nav-item dropdown">
                         <a class="nav-link" href="#" id="notificationBell" role="button" data-bs-toggle="dropdown" aria-expanded="false" 
-                           title="รายการแจ้งเตือน" data-bs-toggle="tooltip" data-bs-placement="bottom">
-                            
+                            title="รายการแจ้งเตือน" data-bs-toggle="tooltip" data-bs-placement="bottom">
                             <i class="bi bi-bell-fill fs-5"></i>
                             {% if pending_count > 0 %}
                                 <span class="position-absolute top-2 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.6em; top: 12px; right: -5px;">
@@ -185,7 +87,6 @@
                                 <h6 class="mb-0 fw-bold">รายการแจ้งเตือน ({{ pending_count }})</h6>
                             </li>
                             <li><hr class="dropdown-divider my-0"></li>
-                            
                             {% for booking in pending_notifications %}
                                 <li>
                                     <a class="notification-dropdown-item" href="{% url 'booking_detail' booking.id %}">
@@ -196,20 +97,17 @@
                             {% empty %}
                                 <li><a class="notification-dropdown-item text-center text-muted py-3" href="#">(ไม่มีรายการแจ้งเตือนใหม่)</a></li>
                             {% endfor %}
-                            
                             <li><hr class="dropdown-divider my-0"></li>
                             <li><a class="dropdown-item text-center notification-dropdown-footer text-primary py-2" href="{% url 'approvals' %}">ดูรายการรออนุมัติทั้งหมด</a></li>
                         </ul>
                     </li>
                     {% endif %}
-
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="navbarUserDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="bi bi-person-circle fs-5 me-1"></i>
                             <span class="d-none d-lg-inline">{{ user.get_full_name|default:user.username }}</span>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end shadow border-0" aria-labelledby="navbarUserDropdown">
-                            <!-- <li><a class="dropdown-item" href="{% url 'change_password' %}"><i class="bi bi-key-fill me-2"></i>เปลี่ยนรหัสผ่าน</a></li> -->
                             <li><hr class="dropdown-divider"></li>
                             <li>
                                 <form action="{% url 'logout' %}" method="post" class="dropdown-item-form">
@@ -227,13 +125,9 @@
         </div>
     </nav>
     
-    <main class="container main-content-wrapper">
-        
-        <!-- <div class="page-header">
-            <h5 class="mb-0">{% block page_title %}หน้าจองห้องประชุม{% endblock %}</h5>
-            <div>
-                {% block page_actions %}{% endblock %} </div>
-        </div> -->
+    <main class="container main-content-wrapper" id="main-content"> <div class="page-header" id="page-header"> <h5 class="mb-0">{% block page_title %}หน้าจองห้องประชุม{% endblock %}</h5>
+            <div> {% block page_actions %}{% endblock %} </div>
+        </div>
 
         {% if messages %}
             {% for message in messages %}
@@ -245,52 +139,66 @@
         {% endif %}
 
         {% block content %}
-        {# เนื้อหาของหน้าย่อยๆ จะมาแทนที่ตรงนี้ #}
         {% endblock %}
     </main>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-
-    {{ form.media.js }}
 
     <script>
     $(document).ready(function() {
-        // ตั้งค่า Default theme ให้ Select2
         if ($.fn.select2) {
             $.fn.select2.defaults.set("theme", "bootstrap-5");
         }
-        
-        // เปิดใช้งาน Tooltips (สำหรับกระดิ่ง)
         var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
         var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
           return new bootstrap.Tooltip(tooltipTriggerEl)
         })
     });
     </script>
-
     
-     <script>
-            document.addEventListener('DOMContentLoaded', (event) => {
-    // 1. ค้นหา Alert ที่เป็นประเภท "success" (สีเขียว)
-             const successAlerts = document.querySelectorAll('.alert-success');
+    <script>
+         document.addEventListener('DOMContentLoaded', (event) => {
+            const successAlerts = document.querySelectorAll('.alert-success');
+            successAlerts.forEach(function(alert) {
+                setTimeout(function() {
+                    const bsAlert = new bootstrap.Alert(alert);
+                    if (bsAlert) {
+                        bsAlert.close();
+                    }
+                }, 1000); // 1 วินาที
+            });
+        });
+    </script>
     
-    successAlerts.forEach(function(alert) {
-        
-        // 2. ตั้งเวลา 1 วินาที (1000 มิลลิวินาที)
-        setTimeout(function() {
+    <script>
+    (function() {
+        // ตรวจสอบว่าหน้าต่างนี้ ไม่ใช่ หน้าต่างบนสุด (แปลว่าอยู่ใน iframe)
+        if (window.self !== window.top) {
             
-            // 3. สั่งให้ Bootstrap Alert ปิดตัวเอง (มันจะ fade-out หายไป)
-            const bsAlert = new bootstrap.Alert(alert);
-            if (bsAlert) {
-                bsAlert.close();
-            }
+            // 1. ซ่อน Navbar (ตาม id ที่เราเพิ่ม)
+            var mainNavbar = document.querySelector('#main-navbar'); 
+            if (mainNavbar) mainNavbar.style.display = 'none';
+            
+            // 2. ซ่อน Header (ตาม id ที่เราเพิ่ม)
+            var pageHeader = document.querySelector('#page-header'); 
+            if (pageHeader) pageHeader.style.display = 'none';
 
-        }, 1000); //  1 วินาที
-    });
-});
-</script>
-{% block extra_scripts %}{% endblock %}
+            // 3. ปรับ Content หลัก (ตาม id ที่เราเพิ่ม)
+            var mainContent = document.querySelector('#main-content'); 
+            if (mainContent) {
+                mainContent.style.paddingTop = '1rem'; // (ลด padding ด้านบน)
+            }
+            
+            // 4. (ถ้าคุณใช้ Sidebar แบบถาวร ให้ซ่อนที่นี่ด้วย)
+            // var mainSidebar = document.querySelector('#sidebar'); 
+            // if (mainSidebar) mainSidebar.style.display = 'none';
+        }
+    })();
+    </script>
+
+    {% block extra_scripts %}{% endblock %}
+
 </body>
 </html>

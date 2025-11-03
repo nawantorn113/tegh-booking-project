@@ -1,38 +1,44 @@
-# booking/admin.py
 from django.contrib import admin
-# 1. ลบ Profile, Equipment, BookingFile ออกจาก import นี้
-from .models import Booking, Room, LoginHistory 
+# 1. (แก้ไข) ลบ 'LoginHistory' ออกจาก import นี้
+from .models import Booking, Room
 
 @admin.register(Room)
 class RoomAdmin(admin.ModelAdmin):
     list_display = ('name', 'building', 'floor', 'capacity')
-    list_filter = ('building', 'floor')
     search_fields = ('name', 'building')
-
-# (ลบ BookingFileInline ออก)
+    list_filter = ('building', 'capacity')
+    fieldsets = (
+        (None, {
+            'fields': ('name', 'building', 'floor', 'capacity', 'image')
+        }),
+        ('อุปกรณ์', {
+            'fields': ('equipment_in_room',)
+        }),
+    )
 
 @admin.register(Booking)
 class BookingAdmin(admin.ModelAdmin):
-    list_display = ('title', 'room', 'booked_by', 'start_time', 'end_time', 'status')
-    list_filter = ('status', 'room', 'start_time', 'booked_by__username')
-    search_fields = ('title', 'booked_by__username', 'room__name')
+    list_display = ('title', 'room', 'user', 'start_time', 'end_time', 'status')
+    search_fields = ('title', 'user__username', 'room__name', 'department')
+    list_filter = ('status', 'room', 'start_time', 'department')
+    autocomplete_fields = ['user', 'participants']
     list_editable = ('status',)
-    autocomplete_fields = ['participants', 'booked_by'] 
-    # (ลบ inlines ออก)
+    list_per_page = 25
+    
+    fieldsets = (
+        ('ข้อมูลหลัก', {
+            'fields': ('title', 'room', 'user', 'department', 'status')
+        }),
+        ('วันและเวลา', {
+            'fields': ('start_time', 'end_time')
+        }),
+        ('ผู้เข้าร่วม', {
+            'fields': ('chairman', 'participant_count', 'participants')
+        }),
+        ('รายละเอียดเพิ่มเติม', {
+            'fields': ('description', 'additional_requests', 'additional_notes', 'presentation_file')
+        }),
+    )
 
-# (ลบ EquipmentAdmin ออก)
-
-# (ลบ ProfileAdmin ออก)
-
-@admin.register(LoginHistory)
-class LoginHistoryAdmin(admin.ModelAdmin):
-    list_display = ('user', 'action', 'timestamp', 'ip_address')
-    list_filter = ('action', 'timestamp', 'user__username')
-    search_fields = ('user__username', 'ip_address')
-    readonly_fields = ('user', 'action', 'timestamp', 'ip_address')
-
-    def has_add_permission(self, request):
-        return False 
-
-    def has_change_permission(self, request, obj=None):
-        return False
+# 2. (แก้ไข) ลบบล็อกที่ลงทะเบียน 'LoginHistory' ทั้งหมดออกจากที่นี่
+# (โค้ด @admin.register(LoginHistory) ... ถูกลบไปแล้ว)

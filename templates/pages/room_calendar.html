@@ -4,209 +4,146 @@
 {% block title %}ปฏิทินห้อง: {{ room.name }}{% endblock %}
 
 {% block extra_head %}
-<link href="{% static 'vendor/fullcalendar/main.min.css' %}" rel="stylesheet" />
+{{ form.media.css }}
+
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/main.min.css" rel="stylesheet" />
+
 <style>
-    /* (สไตล์ปฏิทิน) */
     :root {
         --fc-border-color: #e9ecef;
         --fc-today-bg-color: #f8f9fa;
         --fc-button-active-bg-color: #4338ca;
         --fc-button-active-border-color: #4338ca;
     }
-    .fc {
-        font-family: 'Kanit', sans-serif;
-    }
-    .fc .fc-toolbar-title {
-        font-size: 1.25rem;
-        font-weight: 500;
-    }
-    /* สไตล์สำหรับรูปภาพ (ทำให้ Layout ไม่พัง) */
-    .room-image {
-        height: 200px; 
-        object-fit: cover; 
-        border-radius: 0.5rem;
-    }
-    /* กำหนดให้ปฏิทินแสดงเต็มความกว้าง */
-    #calendar {
-        margin-top: 1.5rem;
-    }
-    /* ซ่อนฟอร์มจองจนกว่า JS จะย้ายไปที่ Modal */
-    #bookingFormContainer {
-        display: none;
+    .fc { font-family: 'Kanit', sans-serif; }
+    .fc .fc-toolbar-title { font-size: 1.25rem; font-weight: 500; }
+    .room-image { height: 250px; object-fit: cover; border-radius: 0.5rem; }
+    #calendar { margin-top: 1.5rem; }
+    #bookingFormContainer { display: none; }
+    
+    /* [แก้ไข] ทำให้ Select2 สวยงามใน Modal */
+    .select2-container { z-index: 1056; } 
+    .select2-container--bootstrap-5 .select2-selection {
+        width: 100% !important;
     }
 </style>
 {% endblock %}
 
 
 {% block content %}
+<div class="container-fluid py-4">
 
-    <div class="page-header">
-        <h5 class="mb-0">รายละเอียดห้องประชุม</h5>
-    </div>
-
+    {# --- ส่วนแสดงรูปภาพและรายละเอียดห้อง --- #}
     <div class="content-card shadow-sm border p-3 p-md-4 mb-4">
-        
         <div class="row">
             <div class="col-lg-6 mb-3 mb-lg-0">
-                <div id="roomCarousel" class="carousel slide" data-bs-ride="carousel">
-                    <div class="carousel-inner rounded">
-                        {% if room.image1 %}
-                        <div class="carousel-item active">
-                            <img src="{{ room.image1.url }}" class="d-block w-100 room-image" alt="รูปห้อง 1">
-                        </div>
-                        {% endif %}
-                        {% if room.image2 %}
-                        <div class="carousel-item {% if not room.image1 %}active{% endif %}">
-                            <img src="{{ room.image2.url }}" class="d-block w-100 room-image" alt="รูปห้อง 2">
-                        </div>
-                        {% endif %}
-                        {% if room.image3 %}
-                        <div class="carousel-item {% if not room.image1 and not room.image2 %}active{% endif %}">
-                            <img src="{{ room.image3.url }}" class="d-block w-100 room-image" alt="รูปห้อง 3">
-                        </div>
-                        {% endif %}
-                        {% if not room.image1 and not room.image2 and not room.image3 %}
-                            <div class="carousel-item active">
-                                <div class="bg-light text-muted d-flex align-items-center justify-content-center room-image">ไม่มีรูปภาพตัวอย่าง</div>
-                            </div>
-                        {% endif %}
-                    </div>
-                    {% if room.image2 or room.image3 %}
-                    <button class="carousel-control-prev" type="button" data-bs-target="#roomCarousel" data-bs-slide="prev">
-                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                        <span class="visually-hidden">Previous</span>
-                    </button>
-                    <button class="carousel-control-next" type="button" data-bs-target="#roomCarousel" data-bs-slide="next">
-                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                        <span class="visually-hidden">Next</span>
-                    </button>
-                    {% endif %}
-                </div>
+                {% if room.image %}
+                    <img src="{{ room.image.url }}" class="d-block w-100 room-image" alt="รูปห้อง">
+                {% else %}
+                    <div class="bg-light text-muted d-flex align-items-center justify-content-center room-image">ไม่มีรูปภาพตัวอย่าง</div>
+                {% endif %}
             </div>
-
             <div class="col-lg-6">
                 <h4 class="fw-bold text-primary">{{ room.name }}</h4>
-                <p class="text-muted small mb-3">{{ room.location|default:"(ไม่มีตำแหน่งระบุ)" }}</p>
-                <p class="mb-2">
-                    <i class="bi bi-people-fill me-2 text-muted"></i> 
-                    <strong>ความจุ:</strong> {{ room.capacity }} คน
-                </p>
-                <p class="mb-2">
-                    <i class="bi bi-building me-2 text-muted"></i> 
-                    <strong>อาคาร:</strong> {{ room.building|default:"-" }} (ชั้น {{ room.floor|default:"-" }})
-                </p>
-                <p class="mb-1">
-                    <i class="bi bi-tools me-2 text-muted"></i> 
-                    <strong>อุปกรณ์:</strong>
-                </p>
+                <p class="text-muted small mb-3">{{ room.location|default:"(ไม่ได้ระบุตำแหน่ง)" }}</p>
+                <p class="mb-2"><i class="bi bi-people-fill me-2 text-muted"></i> <strong>ความจุ:</strong> {{ room.capacity }} คน</p>
+                <p class="mb-2"><i class="bi bi-building me-2 text-muted"></i> <strong>อาคาร:</strong> {{ room.building|default:"-" }} (ชั้น {{ room.floor|default:"-" }})</p>
+                <p class="mb-1"><i class="bi bi-tools me-2 text-muted"></i> <strong>อุปกรณ์:</strong></p>
                 <div class="small text-muted ps-4 mt-1">
                     {{ room.equipment_in_room|default:"(ไม่มีข้อมูลอุปกรณ์ระบุ)"|linebreaksbr }}
                 </div>
             </div>
         </div>
-
     </div>
 
+    {# --- ส่วนปฏิทินการจอง --- #}
     <div class="content-card shadow-sm border p-3 p-md-4">
         <h5 class="mb-0">ตารางการจองห้องประชุม (คลิกที่ช่วงเวลาว่างเพื่อจอง)</h5>
         <div id="calendar"></div>
     </div>
+</div>
 
+{# --- โค้ดที่ซ่อนไว้สำหรับ Modal และ Form (จำเป็น) --- #}
+<div id="bookingFormContainer" style="display:none;">
+    <form id="hiddenBookingForm" action="{% url 'create_booking' room.id %}" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.as_p }}
+    </form>
+</div>
 
-    {# --- โค้ดที่ซ่อนไว้สำหรับ Modal และ Form (จำเป็น) --- #}
-
-    <div id="bookingFormContainer">
-        <form id="hiddenBookingForm" action="{% url 'create_booking_for_room' room.id %}" method="post" enctype="multipart/form-data">
-            {% csrf_token %}
-            {% if form.non_field_errors %}
-            <div class="alert alert-danger">
-                {{ form.non_field_errors }}
+<div class="modal fade" id="bookingModal" tabindex="-1" aria-labelledby="bookingModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="bookingModalLabel">จองห้อง: {{ room.name }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            {% endif %}
-            {{ form.as_p }}
-        </form>
-    </div>
-
-    <div class="modal fade" id="bookingModal" tabindex="-1" aria-labelledby="bookingModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="bookingModalLabel">จองห้อง: {{ room.name }}</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-body" id="modalBookingBody">
                 </div>
-                <div class="modal-body" id="modalBookingBody">
-                    </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
-                    <button type="submit" class="btn btn-primary" form="hiddenBookingForm">ยืนยันการจอง</button>
-                </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+                <button type="submit" class="btn btn-primary" form="hiddenBookingForm">ยืนยันการจอง</button>
             </div>
         </div>
     </div>
-    {# --- สิ้นสุดโค้ดที่ซ่อนไว้ --- #}
-
+</div>
 {% endblock %}
 
 
 {% block extra_scripts %}
-<script src="{% static 'vendor/fullcalendar/main.min.js' %}" defer></script>
-<script src="{% static 'vendor/fullcalendar/th.global.min.js' %}" defer></script>
+{{ form.media.js }}
+
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    var calendarEl = document.getElementById('calendar');
+window.onload = function() {
     
-    // 1. [สำคัญ] ตรวจสอบ Library ก่อน
-    if (typeof FullCalendar === 'undefined' || typeof bootstrap === 'undefined') {
-        console.error("Required JS libraries not loaded.");
+    // (ตรวจสอบครั้งสุดท้าย)
+    if (typeof FullCalendar === 'undefined' || typeof bootstrap === 'undefined' || typeof $ === 'undefined') {
+        console.error("Required JS libraries not loaded (jQuery, FullCalendar or Bootstrap).");
+        document.getElementById('calendar').innerHTML = '<div class="alert alert-danger">เกิดข้อผิดพลาด: โหลดไลบรารีไม่สำเร็จ กรุณาล้างแคช (Ctrl+Shift+R)</div>';
         return; 
     }
     
-    // เตรียม Modal และ Form
+    var calendarEl = document.getElementById('calendar');
     var hiddenForm = document.getElementById('hiddenBookingForm');
     var modalBody = document.getElementById('modalBookingBody');
     var startTimeField = document.getElementById('id_start_time');
     var endTimeField = document.getElementById('id_end_time');
     var bookingModal = new bootstrap.Modal(document.getElementById('bookingModal'));
     
-    // 2. Initial Calendar
+    if (!startTimeField || !endTimeField) {
+        console.error("ไม่พบช่อง input #id_start_time หรือ #id_end_time");
+    }
+
     var calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: 'dayGridWeek', // ⬅️ มุมมองเริ่มต้นเป็น Week (รายการวัน)
+        initialView: 'timeGridWeek', 
         locale: 'th',
+        firstDay: 0, 
         
-        // ⬇️ กำหนดให้สัปดาห์เริ่มที่วันอาทิตย์ (0)
-        firstDay: 0, // 0 = Sunday (อาทิตย์)
-        
-        // การตั้งค่า Toolbar (ปุ่ม เดือน/สัปดาห์/วัน)
         headerToolbar: {
             left: 'prev,next today',
             center: 'title',
-            // ⬅️ มุมมอง Month, Week (รายการวัน), Day (ตารางชั่วโมง)
-            right: 'dayGridMonth,dayGridWeek,timeGridDay' 
+            right: 'dayGridMonth,timeGridWeek,timeGridDay' 
         },
         buttonText: { today: 'วันนี้', month: 'เดือน', week: 'สัปดาห์', day: 'วัน' },
         
-        // การตั้งค่ามุมมองสัปดาห์/วัน (TimeGrid) - มีผลกับ timeGridDay
         allDaySlot: false, 
-        slotMinTime: '08:00:00', 
-        slotMaxTime: '19:00:00',
-        slotLabelFormat: { 
-            hour: 'numeric',
-            minute: '2-digit',
-            omitZeroMinute: false,
-            meridiem: 'short' 
+        slotMinTime: '07:30:00', // (จองล่วงหน้า 30 นาที)
+        slotMaxTime: '18:00:00',
+        businessHours: {
+            daysOfWeek: [ 0, 1, 2, 3, 4, 5, 6 ],
+            startTime: '08:00',
+            endTime: '18:00',
         },
         
-        selectable: true, // ⬅️ เปิดใช้งานการคลิกเลือกช่วงเวลา (สำหรับทุกมุมมอง)
+        selectable: true, 
         selectMirror: true, 
         nowIndicator: true, 
         
         selectAllow: function(selectInfo) {
-            // ป้องกันการจองย้อนหลัง
             var now = new Date();
-            if (selectInfo.start < now) {
-                return false; 
-            }
+            if (selectInfo.start < now) { return false; }
             return true;
         },
 
@@ -215,48 +152,45 @@ document.addEventListener('DOMContentLoaded', function() {
             var start = info.start;
             var end = info.end;
 
-            // 1. ตรวจสอบว่าเลือกย้อนหลังหรือไม่ 
             if (start < now) {
                 alert("ไม่สามารถจองย้อนหลังได้");
                 calendar.unselect();
                 return;
             }
 
-            // 2. จัดการกับการเลือกในมุมมอง DayGrid (Month และ DayGridWeek)
             if (info.view.type.includes('dayGrid')) { 
-                
-                // กำหนดเวลาเริ่มต้น 08:00
                 start.setHours(8, 0, 0, 0); 
-                
-                // สร้าง end date ใหม่จาก start date เพื่อคำนวณ end time ที่ 18:00
                 end = new Date(info.end.getTime()); 
-                
-                // ถ้าเป็นการเลือกวันเดียว (ใน Month/Week View) ให้ end เป็น 18:00 ของวันนั้น
-                if (info.start.getDate() !== info.end.getDate() || info.start.getMonth() !== info.end.getMonth()) {
+                if (info.end.getDate() !== info.start.getDate()) {
                     end.setDate(end.getDate() - 1); 
                 } 
-                
-                end.setHours(18, 0, 0, 0); // กำหนดเวลาสิ้นสุดเป็น 18:00 น.
+                end.setHours(18, 0, 0, 0);
             }
             
-            // 3. Format เวลา
-            var startStr = start.toISOString().substring(0, 16);
-            var endStr = end.toISOString().substring(0, 16);
+            var startStr = new Date(start.getTime() - (start.getTimezoneOffset() * 60000)).toISOString().substring(0, 16);
+            var endStr = new Date(end.getTime() - (end.getTimezoneOffset() * 60000)).toISOString().substring(0, 16);
             
-            // 4. ย้ายฟอร์มเข้า Modal, ตั้งค่าเวลา, แล้วเปิด Modal
             modalBody.appendChild(hiddenForm); 
             startTimeField.value = startStr;
             endTimeField.value = endStr;
             
+            // (เรียกใช้ Select2 *ก่อน* เปิด Modal)
+            if ($.fn.select2) {
+                var participantsField = $('#id_participants');
+                // (ต้อง re-initialize ทุกครั้งที่เปิด modal)
+                participantsField.select2({
+                    dropdownParent: $('#bookingModal'), 
+                    width: '100%'
+                });
+            }
+
             bookingModal.show();
         },
         
-        // --- ดึงข้อมูลการจองที่มีอยู่ ---
-        events: "{% url 'api_bookings' %}?room_id={{ room.id }}",
+        events: "{% url 'bookings_api' %}?room_id={{ room.id }}",
 
         eventDataTransform: function(eventData) {
             let props = eventData.extendedProps || {};
-            // กำหนดสีตามสถานะ
             if (props.status === 'PENDING') {
                 eventData.backgroundColor = '#ffc107'; 
                 eventData.borderColor = '#ffc107';
@@ -270,34 +204,21 @@ document.addEventListener('DOMContentLoaded', function() {
         },
 
         eventClick: function(info) {
-            // เมื่อคลิกที่ Event ที่มีอยู่ (ดูรายละเอียด)
             window.location.href = "{% url 'booking_detail' 0 %}".replace('0', info.event.id);
         },
         
-        // เมื่อ Modal ปิด ให้ย้ายฟอร์มกลับเข้าที่ซ่อนเดิม
         viewDidMount: function() {
             bookingModal._element.addEventListener('hidden.bs.modal', function () {
                 document.getElementById('bookingFormContainer').appendChild(hiddenForm);
+                // (ทำลาย Select2 เมื่อปิด Modal เพื่อป้องกัน Error)
+                if ($.fn.select2) {
+                    $('#id_participants').select2('destroy');
+                }
             });
         }
     });
     
     calendar.render();
-});
-
-// ใช้งาน Select2 หลังจากโหลด Modal
-$(document).ready(function() {
-    // ใช้ delegated event เพื่อให้ Select2 ทำงานใน Modal
-    $('#bookingModal').on('shown.bs.modal', function () {
-        if (typeof $ !== 'undefined' && $.fn.select2) {
-            var participantsField = $('#id_participants');
-            if (participantsField.length) {
-                participantsField.select2({
-                    dropdownParent: $('#bookingModal')
-                });
-            }
-        }
-    });
-});
+};
 </script>
 {% endblock %}

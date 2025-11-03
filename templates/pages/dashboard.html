@@ -5,7 +5,6 @@
 
 {% block extra_head %}
 <style>
-    /* (สไตล์ Hover และ KPI ... เหมือนเดิม) */
     .kpi-card:hover, .room-card-hover:hover {
         transform: translateY(-3px);
         box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1) !important;
@@ -18,8 +17,6 @@
         font-size: 2.5rem;
         opacity: 0.2;
     }
-
-    /* (สไตล์เส้นแบ่ง ... เหมือนเดิม) */
     .section-divider {
         margin-top: 2rem;    
         margin-bottom: 2rem; 
@@ -36,7 +33,7 @@
     {# --- Smart Search Box (กล่องค้นหา) --- #}
     <div class="">
         <div class="">
-            <form action="{% url 'search_results' %}" method="get">
+            <form action="{% url 'smart_search' %}" method="get">
                 <label for="smartSearchInput" class="form-label h5 fw-bold text-primary"><h5>ค้นหาห้องว่าง</h5></label>
                 <div class="input-group">
                     
@@ -49,15 +46,14 @@
                         <i class="bi bi-search me-1"></i> ค้นหา
                     </button>
                 </div>
-                {# --- ลบบล็อก form-text ที่เป็นคำแนะนำออกแล้ว --- #}
             </form>
         </div>
     </div>
     
     <hr class="section-divider"> {# เส้นแบ่ง #}
 
+    {# --- การ์ด KPI --- #}
     <div class="row g-4 mb-4">
-        {# --- การ์ด 1: ห้องทั้งหมด (สีน้ำเงิน) --- #}
         <div class="col-md-6 col-lg-3">
             <div class="card kpi-card border-start border-primary border-2 shadow-sm h-100">
                 <div class="card-body d-flex justify-content-between align-items-center">
@@ -69,7 +65,6 @@
                 </div>
             </div>
         </div>
-        {# --- การ์ด 2: การจองวันนี้ (สีเขียว) --- #}
         <div class="col-md-6 col-lg-3">
             <div class="card kpi-card border-start border-success border-2 shadow-sm h-100">
                 <div class="card-body d-flex justify-content-between align-items-center">
@@ -81,7 +76,6 @@
                 </div>
             </div>
         </div>
-        {# --- การ์ด 3: รออนุมัติ (สีเหลือง) --- #}
         <div class="col-md-6 col-lg-3">
             <div class="card kpi-card border-start border-warning border-2 shadow-sm h-100">
                 <div class="card-body d-flex justify-content-between align-items-center">
@@ -93,7 +87,6 @@
                 </div>
             </div>
         </div>
-        {# --- การ์ด 4: การจองของฉัน (วันนี้) (สีฟ้า) --- #}
         <div class="col-md-6 col-lg-3">
             <div class="card kpi-card border-start border-info border-2 shadow-sm h-100">
                  <div class="card-body d-flex justify-content-between align-items-center">
@@ -107,6 +100,8 @@
         </div>
     </div>
     <hr class="section-divider">
+
+    {# --- ส่วนแสดงห้อง --- #}
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h2 class="mb-0 fw-bold text-primary">สถานะห้องประชุม</h2>
         
@@ -154,23 +149,34 @@
                                         <i class="bi bi-calendar-x"></i> <strong>จองถึง:</strong> {{ room.current_booking_info.end_time|date:"H:i" }} น.
                                     </p>
                                     <p class="small mb-1 text-muted">
-                                       <i class="bi bi-person"></i> โดย: {{ room.current_booking_info.booked_by.get_full_name|default:room.current_booking_info.booked_by.username }}
+                                       <i class="bi bi-person"></i> โดย: {{ room.current_booking_info.user.get_full_name|default:room.current_booking_info.user.username }}
                                     </p>
                                 {% elif room.next_booking_info %}
                                      <p class="small mb-1 text-primary">
                                           <i class="bi bi-calendar-plus"></i> <strong>จองถัดไป:</strong> {{ room.next_booking_info.start_time|date:"H:i" }} น.
-                                     </p>
-                                      <p class="small mb-1 text-muted">
-                                           <i class="bi bi-person"></i> โดย: {{ room.next_booking_info.booked_by.get_full_name|default:room.next_booking_info.booked_by.username }}
                                        </p>
+                                       <p class="small mb-1 text-muted">
+                                            <i class="bi bi-person"></i> โดย: {{ room.next_booking_info.user.get_full_name|default:room.next_booking_info.user.username }}
+                                        </p>
                                 {% else %}
                                     <p class="small mb-1 text-success"><i class="bi bi-calendar-check"></i> ว่างตลอด</p>
-                                    <p class="small mb-1 text-muted">&nbsp;</p> {# Placeholder for consistent height #}
+                                    <p class="small mb-1 text-muted">&nbsp;</p> {# Placeholder #}
                                 {% endif %}
-                                <a href="{% url 'room_calendar' room.id %}" class="btn btn-sm btn-outline-primary mt-2 w-100">
-                                    <i class="bi bi-calendar3 me-1"></i> ดูตาราง / จอง
-                                </a>
-                            </div>
+
+                                {% if is_admin_user %}
+                                    <a href="{% url 'room_calendar' room.id %}" class="btn btn-sm btn-outline-primary mt-2 w-100">
+                                        <i class="bi bi-calendar3 me-1"></i> ดูตาราง / จอง
+                                    </a>
+                                {% else %}
+                                    <button type="button" class="btn btn-sm btn-outline-primary mt-2 w-100 book-modal-trigger" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#bookingModal" 
+                                            data-room-url="{% url 'room_calendar' room.id %}"
+                                            data-room-name="{{ room.name }}">
+                                        <i class="bi bi-calendar3 me-1"></i> ดูตาราง / จอง
+                                    </button>
+                                {% endif %}
+                                </div>
                         </div>
                     </div>
                 </div>
@@ -182,6 +188,62 @@
             <i class="bi bi-exclamation-triangle-fill me-2"></i> ยังไม่มีห้องประชุมในระบบ
         </div>
     {% endfor %}
-    </div> {# End container-fluid #}
+</div> {# End container-fluid #}
+
+
+<div class="modal fade" id="bookingModal" tabindex="-1" aria-labelledby="bookingModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="bookingModalLabel">จองห้อง: ...</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-0" style="height: 75vh;">
+        <iframe id="bookingModalIframe" src="about:blank" width="100%" height="100%" frameborder="0">
+          กำลังโหลด...
+        </iframe>
+      </div>
+    </div>
+  </div>
+</div>
+
 {% endblock %}
 
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var bookingModal = document.getElementById('bookingModal');
+    
+    if (bookingModal) {
+        var modalTitle = document.getElementById('bookingModalLabel');
+        var modalIframe = document.getElementById('bookingModalIframe');
+
+        // 1. ดักจับการคลิกปุ่ม "ดูตาราง / จอง" (สำหรับ User)
+        document.querySelectorAll('.book-modal-trigger').forEach(button => {
+            button.addEventListener('click', function() {
+                var roomUrl = this.getAttribute('data-room-url');
+                var roomName = this.getAttribute('data-room-name');
+                
+                if (modalTitle) {
+                    modalTitle.textContent = 'จองห้อง: ' + roomName;
+                }
+                if (modalIframe) {
+                    modalIframe.src = roomUrl;
+                }
+            });
+        });
+
+        // 2. (สำคัญ) เมื่อ Modal ถูกปิด ให้ล้าง iframe ทิ้ง
+        bookingModal.addEventListener('hidden.bs.modal', function () {
+            if (modalTitle) {
+                modalTitle.textContent = 'จองห้อง: ...';
+            }
+            if (modalIframe) {
+                modalIframe.src = 'about:blank'; // ล้างเนื้อหา
+            }
+        });
+    }
+});
+</script>
+{% endblock %}
