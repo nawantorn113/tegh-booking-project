@@ -42,7 +42,6 @@ def is_admin(user):
 def is_approver_or_admin(user):
     return user.is_authenticated and (user.is_superuser or user.groups.filter(name__in=['Approver', 'Admin']).exists())
 
-# --- Context Function (สำหรับ Navbar) ---
 def get_base_context(request):
     current_url_name = request.resolver_match.url_name if request.resolver_match else ''
     is_admin_user = is_admin(request.user)
@@ -310,7 +309,6 @@ def history_view(request):
     })
     return render(request, 'pages/history.html', context)
 
-# --- 💡💡💡 [นี่คือจุดที่แก้ไข] 💡💡💡 ---
 @login_required
 def booking_detail_view(request, booking_id):
     booking = get_object_or_404(
@@ -324,14 +322,11 @@ def booking_detail_view(request, booking_id):
         return redirect('dashboard')
         
     context = get_base_context(request)
-    
-    # (เพิ่ม 'can_edit_or_cancel' เข้าไปใน context)
     context.update({
         'booking': booking,
         'can_edit_or_cancel': booking.can_user_edit_or_cancel(request.user)
     })
     return render(request, 'pages/booking_detail.html', context)
-# --- 💡💡💡 [สิ้นสุดการแก้ไข] 💡💡💡 ---
 
 @login_required
 def change_password_view(request): 
@@ -357,12 +352,17 @@ def rooms_api(request):
     rooms = Room.objects.all().order_by('building', 'name')
     resources = [{'id': r.id, 'title': r.name, 'building': r.building or ""} for r in rooms]
     return JsonResponse(resources, safe=False)
+
+# --- 💡💡💡 [นี่คือจุดที่แก้ไข] 💡💡💡 ---
 @login_required
 def bookings_api(request):
     start_str = request.GET.get('start'); end_str = request.GET.get('end'); room_id = request.GET.get('room_id')
     if not start_str or not end_str: return JsonResponse({'error': 'Missing required start/end parameters.'}, status=400)
     
     try:
+        # (แก้ไข) FullCalendar อาจส่ง +07:00 ซึ่ง Python 
+        # (บางเวอร์ชัน) ไม่เข้าใจเครื่องหมาย +
+        # เราจะแทนที่ ' ' (ที่อาจเกิดจาก +) กลับเป็น +
         start_dt = datetime.fromisoformat(start_str.replace('Z', '+00:00').replace(' ', '+'))
         end_dt = datetime.fromisoformat(end_str.replace('Z', '+00:00').replace(' ', '+'))
     except (ValueError, TypeError) as e: 
@@ -390,12 +390,13 @@ def bookings_api(request):
             'extendedProps': { 
                 'room_id': b.room.id, 
                 'room_name': b.room.name, 
-                'booked_by_username': b.user.username, 
+                'booked_by_username': b.user.username if b.user else 'N/A', # (ป้องกัน Error ถ้า user=None)
                 'status': b.status, 
-                'user_id': b.user.id 
+                'user_id': b.user.id if b.user else None # (ป้องกัน Error ถ้า user=None)
             },
         })
     return JsonResponse(events, safe=False)
+
 @login_required
 @require_POST
 def update_booking_time_api(request):
@@ -406,6 +407,7 @@ def update_booking_time_api(request):
         booking = get_object_or_404(Booking, pk=booking_id)
         if booking.user != request.user and not is_admin(request.user): return JsonResponse({'status': 'error', 'message': 'Permission denied.'}, status=403)
         try:
+            # (แก้ไข) ต้องรองรับ Timezone ที่ส่งมาจาก JS ด้วย
             new_start = datetime.fromisoformat(start_str.replace('Z', '+00:00').replace(' ', '+'))
             new_end = datetime.fromisoformat(end_str.replace('Z', '+00:00').replace(' ', '+'))
         except ValueError: return JsonResponse({'status': 'error', 'message': 'Invalid date format.'}, status=400)
@@ -433,6 +435,7 @@ def update_booking_time_api(request):
     except Exception as e:
         print(f"Error in update_booking_time_api: {e}")
         return JsonResponse({'status': 'error', 'message': 'Server error.'}, status=500)
+# --- 💡💡💡 [สิ้นสุดการแก้ไข] 💡💡💡 ---
 
 @login_required
 @require_http_methods(["POST"])
