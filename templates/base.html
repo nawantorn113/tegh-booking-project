@@ -58,7 +58,6 @@
                                 <a class="nav-link {% if item.active %}active{% endif %} d-flex align-items-center" href="{% url item.url_name %}">
                                     <i class="{{ item.icon }} me-1"></i> 
                                     {{ item.label }}
-                                    
                                     {% if item.url_name == 'approvals' and pending_count > 0 %}
                                         <span class="badge bg-danger rounded-pill ms-2">
                                             {{ pending_count }}
@@ -152,10 +151,10 @@
     
     <main class="container-xl main-content-wrapper" id="main-content">
         
-        <!-- <div class="page-header" id="page-header">
+        <div class="page-header" id="page-header">
             <h5 class="mb-0">{% block page_title %}หน้าจองห้องประชุม{% endblock %}</h5>
             <div> {% block page_actions %}{% endblock %} </div>
-        </div> -->
+        </div>
 
         {% if messages %}
             {% for message in messages %}
@@ -167,6 +166,7 @@
         {% endif %}
 
         {% block content %}
+        {# เนื้อหาของหน้าย่อยๆ จะมาแทนที่ตรงนี้ #}
         {% endblock %}
     </main>
 

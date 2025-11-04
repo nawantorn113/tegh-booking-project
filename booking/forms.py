@@ -1,3 +1,4 @@
+# booking/forms.py
 from django import forms
 from django.contrib.auth.forms import PasswordChangeForm
 from .models import Booking, Room 
@@ -11,6 +12,24 @@ from django.core.exceptions import ValidationError
 
 class BookingForm(forms.ModelForm):
     
+    # (ฟิลด์สำหรับ "จองซ้ำ")
+    RECURRENCE_CHOICES = [
+        ('NONE', 'ไม่จองซ้ำ'),
+        ('WEEKLY', 'จองซ้ำทุกสัปดาห์ (ในวันเดียวกัน)'),
+        ('MONTHLY', 'จองซ้ำทุกเดือน (ในวันที่เดียวกัน)'),
+    ]
+    recurrence = forms.ChoiceField(
+        choices=RECURRENCE_CHOICES, 
+        required=False, 
+        label="การจองซ้ำ",
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
+    recurrence_end_date = forms.DateField(
+        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}), 
+        required=False, 
+        label="สิ้นสุดการจองซ้ำ"
+    )
+
     class Meta:
         model = Booking
         fields = [
@@ -36,6 +55,8 @@ class BookingForm(forms.ModelForm):
             'additional_notes': 'หมายเหตุเพิ่มเติม',
         }
         
+        # --- 💡 [แก้ไขจุดที่ 1] 💡 ---
+        # (ลบ 'participants' ออกจาก help_texts เพื่อไม่ให้มันแสดงข้างนอก)
         help_texts = {
             'participant_count': '',
             'presentation_file': 'ไฟล์ที่ต้องการนำเสนอ',
@@ -43,10 +64,14 @@ class BookingForm(forms.ModelForm):
         
         widgets = {
             'room': forms.HiddenInput(),
+            
+            # --- 💡 [แก้ไขจุดที่ 2] 💡 ---
+            # (ย้ายข้อความจาก help_texts มาใส่ใน 'data-placeholder' แทน)
             'participants': autocomplete.ModelSelect2Multiple(
                 url='user-autocomplete',
                 attrs={'data-placeholder': 'พิมพ์ชื่อ, นามสกุล, หรือ username เพื่อค้นหา...', 'data-theme': 'bootstrap-5'}
             ),
+
             'presentation_file': forms.ClearableFileInput(attrs={'class':'form-control'}),
             'description': forms.Textarea(attrs={'rows': 3, 'class':'form-control'}),
             'additional_requests': forms.Textarea(attrs={'rows': 2, 'class':'form-control'}),
@@ -57,6 +82,7 @@ class BookingForm(forms.ModelForm):
             'participant_count': forms.NumberInput(attrs={'min': '1', 'class':'form-control'}),
         }
 
+    # (โค้ด __init__ นี้ถูกต้องแล้ว ทำให้ช่องเวลาแสดงผล)
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         
@@ -71,11 +97,24 @@ class BookingForm(forms.ModelForm):
             attrs={'type': 'datetime-local', 'class': 'form-control'},
             format='%Y-%m-%dT%H:%M'
         )
+        
+        field_order = [
+            'title', 'chairman', 'department',
+            'start_time', 'end_time',
+            'recurrence', 'recurrence_end_date',
+            'participant_count', 'participants',
+            'presentation_file', 'description', 
+            'additional_requests', 'additional_notes',
+            'room'
+        ]
+        self.order_fields(field_order)
 
     def clean(self):
         cleaned_data = super().clean()
         start_time = cleaned_data.get('start_time')
-        
+        recurrence = cleaned_data.get('recurrence')
+        recurrence_end_date = cleaned_data.get('recurrence_end_date')
+
         if start_time:
             if timezone.is_naive(start_time):
                 start_time_aware = timezone.make_aware(start_time, timezone.get_current_timezone())
@@ -87,6 +126,13 @@ class BookingForm(forms.ModelForm):
                     "ไม่สามารถจองเวลาย้อนหลังได้ กรุณาเลือกเวลาใหม่",
                     code='invalid_past_date'
                 )
+        
+        if recurrence and recurrence != 'NONE':
+            if not recurrence_end_date:
+                self.add_error('recurrence_end_date', 'กรุณาระบุวันที่สิ้นสุดการจองซ้ำ')
+            elif recurrence_end_date <= start_time.date():
+                self.add_error('recurrence_end_date', 'วันที่สิ้นสุด ต้องอยู่หลังจาก วันที่เริ่มต้น')
+
         return cleaned_data
 
 

@@ -33,6 +33,9 @@ from django.dispatch import receiver
 from django.contrib.auth.forms import AuthenticationForm
 from django.core.exceptions import ValidationError
 
+from django.db import transaction 
+from dateutil.relativedelta import relativedelta 
+
 from .models import Room, Booking
 from .forms import BookingForm, CustomPasswordChangeForm, RoomForm
 
@@ -42,6 +45,7 @@ def is_admin(user):
 def is_approver_or_admin(user):
     return user.is_authenticated and (user.is_superuser or user.groups.filter(name__in=['Approver', 'Admin']).exists())
 
+# --- Context Function (สำหรับ Navbar) ---
 def get_base_context(request):
     current_url_name = request.resolver_match.url_name if request.resolver_match else ''
     is_admin_user = is_admin(request.user)
@@ -269,15 +273,22 @@ def master_calendar_view(request):
     context = get_base_context(request)
     return render(request, 'pages/master_calendar.html', context)
 
+# --- 💡💡💡 [นี่คือจุดที่แก้ไข] 💡💡💡 ---
 @login_required
 def history_view(request):
     
+    # 1. เช็ค Admin
     if is_admin(request.user):
         bookings = Booking.objects.all().select_related('room', 'user').order_by('-start_time')
     else:
         bookings = Booking.objects.filter(user=request.user).select_related('room').order_by('-start_time')
 
-    date_f = request.GET.get('date'); room_f = request.GET.get('room'); status_f = request.GET.get('status')
+    # 2. (แก้ไข) เพิ่ม 'q_f' (Query Filter)
+    date_f = request.GET.get('date')
+    room_f = request.GET.get('room')
+    status_f = request.GET.get('status')
+    q_f = request.GET.get('q', '') # (รับคำค้นหา)
+
     if date_f:
         try:
             bookings = bookings.filter(start_time__date=datetime.strptime(date_f, '%Y-%m-%d').date())
@@ -296,7 +307,22 @@ def history_view(request):
     elif status_f:
         messages.warning(request, "สถานะการจองไม่ถูกต้อง")
         status_f = None
+    
+    # (เพิ่ม Logic การค้นหา)
+    if q_f:
+        bookings = bookings.filter(
+            Q(title__icontains=q_f) |
+            Q(user__username__icontains=q_f) |
+            Q(user__first_name__icontains=q_f) |
+            Q(user__last_name__icontains=q_f) |
+            Q(department__icontains=q_f) |
+            # (เพิ่มการค้นหา "รายชื่อผู้เข้าร่วม")
+            Q(participants__username__icontains=q_f) |
+            Q(participants__first_name__icontains=q_f) |
+            Q(participants__last_name__icontains=q_f)
+        ).distinct() # (distinct() จำเป็นมาก)
 
+    # 3. (ส่ง Context ไปที่ Template)
     context = get_base_context(request)
     context.update({
         'bookings_list': bookings, 
@@ -305,9 +331,11 @@ def history_view(request):
         'current_date': date_f,
         'current_room': room_f,
         'current_status': status_f,
+        'current_query': q_f, # (ส่งคำค้นหากลับไปที่ Template)
         'now_time': timezone.now()
     })
     return render(request, 'pages/history.html', context)
+# --- 💡💡💡 [สิ้นสุดการแก้ไข] 💡💡💡 ---
 
 @login_required
 def booking_detail_view(request, booking_id):
@@ -352,17 +380,12 @@ def rooms_api(request):
     rooms = Room.objects.all().order_by('building', 'name')
     resources = [{'id': r.id, 'title': r.name, 'building': r.building or ""} for r in rooms]
     return JsonResponse(resources, safe=False)
-
-# --- 💡💡💡 [นี่คือจุดที่แก้ไข] 💡💡💡 ---
 @login_required
 def bookings_api(request):
     start_str = request.GET.get('start'); end_str = request.GET.get('end'); room_id = request.GET.get('room_id')
     if not start_str or not end_str: return JsonResponse({'error': 'Missing required start/end parameters.'}, status=400)
     
     try:
-        # (แก้ไข) FullCalendar อาจส่ง +07:00 ซึ่ง Python 
-        # (บางเวอร์ชัน) ไม่เข้าใจเครื่องหมาย +
-        # เราจะแทนที่ ' ' (ที่อาจเกิดจาก +) กลับเป็น +
         start_dt = datetime.fromisoformat(start_str.replace('Z', '+00:00').replace(' ', '+'))
         end_dt = datetime.fromisoformat(end_str.replace('Z', '+00:00').replace(' ', '+'))
     except (ValueError, TypeError) as e: 
@@ -390,13 +413,12 @@ def bookings_api(request):
             'extendedProps': { 
                 'room_id': b.room.id, 
                 'room_name': b.room.name, 
-                'booked_by_username': b.user.username if b.user else 'N/A', # (ป้องกัน Error ถ้า user=None)
+                'booked_by_username': b.user.username if b.user else 'N/A',
                 'status': b.status, 
-                'user_id': b.user.id if b.user else None # (ป้องกัน Error ถ้า user=None)
+                'user_id': b.user.id if b.user else None
             },
         })
     return JsonResponse(events, safe=False)
-
 @login_required
 @require_POST
 def update_booking_time_api(request):
@@ -407,7 +429,6 @@ def update_booking_time_api(request):
         booking = get_object_or_404(Booking, pk=booking_id)
         if booking.user != request.user and not is_admin(request.user): return JsonResponse({'status': 'error', 'message': 'Permission denied.'}, status=403)
         try:
-            # (แก้ไข) ต้องรองรับ Timezone ที่ส่งมาจาก JS ด้วย
             new_start = datetime.fromisoformat(start_str.replace('Z', '+00:00').replace(' ', '+'))
             new_end = datetime.fromisoformat(end_str.replace('Z', '+00:00').replace(' ', '+'))
         except ValueError: return JsonResponse({'status': 'error', 'message': 'Invalid date format.'}, status=400)
@@ -435,7 +456,6 @@ def update_booking_time_api(request):
     except Exception as e:
         print(f"Error in update_booking_time_api: {e}")
         return JsonResponse({'status': 'error', 'message': 'Server error.'}, status=500)
-# --- 💡💡💡 [สิ้นสุดการแก้ไข] 💡💡💡 ---
 
 @login_required
 @require_http_methods(["POST"])
@@ -455,23 +475,35 @@ def delete_booking_api(request, booking_id):
 # --- Booking Views ---
 @login_required
 @require_POST
+@transaction.atomic 
 def create_booking_view(request, room_id):
     room = get_object_or_404(Room, pk=room_id)
     form = BookingForm(request.POST, request.FILES) 
     
     if form.is_valid():
         try:
-            booking = form.save(commit=False)
-            booking.room = room
-            booking.user = request.user
-            booking.clean() 
+            recurrence = form.cleaned_data.get('recurrence')
+            recurrence_end_date = form.cleaned_data.get('recurrence_end_date')
+            start_time = form.cleaned_data.get('start_time')
+            end_time = form.cleaned_data.get('end_time')
             participant_count = form.cleaned_data.get('participant_count', 1)
+
+            new_status = 'APPROVED'
+            if participant_count >= 15:
+                new_status = 'PENDING'
+
+            parent_booking = form.save(commit=False)
+            parent_booking.room = room
+            parent_booking.user = request.user
+            parent_booking.status = new_status
+            
+            parent_booking.clean() 
             
             conflicts = Booking.objects.filter(
                 room=room,
                 status__in=['APPROVED', 'PENDING'],
-                start_time__lt=booking.end_time,
-                end_time__gt=booking.start_time
+                start_time__lt=parent_booking.end_time,
+                end_time__gt=parent_booking.start_time
             ).exists()
             
             if conflicts:
@@ -479,19 +511,70 @@ def create_booking_view(request, room_id):
                 context = get_base_context(request)
                 context.update({'room': room, 'form': form})
                 return render(request, 'pages/room_calendar.html', context)
-
-            if participant_count >= 15:
-                booking.status = 'PENDING'
-                messages.success(request, f"จอง '{booking.title}' ({room.name}) เรียบร้อย **รออนุมัติ**")
-            else:
-                booking.status = 'APPROVED'
-                messages.success(request, f"จอง '{booking.title}' ({room.name}) **อนุมัติอัตโนมัติ**")
-            booking.save() 
+            
+            parent_booking.save()
             form.save_m2m() 
-            if booking.status == 'PENDING':
-                send_booking_notification(booking, 'emails/new_booking_pending.html', 'โปรดอนุมัติ')
+
+            if recurrence and recurrence != 'NONE':
+                
+                parent_booking.recurrence_rule = recurrence 
+                parent_booking.save()
+                
+                next_start_time = start_time
+                next_end_time = end_time
+                bookings_to_create = []
+
+                while True:
+                    if recurrence == 'WEEKLY':
+                        next_start_time += timedelta(weeks=1)
+                        next_end_time += timedelta(weeks=1)
+                    elif recurrence == 'MONTHLY':
+                        next_start_time += relativedelta(months=1)
+                        next_end_time += relativedelta(months=1)
+                    
+                    if next_start_time.date() > recurrence_end_date:
+                        break
+                        
+                    child_conflicts = Booking.objects.filter(
+                        room=room,
+                        status__in=['APPROVED', 'PENDING'],
+                        start_time__lt=next_end_time,
+                        end_time__gt=next_start_time
+                    ).exists()
+
+                    if not child_conflicts:
+                        new_booking = Booking(
+                            parent_booking=parent_booking, 
+                            room=room,
+                            user=request.user,
+                            title=parent_booking.title,
+                            start_time=next_start_time,
+                            end_time=next_end_time,
+                            chairman=parent_booking.chairman,
+                            department=parent_booking.department,
+                            participant_count=parent_booking.participant_count,
+                            description=parent_booking.description,
+                            additional_requests=parent_booking.additional_requests,
+                            additional_notes=parent_booking.additional_notes,
+                            status=new_status,
+                            recurrence_rule=recurrence
+                        )
+                        bookings_to_create.append(new_booking)
+                    else:
+                        print(f"Skipping recurring booking on {next_start_time.date()} due to conflict.")
+
+                created_bookings = Booking.objects.bulk_create(bookings_to_create)
+                
+                participants = list(parent_booking.participants.all())
+                for booking in created_bookings:
+                    booking.participants.set(participants)
+
+            if new_status == 'PENDING':
+                send_booking_notification(parent_booking, 'emails/new_booking_pending.html', 'โปรดอนุมัติ')
+                messages.success(request, f"จอง '{parent_booking.title}' ({room.name}) เรียบร้อย **รออนุมัติ**")
             else:
-                send_booking_notification(booking, 'emails/new_booking_approved.html', 'จองสำเร็จ')
+                send_booking_notification(parent_booking, 'emails/new_booking_approved.html', 'จองสำเร็จ')
+                messages.success(request, f"จอง '{parent_booking.title}' ({room.name}) **อนุมัติอัตโนมัติ**")
             
             return HttpResponse(
                 '<script>window.parent.location.reload();</script>',

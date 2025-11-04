@@ -49,6 +49,19 @@ class Booking(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    # --- 💡💡💡 [นี่คือจุดที่แก้ไข] 💡💡💡 ---
+    # (เพิ่ม 2 ฟิลด์นี้สำหรับ "การจองซ้ำ")
+    parent_booking = models.ForeignKey(
+        'self', 
+        on_delete=models.CASCADE, 
+        null=True, 
+        blank=True, 
+        related_name='child_bookings',
+        help_text="การจองนี้ เป็นส่วนหนึ่งของการจองซ้ำ (ชี้ไปที่การจองแรก)"
+    )
+    recurrence_rule = models.CharField(max_length=20, blank=True, null=True) # (เช่น 'WEEKLY', 'MONTHLY')
+    # --- 💡💡💡 [สิ้นสุดการแก้ไข] 💡💡💡 ---
+
     def __str__(self):
         return f"{self.title} - {self.room.name}"
 

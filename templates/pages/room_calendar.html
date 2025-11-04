@@ -2,6 +2,7 @@
 {% load static %}
 
 {% block title %}ปฏิทินห้อง: {{ room.name }}{% endblock %}
+{% block page_title %}{% endblock %}
 
 {% block extra_head %}
 {{ form.media.css }}
@@ -21,7 +22,7 @@
     #calendar { margin-top: 1.5rem; }
     #bookingFormContainer { display: none; }
     
-    /* (แก้ปัญหา Select2 ใน Modal) */
+    /* [แก้ไข] ทำให้ Select2 สวยงามใน Modal */
     .select2-container { z-index: 1056; } 
     .select2-container--bootstrap-5 .select2-selection {
         width: 100% !important;
@@ -173,26 +174,18 @@ window.onload = function() {
             startTimeField.value = startStr;
             endTimeField.value = endStr;
             
-            
-            // --- 💡💡💡 [นี่คือ "วิธีแก้ที่ได้ผลเลย"] 💡💡💡 ---
-            // (เราจะลบ 'yl.register' (ที่พัง)
-            // และใช้ '$.fn.select2' (ที่ถูกต้อง) แทน)
-            
-            if ($.fn.select2) {
-                var participantsField = $('#id_participants');
-                
-                // (1. ทำลายของเก่าที่อาจค้างอยู่)
-                if (participantsField.hasClass('select2-hidden-accessible')) {
-                    participantsField.select2('destroy');
+            // [แก้ไข] เราต้อง "บังคับ" ให้ DAL (yl) ทำงานกับ Select2 ที่อยู่ใน Modal
+            if (typeof yl !== 'undefined' && yl.register) {
+                var $participants = $(modalBody).find('#id_participants');
+                if ($participants.length) {
+                    if ($participants.hasClass('select2-hidden-accessible')) {
+                        $participants.select2('destroy');
+                    }
+                    yl.register($participants, {
+                        dropdownParent: $('#bookingModal')
+                    });
                 }
-                
-                // (2. สร้าง Select2 ใหม่ โดยใช้ฟังก์ชันของ jQuery)
-                participantsField.select2({
-                    dropdownParent: $('#bookingModal'), 
-                    width: '100%'
-                });
             }
-            // --- 💡💡💡 [สิ้นสุดการแก้ไข] 💡💡💡 ---
 
             bookingModal.show();
         },
