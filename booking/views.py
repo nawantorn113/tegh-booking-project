@@ -16,19 +16,16 @@ DAL_AVAILABLE = True
 from django.core.mail import send_mail
 from django.template.loader import render_to_string, get_template
 from django.conf import settings
-# --- openpyxl ---
 try:
     from openpyxl import Workbook
     OPENPYXL_AVAILABLE = True
 except ImportError:
     OPENPYXL_AVAILABLE = False
-# --- WeasyPrint ---
 try:
     from weasyprint import HTML
     WEASYPRINT_AVAILABLE = True
 except ImportError:
     WEASYPRINT_AVAILABLE = False
-# --- End Libs ---
 from collections import defaultdict
 from django.utils import timezone
 from django.contrib.auth.signals import user_logged_in, user_logged_out
@@ -50,15 +47,13 @@ def get_base_context(request):
     current_url_name = request.resolver_match.url_name if request.resolver_match else ''
     is_admin_user = is_admin(request.user)
     
-    # 1. สร้าง Menu Items (สำหรับทุกคน + Admin ที่ย้ายมา)
     menu_structure = [
         {'label': 'หน้าหลัก', 'url_name': 'dashboard', 'icon': 'bi-house-fill', 'show': True},
         {'label': 'ปฏิทินรวม', 'url_name': 'master_calendar', 'icon': 'bi-calendar3-range', 'show': True},
         {'label': 'ประวัติการจอง', 'url_name': 'history', 'icon': 'bi-clock-history', 'show': True},
-        {'label': 'รออนุมัติ', 'url_name': 'approvals', 'icon': 'bi-check2-circle', 'show': is_admin_user}, # (ย้ายมานี่)
+        {'label': 'รออนุมัติ', 'url_name': 'approvals', 'icon': 'bi-check2-circle', 'show': is_admin_user},
     ]
     
-    # 2. สร้าง Menu Items (สำหรับ Admin ที่เหลือ)
     admin_menu_structure = [
         {'label': 'จัดการห้องประชุม', 'url_name': 'rooms', 'icon': 'bi-door-open-fill', 'show': is_admin_user},
         {'label': 'จัดการผู้ใช้งาน', 'url_name': 'user_management', 'icon': 'bi-people-fill', 'show': is_admin_user},
@@ -77,7 +72,6 @@ def get_base_context(request):
             item['active'] = (item['url_name'] == current_url_name)
             admin_menu_items.append(item)
             
-    # 3. สร้าง Notifications
     pending_count = 0
     pending_notifications = []
     if is_admin_user:
@@ -276,14 +270,43 @@ def master_calendar_view(request):
     context = get_base_context(request)
     return render(request, 'pages/master_calendar.html', context)
 
+# --- 💡💡💡 [นี่คือจุดที่แก้ไข] 💡💡💡 ---
 @login_required
 def history_view(request):
-    bookings = Booking.objects.filter(user=request.user).select_related('room').order_by('-start_time')
-    date_f = request.GET.get('date'); room_f = request.GET.get('room'); status_f = request.GET.get('status')
     
+    # 1. (แก้ไข) เช็คก่อนว่าเป็น Admin หรือไม่
+    if is_admin(request.user):
+        # (Admin: แสดงการจองทั้งหมด)
+        bookings = Booking.objects.all().select_related('room', 'user').order_by('-start_time')
+    else:
+        # (User: แสดงเฉพาะของตัวเอง)
+        bookings = Booking.objects.filter(user=request.user).select_related('room').order_by('-start_time')
+
+    # 2. (โค้ด Filter ... เหมือนเดิม)
+    date_f = request.GET.get('date'); room_f = request.GET.get('room'); status_f = request.GET.get('status')
+    if date_f:
+        try:
+            bookings = bookings.filter(start_time__date=datetime.strptime(date_f, '%Y-%m-%d').date())
+        except ValueError:
+            messages.warning(request, "รูปแบบวันที่ไม่ถูกต้อง กรุณาใช้ YYYY-MM-DD")
+            date_f = None
+    if room_f:
+        try:
+            room_id_int = int(room_f)
+            bookings = bookings.filter(room_id=room_id_int)
+        except (ValueError, TypeError):
+             messages.warning(request, "Room ID ไม่ถูกต้อง")
+             room_f = None
+    if status_f and status_f in dict(Booking.STATUS_CHOICES):
+        bookings = bookings.filter(status=status_f)
+    elif status_f:
+        messages.warning(request, "สถานะการจองไม่ถูกต้อง")
+        status_f = None
+
+    # 3. (ส่ง Context ไปที่ Template)
     context = get_base_context(request)
     context.update({
-        'my_bookings': bookings,
+        'bookings_list': bookings, # (เปลี่ยนชื่อจาก 'my_bookings' เป็น 'bookings_list')
         'all_rooms': Room.objects.all().order_by('name'),
         'status_choices': Booking.STATUS_CHOICES,
         'current_date': date_f,
@@ -292,6 +315,7 @@ def history_view(request):
         'now_time': timezone.now()
     })
     return render(request, 'pages/history.html', context)
+# --- 💡💡💡 [สิ้นสุดการแก้ไข] 💡💡💡 ---
 
 @login_required
 def booking_detail_view(request, booking_id):
