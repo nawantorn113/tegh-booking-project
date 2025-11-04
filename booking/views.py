@@ -1,6 +1,6 @@
 import json
 import re
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, time # 💡 เพิ่ม time
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
@@ -16,6 +16,10 @@ DAL_AVAILABLE = True
 from django.core.mail import send_mail
 from django.template.loader import render_to_string, get_template
 from django.conf import settings
+
+from django.db import transaction 
+from dateutil.relativedelta import relativedelta 
+
 try:
     from openpyxl import Workbook
     OPENPYXL_AVAILABLE = True
@@ -26,6 +30,7 @@ try:
     WEASYPRINT_AVAILABLE = True
 except ImportError:
     WEASYPRINT_AVAILABLE = False
+    
 from collections import defaultdict
 from django.utils import timezone
 from django.contrib.auth.signals import user_logged_in, user_logged_out
@@ -33,13 +38,10 @@ from django.dispatch import receiver
 from django.contrib.auth.forms import AuthenticationForm
 from django.core.exceptions import ValidationError
 
-from django.db import transaction 
-from dateutil.relativedelta import relativedelta 
-
 from .models import Room, Booking
 from .forms import BookingForm, CustomPasswordChangeForm, RoomForm
 
-# --- Helper Functions ---
+# --- Helper Functions (ต้องอยู่ข้างบนสุด) ---
 def is_admin(user):
     return user.is_authenticated and (user.is_superuser or user.groups.filter(name='Admin').exists())
 def is_approver_or_admin(user):
@@ -146,68 +148,88 @@ def logout_view(request):
 
 # --- Smart Search ---
 def parse_search_query(query_text):
+    # 💡 [แก้ไข] ต้อง import time จากด้านบนมาใช้
+    from datetime import datetime, time, timedelta 
+    
     capacity = None
     start_time = None
     end_time = None
     now = timezone.now()
     today = now.date()
     capacity_match = re.search(r'(\d+)\s*คน', query_text)
+    
     if capacity_match:
         capacity = int(capacity_match.group(1))
+    
+    # 💡 [แก้ไข] ใช้ time(...) แทน datetime.time(...)
     if "บ่ายนี้" in query_text:
-        start_time = timezone.make_aware(datetime.combine(today, datetime.time(13, 0)))
-        end_time = timezone.make_aware(datetime.combine(today, datetime.time(17, 0)))
+        start_time = timezone.make_aware(datetime.combine(today, time(13, 0))) 
+        end_time = timezone.make_aware(datetime.combine(today, time(17, 0)))
         if now > end_time: start_time, end_time = None, None 
     elif "เช้านี้" in query_text:
-        start_time = timezone.make_aware(datetime.combine(today, datetime.time(9, 0)))
-        end_time = timezone.make_aware(datetime.combine(today, datetime.time(12, 0)))
+        start_time = timezone.make_aware(datetime.combine(today, time(9, 0)))
+        end_time = timezone.make_aware(datetime.combine(today, time(12, 0)))
         if now > end_time: start_time, end_time = None, None
     elif "พรุ่งนี้เช้า" in query_text:
         tomorrow = today + timedelta(days=1)
-        start_time = timezone.make_aware(datetime.combine(tomorrow, datetime.time(9, 0)))
-        end_time = timezone.make_aware(datetime.combine(tomorrow, datetime.time(12, 0)))
+        start_time = timezone.make_aware(datetime.combine(tomorrow, time(9, 0)))
+        end_time = timezone.make_aware(datetime.combine(tomorrow, time(12, 0)))
     elif "พรุ่งนี้บ่าย" in query_text:
         tomorrow = today + timedelta(days=1)
-        start_time = timezone.make_aware(datetime.combine(tomorrow, datetime.time(13, 0)))
-        end_time = timezone.make_aware(datetime.combine(tomorrow, datetime.time(17, 0)))
+        start_time = timezone.make_aware(datetime.combine(tomorrow, time(13, 0)))
+        end_time = timezone.make_aware(datetime.combine(tomorrow, time(17, 0)))
     elif "พรุ่งนี้" in query_text:
         tomorrow = today + timedelta(days=1)
-        start_time = timezone.make_aware(datetime.combine(tomorrow, datetime.time(9, 0)))
-        end_time = timezone.make_aware(datetime.combine(tomorrow, datetime.time(17, 0)))
+        start_time = timezone.make_aware(datetime.combine(tomorrow, time(9, 0)))
+        end_time = timezone.make_aware(datetime.combine(tomorrow, time(17, 0)))
     elif "วันนี้" in query_text:
-        start_time = timezone.make_aware(datetime.combine(today, datetime.time(9, 0)))
-        end_time = timezone.make_aware(datetime.combine(today, datetime.time(17, 0)))
+        start_time = timezone.make_aware(datetime.combine(today, time(9, 0)))
+        end_time = timezone.make_aware(datetime.combine(today, time(17, 0)))
         if now > end_time: start_time, end_time = None, None
+        
     return capacity, start_time, end_time
+
 @login_required
 def smart_search_view(request):
     query_text = request.GET.get('q', '')
-    available_rooms = Room.objects.all()
+    
+    # 💡 [แก้ไข] เริ่มต้นด้วยการดึงห้องทั้งหมด 💡
+    available_rooms = Room.objects.all().order_by('capacity') 
+    
     search_params = {}
+
     if not query_text:
         available_rooms = Room.objects.none()
     else:
+        # 💡 [แก้ไข] เรียกใช้ parse_search_query ด้วยการ import time ที่แก้ไขแล้ว
         capacity, start_time, end_time = parse_search_query(query_text)
+        
         search_params['capacity'] = capacity
         search_params['start_time'] = start_time
         search_params['end_time'] = end_time
+
+        # 1. กรองตามความจุ (ถ้ามี)
         if capacity:
             available_rooms = available_rooms.filter(capacity__gte=capacity)
+        
+        # 2. กรองตามความว่าง (ถ้ามีวันที่/เวลา)
         if start_time and end_time:
             conflicting_room_ids = Booking.objects.filter(
                 status__in=['APPROVED', 'PENDING'],
                 start_time__lt=end_time,
                 end_time__gt=start_time
             ).values_list('room_id', flat=True).distinct()
+            
             available_rooms = available_rooms.exclude(id__in=conflicting_room_ids)
-    
+            
     context = get_base_context(request)
     context.update({
         'query_text': query_text,
         'search_params': search_params,
-        'available_rooms': available_rooms.order_by('capacity'),
+        'available_rooms': available_rooms, 
     })
     return render(request, 'pages/search_results.html', context)
+# --- 💡💡💡 [สิ้นสุดการแก้ไข smart_search_view] 💡💡💡 ---
 
 # --- Main Pages ---
 @login_required
@@ -273,21 +295,15 @@ def master_calendar_view(request):
     context = get_base_context(request)
     return render(request, 'pages/master_calendar.html', context)
 
-# --- 💡💡💡 [นี่คือจุดที่แก้ไข] 💡💡💡 ---
 @login_required
 def history_view(request):
     
-    # 1. เช็ค Admin
     if is_admin(request.user):
         bookings = Booking.objects.all().select_related('room', 'user').order_by('-start_time')
     else:
         bookings = Booking.objects.filter(user=request.user).select_related('room').order_by('-start_time')
 
-    # 2. (แก้ไข) เพิ่ม 'q_f' (Query Filter)
-    date_f = request.GET.get('date')
-    room_f = request.GET.get('room')
-    status_f = request.GET.get('status')
-    q_f = request.GET.get('q', '') # (รับคำค้นหา)
+    date_f = request.GET.get('date'); room_f = request.GET.get('room'); status_f = request.GET.get('status'); q_f = request.GET.get('q', '')
 
     if date_f:
         try:
@@ -308,7 +324,6 @@ def history_view(request):
         messages.warning(request, "สถานะการจองไม่ถูกต้อง")
         status_f = None
     
-    # (เพิ่ม Logic การค้นหา)
     if q_f:
         bookings = bookings.filter(
             Q(title__icontains=q_f) |
@@ -316,13 +331,11 @@ def history_view(request):
             Q(user__first_name__icontains=q_f) |
             Q(user__last_name__icontains=q_f) |
             Q(department__icontains=q_f) |
-            # (เพิ่มการค้นหา "รายชื่อผู้เข้าร่วม")
             Q(participants__username__icontains=q_f) |
             Q(participants__first_name__icontains=q_f) |
             Q(participants__last_name__icontains=q_f)
-        ).distinct() # (distinct() จำเป็นมาก)
+        ).distinct()
 
-    # 3. (ส่ง Context ไปที่ Template)
     context = get_base_context(request)
     context.update({
         'bookings_list': bookings, 
@@ -331,11 +344,10 @@ def history_view(request):
         'current_date': date_f,
         'current_room': room_f,
         'current_status': status_f,
-        'current_query': q_f, # (ส่งคำค้นหากลับไปที่ Template)
+        'current_query': q_f,
         'now_time': timezone.now()
     })
     return render(request, 'pages/history.html', context)
-# --- 💡💡💡 [สิ้นสุดการแก้ไข] 💡💡💡 ---
 
 @login_required
 def booking_detail_view(request, booking_id):
@@ -511,70 +523,19 @@ def create_booking_view(request, room_id):
                 context = get_base_context(request)
                 context.update({'room': room, 'form': form})
                 return render(request, 'pages/room_calendar.html', context)
-            
-            parent_booking.save()
+
+            if participant_count >= 15:
+                booking.status = 'PENDING'
+                messages.success(request, f"จอง '{booking.title}' ({room.name}) เรียบร้อย **รออนุมัติ**")
+            else:
+                booking.status = 'APPROVED'
+                messages.success(request, f"จอง '{booking.title}' ({room.name}) **อนุมัติอัตโนมัติ**")
+            booking.save() 
             form.save_m2m() 
-
-            if recurrence and recurrence != 'NONE':
-                
-                parent_booking.recurrence_rule = recurrence 
-                parent_booking.save()
-                
-                next_start_time = start_time
-                next_end_time = end_time
-                bookings_to_create = []
-
-                while True:
-                    if recurrence == 'WEEKLY':
-                        next_start_time += timedelta(weeks=1)
-                        next_end_time += timedelta(weeks=1)
-                    elif recurrence == 'MONTHLY':
-                        next_start_time += relativedelta(months=1)
-                        next_end_time += relativedelta(months=1)
-                    
-                    if next_start_time.date() > recurrence_end_date:
-                        break
-                        
-                    child_conflicts = Booking.objects.filter(
-                        room=room,
-                        status__in=['APPROVED', 'PENDING'],
-                        start_time__lt=next_end_time,
-                        end_time__gt=next_start_time
-                    ).exists()
-
-                    if not child_conflicts:
-                        new_booking = Booking(
-                            parent_booking=parent_booking, 
-                            room=room,
-                            user=request.user,
-                            title=parent_booking.title,
-                            start_time=next_start_time,
-                            end_time=next_end_time,
-                            chairman=parent_booking.chairman,
-                            department=parent_booking.department,
-                            participant_count=parent_booking.participant_count,
-                            description=parent_booking.description,
-                            additional_requests=parent_booking.additional_requests,
-                            additional_notes=parent_booking.additional_notes,
-                            status=new_status,
-                            recurrence_rule=recurrence
-                        )
-                        bookings_to_create.append(new_booking)
-                    else:
-                        print(f"Skipping recurring booking on {next_start_time.date()} due to conflict.")
-
-                created_bookings = Booking.objects.bulk_create(bookings_to_create)
-                
-                participants = list(parent_booking.participants.all())
-                for booking in created_bookings:
-                    booking.participants.set(participants)
-
-            if new_status == 'PENDING':
+            if booking.status == 'PENDING':
                 send_booking_notification(parent_booking, 'emails/new_booking_pending.html', 'โปรดอนุมัติ')
-                messages.success(request, f"จอง '{parent_booking.title}' ({room.name}) เรียบร้อย **รออนุมัติ**")
             else:
                 send_booking_notification(parent_booking, 'emails/new_booking_approved.html', 'จองสำเร็จ')
-                messages.success(request, f"จอง '{parent_booking.title}' ({room.name}) **อนุมัติอัตโนมัติ**")
             
             return HttpResponse(
                 '<script>window.parent.location.reload();</script>',
