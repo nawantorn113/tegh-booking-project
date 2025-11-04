@@ -22,7 +22,6 @@ urlpatterns = [
     path('delete/<int:booking_id>/', views.delete_booking_view, name='delete_booking'),
 
     # --- APIs ---
-    path('api/rooms/', views.rooms_api, name='rooms_api'),
     path('api/bookings/', views.bookings_api, name='bookings_api'),
     path('api/update-time/', views.update_booking_time_api, name='update_booking_time'),
     path('api/delete-booking/<int:booking_id>/', views.delete_booking_api, name='delete_booking_api'),

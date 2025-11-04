@@ -38,7 +38,7 @@ from django.dispatch import receiver
 from django.contrib.auth.forms import AuthenticationForm
 from django.core.exceptions import ValidationError
 
-from .models import Room, Booking
+from .models import Room, Booking, AuditLog
 from .forms import BookingForm, CustomPasswordChangeForm, RoomForm
 
 # --- Helper Functions ---
@@ -46,6 +46,14 @@ def is_admin(user):
     return user.is_authenticated and (user.is_superuser or user.groups.filter(name='Admin').exists())
 def is_approver_or_admin(user):
     return user.is_authenticated and (user.is_superuser or user.groups.filter(name__in=['Approver', 'Admin']).exists())
+
+def get_client_ip(request):
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        ip = x_forwarded_for.split(',')[0]
+    else:
+        ip = request.META.get('REMOTE_ADDR')
+    return ip
 
 # --- Context Function (สำหรับ Navbar) ---
 def get_base_context(request):
@@ -56,7 +64,7 @@ def get_base_context(request):
         {'label': 'หน้าหลัก', 'url_name': 'dashboard', 'icon': 'bi-house-fill', 'show': True},
         {'label': 'ปฏิทินรวม', 'url_name': 'master_calendar', 'icon': 'bi-calendar3-range', 'show': True},
         {'label': 'ประวัติการจอง', 'url_name': 'history', 'icon': 'bi-clock-history', 'show': True},
-        {'label': 'รออนุมัติ', 'url_name': 'approvals', 'icon': 'bi-check2-circle', 'show': is_admin_user},
+        {'label': 'รออนุมัติ', 'url_name': 'approvals', 'icon': 'bi-check2-circle', 'show': is_approver_or_admin(request.user)},
     ]
     
     admin_menu_structure = [
@@ -79,8 +87,18 @@ def get_base_context(request):
             
     pending_count = 0
     pending_notifications = []
-    if is_admin_user:
-        pending_bookings = Booking.objects.filter(status='PENDING').order_by('-created_at')
+    
+    if request.user.is_authenticated and is_approver_or_admin(request.user):
+        rooms_we_approve = Q(room__approver=request.user)
+        rooms_for_central_admin = Q(room__approver__isnull=True)
+        
+        if is_admin(request.user):
+            pending_query = rooms_we_approve | rooms_for_central_admin
+        else:
+            pending_query = rooms_we_approve
+
+        pending_bookings = Booking.objects.filter(pending_query, status='PENDING').order_by('-created_at')
+        
         pending_count = pending_bookings.count()
         pending_notifications = pending_bookings[:5] 
     else:
@@ -98,15 +116,39 @@ def get_base_context(request):
 # --- Callbacks / Email / Autocomplete ---
 @receiver(user_logged_in)
 def user_logged_in_callback(sender, request, user, **kwargs):
-    pass 
+    try:
+        AuditLog.objects.create(
+            user=user,
+            action='LOGIN',
+            ip_address=get_client_ip(request),
+            details=f"User {user.username} logged in."
+        )
+    except Exception as e:
+        print(f"Failed to log LOGIN action for {user.username}: {e}")
+        
 @receiver(user_logged_out)
 def user_logged_out_callback(sender, request, user, **kwargs):
     pass 
-def get_admin_emails(): return list(User.objects.filter(Q(groups__name__in=['Admin', 'Approver']) | Q(is_superuser=True), is_active=True).exclude(email__exact='').values_list('email', flat=True))
+
+def get_admin_emails(): 
+    return list(User.objects.filter(Q(groups__name='Admin') | Q(is_superuser=True), is_active=True).distinct().exclude(email__exact='').values_list('email', flat=True))
+
 def send_booking_notification(booking, template_name, subject_prefix):
-    recipients = get_admin_emails()
+    
+    recipients = []
+    
+    if 'โปรดอนุมัติ' in subject_prefix or 'จองสำเร็จ' in subject_prefix:
+        if booking.room.approver and booking.room.approver.email:
+            recipients = [booking.room.approver.email]
+        else:
+            recipients = get_admin_emails()
+            
+    elif booking.user and booking.user.email:
+        recipients = [booking.user.email]
+
     if not recipients: print(f"Skipping email '{subject_prefix}': No recipients found."); return
     if not isinstance(recipients, list): recipients = [recipients]
+    
     subject = f"[{subject_prefix}] การจองห้อง: {booking.title} ({booking.room.name})"
     context = {'booking': booking, 'settings': settings}
     try:
@@ -191,7 +233,9 @@ def parse_search_query(query_text):
 def smart_search_view(request):
     query_text = request.GET.get('q', '')
     
-    available_rooms = Room.objects.all().order_by('capacity') 
+    # --- 💡💡💡 [นี่คือจุดที่แก้ไข 1] 💡💡💡 ---
+    # (กรองเฉพาะห้องที่ Active)
+    available_rooms = Room.objects.filter(is_active=True).order_by('capacity') 
     
     search_params = {}
 
@@ -228,17 +272,22 @@ def smart_search_view(request):
 @login_required
 def dashboard_view(request):
     now = timezone.now(); sort_by = request.GET.get('sort', 'floor')
-    all_rooms = Room.objects.all()
+    
+    # --- 💡💡💡 [นี่คือจุดที่แก้ไข 2] 💡💡💡 ---
+    # (กรองเฉพาะห้องที่ Active)
+    all_rooms = Room.objects.filter(is_active=True)
+    
     if sort_by == 'status':
-        all_rooms = sorted(all_rooms, key=lambda r: not r.bookings.filter(start_time__lte=now, end_time__gt=now, status='APPROVED').exists())
+        all_rooms_sorted = sorted(all_rooms, key=lambda r: not r.bookings.filter(start_time__lte=now, end_time__gt=now, status='APPROVED').exists())
     elif sort_by == 'capacity':
-         all_rooms = sorted(all_rooms, key=lambda r: r.capacity, reverse=True)
+         all_rooms_sorted = sorted(all_rooms, key=lambda r: r.capacity, reverse=True)
     elif sort_by == 'name':
-        all_rooms = all_rooms.order_by('name')
+        all_rooms_sorted = all_rooms.order_by('name')
     else: 
-        all_rooms = all_rooms.order_by('building', 'floor', 'name')
+        all_rooms_sorted = all_rooms.order_by('building', 'floor', 'name')
+        
     buildings = defaultdict(list)
-    for room in all_rooms:
+    for room in all_rooms_sorted:
         current = room.bookings.filter(start_time__lte=now, end_time__gt=now, status='APPROVED').select_related('user').first()
         room.status = 'ไม่ว่าง' if current else 'ว่าง'
         room.current_booking_info = current
@@ -253,7 +302,7 @@ def dashboard_view(request):
     context = get_base_context(request)
     
     summary = {
-        'total_rooms': Room.objects.count(),
+        'total_rooms': all_rooms.count(), # (นับเฉพาะห้องที่ Active)
         'today_bookings': Booking.objects.filter(start_time__date=now.date(), status='APPROVED').count(),
         'pending_approvals': context['pending_count'], 
         'my_bookings_today': my_bookings_today_count,
@@ -263,7 +312,7 @@ def dashboard_view(request):
         'buildings': dict(buildings), 
         'summary_cards': summary, 
         'current_sort': sort_by, 
-        'all_rooms': all_rooms,
+        'all_rooms': all_rooms_sorted,
     })
     return render(request, 'pages/dashboard.html', context)
 
@@ -271,6 +320,11 @@ def dashboard_view(request):
 def room_calendar_view(request, room_id):
     room = get_object_or_404(Room, pk=room_id)
     
+    # (ถ้าห้องถูกปิดปรับปรุง (is_active=False) และคนเข้าไม่ใช่ Admin)
+    if not room.is_active and not is_admin(request.user):
+        messages.error(request, f"ห้อง '{room.name}' กำลังปิดปรับปรุงชั่วคราว")
+        return redirect('dashboard')
+        
     if request.method == 'POST':
         form = BookingForm(request.POST, request.FILES)
     else:
@@ -285,7 +339,14 @@ def room_calendar_view(request, room_id):
 
 @login_required
 def master_calendar_view(request):
+    # --- 💡💡💡 [นี่คือจุดที่แก้ไข 3] 💡💡💡 ---
+    # (ส่งเฉพาะห้องที่ Active ไปที่ปฏิทินรวม)
+    all_rooms = Room.objects.filter(is_active=True).order_by('building', 'floor', 'name')
+    
     context = get_base_context(request)
+    context.update({
+        'all_rooms': all_rooms 
+    })
     return render(request, 'pages/master_calendar.html', context)
 
 @login_required
@@ -332,7 +393,8 @@ def history_view(request):
     context = get_base_context(request)
     context.update({
         'bookings_list': bookings, 
-        'all_rooms': Room.objects.all().order_by('name'),
+        # (ส่งเฉพาะห้องที่ Active ไปที่ Dropdown Filter)
+        'all_rooms': Room.objects.filter(is_active=True).order_by('name'),
         'status_choices': Booking.STATUS_CHOICES,
         'current_date': date_f,
         'current_room': room_f,
@@ -382,8 +444,16 @@ def change_password_view(request):
 # --- APIs ---
 @login_required
 def rooms_api(request):
-    rooms = Room.objects.all().order_by('building', 'name')
-    resources = [{'id': r.id, 'title': r.name, 'building': r.building or ""} for r in rooms]
+    # --- 💡💡💡 [นี่คือจุดที่แก้ไข 4] 💡💡💡 ---
+    # (ส่งเฉพาะห้องที่ Active ไปที่ API)
+    rooms = Room.objects.filter(is_active=True).order_by('building', 'name')
+    resources = [{
+        'id': r.id, 
+        'title': r.name, 
+        'building': r.building or "",
+        'capacity': r.capacity, 
+        'floor': r.floor or ""
+    } for r in rooms]
     return JsonResponse(resources, safe=False)
 @login_required
 def bookings_api(request):
@@ -455,6 +525,14 @@ def update_booking_time_api(request):
              booking.status = 'PENDING'
              status_message = "Booking time updated. Approval now required."
         booking.save()
+        
+        AuditLog.objects.create(
+            user=request.user,
+            action='BOOKING_EDITED',
+            ip_address=get_client_ip(request),
+            details=f"Edited Booking ID {booking.id} ('{booking.title}') via Drag&Drop"
+        )
+        
         return JsonResponse({'status': 'success', 'message': status_message, 'new_status': booking.status})
     except json.JSONDecodeError: return JsonResponse({'status': 'error', 'message': 'Invalid JSON data.'}, status=400)
     except Booking.DoesNotExist: return JsonResponse({'status': 'error', 'message': 'Booking not found.'}, status=404)
@@ -471,6 +549,14 @@ def delete_booking_api(request, booking_id):
         if booking.status in ['CANCELLED', 'REJECTED']: return JsonResponse({'success': False, 'error': 'การจองนี้ถูกยกเลิกหรือปฏิเสธไปแล้ว'})
         booking.status = 'CANCELLED'
         booking.save()
+        
+        AuditLog.objects.create(
+            user=request.user,
+            action='BOOKING_CANCELLED',
+            ip_address=get_client_ip(request),
+            details=f"Cancelled Booking ID {booking.id} ('{booking.title}') via API"
+        )
+        
         return JsonResponse({'success': True, 'message': 'ยกเลิกการจองเรียบร้อย'})
     except Booking.DoesNotExist: return JsonResponse({'success': False, 'error': 'ไม่พบการจองนี้'}, status=44)
     except Exception as e:
@@ -517,8 +603,6 @@ def create_booking_view(request, room_id):
                 context.update({'room': room, 'form': form})
                 return render(request, 'pages/room_calendar.html', context)
 
-            # --- 💡💡💡 [นี่คือจุดที่แก้ไข] 💡💡💡 ---
-            # (เปลี่ยน 'booking' เป็น 'parent_booking')
             if participant_count >= 15:
                 parent_booking.status = 'PENDING'
                 messages.success(request, f"จอง '{parent_booking.title}' ({room.name}) เรียบร้อย **รออนุมัติ**")
@@ -529,13 +613,18 @@ def create_booking_view(request, room_id):
             parent_booking.save() 
             form.save_m2m() 
             
+            AuditLog.objects.create(
+                user=request.user,
+                action='BOOKING_CREATED',
+                ip_address=get_client_ip(request),
+                details=f"Created Booking ID {parent_booking.id} ('{parent_booking.title}')"
+            )
+            
             if parent_booking.status == 'PENDING':
-            # --- 💡💡💡 [สิ้นสุดการแก้ไข] 💡💡💡 ---
                 send_booking_notification(parent_booking, 'emails/new_booking_pending.html', 'โปรดอนุมัติ')
             else:
                 send_booking_notification(parent_booking, 'emails/new_booking_approved.html', 'จองสำเร็จ')
             
-            # (ตรรกะการจองซ้ำ)
             if recurrence and recurrence != 'NONE':
                 
                 parent_booking.recurrence_rule = recurrence 
@@ -631,6 +720,14 @@ def edit_booking_view(request, booking_id):
                 updated_booking.save()
                 form.save_m2m() 
                 messages.success(request, "แก้ไขข้อมูลการจองเรียบร้อยแล้ว")
+                
+                AuditLog.objects.create(
+                    user=request.user,
+                    action='BOOKING_EDITED',
+                    ip_address=get_client_ip(request),
+                    details=f"Edited Booking ID {updated_booking.id} ('{updated_booking.title}')"
+                )
+                
                 if updated_booking.status == 'PENDING' and changed_for_approval:
                         send_booking_notification(updated_booking, 'emails/new_booking_pending.html', 'โปรดอนุมัติ (แก้ไข)')
                 return redirect('history')
@@ -656,6 +753,14 @@ def delete_booking_view(request, booking_id):
         return redirect('history')
     booking.status = 'CANCELLED'
     booking.save()
+    
+    AuditLog.objects.create(
+        user=request.user,
+        action='BOOKING_CANCELLED',
+        ip_address=get_client_ip(request),
+        details=f"Cancelled Booking ID {booking.id} ('{booking.title}')"
+    )
+    
     messages.success(request, f"ยกเลิกการจอง '{booking.title}' เรียบร้อย")
     return redirect('history')
 
@@ -663,9 +768,16 @@ def delete_booking_view(request, booking_id):
 @login_required
 @user_passes_test(is_approver_or_admin)
 def approvals_view(request):
-    pending_bookings = Booking.objects.filter(status='PENDING') \
+    
+    if is_admin(request.user):
+        pending_query = Q(room__approver=request.user) | Q(room__approver__isnull=True)
+    else:
+        pending_query = Q(room__approver=request.user)
+        
+    pending_bookings = Booking.objects.filter(pending_query, status='PENDING') \
                                         .select_related('room', 'user') \
                                         .order_by('start_time')
+                                        
     context = get_base_context(request)
     context.update({'pending_bookings': pending_bookings})
     return render(request, 'pages/approvals.html', context)
@@ -673,18 +785,46 @@ def approvals_view(request):
 @user_passes_test(is_approver_or_admin)
 @require_POST
 def approve_booking_view(request, booking_id):
-    booking = get_object_or_404(Booking.objects.select_related('user'), id=booking_id, status='PENDING')
+    booking = get_object_or_404(Booking.objects.select_related('user', 'room'), id=booking_id, status='PENDING')
+    
+    if not (is_admin(request.user) or (booking.room.approver == request.user)):
+        messages.error(request, "คุณไม่มีสิทธิ์อนุมัติการจองนี้")
+        return redirect('approvals')
+
     booking.status = 'APPROVED'
     booking.save()
+    
+    AuditLog.objects.create(
+        user=request.user,
+        action='BOOKING_APPROVED',
+        ip_address=get_client_ip(request),
+        details=f"Approved Booking ID {booking.id} ('{booking.title}')"
+    )
+    send_booking_notification(booking, 'emails/booking_approved_user.html', 'การจองของคุณอนุมัติแล้ว')
+    
     messages.success(request, f"อนุมัติการจอง '{booking.title}' เรียบร้อย")
     return redirect('approvals')
 @login_required
 @user_passes_test(is_approver_or_admin)
 @require_POST
 def reject_booking_view(request, booking_id):
-    booking = get_object_or_404(Booking.objects.select_related('user'), id=booking_id, status='PENDING')
+    booking = get_object_or_404(Booking.objects.select_related('user', 'room'), id=booking_id, status='PENDING')
+
+    if not (is_admin(request.user) or (booking.room.approver == request.user)):
+        messages.error(request, "คุณไม่มีสิทธิ์ปฏิเสธการจองนี้")
+        return redirect('approvals')
+        
     booking.status = 'REJECTED'
     booking.save()
+    
+    AuditLog.objects.create(
+        user=request.user,
+        action='BOOKING_REJECTED',
+        ip_address=get_client_ip(request),
+        details=f"Rejected Booking ID {booking.id} ('{booking.title}')"
+    )
+    send_booking_notification(booking, 'emails/booking_rejected_user.html', 'การจองของคุณถูกปฏิเสธ')
+    
     messages.warning(request, f"ปฏิเสธการจอง '{booking.title}' เรียบร้อย")
     return redirect('approvals')
 
@@ -719,6 +859,7 @@ def edit_user_roles_view(request, user_id):
 @login_required
 @user_passes_test(is_admin)
 def room_management_view(request):
+    # (Admin ควรเห็นห้องทั้งหมด แม้ว่าจะ 'is_active=False')
     rooms = Room.objects.all().order_by('building', 'name')
     context = get_base_context(request)
     context.update({'rooms': rooms})
@@ -795,9 +936,13 @@ def reports_view(request):
     if department:
         recent_bookings = recent_bookings.filter(department=department)
         report_title += f" (แผนก: {department})"
-    room_usage_stats = Room.objects.annotate(
+        
+    # --- 💡💡💡 [นี่คือจุดที่แก้ไข 5] 💡💡💡 ---
+    # (กรองเฉพาะห้องที่ Active)
+    room_usage_stats = Room.objects.filter(is_active=True).annotate(
         booking_count=Count('bookings', filter=Q(bookings__in=recent_bookings))
     ).filter(booking_count__gt=0).order_by('-booking_count')
+    
     room_usage_labels = [r.name for r in room_usage_stats[:10]]
     room_usage_data = [r.booking_count for r in room_usage_stats[:10]]
     dept_usage_query = recent_bookings.exclude(department__exact='').exclude(department__isnull=True) \
@@ -824,7 +969,7 @@ def reports_view(request):
         'pending_count': context['pending_count'],
         'today_bookings_count': Booking.objects.filter(start_time__date=timezone.now().date(), status='APPROVED').count(),
         'total_users_count': User.objects.count(),
-        'total_rooms_count': Room.objects.count(),
+        'total_rooms_count': Room.objects.filter(is_active=True).count(), # (นับเฉพาะ Active)
         'login_history': [], 
      })
     return render(request, 'pages/reports.html', context)

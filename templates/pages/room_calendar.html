@@ -22,10 +22,17 @@
     #calendar { margin-top: 1.5rem; }
     #bookingFormContainer { display: none; }
     
-    /* [แก้ไข] ทำให้ Select2 สวยงามใน Modal */
     .select2-container { z-index: 1056; } 
     .select2-container--bootstrap-5 .select2-selection {
         width: 100% !important;
+    }
+
+    /* (สไตล์สำหรับ Event ที่ลากได้) */
+    .fc-event-draggable, .fc-event-resizable {
+        cursor: move;
+    }
+    .fc-event-main:hover {
+        opacity: 0.8;
     }
 </style>
 {% endblock %}
@@ -99,7 +106,7 @@
 <script>
 window.onload = function() {
     
-    // (ตรวจสอบไลบรารี)
+    // (ตรวจสอบไลบรารีพื้นฐาน)
     if (typeof FullCalendar === 'undefined' || typeof bootstrap === 'undefined' || typeof $ === 'undefined' || typeof yl === 'undefined') {
         console.error("Required JS libraries not loaded (jQuery, Bootstrap, FullCalendar, or DAL/yl).");
         document.getElementById('calendar').innerHTML = '<div class="alert alert-danger">เกิดข้อผิดพลาด: โหลดไลบรารีไม่สำเร็จ กรุณาล้างแคช (Ctrl+Shift+R)</div>';
@@ -117,6 +124,58 @@ window.onload = function() {
     if (!startTimeField || !endTimeField) {
         console.error("ไม่พบช่อง input #id_start_time หรือ #id_end_time");
     }
+
+    // --- 💡💡💡 [นี่คือฟังก์ชันที่เพิ่มใหม่] 💡💡💡 ---
+    // (ฟังก์ชันสำหรับ "ยิง" ข้อมูลกลับไปหา Django API)
+    function sendEventUpdate(info, revert) {
+        var event = info.event;
+        var new_start = event.start.toISOString();
+        var new_end = event.end ? event.end.toISOString() : null;
+        
+        // (เช็คเวลาใหม่)
+        if (new Date(new_start) < new Date()) {
+            alert("ไม่สามารถย้ายการจองไปในอดีตได้");
+            revert(); // (ย้ายกลับที่เดิม)
+            return;
+        }
+
+        // (ยืนยันก่อนลาก)
+        if (!confirm(`คุณต้องการย้าย "${event.title}" ไปยังเวลานี้ใช่หรือไม่?`)) {
+            revert();
+            return;
+        }
+
+        fetch("{% url 'update_booking_time' %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}' // (CSRF Token)
+            },
+            body: JSON.stringify({
+                booking_id: event.id,
+                start_time: new_start,
+                end_time: new_end
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                console.log('Update successful:', data.message);
+                calendar.refetchEvents(); // (โหลด Event ใหม่)
+            } else {
+                // (ถ้า Django บอกว่าชน ให้ย้ายกลับ)
+                alert('เกิดข้อผิดพลาด: ' + data.message);
+                revert();
+            }
+        })
+        .catch(error => {
+            console.error('Error updating event:', error);
+            alert('เกิดข้อผิดพลาดในการเชื่อมต่อ');
+            revert();
+        });
+    }
+    // --- 💡💡💡 [สิ้นสุดฟังก์ชันที่เพิ่มใหม่] 💡💡💡 ---
+
 
     var calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: 'timeGridWeek', 
@@ -142,6 +201,12 @@ window.onload = function() {
         selectable: true, 
         selectMirror: true, 
         nowIndicator: true, 
+        
+        // --- 💡💡💡 [นี่คือจุดที่แก้ไข] 💡💡💡 ---
+        editable: true, // (เปิดให้ลาก/ยืด-หด)
+        eventDrop: sendEventUpdate,  // (เมื่อ "ลาก" เสร็จ)
+        eventResize: sendEventUpdate, // (เมื่อ "ยืด-หด" เสร็จ)
+        // --- 💡💡💡 [สิ้นสุดการแก้ไข] 💡💡💡 ---
         
         selectAllow: function(selectInfo) {
             var now = new Date();
@@ -174,7 +239,6 @@ window.onload = function() {
             startTimeField.value = startStr;
             endTimeField.value = endStr;
             
-            // [แก้ไข] เราต้อง "บังคับ" ให้ DAL (yl) ทำงานกับ Select2 ที่อยู่ใน Modal
             if (typeof yl !== 'undefined' && yl.register) {
                 var $participants = $(modalBody).find('#id_participants');
                 if ($participants.length) {
@@ -215,6 +279,14 @@ window.onload = function() {
             } else if (eventData.display !== 'background') {
                 eventData.display = 'none';
             }
+            
+            // (เช็คสิทธิ์ในการลาก: ต้องเป็น Admin หรือ เจ้าของการจอง)
+            if (props.user_id == {{ request.user.id }} || {{ is_admin_user|yesno:"true,false" }}) {
+                eventData.editable = true;
+            } else {
+                eventData.editable = false;
+            }
+
             return eventData;
         },
 

@@ -1,4 +1,3 @@
-# booking/forms.py
 from django import forms
 from django.contrib.auth.forms import PasswordChangeForm
 from .models import Booking, Room 
@@ -8,6 +7,7 @@ from django.urls import reverse_lazy
 from dal import autocomplete
 from django.utils import timezone
 from django.core.exceptions import ValidationError
+from django.db.models import Q 
 
 
 class BookingForm(forms.ModelForm):
@@ -55,8 +55,6 @@ class BookingForm(forms.ModelForm):
             'additional_notes': 'หมายเหตุเพิ่มเติม',
         }
         
-        # --- 💡 [แก้ไขจุดที่ 1] 💡 ---
-        # (ลบ 'participants' ออกจาก help_texts เพื่อไม่ให้มันแสดงข้างนอก)
         help_texts = {
             'participant_count': '',
             'presentation_file': 'ไฟล์ที่ต้องการนำเสนอ',
@@ -64,14 +62,10 @@ class BookingForm(forms.ModelForm):
         
         widgets = {
             'room': forms.HiddenInput(),
-            
-            # --- 💡 [แก้ไขจุดที่ 2] 💡 ---
-            # (ย้ายข้อความจาก help_texts มาใส่ใน 'data-placeholder' แทน)
             'participants': autocomplete.ModelSelect2Multiple(
                 url='user-autocomplete',
                 attrs={'data-placeholder': 'พิมพ์ชื่อ, นามสกุล, หรือ username เพื่อค้นหา...', 'data-theme': 'bootstrap-5'}
             ),
-
             'presentation_file': forms.ClearableFileInput(attrs={'class':'form-control'}),
             'description': forms.Textarea(attrs={'rows': 3, 'class':'form-control'}),
             'additional_requests': forms.Textarea(attrs={'rows': 2, 'class':'form-control'}),
@@ -82,7 +76,6 @@ class BookingForm(forms.ModelForm):
             'participant_count': forms.NumberInput(attrs={'min': '1', 'class':'form-control'}),
         }
 
-    # (โค้ด __init__ นี้ถูกต้องแล้ว ทำให้ช่องเวลาแสดงผล)
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         
@@ -130,7 +123,7 @@ class BookingForm(forms.ModelForm):
         if recurrence and recurrence != 'NONE':
             if not recurrence_end_date:
                 self.add_error('recurrence_end_date', 'กรุณาระบุวันที่สิ้นสุดการจองซ้ำ')
-            elif recurrence_end_date <= start_time.date():
+            elif recurrence_end_date and start_time and recurrence_end_date <= start_time.date():
                 self.add_error('recurrence_end_date', 'วันที่สิ้นสุด ต้องอยู่หลังจาก วันที่เริ่มต้น')
 
         return cleaned_data
@@ -141,20 +134,40 @@ class CustomPasswordChangeForm(PasswordChangeForm):
      new_password1 = forms.CharField( label="รหัสผ่านใหม่", widget=forms.PasswordInput(attrs={'autocomplete': 'new-password', 'class':'form-control'}), strip=False, )
      new_password2 = forms.CharField( label="ยืนยันรหัสผ่านใหม่", strip=False, widget=forms.PasswordInput(attrs={'autocomplete': 'new-password', 'class':'form-control'}), )
 
+# --- 💡💡💡 [นี่คือจุดที่แก้ไข] 💡💡💡 ---
 class RoomForm(forms.ModelForm):
+    
+    approver = forms.ModelChoiceField(
+        queryset=User.objects.filter(Q(groups__name__in=['Approver', 'Admin']) | Q(is_superuser=True)).distinct(),
+        widget=autocomplete.ModelSelect2(
+            url='user-autocomplete', 
+            attrs={'data-placeholder': 'พิมพ์ค้นหา Admin หรือ Approver...', 'data-theme': 'bootstrap-5'}
+        ),
+        required=False,
+        label="ผู้อนุมัติประจำห้อง"
+    )
+
     class Meta:
         model = Room
-        fields = ['name', 'building', 'floor', 'capacity', 'equipment_in_room', 'location', 'image'] 
+        # (เพิ่ม 'is_active' เข้าไปใน fields)
+        fields = [
+            'name', 'building', 'floor', 'capacity', 'equipment_in_room', 
+            'location', 'image', 'approver', 'is_active'
+        ] 
         labels = {
             'name': 'ชื่อห้องประชุม', 'building': 'อาคาร', 'floor': 'ชั้น',
             'capacity': 'ความจุ (คน)', 'equipment_in_room': 'อุปกรณ์ภายในห้อง',
             'location': 'ตำแหน่ง (เช่น ใกล้ฝ่ายบุคคล)',
             'image': 'รูปภาพ (รูปหลัก)',
+            'approver': 'ผู้อนุมัติประจำห้อง',
+            'is_active': 'เปิดใช้งาน (Active)', # (เพิ่ม Label)
         }
         help_texts = {
             'equipment_in_room': 'ระบุอุปกรณ์แต่ละอย่างในบรรทัดใหม่ เช่น โปรเจคเตอร์, ไวท์บอร์ด',
             'image': 'เลือกไฟล์รูปภาพ .jpg, .png',
             'capacity': 'ระบุเป็นตัวเลขเท่านั้น',
+            'approver': 'หากเว้นว่าง ระบบจะใช้ Admin กลางในการอนุมัติ',
+            'is_active': 'ติ๊กออก เพื่อ "ปิดปรับปรุง" ห้องนี้ (ห้องจะไม่แสดงในหน้าจอง)', # (เพิ่ม Help Text)
         }
         widgets = {
             'name': forms.TextInput(attrs={'placeholder': 'เช่น ห้องประชุม O1-1', 'class':'form-control'}),
@@ -164,4 +177,6 @@ class RoomForm(forms.ModelForm):
             'equipment_in_room': forms.Textarea(attrs={'rows': 5, 'placeholder': 'โปรเจคเตอร์\nไวท์บอร์ด\nชุดเครื่องเสียง\nปลั๊กไฟ', 'class':'form-control'}),
             'location': forms.TextInput(attrs={'placeholder': 'เช่น ใกล้ฝ่ายบุคคล, โซน R&D', 'class':'form-control'}),
             'image': forms.ClearableFileInput(attrs={'accept': 'image/*', 'class':'form-control'}),
+            # (BooleanField (is_active) ไม่จำเป็นต้องมี Widget พิเศษ มันจะกลายเป็น Checkbox อัตโนมัติ)
         }
+# --- 💡💡💡 [สิ้นสุดการแก้ไข] 💡💡💡 ---
