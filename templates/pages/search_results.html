@@ -14,7 +14,7 @@
                 <label for="searchQuery" class="form-label">คำค้นหา</label>
                 <input type="text" 
                        class="form-control" 
-                       placeholder="" 
+                       placeholder="เช่น 10 คน, พรุ่งนี้เช้า, ห้อง RD1" 
                        name="q" 
                        id="searchQuery"
                        value="{{ query_text|default:'' }}">
@@ -36,7 +36,7 @@
 
     <div class="content-card shadow-sm border p-3 p-md-4">
         <h5 class="mb-4">
-            ห้องประชุมที่ว่าง: 
+            ผลลัพธ์สำหรับ "{{ query_text|default:'' }}": 
             <span class="text-primary fw-bold">{{ available_rooms|length }} ห้อง</span>
         </h5>
 
@@ -44,7 +44,7 @@
         <div class="row g-4 row-cols-1 row-cols-md-2 row-cols-lg-3">
             {% for room in available_rooms %}
             <div class="col">
-                <div class="card h-100 shadow-sm border-start border-3 border-success room-card-hover">
+                <div class="card h-90 shadow-sm border-start border-2 border-primary room-card-hover">
                     <div class="card-body">
                         <h5 class="card-title">{{ room.name }}</h5>
                         <p class="card-subtitle mb-2 text-muted small">
@@ -56,9 +56,21 @@
                             {{ room.equipment_in_room|truncatewords:4|default:"-" }}
                         </p>
                         
-                        <a href="{% url 'room_calendar' room.id %}" class="btn btn-sm btn-success w-100 mt-2">
-                            <i class="bi bi-calendar-check-fill me-1"></i> ดูตาราง / จอง
-                        </a>
+                        {% if is_admin_user %}
+                            <a href="{% url 'room_calendar' room.id %}" class="btn btn-outline-success w-100 mt-2">
+                                <!-- <button type="button" class="btn btn-outline-warning">Warning</button> -->
+                                <i class="bi bi-calendar-check-fill me-1"></i> ดูตาราง / จอง
+                            </a>
+                        {% else %}
+                             <button type="button" class="btn btn-sm btn-primary mt-2 w-100 book-modal-trigger" 
+                                     data-bs-toggle="modal" 
+                                     data-bs-target="#bookingModal" 
+                                     data-room-url="{% url 'room_calendar' room.id %}"
+                                     data-room-name="{{ room.name }}">
+                                 <i class="bi bi-calendar3 me-1"></i> ดูตาราง / จอง
+                             </button>
+                        {% endif %}
+
                     </div>
                 </div>
             </div>
