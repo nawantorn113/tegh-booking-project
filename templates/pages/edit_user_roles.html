@@ -1,28 +1,115 @@
 {% extends 'base.html' %}
-{% block title %}แก้ไขสิทธิ์ผู้ใช้ - {{ block.super }}{% endblock %}
+{% load static %}
+
+{% block title %}แก้ไขการจอง: {{ booking.title }}{% endblock %}
+{% block page_title %}แก้ไขการจอง{% endblock %}
+
+{% block extra_head %}
+{{ form.media.css }}
+
+<style>
+    .room-image { 
+        height: 250px; 
+        object-fit: cover; 
+        border-radius: 0.5rem; 
+    }
+    /* (แก้ปัญหา Select2) */
+    .select2-container--bootstrap-5 .select2-selection {
+        width: 100% !important;
+    }
+</style>
+{% endblock %}
+
 
 {% block content %}
-<a href="{% url 'user_management' %}" class="btn btn-outline-secondary btn-sm mb-3"><i class="bi bi-arrow-left"></i> กลับไปหน้ารายชื่อ</a>
-<h1 class="mb-1">แก้ไขสิทธิ์การใช้งาน</h1>
-<p class="text-muted mb-4">สำหรับผู้ใช้: <strong>{{ user_to_edit.username }}</strong></p>
+<div class="container-fluid py-4">
 
-<div class="card shadow-sm">
-    <div class="card-body">
-        <form method="post">
-            {% csrf_token %}
-            <p>เลือกกลุ่มสิทธิ์ที่ต้องการ:</p>
-            {% for group in all_groups %}
-                <div class="form-check mb-2">
-                    <input class="form-check-input" type="checkbox" name="groups" value="{{ group.id }}" id="group-{{ group.id }}" 
-                           {% if group in user_to_edit.groups.all %}checked{% endif %}>
-                    <label class="form-check-label" for="group-{{ group.id }}">
-                        {{ group.name }}
-                    </label>
+    <div class="content-card shadow-sm border p-3 p-md-4 mb-4">
+        <div class="row">
+            <div class="col-lg-6 mb-3 mb-lg-0">
+                {% if booking.room.image %}
+                    <img src="{{ booking.room.image.url }}" class="d-block w-100 room-image" alt="รูปห้อง {{ booking.room.name }}">
+                {% else %}
+                    <div class="bg-light text-muted d-flex align-items-center justify-content-center room-image">ไม่มีรูปภาพตัวอย่าง</div>
+                {% endif %}
+            </div>
+            <div class="col-lg-6">
+                <h4 class="fw-bold text-primary">{{ booking.room.name }}</h4>
+                <p class="text-muted small mb-3">{{ booking.room.location|default:"(ไม่ได้ระบุตำแหน่ง)" }}</p>
+                <p class="mb-2"><i class="bi bi-people-fill me-2 text-muted"></i> <strong>ความจุ:</strong> {{ booking.room.capacity }} คน</p>
+                <p class="mb-2"><i class="bi bi-building me-2 text-muted"></i> <strong>อาคาร:</strong> {{ booking.room.building|default:"-" }} (ชั้น {{ booking.room.floor|default:"-" }})</p>
+                <p class="mb-1"><i class="bi bi-tools me-2 text-muted"></i> <strong>อุปกรณ์:</strong></p>
+                <div class="small text-muted ps-4 mt-1">
+                    {{ booking.room.equipment_in_room|default:"(ไม่มีข้อมูลอุปกรณ์ระบุ)"|linebreaksbr }}
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="content-card shadow-sm border p-3 p-md-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="mb-0 fw-bold">แก้ไขข้อมูลการจอง: "{{ booking.title }}"</h5>
+            <h6 class="card-subtitle mb-2 text-muted">
+                สถานะปัจจุบัน:
+                {% if booking.status == 'APPROVED' %}<span class="badge bg-success">อนุมัติแล้ว</span>
+                {% elif booking.status == 'PENDING' %}<span class="badge bg-warning text-dark">รออนุมัติ</span>
+                {% elif booking.status == 'REJECTED' %}<span class="badge bg-danger">ถูกปฏิเสธ</span>
+                {% elif booking.status == 'CANCELLED' %}<span class="badge bg-secondary">ยกเลิกแล้ว</span>
+                {% else %}<span class="badge bg-light text-dark">{{ booking.get_status_display }}</span>
+                {% endif %}
+            </h6>
+        </div>
+        <hr>
+        <form method="post" enctype="multipart/form-data" id="editBookingForm">
+            {% csrf_token %}
+            
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+            {% endif %}
+
+            {% for field in form %}
+            <div class="mb-3">
+                <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}{% if field.field.required %}<span class="text-danger">*</span>{% endif %}</label>
+                {{ field }}
+                {% if field.name != 'participants' and field.help_text %}
+                  <div class="form-text">{{ field.help_text }}</div>
+                {% endif %}
+                {% if field.errors %}<div class="invalid-feedback d-block">{{ field.errors }}</div>{% endif %}
+            </div>
             {% endfor %}
-            <hr>
-            <button type="submit" class="btn btn-primary">บันทึกการเปลี่ยนแปลง</button>
+
+            <hr class="my-4">
+            <div class="d-flex justify-content-end">
+                <a href="{% url 'history' %}" class="btn btn-outline-secondary me-2" onclick="return confirm('คุณแน่ใจหรือไม่ว่าต้องการยกเลิกการแก้ไข?');">
+                    <i class="bi bi-x-circle me-1"></i>ยกเลิก
+                </a>
+                <button type="submit" class="btn btn-primary px-4"><i class="bi bi-save-fill me-2"></i>บันทึกการเปลี่ยนแปลง</button>
+            </div>
         </form>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_scripts %}
+{{ form.media.js }}
+
+<script>
+// (ใช้ window.onload เพื่อรอให้ {{ form.media.js }} โหลดเสร็จก่อน)
+window.onload = function() {
+    if (typeof $ === 'undefined') {
+        console.error("jQuery not loaded!");
+        return;
+    }
+
+    // (เรียกใช้ Select2 บนช่อง participants)
+    if ($.fn.select2) {
+        var participantsField = $('#id_participants');
+        if (participantsField.length) {
+            participantsField.select2({
+                width: '100%'
+            });
+        }
+    }
+};
+</script>
 {% endblock %}

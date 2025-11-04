@@ -270,19 +270,14 @@ def master_calendar_view(request):
     context = get_base_context(request)
     return render(request, 'pages/master_calendar.html', context)
 
-# --- 💡💡💡 [นี่คือจุดที่แก้ไข] 💡💡💡 ---
 @login_required
 def history_view(request):
     
-    # 1. (แก้ไข) เช็คก่อนว่าเป็น Admin หรือไม่
     if is_admin(request.user):
-        # (Admin: แสดงการจองทั้งหมด)
         bookings = Booking.objects.all().select_related('room', 'user').order_by('-start_time')
     else:
-        # (User: แสดงเฉพาะของตัวเอง)
         bookings = Booking.objects.filter(user=request.user).select_related('room').order_by('-start_time')
 
-    # 2. (โค้ด Filter ... เหมือนเดิม)
     date_f = request.GET.get('date'); room_f = request.GET.get('room'); status_f = request.GET.get('status')
     if date_f:
         try:
@@ -303,10 +298,9 @@ def history_view(request):
         messages.warning(request, "สถานะการจองไม่ถูกต้อง")
         status_f = None
 
-    # 3. (ส่ง Context ไปที่ Template)
     context = get_base_context(request)
     context.update({
-        'bookings_list': bookings, # (เปลี่ยนชื่อจาก 'my_bookings' เป็น 'bookings_list')
+        'bookings_list': bookings, 
         'all_rooms': Room.objects.all().order_by('name'),
         'status_choices': Booking.STATUS_CHOICES,
         'current_date': date_f,
@@ -315,8 +309,8 @@ def history_view(request):
         'now_time': timezone.now()
     })
     return render(request, 'pages/history.html', context)
-# --- 💡💡💡 [สิ้นสุดการแก้ไข] 💡💡💡 ---
 
+# --- 💡💡💡 [นี่คือจุดที่แก้ไข] 💡💡💡 ---
 @login_required
 def booking_detail_view(request, booking_id):
     booking = get_object_or_404(
@@ -330,8 +324,14 @@ def booking_detail_view(request, booking_id):
         return redirect('dashboard')
         
     context = get_base_context(request)
-    context.update({'booking': booking})
+    
+    # (เพิ่ม 'can_edit_or_cancel' เข้าไปใน context)
+    context.update({
+        'booking': booking,
+        'can_edit_or_cancel': booking.can_user_edit_or_cancel(request.user)
+    })
     return render(request, 'pages/booking_detail.html', context)
+# --- 💡💡💡 [สิ้นสุดการแก้ไข] 💡💡💡 ---
 
 @login_required
 def change_password_view(request): 
