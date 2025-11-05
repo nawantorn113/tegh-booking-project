@@ -40,6 +40,7 @@ urlpatterns = [
     path('manage/rooms/', views.room_management_view, name='rooms'),
     path('manage/rooms/add/', views.add_room_view, name='add_room'),
     path('manage/rooms/edit/<int:room_id>/', views.edit_room_view, name='edit_room'),
+    path('manage/audit-log/', views.audit_log_view, name='audit_log'),
     path('manage/rooms/delete/<int:room_id>/', views.delete_room_view, name='delete_room'),
     
     # --- Admin / Reports ---

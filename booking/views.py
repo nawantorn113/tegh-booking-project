@@ -10,6 +10,8 @@ from django.db.models import Count, Q
 from django.views.decorators.http import require_POST, require_http_methods
 from django.contrib.auth.models import User, Group
 
+from django.core.paginator import Paginator
+
 from dal_select2.views import Select2QuerySetView
 DAL_AVAILABLE = True 
 
@@ -71,6 +73,7 @@ def get_base_context(request):
         {'label': 'จัดการห้องประชุม', 'url_name': 'rooms', 'icon': 'bi-door-open-fill', 'show': is_admin_user},
         {'label': 'จัดการผู้ใช้งาน', 'url_name': 'user_management', 'icon': 'bi-people-fill', 'show': is_admin_user},
         {'label': 'รายงานและสถิติ', 'url_name': 'reports', 'icon': 'bi-bar-chart-fill', 'show': is_admin_user},
+        {'label': 'ประวัติการใช้งาน', 'url_name': 'audit_log', 'icon': 'bi-clipboard-data-fill', 'show': is_admin_user}, 
     ]
 
     menu_items = []
@@ -233,9 +236,8 @@ def parse_search_query(query_text):
 def smart_search_view(request):
     query_text = request.GET.get('q', '')
     
-    # --- 💡💡💡 [นี่คือจุดที่แก้ไข 1] 💡💡💡 ---
-    # (กรองเฉพาะห้องที่ Active)
-    available_rooms = Room.objects.filter(is_active=True).order_by('capacity') 
+    # --- 💡 [แก้ไข] กรองเฉพาะห้องที่ "ไม่" ปิดปรับปรุง ---
+    available_rooms = Room.objects.filter(is_maintenance=False).order_by('capacity') 
     
     search_params = {}
 
@@ -273,12 +275,15 @@ def smart_search_view(request):
 def dashboard_view(request):
     now = timezone.now(); sort_by = request.GET.get('sort', 'floor')
     
-    # --- 💡💡💡 [นี่คือจุดที่แก้ไข 2] 💡💡💡 ---
-    # (กรองเฉพาะห้องที่ Active)
-    all_rooms = Room.objects.filter(is_active=True)
+    # --- 💡💡💡 [นี่คือจุดที่แก้ไข 1] 💡💡💡 ---
+    # User ทั่วไป (is_admin(request.user) เป็น False) จะเห็นห้องทุกห้อง (Room.objects.all())
+    # เพื่อให้แสดงห้องที่ปิดปรับปรุง
+    all_rooms = Room.objects.all()
+    # --- 💡💡💡 [สิ้นสุดการแก้ไข 1] 💡💡💡 ---
     
     if sort_by == 'status':
-        all_rooms_sorted = sorted(all_rooms, key=lambda r: not r.bookings.filter(start_time__lte=now, end_time__gt=now, status='APPROVED').exists())
+        # เรียงตามสถานะ: ห้องที่ปิดปรับปรุงจะอยู่ก่อนห้องว่าง
+        all_rooms_sorted = sorted(all_rooms, key=lambda r: (r.is_maintenance, not r.bookings.filter(start_time__lte=now, end_time__gt=now, status='APPROVED').exists()))
     elif sort_by == 'capacity':
          all_rooms_sorted = sorted(all_rooms, key=lambda r: r.capacity, reverse=True)
     elif sort_by == 'name':
@@ -288,12 +293,18 @@ def dashboard_view(request):
         
     buildings = defaultdict(list)
     for room in all_rooms_sorted:
-        current = room.bookings.filter(start_time__lte=now, end_time__gt=now, status='APPROVED').select_related('user').first()
-        room.status = 'ไม่ว่าง' if current else 'ว่าง'
-        room.current_booking_info = current
-        room.next_booking_info = None
-        if not current:
-            room.next_booking_info = room.bookings.filter(start_time__gt=now, status='APPROVED').select_related('user').order_by('start_time').first()
+        
+        if room.is_maintenance:
+            room.status = 'ปิดปรับปรุง' # กำหนดสถานะให้ชัดเจน
+            room.current_booking_info = None
+            room.next_booking_info = None
+        else:
+            current = room.bookings.filter(start_time__lte=now, end_time__gt=now, status='APPROVED').select_related('user').first()
+            room.status = 'ไม่ว่าง' if current else 'ว่าง'
+            room.current_booking_info = current
+            room.next_booking_info = None
+            if not current:
+                room.next_booking_info = room.bookings.filter(start_time__gt=now, status='APPROVED').select_related('user').order_by('start_time').first()
         
         buildings[room.building or "(ไม่ได้ระบุอาคาร)"].append(room)
         
@@ -302,7 +313,7 @@ def dashboard_view(request):
     context = get_base_context(request)
     
     summary = {
-        'total_rooms': all_rooms.count(), # (นับเฉพาะห้องที่ Active)
+        'total_rooms': all_rooms.count(), 
         'today_bookings': Booking.objects.filter(start_time__date=now.date(), status='APPROVED').count(),
         'pending_approvals': context['pending_count'], 
         'my_bookings_today': my_bookings_today_count,
@@ -320,9 +331,8 @@ def dashboard_view(request):
 def room_calendar_view(request, room_id):
     room = get_object_or_404(Room, pk=room_id)
     
-    # (ถ้าห้องถูกปิดปรับปรุง (is_active=False) และคนเข้าไม่ใช่ Admin)
-    if not room.is_active and not is_admin(request.user):
-        messages.error(request, f"ห้อง '{room.name}' กำลังปิดปรับปรุงชั่วคราว")
+    if room.is_maintenance and not is_admin(request.user):
+        messages.error(f"ห้อง '{room.name}' กำลังปิดปรับปรุงชั่วคราว ไม่สามารถเข้าดูปฏิทินได้")
         return redirect('dashboard')
         
     if request.method == 'POST':
@@ -339,9 +349,7 @@ def room_calendar_view(request, room_id):
 
 @login_required
 def master_calendar_view(request):
-    # --- 💡💡💡 [นี่คือจุดที่แก้ไข 3] 💡💡💡 ---
-    # (ส่งเฉพาะห้องที่ Active ไปที่ปฏิทินรวม)
-    all_rooms = Room.objects.filter(is_active=True).order_by('building', 'floor', 'name')
+    all_rooms = Room.objects.filter(is_maintenance=False).order_by('building', 'floor', 'name')
     
     context = get_base_context(request)
     context.update({
@@ -393,8 +401,7 @@ def history_view(request):
     context = get_base_context(request)
     context.update({
         'bookings_list': bookings, 
-        # (ส่งเฉพาะห้องที่ Active ไปที่ Dropdown Filter)
-        'all_rooms': Room.objects.filter(is_active=True).order_by('name'),
+        'all_rooms': Room.objects.all().order_by('name'),
         'status_choices': Booking.STATUS_CHOICES,
         'current_date': date_f,
         'current_room': room_f,
@@ -444,9 +451,7 @@ def change_password_view(request):
 # --- APIs ---
 @login_required
 def rooms_api(request):
-    # --- 💡💡💡 [นี่คือจุดที่แก้ไข 4] 💡💡💡 ---
-    # (ส่งเฉพาะห้องที่ Active ไปที่ API)
-    rooms = Room.objects.filter(is_active=True).order_by('building', 'name')
+    rooms = Room.objects.filter(is_maintenance=False).order_by('building', 'name')
     resources = [{
         'id': r.id, 
         'title': r.name, 
@@ -569,6 +574,14 @@ def delete_booking_api(request, booking_id):
 @transaction.atomic 
 def create_booking_view(request, room_id):
     room = get_object_or_404(Room, pk=room_id)
+    
+    if room.is_maintenance and not is_admin(request.user):
+        messages.error(request, f"ไม่สามารถจองได้: ห้อง '{room.name}' กำลังปิดปรับปรุง")
+        context = get_base_context(request)
+        form = BookingForm(request.POST, request.FILES)
+        context.update({'room': room, 'form': form})
+        return render(request, 'pages/room_calendar.html', context)
+
     form = BookingForm(request.POST, request.FILES) 
     
     if form.is_valid():
@@ -859,7 +872,6 @@ def edit_user_roles_view(request, user_id):
 @login_required
 @user_passes_test(is_admin)
 def room_management_view(request):
-    # (Admin ควรเห็นห้องทั้งหมด แม้ว่าจะ 'is_active=False')
     rooms = Room.objects.all().order_by('building', 'name')
     context = get_base_context(request)
     context.update({'rooms': rooms})
@@ -910,6 +922,21 @@ def delete_room_view(request, room_id):
         messages.error(request, f"ไม่สามารถลบห้อง '{room_name}' ได้: {e}")
     return redirect('rooms')
 
+@login_required
+@user_passes_test(is_admin) 
+def audit_log_view(request):
+    log_list = AuditLog.objects.all().select_related('user').order_by('-timestamp')
+    
+    paginator = Paginator(log_list, 25) 
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    context = get_base_context(request)
+    context.update({
+        'page_obj': page_obj
+    })
+    return render(request, 'pages/audit_log.html', context)
+
 # --- Reports ---
 @login_required
 @user_passes_test(is_admin)
@@ -937,9 +964,7 @@ def reports_view(request):
         recent_bookings = recent_bookings.filter(department=department)
         report_title += f" (แผนก: {department})"
         
-    # --- 💡💡💡 [นี่คือจุดที่แก้ไข 5] 💡💡💡 ---
-    # (กรองเฉพาะห้องที่ Active)
-    room_usage_stats = Room.objects.filter(is_active=True).annotate(
+    room_usage_stats = Room.objects.filter(is_maintenance=False).annotate(
         booking_count=Count('bookings', filter=Q(bookings__in=recent_bookings))
     ).filter(booking_count__gt=0).order_by('-booking_count')
     
@@ -969,7 +994,7 @@ def reports_view(request):
         'pending_count': context['pending_count'],
         'today_bookings_count': Booking.objects.filter(start_time__date=timezone.now().date(), status='APPROVED').count(),
         'total_users_count': User.objects.count(),
-        'total_rooms_count': Room.objects.filter(is_active=True).count(), # (นับเฉพาะ Active)
+        'total_rooms_count': Room.objects.filter(is_maintenance=False).count(),
         'login_history': [], 
      })
     return render(request, 'pages/reports.html', context)

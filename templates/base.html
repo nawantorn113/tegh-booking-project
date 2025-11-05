@@ -19,7 +19,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;500;600&display=swap" rel="stylesheet">
 
     <style>
-        /* (สไตล์ทั้งหมดของคุณ ... ) */
         body { background-color: #f8f9fa; font-family: 'Kanit', sans-serif; font-weight: 400; }
         .navbar { box-shadow: none; background-color: #fff; padding-top: 0.75rem; padding-bottom: 0.75rem; border-bottom: 1px solid #e9ecef; }
         .navbar-brand { color: #4338ca !important; font-weight: 600; }
@@ -151,10 +150,10 @@
     
     <main class="container-xl main-content-wrapper" id="main-content">
         
-        <!-- <div class="page-header" id="page-header">
+        <div class="page-header" id="page-header">
             <h5 class="mb-0">{% block page_title %}หน้าจองห้องประชุม{% endblock %}</h5>
             <div> {% block page_actions %}{% endblock %} </div>
-        </div> -->
+        </div>
 
         {% if messages %}
             {% for message in messages %}
@@ -166,7 +165,6 @@
         {% endif %}
 
         {% block content %}
-        {# เนื้อหาของหน้าย่อยๆ จะมาแทนที่ตรงนี้ #}
         {% endblock %}
     </main>
 
@@ -174,14 +172,9 @@
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
     
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/i18n/th.js"></script>
-
     <script>
     $(document).ready(function() {
-        if ($.fn.select2) {
-            $.fn.select2.defaults.set("theme", "bootstrap-5");
-        }
+        // (ลบ $.fn.select2.defaults.set ออก)
         var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
         var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
           return new bootstrap.Tooltip(tooltipTriggerEl)

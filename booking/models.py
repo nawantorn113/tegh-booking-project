@@ -22,9 +22,10 @@ class Room(models.Model):
     )
     
     # --- 💡💡💡 [นี่คือจุดที่แก้ไข] 💡💡💡 ---
-    is_active = models.BooleanField(
-        default=True,
-        help_text="ติ๊กออก เพื่อ 'ปิดปรับปรุง' ห้องนี้ (ห้องจะไม่แสดงในหน้าจอง)"
+    # (เปลี่ยนจาก is_active=True เป็น is_maintenance=False)
+    is_maintenance = models.BooleanField(
+        default=False, # (ค่าเริ่มต้น = ไม่ได้ปิดปรับปรุง)
+        help_text="ติ๊กถูก [✓] เพื่อ 'ปิดปรับปรุง' ห้องนี้"
     )
     # --- 💡💡💡 [สิ้นสุดการแก้ไข] 💡💡💡 ---
 

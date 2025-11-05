@@ -106,7 +106,6 @@
 <script>
 window.onload = function() {
     
-    // (ตรวจสอบไลบรารีพื้นฐาน)
     if (typeof FullCalendar === 'undefined' || typeof bootstrap === 'undefined' || typeof $ === 'undefined' || typeof yl === 'undefined') {
         console.error("Required JS libraries not loaded (jQuery, Bootstrap, FullCalendar, or DAL/yl).");
         document.getElementById('calendar').innerHTML = '<div class="alert alert-danger">เกิดข้อผิดพลาด: โหลดไลบรารีไม่สำเร็จ กรุณาล้างแคช (Ctrl+Shift+R)</div>';
@@ -281,7 +280,11 @@ window.onload = function() {
             }
             
             // (เช็คสิทธิ์ในการลาก: ต้องเป็น Admin หรือ เจ้าของการจอง)
-            if (props.user_id == {{ request.user.id }} || {{ is_admin_user|yesno:"true,false" }}) {
+            // (เราใช้ request.user.id เพื่อเปรียบเทียบ)
+            var currentUserId = {{ request.user.id|default:"null" }};
+            var isAdmin = {{ is_admin_user|yesno:"true,false" }};
+            
+            if (props.user_id == currentUserId || isAdmin) {
                 eventData.editable = true;
             } else {
                 eventData.editable = false;
