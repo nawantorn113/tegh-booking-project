@@ -16,89 +16,94 @@
 
 
 {% block content %}
-<div class="content-card shadow-sm border p-3 p-md-4">
-        
-        <form method="post" enctype="multipart/form-data">
-            {% csrf_token %}
+<div class="row justify-content-center">
+    <div class="col-lg-10 col-xl-9"> 
+        <div class="content-card shadow-sm border p-3 p-md-4">
             
-            {% if form.non_field_errors %}
-                <div class="alert alert-danger">{{ form.non_field_errors }}</div>
-            {% endif %}
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+                {% endif %}
 
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label for="{{ form.name.id_for_label }}" class="form-label">{{ form.name.label }}{% if form.name.field.required %}<span class="text-danger">*</span>{% endif %}</label>
-                    {{ form.name }}
-                    {% if form.name.errors %}<div class="invalid-feedback d-block">{{ form.name.errors }}</div>{% endif %}
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.name.id_for_label }}" class="form-label">{{ form.name.label }}{% if form.name.field.required %}<span class="text-danger">*</span>{% endif %}</label>
+                        {{ form.name }}
+                        {% if form.name.errors %}<div class="invalid-feedback d-block">{{ form.name.errors }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.capacity.id_for_label }}" class="form-label">{{ form.capacity.label }}{% if form.capacity.field.required %}<span class="text-danger">*</span>{% endif %}</label>
+                        {{ form.capacity }}
+                        {% if form.capacity.errors %}<div class="invalid-feedback d-block">{{ form.capacity.errors }}</div>{% endif %}
+                    </div>
                 </div>
-                <div class="col-md-6 mb-3">
-                    <label for="{{ form.capacity.id_for_label }}" class="form-label">{{ form.capacity.label }}{% if form.capacity.field.required %}<span class="text-danger">*</span>{% endif %}</label>
-                    {{ form.capacity }}
-                    {% if form.capacity.errors %}<div class="invalid-feedback d-block">{{ form.capacity.errors }}</div>{% endif %}
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.building.id_for_label }}" class="form-label">{{ form.building.label }}</label>
+                        {{ form.building }}
+                        {% if form.building.errors %}<div class="invalid-feedback d-block">{{ form.building.errors }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.floor.id_for_label }}" class="form-label">{{ form.floor.label }}</label>
+                        {{ form.floor }}
+                        {% if form.floor.errors %}<div class="invalid-feedback d-block">{{ form.floor.errors }}</div>{% endif %}
+                    </div>
                 </div>
-            </div>
 
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label for="{{ form.building.id_for_label }}" class="form-label">{{ form.building.label }}</label>
-                    {{ form.building }}
-                    {% if form.building.errors %}<div class="invalid-feedback d-block">{{ form.building.errors }}</div>{% endif %}
+                <div class="mb-3">
+                    <label for="{{ form.location.id_for_label }}" class="form-label">{{ form.location.label }}</label>
+                    {{ form.location }}
+                    <div class="form-text">{{ form.location.help_text }}</div>
+                    {% if form.location.errors %}<div class="invalid-feedback d-block">{{ form.location.errors }}</div>{% endif %}
                 </div>
-                <div class="col-md-6 mb-3">
-                    <label for="{{ form.floor.id_for_label }}" class="form-label">{{ form.floor.label }}</label>
-                    {{ form.floor }}
-                    {% if form.floor.errors %}<div class="invalid-feedback d-block">{{ form.floor.errors }}</div>{% endif %}
+
+                <div class="mb-3">
+                    <label for="{{ form.equipment_in_room.id_for_label }}" class="form-label">{{ form.equipment_in_room.label }}</label>
+                    {{ form.equipment_in_room }}
+                    <div class="form-text">{{ form.equipment_in_room.help_text }}</div>
+                    {% if form.equipment_in_room.errors %}<div class="invalid-feedback d-block">{{ form.equipment_in_room.errors }}</div>{% endif %}
                 </div>
-            </div>
 
-            <div class="mb-3">
-                <label for="{{ form.location.id_for_label }}" class="form-label">{{ form.location.label }}</label>
-                {{ form.location }}
-                <div class="form-text">{{ form.location.help_text }}</div>
-                {% if form.location.errors %}<div class="invalid-feedback d-block">{{ form.location.errors }}</div>{% endif %}
-            </div>
-
-            <div class="mb-3">
-                <label for="{{ form.equipment_in_room.id_for_label }}" class="form-label">{{ form.equipment_in_room.label }}</label>
-                {{ form.equipment_in_room }}
-                <div class="form-text">{{ form.equipment_in_room.help_text }}</div>
-                {% if form.equipment_in_room.errors %}<div class="invalid-feedback d-block">{{ form.equipment_in_room.errors }}</div>{% endif %}
-            </div>
-
-            <div class="mb-3">
-                <label for="{{ form.image.id_for_label }}" class="form-label">{{ form.image.label }}</label>
-                {{ form.image }}
-                <div class="form-text">{{ form.image.help_text }}</div>
-                {% if form.image.errors %}<div class="invalid-feedback d-block">{{ form.image.errors }}</div>{% endif %}
-            </div>
-
-            <hr class="my-4">
-            
-            <div class="mb-3">
-                <label for="{{ form.approver.id_for_label }}" class="form-label">{{ form.approver.label }}</label>
-                {{ form.approver }}
-                <div class="form-text">{{ form.approver.help_text }}</div>
-                {% if form.approver.errors %}<div class="invalid-feedback d-block">{{ form.approver.errors }}</div>{% endif %}
-            </div>
-
-            <div class="mb-3">
-                <div class="form-check form-switch fs-5">
-                    {{ form.is_maintenance }}
-                    <label class="form-check-label" for="{{ form.is_maintenance.id_for_label }}">
-                        {{ form.is_maintenance.label }}
-                    </label>
+                <div class="mb-3">
+                    <label for="{{ form.image.id_for_label }}" class="form-label">{{ form.image.label }}</label>
+                    {{ form.image }}
+                    <div class="form-text">{{ form.image.help_text }}</div>
+                    {% if form.image.errors %}<div class="invalid-feedback d-block">{{ form.image.errors }}</div>{% endif %}
                 </div>
-                <!-- <div class="form-text ms-2">ติ๊ก [✓] เพื่อ "ปิดปรับปรุง" (ห้องจะแสดงในหน้าหลัก แต่จองไม่ได้)</div> -->
-                {% if form.is_maintenance.errors %}<div class="invalid-feedback d-block">{{ form.is_maintenance.errors }}</div>{% endif %}
-            </div>
 
-            <hr class="my-4">
-            <div class="d-flex justify-content-end">
-                <a href="{% url 'rooms' %}" class="btn btn-outline-secondary me-2"><i class="bi bi-x-circle me-1"></i>ยกเลิก</a>
-                <button type="submit" class="btn btn-primary px-4"><i class=""></i>บันทึกข้อมูล</button>
-            </div>
-        </form>
+                <hr class="my-4">
+                
+                <div class="mb-3">
+                    <label for="{{ form.approver.id_for_label }}" class="form-label">{{ form.approver.label }}</label>
+                    {{ form.approver }}
+                    <div class="form-text">{{ form.approver.help_text }}</div>
+                    {% if form.approver.errors %}<div class="invalid-feedback d-block">{{ form.approver.errors }}</div>{% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <div class="form-check form-switch fs-5">
+                        {{ form.is_maintenance }}
+                        <label class="form-check-label fw-bold text-danger" for="{{ form.is_maintenance.id_for_label }}">
+                            {{ form.is_maintenance.label }} 
+                            <span class="badge bg-danger ms-2">แสดงสถานะนี้ใน Dashboard</span>
+                        </label>
+                    </div>
+                    <div class="form-text ms-2 text-muted">{{ form.is_maintenance.help_text }}</div>
+                    {% if form.is_maintenance.errors %}<div class="invalid-feedback d-block">{{ form.is_maintenance.errors }}</div>{% endif %}
+                </div>
+
+                <hr class="my-4">
+                <div class="d-flex justify-content-end">
+                    <a href="{% url 'rooms' %}" class="btn btn-outline-secondary me-2"><i class="bi bi-x-circle me-1"></i>ยกเลิก</a>
+                    <button type="submit" class="btn btn-primary px-4"><i class="bi bi-save-fill me-2"></i>บันทึกข้อมูล</button>
+                </div>
+            </form>
+        </div>
     </div>
+</div>
 {% endblock %}
 
 {% block extra_scripts %}

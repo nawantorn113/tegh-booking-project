@@ -67,7 +67,7 @@ class BookingForm(forms.ModelForm):
                 attrs={'data-placeholder': 'พิมพ์ชื่อ, นามสกุล, หรือ username เพื่อค้นหา...', 'data-theme': 'bootstrap-5'}
             ),
             'presentation_file': forms.ClearableFileInput(attrs={'class':'form-control'}),
-            'description': forms.Textarea(attrs={'rows': 3, 'class':'form-control'}),
+            'description': forms.Textarea(attrs={'rows': 4, 'class':'form-control'}),
             'additional_requests': forms.Textarea(attrs={'rows': 2, 'class':'form-control'}),
             'additional_notes': forms.Textarea(attrs={'rows': 2, 'class':'form-control'}),
             'title': forms.TextInput(attrs={'class':'form-control'}),
@@ -159,14 +159,14 @@ class RoomForm(forms.ModelForm):
             'location': 'ตำแหน่ง (เช่น ใกล้ฝ่ายบุคคล)',
             'image': 'รูปภาพ (รูปหลัก)',
             'approver': 'ผู้อนุมัติประจำห้อง',
-            'is_maintenance': 'ปิดปรับปรุง (Maintenance)', 
+            'is_maintenance': 'ปิดปรับปรุง', # 💡 [แก้ไข] Label ให้สั้นลง
         }
         help_texts = {
             'equipment_in_room': 'ระบุอุปกรณ์แต่ละอย่างในบรรทัดใหม่ เช่น โปรเจคเตอร์, ไวท์บอร์ด',
             'image': 'เลือกไฟล์รูปภาพ .jpg, .png',
             'capacity': 'ระบุเป็นตัวเลขเท่านั้น',
             'approver': 'หากเว้นว่าง ระบบจะใช้ Admin กลางในการอนุมัติ',
-            'is_maintenance': '', # (ลบข้อความที่ดูไม่ดีออก)
+            'is_maintenance': 'ติ๊ก [✓] เพื่อปิดการจองห้องนี้ชั่วคราว', # 💡 [แก้ไข] Help Text ให้สั้นและชัดเจนขึ้น
         }
         widgets = {
             'name': forms.TextInput(attrs={'placeholder': 'เช่น ห้องประชุม O1-1', 'class':'form-control'}),
@@ -176,8 +176,6 @@ class RoomForm(forms.ModelForm):
             'equipment_in_room': forms.Textarea(attrs={'rows': 5, 'placeholder': 'โปรเจคเตอร์\nไวท์บอร์ด\nชุดเครื่องเสียง\nปลั๊กไฟ', 'class':'form-control'}),
             'location': forms.TextInput(attrs={'placeholder': 'เช่น ใกล้ฝ่ายบุคคล, โซน R&D', 'class':'form-control'}),
             'image': forms.ClearableFileInput(attrs={'accept': 'image/*', 'class':'form-control'}),
-            
-            # (เราจะใช้ Checkbox ธรรมดา)
             'is_maintenance': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
 # --- 💡💡💡 [สิ้นสุดการแก้ไข] 💡💡💡 ---

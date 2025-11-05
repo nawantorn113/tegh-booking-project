@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 {% block title %}Dashboard - TEGH Booking{% endblock %}
-{% block page_title %}หน้าหลัก{% endblock %}
+<!-- {% block page_title %}หน้าหลัก{% endblock %} -->
 {% block extra_head %}
 <style>
     .kpi-card:hover, .room-card-hover:hover {
@@ -25,81 +25,19 @@
     }
     /* สไตล์สำหรับห้องที่ปิดปรับปรุง */
     .room-maintenance {
-        background-color: #f1f2f3; 
-        opacity: 0.8;
+        background-color: #f8f8f8; /* สีพื้นหลังเทาอ่อน */
+        opacity: 0.9;
     }
     /* สไตล์ปุ่ม Alert ใหม่ */
     .btn-maintenance-alert {
-        background-color: #f0f0f0;
+        background-color: #e9ecef; /* สีเทาอ่อนสำหรับปุ่ม */
         color: #6c757d;
         border-color: #ced4da;
     }
     .btn-maintenance-alert:hover {
-        background-color: #e9ecef;
+        background-color: #d1d5db;
         color: #495057;
     }
-
-    /* --- ✨✨✨ สไตล์ใหม่สำหรับ Pop-up แจ้งเตือน ✨✨✨ --- */
-    .maintenance-modal .modal-header {
-        background-color: #ffffff; 
-        border-bottom: none;
-        padding: 1.5rem;
-        text-align: center;
-        border-top-left-radius: 0.5rem;
-        border-top-right-radius: 0.5rem;
-        position: relative; /* สำหรับ icon */
-    }
-    .maintenance-modal .modal-title {
-        color: #ffffff; 
-        font-size: 1.8rem;
-        font-weight: 600;
-        margin: 0 auto; /* จัดกลาง */
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    .maintenance-modal .modal-title i {
-        font-size: 2.2rem;
-        margin-right: 0.75rem;
-        color: #e65100;
-    }
-    .maintenance-modal .modal-body {
-        padding: 2rem;
-        text-align: center;
-        background-color: #fff;
-    }
-    .maintenance-modal .modal-body .display-5 {
-        color: #343a40;
-        font-weight: 700;
-        margin-bottom: 0.5rem;
-    }
-    .maintenance-modal .modal-body .fw-bold {
-        color: #e65100; /* สีส้มเข้ม */
-    }
-    .maintenance-modal .modal-body .lead {
-        font-size: 1.15rem;
-        color: #555;
-    }
-    .maintenance-modal .modal-footer {
-        border-top: none;
-        padding: 1.5rem;
-        justify-content: center;
-        background-color: #f8f9fa;
-        border-bottom-left-radius: 0.5rem;
-        border-bottom-right-radius: 0.5rem;
-    }
-    .maintenance-modal .btn-close {
-        position: absolute;
-        top: 1rem;
-        right: 1rem;
-        color: #e65100;
-        opacity: 0.7;
-    }
-    .maintenance-modal .btn-close:hover {
-        opacity: 1;
-    }
-    /* --- ✨✨✨ สิ้นสุดสไตล์ใหม่ ✨✨✨ --- */
-
 </style>
 {% endblock %}
 
@@ -163,8 +101,8 @@
             <div class="card kpi-card border-start border-info border-2 shadow-sm h-100">
                  <div class="card-body d-flex justify-content-between align-items-center">
                     <div>
-                        <h6 class="card-subtitle text-muted mb-1">การจองของคุณ (วันนี้)</h6>
-                        <h2 class="card-title fw-bold mb-0">{{ summary_cards.my_bookings_today }} <small class="text-muted fs-6">รายการ</small></h2>
+                        <h6 class="card-subtitle text-muted mb-1">ผู้ใช้ทั้งหมด</h6>
+                        <h2 class="card-title fw-bold mb-0">{{ summary_cards.total_users_count }} <small class="text-muted fs-6">คน</small></h2>
                     </div>
                      <i class="bi bi-person-check-fill kpi-icon text-info"></i>
                 </div>
@@ -260,7 +198,7 @@
                                             <i class="bi bi-calendar3 me-1"></i> ดูตาราง / จอง
                                         </a>
                                 {% else %}
-                                    <p class="small mb-1 text-success"><i class="bi bi-calendar-check"></i> ว่าง</p>
+                                    <p class="small mb-1 text-success"><i class="bi bi-calendar-check"></i> ว่างตลอด</p>
                                     <p class="small mb-1 text-muted">&nbsp;</p> {# Placeholder #}
                                     <a href="{% url 'room_calendar' room.id %}" class="btn btn-sm btn-outline-success mt-2 w-100">
                                         <i class="bi bi-calendar3 me-1"></i> ดูตาราง / จอง
@@ -282,14 +220,13 @@
 
 {# --- Modal สำหรับแจ้งเตือน ปิดปรับปรุง (ปรับปรุงให้สวยงาม) --- #}
 <div class="modal fade" id="maintenanceAlertModal" tabindex="-1" aria-labelledby="maintenanceAlertModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-sm modal-dialog-centered maintenance-modal"> {# เพิ่ม class maintenance-modal #}
+  <div class="modal-dialog modal-sm modal-dialog-centered maintenance-modal"> 
     <div class="modal-content">
       <div class="modal-header">
-        {# ไม่ต้องมี title tag ที่นี่ ให้ icon และข้อความอยู่ใน body แทน #}
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <i class="bi bi-exclamation-triangle-fill display-3 text-warning mb-3"></i> {# Icon ใหญ่ขึ้น #}
+        <i class="bi bi-exclamation-triangle-fill display-3 text-warning mb-3"></i> 
         <h4 class="mb-2 fw-bold text-danger">ไม่สามารถจองได้!</h4>
         <p class="mb-2 lead">
             ห้องประชุม <span id="roomNameAlert" class="fw-bold text-primary"></span>
@@ -300,7 +237,7 @@
         </p>
       </div>
       <div class="modal-footer justify-content-center">
-        <button type="button" class="btn btn-primary px-4" data-bs-dismiss="modal">ปิด</button>
+        <button type="button" class="btn btn-primary px-4" data-bs-dismiss="modal">รับทราบ</button>
       </div>
     </div>
   </div>

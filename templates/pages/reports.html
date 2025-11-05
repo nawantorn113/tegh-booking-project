@@ -2,22 +2,36 @@
 {% load static %}
 
 {% block title %}รายงานและสถิติ{% endblock %}
-<!-- {% block page_title %}
-<h2 class="text-danger text-center ">หน้ารายงานและสถิติ</h2>
-{% endblock %} -->
+{% block page_title %}รายงานและสถิติการจอง{% endblock %}
 
 {% block extra_head %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js"></script>
 <style>
-    .kpi-card .card-body { padding: 1.25rem; }
-    .kpi-icon { font-size: 2.5rem; opacity: 0.2; }
-    
-    /* 2. [ใหม่] ตั้งค่า Font ของ Chart ให้เป็น Kanit (ชัด 4k) */
-    .chart-container {
+    /* (สไตล์ Chart และ KPI cards เหมือนเดิม) */
+    .kpi-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1) !important;
+        transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+    }
+    .kpi-card .card-body {
+         padding: 1.25rem; 
+    }
+    .kpi-icon {
+        font-size: 2.5rem;
+        opacity: 0.2;
+    }
+    .section-divider {
+        margin-top: 2rem;    
+        margin-bottom: 2rem; 
+        border-color: #adb5bd; 
+        border-top-width: 1px; 
+        opacity: 1; 
+    }
+    .chart-wrapper {
         position: relative;
-        height: 400px;
+        height: 300px; 
         width: 100%;
+        margin: auto;
     }
 </style>
 {% endblock %}
@@ -25,13 +39,14 @@
 {% block content %}
 <div class="container-fluid py-4">
 
+    {# --- KPI Cards --- #}
     <div class="row g-4 mb-4">
         <div class="col-md-3">
             <div class="card kpi-card border-start border-primary border-2 shadow-sm h-100">
                 <div class="card-body d-flex justify-content-between align-items-center">
                     <div>
-                        <h6 class="card-subtitle text-muted mb-1">ห้องทั้งหมด</h6>
-                        <h2 class="card-title fw-bold mb-0">{{ total_rooms_count }}</h2>
+                        <h6 class="card-subtitle text-muted mb-1">ห้องประชุมทั้งหมด</h6>
+                        <h2 class="card-title fw-bold mb-0">{{ total_rooms_count }} <small class="text-muted fs-6">ห้อง</small></h2>
                     </div>
                     <i class="bi bi-door-open-fill kpi-icon text-primary"></i>
                 </div>
@@ -41,10 +56,10 @@
             <div class="card kpi-card border-start border-success border-2 shadow-sm h-100">
                 <div class="card-body d-flex justify-content-between align-items-center">
                     <div>
-                        <h6 class="card-subtitle text-muted mb-1">จองวันนี้</h6>
-                        <h2 class="card-title fw-bold mb-0">{{ today_bookings_count }}</h2>
+                        <h6 class="card-subtitle text-muted mb-1">การจองวันนี้ (อนุมัติแล้ว)</h6>
+                        <h2 class="card-title fw-bold mb-0">{{ today_bookings_count }} <small class="text-muted fs-6">รายการ</small></h2>
                     </div>
-                    <i class="bi bi-calendar-check-fill kpi-icon text-success"></i>
+                     <i class="bi bi-calendar-check-fill kpi-icon text-success"></i>
                 </div>
             </div>
         </div>
@@ -53,36 +68,38 @@
                 <div class="card-body d-flex justify-content-between align-items-center">
                     <div>
                         <h6 class="card-subtitle text-muted mb-1">รออนุมัติ</h6>
-                        <h2 class="card-title fw-bold mb-0">{{ pending_count }}</h2>
+                        <h2 class="card-title fw-bold mb-0">{{ pending_count }} <small class="text-muted fs-6">รายการ</small></h2>
                     </div>
-                    <i class="bi bi-hourglass-split kpi-icon text-warning"></i>
+                     <i class="bi bi-hourglass-split kpi-icon text-warning"></i>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
             <div class="card kpi-card border-start border-info border-2 shadow-sm h-100">
-                <div class="card-body d-flex justify-content-between align-items-center">
+                 <div class="card-body d-flex justify-content-between align-items-center">
                     <div>
                         <h6 class="card-subtitle text-muted mb-1">ผู้ใช้ทั้งหมด</h6>
-                        <h2 class="card-title fw-bold mb-0">{{ total_users_count }}</h2>
+                        <h2 class="card-title fw-bold mb-0">{{ total_users_count }} <small class="text-muted fs-6">คน</small></h2>
                     </div>
-                    <i class="bi bi-person-fill kpi-icon text-info"></i>
+                     <i class="bi bi-person-check-fill kpi-icon text-info"></i>
                 </div>
             </div>
         </div>
     </div>
-
+    
+    {# --- Filter และ Export --- #}
     <div class="content-card shadow-sm border p-3 p-md-4 mb-4">
-        <form method="get" class="row g-3 align-items-end">
-            <div class="col-md-4">
+        <form method="get" class="row g-3 align-items-end" id="reportFilterForm">
+            
+            <div class="col-md-3">
                 <label for="period" class="form-label">ช่วงเวลา</label>
                 <select name="period" id="period" class="form-select">
                     <option value="daily" {% if current_period == 'daily' %}selected{% endif %}>รายวัน</option>
-                    <option value="weekly" {% if current_period == 'weekly' %}selected{% endif %}>รายสัปดาห์</option>
+                    <option value="weekly" {% if current_period == 'weekly' %}selected{% endif %}>รายสัปดาห์ (7 วัน)</option>
                     <option value="monthly" {% if current_period == 'monthly' %}selected{% endif %}>รายเดือน (30 วัน)</option>
                 </select>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <label for="department" class="form-label">แผนก</label>
                 <select name="department" id="department" class="form-select">
                     <option value="">-- ทุกแผนก --</option>
@@ -91,67 +108,62 @@
                     {% endfor %}
                 </select>
             </div>
-            <div class="col-md-4 d-grid d-md-flex gap-2">
-                <button type="submit" class="btn btn-primary flex-grow-1"><i class="bi bi-filter me-1"></i> กรองข้อมูล</button>
-                
-                <a href="{% url 'export_excel' %}?{{ request.GET.urlencode }}" class="btn btn-outline-success flex-grow-1">
-                    <i class="bi bi-file-earmark-excel me-1"></i> Export Excel
-                </a>
+            
+            <div class="col-md-2 d-grid">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-filter me-1"></i> กรองข้อมูล</button>
             </div>
+            
+            {# --- Dropdown Export --- #}
+            <div class="col-md-2 d-grid">
+                <div class="dropdown d-grid">
+                    <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-file-earmark-arrow-down me-1"></i> Export รายงาน
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li>
+                            <a class="dropdown-item text-success" 
+                               href="{% url 'export_excel' %}?period={{ current_period }}&department={{ current_department }}" 
+                               id="exportExcelBtn">
+                                <i class="bi bi-file-earmark-spreadsheet-fill me-2"></i> Export เป็น Excel
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item text-danger" 
+                               href="{% url 'export_pdf' %}?period={{ current_period }}&department={{ current_department }}" 
+                               id="exportPdfBtn">
+                                <i class="bi bi-file-earmark-pdf-fill me-2"></i> Export เป็น PDF
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
         </form>
+        
+        <p class="mt-4 small text-muted">{{ report_title }}</p>
     </div>
 
-    <div class="row g-4 mb-4">
-        <div class="col-lg-6">
-            <div class="content-card shadow-sm border p-4">
+    {# --- Charts and Data --- #}
+    <div class="row g-2"> 
+        
+        <div class="col-lg-6 mb-2">
+            <div class="content-card shadow-sm border p-3 p-md-4 h-100">
                 <h5 class="mb-3">การใช้งานห้อง (10 อันดับแรก)</h5>
-                <div class="chart-container">
+                <div class="chart-wrapper">
                     <canvas id="roomUsageChart"></canvas>
                 </div>
             </div>
         </div>
-        <div class="col-lg-6">
-            <div class="content-card shadow-sm border p-4">
+
+        <div class="col-lg-6 mb-2">
+            <div class="content-card shadow-sm border p-3 p-md-4 h-100">
                 <h5 class="mb-3">การใช้งานตามแผนก (10 อันดับแรก)</h5>
-                <div class="chart-container">
+                <div class="chart-wrapper">
                     <canvas id="deptUsageChart"></canvas>
                 </div>
             </div>
         </div>
-    </div>
 
-    <div class="content-card shadow-sm border p-3 p-md-4 mb-4">
-        <h5 class="mb-3">สรุปข้อมูลดิบ: {{ report_title }}</h5>
-        <div class="table-responsive">
-            <table class="table table-hover align-middle">
-                <thead class="table-light">
-                    <tr>
-                        <th scope="col">#</th>
-                        <th scope="col">ชื่อห้อง</th>
-                        <th scope="col">อาคาร/ชั้น</th>
-                        <th scope="col" class="text-center">จำนวนครั้งที่จอง</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for room in room_usage_stats %}
-                    <tr>
-                        <th scope="row">{{ forloop.counter }}</th>
-                        <td>
-                            <a href="{% url 'room_calendar' room.id %}">{{ room.name }}</a>
-                        </td>
-                        <td>{{ room.building|default:"-" }} (ชั้น {{ room.floor|default:"-" }})</td>
-                        <td class="text-center fw-bold">{{ room.booking_count }}</td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="4" class="text-center text-muted py-4">
-                            ไม่พบข้อมูลการจองในช่วงเวลานี้
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
     </div>
 
 </div>
@@ -159,75 +171,87 @@
 
 {% block extra_scripts %}
 <script>
+// Chart.js script must be loaded again since it was removed from base.html to prevent conflict
+
 document.addEventListener('DOMContentLoaded', function() {
     
-    // 3. [ใหม่] ตั้งค่า Font เริ่มต้นของ Chart.js
-    if (typeof Chart !== 'undefined') {
-        Chart.defaults.font.family = "'Kanit', sans-serif";
-        Chart.defaults.font.weight = 500;
-    }
+    // --- Data Setup ---
+    const roomLabels = {{ room_usage_labels|safe }};
+    const roomData = {{ room_usage_data|safe }};
+    const deptLabels = {{ dept_usage_labels|safe }};
+    const deptData = {{ dept_usage_data|safe }};
 
-    // Chart 1: Room Usage
-    var roomCtx = document.getElementById('roomUsageChart');
-    if (roomCtx) {
-        new Chart(roomCtx, {
-            type: 'bar',
-            data: {
-                labels: {{ room_usage_labels|safe }},
-                datasets: [{
-                    label: 'จำนวนการจอง',
-                    data: {{ room_usage_data|safe }},
-                    backgroundColor: 'rgba(67, 56, 202, 0.7)',
-                    borderColor: 'rgba(67, 56, 202, 1)',
-                    borderWidth: 1
-                }]
+    // --- Utility Function ---
+    function generateBackgroundColor(count) {
+        const colors = [
+            '#4338ca', '#10b981', '#f59e0b', '#ef4444', '#3b82f6',
+            '#06b6d4', '#eab308', '#8b5cf6', '#db2777', '#f97316'
+        ];
+        return Array.from({length: count}, (_, i) => colors[i % colors.length]);
+    }
+    
+    // --- Chart 1: Room Usage (Horizontal Bar) ---
+    const roomUsageCtx = document.getElementById('roomUsageChart').getContext('2d');
+    new Chart(roomUsageCtx, {
+        type: 'bar',
+        data: {
+            labels: roomLabels,
+            datasets: [{
+                label: 'จำนวนการจอง (ครั้ง)',
+                data: roomData,
+                backgroundColor: generateBackgroundColor(roomData.length),
+                borderColor: generateBackgroundColor(roomData.length).map(c => c + 'AA'),
+                borderWidth: 1
+            }]
+        },
+        options: {
+            indexAxis: 'y', 
+            responsive: true,
+            maintainAspectRatio: false, 
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    ticks: {
+                        precision: 0
+                    }
+                }
             },
-            options: {
-                indexAxis: 'y', 
-                responsive: true,
-                maintainAspectRatio: false, // (สำคัญสำหรับ .chart-container)
-                plugins: {
-                    legend: { display: false }
+            plugins: {
+                legend: {
+                    display: false
+                },
+                title: {
+                    display: false
                 }
             }
-        });
-    }
+        }
+    });
 
-    // Chart 2: Department Usage
-    var deptCtx = document.getElementById('deptUsageChart');
-    if (deptCtx) {
-        new Chart(deptCtx, {
-            type: 'pie',
-            data: {
-                labels: {{ dept_usage_labels|safe }},
-                datasets: [{
-                    label: 'จำนวนการจอง',
-                    data: {{ dept_usage_data|safe }},
-                    backgroundColor: [
-                        'rgba(255, 99, 132, 0.7)',
-                        'rgba(54, 162, 235, 0.7)',
-                        'rgba(255, 206, 86, 0.7)',
-                        'rgba(75, 192, 192, 0.7)',
-                        'rgba(153, 102, 255, 0.7)',
-                        'rgba(255, 159, 64, 0.7)',
-                        'rgba(199, 199, 199, 0.7)',
-                        'rgba(83, 102, 255, 0.7)',
-                        'rgba(255, 99, 255, 0.7)',
-                        'rgba(100, 255, 64, 0.7)'
-                    ],
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false, // (สำคัญสำหรับ .chart-container)
-                plugins: {
-                    legend: {
-                        position: 'top',
-                    },
+    // --- Chart 2: Department Usage (Pie Chart) ---
+    const deptUsageCtx = document.getElementById('deptUsageChart').getContext('2d');
+    new Chart(deptUsageCtx, {
+        type: 'pie',
+        data: {
+            labels: deptLabels,
+            datasets: [{
+                data: deptData,
+                backgroundColor: generateBackgroundColor(deptData.length),
+                hoverOffset: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false, 
+            plugins: {
+                legend: {
+                    position: 'bottom', 
+                },
+                title: {
+                    display: false,
                 }
             }
-        });
-    }
+        }
+    });
 });
 </script>
 {% endblock %}
