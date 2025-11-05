@@ -12,7 +12,7 @@
 <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
 
 <style>
-    :root {
+    :root {
         --fc-border-color: #e9ecef;
         --fc-today-bg-color: #f8f9fa;
         --fc-button-active-bg-color: #4338ca;
@@ -20,13 +20,16 @@
     }
     .fc { font-family: 'Kanit', sans-serif; }
     .fc .fc-toolbar-title { font-size: 1.25rem; font-weight: 500; }
-    .room-image { height: 250px; object-fit: cover; border-radius: 0.5rem; }
+    
+    /* * [ถูกปิดการใช้งาน] เนื่องจากจะใช้ inline style เพื่อ override CSS ทั้งหมด
+     * .room-image { height: 150px; object-fit: cover; border-radius: 0.5rem; } 
+     */
+
     #calendar { margin-top: 1.5rem; }
     #bookingFormContainer { display: none; }
     
     .select2-container { z-index: 1056; } 
-    
-    /* 🎯 CSS บังคับความกว้างสุดๆ ให้กับ Select2 Container ทั่วไป */
+    /* FIX: บังคับ Select2 ให้เต็ม 100% */
     .select2-container {
         min-width: 100% !important;
         width: 100% !important;
@@ -47,37 +50,43 @@
 {% block content %}
 <div class="container-fluid py-4">
 
-    {# --- ส่วนแสดงรูปภาพและรายละเอียดห้อง --- #}
-    <div class="content-card shadow-sm border p-3 p-md-4 mb-4">
-        <div class="row">
-            <div class="col-lg-6 mb-3 mb-lg-0">
-                {% if room.image %}
-                    <img src="{{ room.image.url }}" class="d-block w-100 room-image" alt="รูปห้อง">
-                {% else %}
-                    <div class="bg-light text-muted d-flex align-items-center justify-content-center room-image">ไม่มีรูปภาพตัวอย่าง</div>
-                {% endif %}
-            </div>
-            <div class="col-lg-6">
-                <h4 class="fw-bold text-primary">{{ room.name }}</h4>
-                <p class="text-muted small mb-3">{{ room.location|default:"(ไม่ได้ระบุตำแหน่ง)" }}</p>
-                <p class="mb-2"><i class="bi bi-people-fill me-2 text-muted"></i> <strong>ความจุ:</strong> {{ room.capacity }} คน</p>
-                <p class="mb-2"><i class="bi bi-building me-2 text-muted"></i> <strong>อาคาร:</strong> {{ room.building|default:"-" }} (ชั้น {{ room.floor|default:"-" }})</p>
-                <p class="mb-1"><i class="bi bi-tools me-2 text-muted"></i> <strong>อุปกรณ์:</strong></p>
-                <div class="small text-muted ps-4 mt-1">
-                    {{ room.equipment_in_room|default:"(ไม่มีข้อมูลอุปกรณ์ระบุ)"|linebreaksbr }}
-                </div>
-            </div>
-        </div>
-    </div>
+    {# --- 1. ส่วนแสดงรูปภาพและรายละเอียดห้อง (เต็มความกว้างด้านบน) --- #}
+    <div class="content-card shadow-sm border p-3 p-md-4 mb-4">
+        <div class="row">
+            
+            {# 🎯 คอลัมน์สำหรับรูปภาพ (col-lg-5) #}
+            <div class="col-lg-5 mb-3 mb-lg-0">
+                <h4 class="fw-bold text-primary mb-3">{{ room.name }}</h4>
+                {% if room.image %}
+                    {# 💡 FIX: ใช้ inline style เพื่อบังคับขนาดรูปภาพโดยตรง #}
+                    <img src="{{ room.image.url }}" class="d-block w-100" style="height: 150px; object-fit: cover; border-radius: 0.5rem;" alt="รูปห้อง">
+                {% else %}
+                    {# 💡 FIX: ใช้ inline style กับ div กรณีไม่มีรูปภาพ #}
+                    <div class="bg-light text-muted d-flex align-items-center justify-content-center" style="height: 150px; object-fit: cover; border-radius: 0.5rem;">ไม่มีรูปภาพตัวอย่าง</div>
+                {% endif %}
+            </div>
+            
+            {# 🎯 คอลัมน์สำหรับรายละเอียด (col-lg-7) #}
+            <div class="col-lg-7">
+                <p class="text-muted small mb-3">{{ room.location|default:"(ไม่ได้ระบุตำแหน่ง)" }}</p>
+                <p class="mb-2"><i class="bi bi-people-fill me-2 text-muted"></i> <strong>ความจุ:</strong> {{ room.capacity }} คน</p>
+                <p class="mb-2"><i class="bi bi-building me-2 text-muted"></i> <strong>อาคาร:</strong> {{ room.building|default:"-" }} (ชั้น {{ room.floor|default:"-" }})</p>
+                <p class="mb-1"><i class="bi bi-tools me-2 text-muted"></i> <strong>อุปกรณ์:</strong></p>
+                <div class="small text-muted ps-4 mt-1">
+                    {{ room.equipment_in_room|default:"(ไม่มีข้อมูลอุปกรณ์ระบุ)"|linebreaksbr }}
+                </div>
+            </div>
+        </div>
+    </div>
 
-    {# --- ส่วนปฏิทินการจอง --- #}
-    <div class="content-card shadow-sm border p-3 p-md-4">
-        <h5 class="mb-0">ตารางการจองห้องประชุม (คลิกที่ช่วงเวลาว่างเพื่อจอง)</h5>
-        <div id="calendar"></div>
-    </div>
+    {# --- 2. ส่วนปฏิทินการจอง (เต็มความกว้างด้านล่าง) --- #}
+    <div class="content-card shadow-sm border p-3 p-md-4">
+        <h5 class="mb-0">ตารางการจองห้องประชุม (คลิกที่ช่วงเวลาว่างเพื่อจอง)</h5>
+        <div id="calendar"></div>
+    </div>
 </div>
 
-{# --- โค้ดที่ซ่อนไว้สำหรับ Modal และ Form (จำเป็น) --- #}
+{# --- โค้ดที่ซ่อนไว้สำหรับ Modal และ Form (ย้ายมาไว้ด้านล่าง) --- #}
 <div id="bookingFormContainer" style="display:none;">
     <form id="hiddenBookingForm" action="{% url 'create_booking' room.id %}" method="post" enctype="multipart/form-data">
         {% csrf_token %}
@@ -99,20 +108,35 @@
                 <button type="submit" class="btn btn-primary" form="hiddenBookingForm">ยืนยันการจอง</button>
             </div>
         </div>
+        
     </div>
 </div>
 {% endblock %}
 
 
 {% block extra_scripts %}
+{# โหลด jQuery, Select2 และ DAL.js (form.media.js) #}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/i18n/th.js"></script> 
 {{ form.media.js }}
 
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.full.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/i18n/th.js"></script>
 
 
 <script>
+// 💡 FIX 2: ตั้งค่า Select2 Defaults ให้รู้จักภาษาไทยก่อนเรียกใช้
+if ($.fn.select2) {
+    $.extend($.fn.select2.defaults, {
+        language: 'th' 
+    });
+}
+// 💡 FIX 3: แก้ปัญหา Select2 Language Fallback Warning ใน Console 
+if ($.fn.select2 && $.fn.select2.amd) {
+     $.fn.select2.amd.define('select2/i18n/th', [], function () { return {}; });
+}
+
+
 window.onload = function() {
     
     // (ตรวจสอบไลบรารีพื้นฐาน)
@@ -123,7 +147,6 @@ window.onload = function() {
     }
     
     // 💡 ฟังก์ชันบังคับความกว้าง Select2 ให้เต็ม 100% (คีย์หลัก)
-    // ฟังก์ชันนี้จะถูกเรียกเมื่อ Modal เปิด
     function fixSelect2Width() {
         var $participantsField = $('#id_participants');
         
@@ -136,7 +159,6 @@ window.onload = function() {
 
         // 2. สั่งให้ Select2 คำนวณตัวเองใหม่ (ท่าไม้ตายแก้บั๊ก)
         $participantsField.trigger('change.select2');
-        console.log("Select2 width forcefully recalculated.");
     }
     
 
@@ -269,9 +291,10 @@ window.onload = function() {
                         $participants.select2('destroy');
                     }
                     yl.register($participants, {
-                        dropdownParent: $('#bookingModal'), // **ท่าไม้ตาย 1**
-                        width: '100%',                  // **ท่าไม้ตาย 2**
-                        theme: 'bootstrap-5'
+                        dropdownParent: $('#bookingModal'), 
+                        width: '100%',                  
+                        theme: 'bootstrap-5',
+                        language: 'th' // ยืนยันภาษาใน DAL
                     });
                 }
             }

@@ -21,16 +21,42 @@ class Room(models.Model):
         help_text="เลือก User ที่มีสิทธิ์อนุมัติห้องนี้ (ถ้าเว้นว่าง = Admin กลาง)"
     )
     
-    # --- 💡💡💡 [นี่คือจุดที่แก้ไข] 💡💡💡 ---
-    # (เปลี่ยนจาก is_active=True เป็น is_maintenance=False)
+    # --- 💡💡💡 ฟิลด์และฟังก์ชันใหม่ที่ขาดหายไป 💡💡💡 ---
     is_maintenance = models.BooleanField(
-        default=False, # (ค่าเริ่มต้น = ไม่ได้ปิดปรับปรุง)
+        default=False, 
+        verbose_name="ปิดปรับปรุง (โหมดแมนนวล)",
         help_text="ติ๊กถูก [✓] เพื่อ 'ปิดปรับปรุง' ห้องนี้"
     )
-    # --- 💡💡💡 [สิ้นสุดการแก้ไข] 💡💡💡 ---
+    
+    maintenance_start = models.DateTimeField(
+        null=True, blank=True,
+        verbose_name="เริ่มปิดปรับปรุง (อัตโนมัติ)"
+    )
+    maintenance_end = models.DateTimeField(
+        null=True, blank=True,
+        verbose_name="สิ้นสุดปิดปรับปรุง (อัตโนมัติ)"
+    )
+    
+    @property
+    def is_currently_under_maintenance(self):
+        now = timezone.now()
+        
+        # 1. ตรวจสอบโหมดแมนนวล/ปิดถาวร (ถ้า is_maintenance ถูกติ๊ก และไม่ได้กำหนดช่วงเวลา)
+        if self.is_maintenance and (not self.maintenance_start or not self.maintenance_end):
+            return True
+        
+        # 2. ตรวจสอบโหมดกำหนดเวลา
+        if self.maintenance_start and self.maintenance_end:
+            if self.maintenance_start <= now <= self.maintenance_end:
+                return True
+        
+        return False
+    # --- 💡💡💡 สิ้นสุดฟิลด์และฟังก์ชันใหม่ 💡💡💡 ---
 
     def __str__(self):
-        return self.name
+        # 💡 [ปรับปรุง] แสดงสถานะใน __str__ ด้วย
+        status = " (ปิดปรับปรุง)" if self.is_currently_under_maintenance else ""
+        return f"{self.name}{status}"
 
     @property
     def equipment_list(self):
@@ -39,6 +65,7 @@ class Room(models.Model):
         return []
 
 class Booking(models.Model):
+    # ... (โค้ด Booking Model เดิม) ...
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='bookings')
     room = models.ForeignKey(Room, on_delete=models.CASCADE, related_name='bookings')
     
@@ -95,6 +122,7 @@ class Booking(models.Model):
         return self.user == user
 
 class AuditLog(models.Model):
+    # ... (โค้ด AuditLog Model เดิม) ...
     ACTION_CHOICES = [
         ('LOGIN', 'User Logged In'),
         ('BOOKING_CREATED', 'Booking Created'),

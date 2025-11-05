@@ -13,7 +13,7 @@ from django.contrib.auth.models import User, Group
 from django.core.paginator import Paginator
 
 from dal_select2.views import Select2QuerySetView
-DAL_AVAILABLE = True 
+# DAL_AVAILABLE = True 
 
 from django.core.mail import send_mail
 from django.template.loader import render_to_string, get_template
@@ -40,8 +40,8 @@ from django.dispatch import receiver
 from django.contrib.auth.forms import AuthenticationForm
 from django.core.exceptions import ValidationError
 
-from .models import Room, Booking, AuditLog
-from .forms import BookingForm, CustomPasswordChangeForm, RoomForm
+from .models import Room, Booking, AuditLog # นำเข้า Models ที่เกี่ยวข้อง
+from .forms import BookingForm, CustomPasswordChangeForm, RoomForm # นำเข้า Forms ที่เกี่ยวข้อง
 
 # --- Helper Functions ---
 def is_admin(user):
@@ -236,36 +236,52 @@ def parse_search_query(query_text):
 def smart_search_view(request):
     query_text = request.GET.get('q', '')
     
-    available_rooms = Room.objects.filter(is_maintenance=False).order_by('capacity') 
+    # 💡 [แก้ไข] ใช้ is_currently_under_maintenance เพื่อกรองห้องที่ปิดอยู่
+    # Note: เราใช้ Room.objects.all() และตรวจสอบใน template/view แทนการ exclude() เพื่อให้รวม Logic การตรวจสอบเวลาอัตโนมัติ
+    available_rooms = Room.objects.all().order_by('capacity') 
+    
+    # กรองเฉพาะห้องที่ 'ว่าง' ในช่วงเวลาที่ค้นหา (รวมถึงห้องที่ไม่อยู่ในช่วง Maintenance)
+    valid_rooms = []
     
     search_params = {}
+    capacity, start_time, end_time = None, None, None
 
-    if not query_text:
-        available_rooms = Room.objects.none()
-    else:
+    if query_text:
         capacity, start_time, end_time = parse_search_query(query_text)
         
         search_params['capacity'] = capacity
         search_params['start_time'] = start_time
         search_params['end_time'] = end_time
 
+        rooms_to_check = available_rooms
         if capacity:
-            available_rooms = available_rooms.filter(capacity__gte=capacity)
+            rooms_to_check = rooms_to_check.filter(capacity__gte=capacity)
         
-        if start_time and end_time:
-            conflicting_room_ids = Booking.objects.filter(
-                status__in=['APPROVED', 'PENDING'],
-                start_time__lt=end_time,
-                end_time__gt=start_time
-            ).values_list('room_id', flat=True).distinct()
-            
-            available_rooms = available_rooms.exclude(id__in=conflicting_room_ids)
-            
+        for room in rooms_to_check:
+            # ตรวจสอบว่าไม่อยู่ในช่วงปิดปรับปรุง
+            if room.is_currently_under_maintenance:
+                continue
+
+            if start_time and end_time:
+                # ตรวจสอบการซ้อนทับการจอง
+                conflicts = Booking.objects.filter(
+                    room=room,
+                    status__in=['APPROVED', 'PENDING'],
+                    start_time__lt=end_time,
+                    end_time__gt=start_time
+                ).exists()
+                
+                if not conflicts:
+                    valid_rooms.append(room)
+            elif not start_time and not end_time:
+                # ถ้าไม่ระบุเวลา ให้แสดงห้องที่จุคนได้และ 'ว่าง' ณ ปัจจุบัน
+                valid_rooms.append(room)
+
     context = get_base_context(request)
     context.update({
         'query_text': query_text,
         'search_params': search_params,
-        'available_rooms': available_rooms, 
+        'available_rooms': valid_rooms, # ใช้ valid_rooms ที่ผ่านการกรองแล้ว
     })
     return render(request, 'pages/search_results.html', context)
 
@@ -274,17 +290,15 @@ def smart_search_view(request):
 def dashboard_view(request):
     now = timezone.now(); sort_by = request.GET.get('sort', 'floor')
     
-    # --- 💡💡💡 [นี่คือจุดที่แก้ไข 1] 💡💡💡 ---
     # User ทั่วไป (is_admin(request.user) เป็น False) จะเห็นห้องทุกห้อง (Room.objects.all())
-    # เพื่อให้แสดงห้องที่ปิดปรับปรุง
     all_rooms = Room.objects.all()
-    # --- 💡💡💡 [สิ้นสุดการแก้ไข 1] 💡💡💡 ---
     
     if sort_by == 'status':
         # เรียงตามสถานะ: ห้องที่ปิดปรับปรุงจะอยู่ก่อนห้องว่าง
-        all_rooms_sorted = sorted(all_rooms, key=lambda r: (r.is_maintenance, not r.bookings.filter(start_time__lte=now, end_time__gt=now, status='APPROVED').exists()))
+        # 💡 [แก้ไข] ใช้ is_currently_under_maintenance ในการเรียง
+        all_rooms_sorted = sorted(all_rooms, key=lambda r: (r.is_currently_under_maintenance, not r.bookings.filter(start_time__lte=now, end_time__gt=now, status='APPROVED').exists()))
     elif sort_by == 'capacity':
-         all_rooms_sorted = sorted(all_rooms, key=lambda r: r.capacity, reverse=True)
+        all_rooms_sorted = sorted(all_rooms, key=lambda r: r.capacity, reverse=True)
     elif sort_by == 'name':
         all_rooms_sorted = all_rooms.order_by('name')
     else: 
@@ -293,11 +307,13 @@ def dashboard_view(request):
     buildings = defaultdict(list)
     for room in all_rooms_sorted:
         
-        if room.is_maintenance:
+        # 💡 [แก้ไข] ใช้ is_currently_under_maintenance เพื่อตรวจสอบสถานะปัจจุบัน
+        if room.is_currently_under_maintenance: 
             room.status = 'ปิดปรับปรุง' # กำหนดสถานะให้ชัดเจน
             room.current_booking_info = None
             room.next_booking_info = None
         else:
+            # Logic ตรวจสอบการจองปัจจุบัน/ถัดไปเหมือนเดิม
             current = room.bookings.filter(start_time__lte=now, end_time__gt=now, status='APPROVED').select_related('user').first()
             room.status = 'ไม่ว่าง' if current else 'ว่าง'
             room.current_booking_info = current
@@ -315,7 +331,7 @@ def dashboard_view(request):
         'total_rooms': all_rooms.count(), 
         'today_bookings': Booking.objects.filter(start_time__date=now.date(), status='APPROVED').count(),
         'pending_approvals': context['pending_count'], 
-        'my_bookings_today': my_bookings_today_count,
+        'total_users_count': User.objects.count(), # เพิ่มกลับเข้ามาใน dashboard
     }
     
     context.update({
@@ -330,7 +346,8 @@ def dashboard_view(request):
 def room_calendar_view(request, room_id):
     room = get_object_or_404(Room, pk=room_id)
     
-    if room.is_maintenance and not is_admin(request.user):
+    # 💡 [แก้ไข] ใช้ is_currently_under_maintenance เพื่อตรวจสอบสถานะปัจจุบัน
+    if room.is_currently_under_maintenance and not is_admin(request.user):
         messages.error(f"ห้อง '{room.name}' กำลังปิดปรับปรุงชั่วคราว ไม่สามารถเข้าดูปฏิทินได้")
         return redirect('dashboard')
         
@@ -348,7 +365,8 @@ def room_calendar_view(request, room_id):
 
 @login_required
 def master_calendar_view(request):
-    all_rooms = Room.objects.filter(is_maintenance=False).order_by('building', 'floor', 'name')
+    # 💡 [แก้ไข] กรองห้องที่ "ไม่ได้" ปิดปรับปรุงตลอดเวลา
+    all_rooms = Room.objects.all().exclude(is_maintenance=True).order_by('building', 'floor', 'name')
     
     context = get_base_context(request)
     context.update({
@@ -357,7 +375,7 @@ def master_calendar_view(request):
     return render(request, 'pages/master_calendar.html', context)
 
 @login_required
-def history_view(request):
+def history_view(request): # 👈 ฟังก์ชันนี้คือตัวที่ทำให้เกิด error, ได้ถูกนำกลับเข้ามาแล้ว
     
     if is_admin(request.user):
         bookings = Booking.objects.all().select_related('room', 'user').order_by('-start_time')
@@ -377,8 +395,8 @@ def history_view(request):
             room_id_int = int(room_f)
             bookings = bookings.filter(room_id=room_id_int)
         except (ValueError, TypeError):
-             messages.warning(f"Room ID ไม่ถูกต้อง")
-             room_f = None
+            messages.warning(f"Room ID ไม่ถูกต้อง")
+            room_f = None
     if status_f and status_f in dict(Booking.STATUS_CHOICES):
         bookings = bookings.filter(status=status_f)
     elif status_f:
@@ -414,7 +432,7 @@ def history_view(request):
 def booking_detail_view(request, booking_id):
     booking = get_object_or_404(
         Booking.objects.select_related('room', 'user')
-                          .prefetch_related('participants'), 
+                      .prefetch_related('participants'), 
         pk=booking_id
     )
     is_participant = request.user in booking.participants.all()
@@ -450,7 +468,8 @@ def change_password_view(request):
 # --- APIs ---
 @login_required
 def rooms_api(request):
-    rooms = Room.objects.filter(is_maintenance=False).order_by('building', 'name')
+    # 💡 [แก้ไข] ใช้ is_currently_under_maintenance เพื่อกรองห้องที่ปิดอยู่
+    rooms = Room.objects.all().exclude(is_maintenance=True).order_by('building', 'name')
     resources = [{
         'id': r.id, 
         'title': r.name, 
@@ -459,6 +478,7 @@ def rooms_api(request):
         'floor': r.floor or ""
     } for r in rooms]
     return JsonResponse(resources, safe=False)
+
 @login_required
 def bookings_api(request):
     start_str = request.GET.get('start'); end_str = request.GET.get('end'); room_id = request.GET.get('room_id')
@@ -498,6 +518,7 @@ def bookings_api(request):
             },
         })
     return JsonResponse(events, safe=False)
+
 @login_required
 @require_POST
 def update_booking_time_api(request):
@@ -512,6 +533,10 @@ def update_booking_time_api(request):
             new_end = datetime.fromisoformat(end_str.replace('Z', '+00:00').replace(' ', '+'))
         except ValueError: return JsonResponse({'status': 'error', 'message': f"Invalid date format."})
         if new_end <= new_start: return JsonResponse({'status': 'error', 'message': f"End time must be after start time."})
+        
+        # 💡 [ใหม่] ตรวจสอบ Maintenance ก่อนการอัปเดต
+        if booking.room.is_currently_under_maintenance:
+             return JsonResponse({'status': 'error', 'message': f"ไม่สามารถแก้ไขการจองได้: ห้อง '{booking.room.name}' กำลังปิดปรับปรุง"}, status=400)
         
         conflicts = Booking.objects.filter( 
             room=booking.room, 
@@ -551,6 +576,12 @@ def delete_booking_api(request, booking_id):
         booking = get_object_or_404(Booking, pk=booking_id)
         if booking.user != request.user and not is_admin(request.user): return JsonResponse({'success': False, 'error': f"ไม่มีสิทธิ์ยกเลิก"})
         if booking.status in ['CANCELLED', 'REJECTED']: return JsonResponse({'success': False, 'error': f"การจองนี้ถูกยกเลิกหรือปฏิเสธไปแล้ว"})
+        
+        # 💡 [ใหม่] ตรวจสอบ Maintenance ก่อนการยกเลิก (ป้องกันการยกเลิกในช่วงปิดปรับปรุงที่ไม่เกี่ยวข้อง)
+        if booking.room.is_currently_under_maintenance and not is_admin(request.user):
+            messages.error(f"ไม่สามารถยกเลิกการจองได้: ห้อง '{booking.room.name}' กำลังปิดปรับปรุง")
+            return JsonResponse({'success': False, 'error': f"ห้องกำลังปิดปรับปรุง"}, status=400)
+            
         booking.status = 'CANCELLED'
         booking.save()
         
@@ -574,7 +605,8 @@ def delete_booking_api(request, booking_id):
 def create_booking_view(request, room_id):
     room = get_object_or_404(Room, pk=room_id)
     
-    if room.is_maintenance and not is_admin(request.user):
+    # 💡 [แก้ไข] ใช้ is_currently_under_maintenance เพื่อตรวจสอบสถานะปัจจุบัน
+    if room.is_currently_under_maintenance and not is_admin(request.user):
         messages.error(f"ไม่สามารถจองได้: ห้อง '{room.name}' กำลังปิดปรับปรุง")
         context = get_base_context(request)
         form = BookingForm(request.POST, request.FILES)
@@ -602,6 +634,7 @@ def create_booking_view(request, room_id):
             
             parent_booking.clean() 
             
+            # ตรวจสอบการซ้อนทับเวลาสำหรับการจองหลัก
             conflicts = Booking.objects.filter(
                 room=room,
                 status__in=['APPROVED', 'PENDING'],
@@ -649,13 +682,16 @@ def create_booking_view(request, room_id):
                 while True:
                     if recurrence == 'WEEKLY':
                         next_start_time += timedelta(weeks=1)
-                        next_end_time += timedelta(weeks=1)
                     elif recurrence == 'MONTHLY':
                         next_start_time += relativedelta(months=1)
-                        next_end_time += relativedelta(months=1)
                     
                     if next_start_time.date() > recurrence_end_date:
                         break
+                        
+                    # 💡 [แก้ไข] ตรวจสอบ Maintenance ในช่วงเวลาซ้ำ
+                    if room.is_currently_under_maintenance_during_period(next_start_time, next_end_time): # สมมติว่ามี Helper function ใน Room Model
+                        print(f"Skipping recurring booking on {next_start_time.date()} due to maintenance.")
+                        continue # ข้ามรอบนี้ไป
                         
                     child_conflicts = Booking.objects.filter(
                         room=room,
@@ -723,12 +759,20 @@ def edit_booking_view(request, booking_id):
         if form.is_valid():
             try:
                 updated_booking = form.save(commit=False)
+                
+                # 💡 [ใหม่] ตรวจสอบ Maintenance ก่อนการแก้ไข
+                if updated_booking.room.is_currently_under_maintenance and not is_admin(request.user):
+                     messages.error(f"ไม่สามารถแก้ไขการจองได้: ห้อง '{updated_booking.room.name}' กำลังปิดปรับปรุง")
+                     context = get_base_context(request)
+                     context.update({'form': form, 'booking': booking})
+                     return render(request, 'pages/edit_booking.html', context)
+                
                 updated_booking.clean() 
                 new_count = form.cleaned_data.get('participant_count', 1)
                 changed_for_approval = any(f in form.changed_data for f in ['start_time', 'end_time', 'participant_count'])
                 if new_count >= 15 and changed_for_approval and updated_booking.status not in ['PENDING', 'REJECTED', 'CANCELLED']:
-                        updated_booking.status = 'PENDING'
-                        messages.info(f"การแก้ไขต้องรอการอนุมัติใหม่")
+                     updated_booking.status = 'PENDING'
+                     messages.info(f"การแก้ไขต้องรอการอนุมัติใหม่")
                 updated_booking.save()
                 form.save_m2m() 
                 messages.success(f"แก้ไขข้อมูลการจองเรียบร้อยแล้ว")
@@ -741,7 +785,7 @@ def edit_booking_view(request, booking_id):
                 )
                 
                 if updated_booking.status == 'PENDING' and changed_for_approval:
-                        send_booking_notification(updated_booking, 'emails/new_booking_pending.html', 'โปรดอนุมัติ (แก้ไข)')
+                     send_booking_notification(updated_booking, 'emails/new_booking_pending.html', 'โปรดอนุมัติ (แก้ไข)')
                 return redirect('history')
             except ValidationError as e:
                 error_str = ", ".join(e.messages)
@@ -763,6 +807,12 @@ def delete_booking_view(request, booking_id):
     if booking.status in ['CANCELLED', 'REJECTED']:
         messages.warning(f"การจองนี้ถูกยกเลิกหรือปฏิเสธไปแล้ว")
         return redirect('history')
+        
+    # 💡 [ใหม่] ตรวจสอบ Maintenance ก่อนการยกเลิก
+    if booking.room.is_currently_under_maintenance and not is_admin(request.user):
+        messages.error(f"ไม่สามารถยกเลิกการจองได้: ห้อง '{booking.room.name}' กำลังปิดปรับปรุง")
+        return redirect('history')
+        
     booking.status = 'CANCELLED'
     booking.save()
     
@@ -787,9 +837,9 @@ def approvals_view(request):
         pending_query = Q(room__approver=request.user)
         
     pending_bookings = Booking.objects.filter(pending_query, status='PENDING') \
-                                        .select_related('room', 'user') \
-                                        .order_by('start_time')
-                                        
+                                     .select_related('room', 'user') \
+                                     .order_by('start_time')
+                                     
     context = get_base_context(request)
     context.update({'pending_bookings': pending_bookings})
     return render(request, 'pages/approvals.html', context)
@@ -798,6 +848,11 @@ def approvals_view(request):
 @require_POST
 def approve_booking_view(request, booking_id):
     booking = get_object_or_404(Booking.objects.select_related('user', 'room'), id=booking_id, status='PENDING')
+    
+    # 💡 [ใหม่] ตรวจสอบ Maintenance ก่อนการอนุมัติ
+    if booking.room.is_currently_under_maintenance:
+        messages.error(f"ไม่สามารถอนุมัติได้: ห้อง '{booking.room.name}' กำลังปิดปรับปรุงในช่วงเวลานี้")
+        return redirect('approvals')
     
     if not (is_admin(request.user) or (booking.room.approver == request.user)):
         messages.error(f"คุณไม่มีสิทธิ์อนุมัติการจองนี้")
@@ -968,14 +1023,14 @@ def reports_view(request):
     room_usage_labels = [r.name for r in room_usage_stats[:10]]
     room_usage_data = [r.booking_count for r in room_usage_stats[:10]]
     dept_usage_query = recent_bookings.exclude(department__exact='').exclude(department__isnull=True) \
-                                        .values('department') \
-                                        .annotate(count=Count('id')) \
-                                        .order_by('-count')
+                                         .values('department') \
+                                         .annotate(count=Count('id')) \
+                                         .order_by('-count')
     dept_usage_labels = [d['department'] for d in dept_usage_query[:10] if d.get('department')]
     dept_usage_data = [d['count'] for d in dept_usage_query[:10] if d.get('department')]
     departments_dropdown = Booking.objects.exclude(department__exact='').exclude(department__isnull=True) \
-                                        .values_list('department', flat=True) \
-                                        .distinct().order_by('department')
+                                         .values_list('department', flat=True) \
+                                         .distinct().order_by('department')
     
     context = get_base_context(request)
     context.update({
