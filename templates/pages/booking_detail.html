@@ -1,162 +1,109 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}แก้ไขการจอง: {{ booking.title }}{% endblock %}
-{% block page_title %}แก้ไขการจอง{% endblock %}
+{% block title %}รายละเอียดการจอง: {{ booking.title }}{% endblock %}
+{% block page_title %}รายละเอียดการจอง{% endblock %}
 
 {% block extra_head %}
-{{ form.media.css }}
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-<link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
-
-<style>
-    body {
-        background-color: #f8f9fa;
-    }
-
-    .form-container {
-        max-width: 480px;
-        margin: 50px auto;
-        padding: 25px 30px;
-        background: #ffffff;
-        border-radius: 20px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    }
-
-    .form-label {
-        font-weight: 600;
-        margin-top: 10px;
-    }
-
-    .form-control, .select2-selection {
-        border-radius: 10px !important;
-    }
-
-    /* ✅ ปรับความกว้าง Select2 ให้กินเต็มบล็อกจริงๆ */
-    .select2-container {
-        min-width: 100% !important;
-        width: 100% !important;
-        display: block !important;
-    }
-
-    /* ปรับให้สูงขึ้นหน่อย */
-    .select2-selection--multiple {
-        min-height: 45px !important;
-    }
-
-    .btn {
-        border-radius: 10px;
-        padding: 8px 20px;
-    }
-
-    .text-center {
-        margin-top: 20px;
-    }
-</style>
 {% endblock %}
 
 {% block content %}
-<div class="form-container">
-    <h5 class="text-center mb-4"><strong>แก้ไขการจองห้อง: {{ booking.room.name }}</strong></h5>
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            
+            <div class="card shadow-lg border-0" style="border-radius: 1rem;"> 
+                
+                <div class="card-header bg-white border-0 p-4" style="border-top-left-radius: 1rem; border-top-right-radius: 1rem;">
+                    
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <h4 class="fw-bold text-primary mb-0">{{ booking.title }}</h4>
+                        
+                        {% if booking.status == 'APPROVED' %}
+                            <span class="badge bg-success-subtle text-success-emphasis fs-6 rounded-pill px-3 py-2">อนุมัติแล้ว</span>
+                        {% elif booking.status == 'PENDING' %}
+                            <span class="badge bg-warning-subtle text-warning-emphasis fs-6 rounded-pill px-3 py-2">รออนุมัติ</span>
+                        {% elif booking.status == 'REJECTED' %}
+                            <span class="badge bg-danger-subtle text-danger-emphasis fs-6 rounded-pill px-3 py-2">ไม่อนุมัติ</span>
+                        {% elif booking.status == 'CANCELLED' %}
+                            <span class="badge bg-secondary-subtle text-secondary-emphasis fs-6 rounded-pill px-3 py-2">ยกเลิกแล้ว</span>
+                        {% endif %}
+                    </div>
+                    <p class="text-muted mb-0">จองโดย: {{ booking.user.get_full_name|default:booking.user.username }}</p>
+                </div>
 
-    <form method="POST" enctype="multipart/form-data" id="bookingForm">
-        {% csrf_token %}
-        <div class="mb-3">
-            <label class="form-label">หัวข้อการประชุม</label>
-            {{ form.title }}
-        </div>
+                <div class="card-body p-4">
 
-        <div class="row">
-            <div class="col">
-                <label class="form-label">ประเภท (ถ้ามี)</label>
-                {{ form.meeting_type }}
+                    <div class="pb-3 mb-3 border-bottom">
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex px-0">
+                                <i class="bi bi-calendar3 text-primary fs-5 me-3" style="width: 24px;"></i>
+                                <div>
+                                    <strong class="d-block">วัน/เวลา</strong>
+                                    <span class="text-muted">
+                                        {{ booking.start_time|date:"l, d F Y" }}
+                                        (เวลา {{ booking.start_time|time:"H:i" }} - {{ booking.end_time|time:"H:i" }} น.)
+                                    </span>
+                                </div>
+                            </li>
+                            <li class="list-group-item d-flex px-0">
+                                <i class="bi bi-door-open text-primary fs-5 me-3" style="width: 24px;"></i>
+                                <div>
+                                    <strong class="d-block">ห้องประชุม</strong>
+                                    <span class="text-muted">{{ booking.room.name }} ({{ booking.room.location|default:"-" }})</span>
+                                </div>
+                            </li>
+                        </ul>
+                    </div> <div class="pb-3 mb-3 border-bottom">
+                        <h5 class="text-muted fw-bold small text-uppercase mb-3">ผู้เข้าร่วม</h5>
+                        
+                        <p class="mb-2"><strong>ประธาน (ถ้ามี):</strong> {{ booking.chairman|default:"-" }}</p>
+                        <p class="mb-2"><strong>แผนก:</strong> {{ booking.department|default:"-" }}</p>
+                        <p class="mb-3"><strong>จำนวนผู้เข้าร่วม:</strong> {{ booking.participant_count }} คน</p>
+
+                        <p class="mb-2"><strong>รายชื่อผู้เข้าร่วม ({{ booking.participants.count }} คน):</strong></p>
+                        {% if booking.participants.count > 0 %}
+                            <div class="bg-light rounded p-2" style="max-height: 200px; overflow-y: auto;">
+                                <ul class="small text-muted mb-0">
+                                {% for user in booking.participants.all %}
+                                    <li>{{ user.get_full_name|default:user.username }}</li>
+                                {% endfor %}
+                                </ul>
+                            </div>
+                        {% else %}
+                            <p class="text-muted small"> (ไม่ได้ระบุ)</p>
+                        {% endif %}
+                    </div> <div>
+                        <h5 class="text-muted fw-bold small text-uppercase mb-3">วาระและไฟล์แนบ</h5>
+
+                        <p class="mb-2"><strong>รายละเอียด/วาระการประชุม:</strong></p>
+                        <div class="text-muted bg-light p-3 rounded mb-3" style="font-size: 0.9rem;">
+                            {{ booking.description|linebreaksbr|default:"(ไม่มีรายละเอียด)" }}
+                        </div>
+                        
+                        <p class="mb-2"><strong>คำขอเพิ่มเติม:</strong></p>
+                        <div class="text-muted bg-light p-3 rounded mb-3" style="font-size: 0.9rem;">
+                            {{ booking.additional_requests|linebreaksbr|default:"(ไม่มี)" }}
+                        </div>
+
+                        <p class="mb-2"><strong>ไฟล์แนบ:</strong></p>
+                        {% if booking.presentation_file %}
+                            <a href="{{ booking.presentation_file.url }}" target="_blank">
+                                <i class="bi bi-download me-1"></i>
+                                {{ booking.presentation_file.name|slice:"presentations/"|default:booking.presentation_file.name }}
+                            </a>
+                        {% else %}
+                            <span class="text-muted">(ไม่มีไฟล์แนบ)</span>
+                        {% endif %}
+                    </div> </div>
+                <div class="card-footer bg-light text-end border-0 p-3" style="border-bottom-left-radius: 1rem; border-bottom-right-radius: 1rem;">
+                    <a href="{% url 'history' %}" class="btn btn-outline-success">
+                        <i class="bi bi-arrow-left me-1"></i> กลับไปหน้าประวัติ
+                    </a>
+                </div>
             </div>
-            <div class="col">
-                <label class="form-label">แผนกผู้จอง</label>
-                {{ form.department }}
-            </div>
         </div>
-
-        <div class="row">
-            <div class="col">
-                <label class="form-label">วัน/เวลา เริ่มต้น</label>
-                {{ form.start_time }}
-            </div>
-            <div class="col">
-                <label class="form-label">วัน/เวลา สิ้นสุด</label>
-                {{ form.end_time }}
-            </div>
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label">จำนวนผู้เข้าร่วม</label>
-            {{ form.participants_count }}
-        </div>
-
-        <!-- ✅ ส่วนนี้คือจุดสำคัญ -->
-        <div class="mb-3" style="display: block; width: 100%;">
-            <label class="form-label">รายชื่อผู้เข้าร่วม</label>
-            <div class="participant-select" style="width: 100%;">
-                {{ form.participants }}
-            </div>
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label">รายละเอียดการประชุม / วาระการประชุม</label>
-            {{ form.details }}
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label">ไฟล์เอกสาร</label>
-            {{ form.attachment }}
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label">อุปกรณ์เพิ่มเติม</label>
-            {{ form.equipment }}
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label">หมายเหตุ</label>
-            {{ form.note }}
-        </div>
-
-        <div class="text-center">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
-            <button type="submit" class="btn btn-primary">ยืนยัน</button>
-        </div>
-    </form>
+    </div>
 </div>
-{% endblock %}
 
-{% block extra_js %}
-{{ form.media.js }}
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.full.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/i18n/th.js"></script>
-
-<script>
-$(document).ready(function() {
-    // ✅ เรียก Select2
-    const $selects = $('select').select2({
-        theme: 'bootstrap-5',
-        language: 'th',
-        width: 'resolve'
-    });
-
-    // ✅ บังคับให้มันยืดเต็มแน่นอน (กันบั๊กของ select2)
-    function fixSelect2Width() {
-        $('.select2-container').css({
-            width: '100%',
-            minWidth: '100%',
-            maxWidth: '100%'
-        });
-    }
-
-    // เรียกตอนโหลดและหลัง render เสร็จ
-    fixSelect2Width();
-    setTimeout(fixSelect2Width, 500);
-    $(window).on('resize', fixSelect2Width);
-});
-</script>
 {% endblock %}

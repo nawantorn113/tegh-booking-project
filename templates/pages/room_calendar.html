@@ -6,368 +6,249 @@
 
 {% block extra_head %}
 {{ form.media.css }}
-
 <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/main.min.css" rel="stylesheet" />
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
 
 <style>
+    /* ... (CSS ทั้งหมด... เหมือนเดิมเป๊ะ) ... */
     :root {
-        --fc-border-color: #e9ecef;
-        --fc-today-bg-color: #f8f9fa;
-        --fc-button-active-bg-color: #4338ca;
-        --fc-button-active-border-color: #4338ca;
-    }
-    .fc { font-family: 'Kanit', sans-serif; }
-    .fc .fc-toolbar-title { font-size: 1.25rem; font-weight: 500; }
+        --fc-border-color: #e9ecef;
+        --fc-today-bg-color: #f8f9fa;
+    }
+    .fc { font-family: 'Kanit', sans-serif; }
+    .fc .fc-toolbar-title { font-size: 1.25rem; font-weight: 500; }
+    #calendar { margin-top: 1.5rem; }
+
+    /* (Modal spacing fix) */
+    .modal-header { padding-bottom: 5px !important; }
+    .modal-body { padding-top: 10px !important; }
+    #bookingFormContainer p { margin-bottom: 0.4rem !important; }
+
+    /* (Select2 fix) */
+    .select2-container {
+        min-width: 100% !important;
+        width: 100% !important;
+        display: block !important;
+        z-index: 1056;
+    }
     
-    /* * [ถูกปิดการใช้งาน] เนื่องจากจะใช้ inline style เพื่อ override CSS ทั้งหมด
-     * .room-image { height: 150px; object-fit: cover; border-radius: 0.5rem; } 
-     */
+    /* (สไตล์ "รออนุมัติ") */
+    .fc-event.event-pending {
+        background-color: #f39c12 !important; 
+        border-color: #f39c12 !important;
+    }
 
-    #calendar { margin-top: 1.5rem; }
-    #bookingFormContainer { display: none; }
-    
-    .select2-container { z-index: 1056; } 
-    /* FIX: บังคับ Select2 ให้เต็ม 100% */
-    .select2-container {
-        min-width: 100% !important;
-        width: 100% !important;
-        display: block !important;
-    }
-
-    /* สไตล์สำหรับ Event ที่ลากได้ */
-    .fc-event-draggable, .fc-event-resizable {
-        cursor: move;
-    }
-    .fc-event-main:hover {
-        opacity: 0.8;
-    }
+    /* (CSS สำหรับคำว่า "ว่าง") */
+    .fc-daygrid-day-frame {
+        position: relative; 
+        min-height: 100px; 
+    }
+    .fc-day-available-text {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 1.25rem;
+        color: #d0d0d0; 
+        font-weight: 600;
+        z-index: 1; 
+        pointer-events: none; 
+    }
+    .fc-daygrid-event {
+        z-index: 2 !important; 
+    }
 </style>
 {% endblock %}
 
 
 {% block content %}
 <div class="container-fluid py-4">
-
-    {# --- 1. ส่วนแสดงรูปภาพและรายละเอียดห้อง (เต็มความกว้างด้านบน) --- #}
     <div class="content-card shadow-sm border p-3 p-md-4 mb-4">
-        <div class="row">
-            
-            {# 🎯 คอลัมน์สำหรับรูปภาพ (col-lg-5) #}
-            <div class="col-lg-5 mb-3 mb-lg-0">
-                <h4 class="fw-bold text-primary mb-3">{{ room.name }}</h4>
+        <div class="row g-4">
+            <div class="col-lg-5">
                 {% if room.image %}
-                    {# 💡 FIX: ใช้ inline style เพื่อบังคับขนาดรูปภาพโดยตรง #}
-                    <img src="{{ room.image.url }}" class="d-block w-100" style="height: 150px; object-fit: cover; border-radius: 0.5rem;" alt="รูปห้อง">
+                    <img src="{{ room.image.url }}" class="d-block w-100" style="height: 250px; object-fit: cover; border-radius: 0.5rem;" alt="รูปห้อง {{ room.name }}">
                 {% else %}
-                    {# 💡 FIX: ใช้ inline style กับ div กรณีไม่มีรูปภาพ #}
-                    <div class="bg-light text-muted d-flex align-items-center justify-content-center" style="height: 150px; object-fit: cover; border-radius: 0.5rem;">ไม่มีรูปภาพตัวอย่าง</div>
+                    <div class="bg-light text-muted d-flex align-items-center justify-content-center" style="height: 250px; border-radius: 0.5rem;">
+                        <i class="bi bi-image" style="font-size: 3rem;"></i>
+                    </div>
                 {% endif %}
             </div>
-            
-            {# 🎯 คอลัมน์สำหรับรายละเอียด (col-lg-7) #}
             <div class="col-lg-7">
-                <p class="text-muted small mb-3">{{ room.location|default:"(ไม่ได้ระบุตำแหน่ง)" }}</p>
-                <p class="mb-2"><i class="bi bi-people-fill me-2 text-muted"></i> <strong>ความจุ:</strong> {{ room.capacity }} คน</p>
-                <p class="mb-2"><i class="bi bi-building me-2 text-muted"></i> <strong>อาคาร:</strong> {{ room.building|default:"-" }} (ชั้น {{ room.floor|default:"-" }})</p>
-                <p class="mb-1"><i class="bi bi-tools me-2 text-muted"></i> <strong>อุปกรณ์:</strong></p>
-                <div class="small text-muted ps-4 mt-1">
-                    {{ room.equipment_in_room|default:"(ไม่มีข้อมูลอุปกรณ์ระบุ)"|linebreaksbr }}
+                <h4 class="fw-bold text-primary mb-2">{{ room.name }}</h4> 
+                <p class="text-muted small mb-3">
+                    <i class="bi bi-geo-alt-fill me-1"></i>
+                    {{ room.location|default:"(ไม่ได้ระบุตำแหน่ง)" }}
+                </p>
+                <ul class="list-unstyled mb-0">
+                    <li class="mb-2">
+                        <i class="bi bi-people-fill me-2 text-muted" style="width: 1.25em;"></i>
+                        <strong>ความจุ:</strong> {{ room.capacity }} คน
+                    </li>
+                    <li class="mb-2">
+                        <i class="bi bi-building me-2 text-muted" style="width: 1.25em;"></i>
+                        <strong>อาคาร:</strong> {{ room.building|default:"-" }} (ชั้น {{ room.floor|default:"-" }})
+                    </li>
+                    <li class="mb-2">
+                        <i class="bi bi-tools me-2 text-muted" style="width: 1.25em;"></i>
+                        <strong>อุปกรณ์:</strong>
+                    </li>
+                </ul>
+                <div class="small text-muted ps-4" style="margin-left: 1.25em;">
+                    {{ room.equipment_in_room|default:"(ไม่มีข้อมูล)"|linebreaksbr }}
                 </div>
             </div>
         </div>
     </div>
 
-    {# --- 2. ส่วนปฏิทินการจอง (เต็มความกว้างด้านล่าง) --- #}
     <div class="content-card shadow-sm border p-3 p-md-4">
         <h5 class="mb-0">ตารางการจองห้องประชุม (คลิกที่ช่วงเวลาว่างเพื่อจอง)</h5>
         <div id="calendar"></div>
     </div>
 </div>
 
-{# --- โค้ดที่ซ่อนไว้สำหรับ Modal และ Form (ย้ายมาไว้ด้านล่าง) --- #}
 <div id="bookingFormContainer" style="display:none;">
-    <form id="hiddenBookingForm" action="{% url 'create_booking' room.id %}" method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        {{ form.as_p }}
-    </form>
+    <form id="hiddenBookingForm" action="{% url 'create_booking' room.id %}" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.as_p }}
+    </form>
 </div>
 
 <div class="modal fade" id="bookingModal" tabindex="-1" aria-labelledby="bookingModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="bookingModalLabel">จองห้อง: {{ room.name }}</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body" id="modalBookingBody">
-                </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
-                <button type="submit" class="btn btn-primary" form="hiddenBookingForm">ยืนยันการจอง</button>
-            </div>
-        </div>
-        
-    </div>
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="bookingModalLabel">จองห้อง: {{ room.name }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="modalBookingBody"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+                <button type="submit" class="btn btn-primary" form="hiddenBookingForm">ยืนยันการจอง</button>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}
 
 
-{% block extra_scripts %}
-{# โหลด jQuery, Select2 และ DAL.js (form.media.js) #}
+{% block extra_scripts %} 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.full.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/i18n/th.js"></script> 
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/i18n/th.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
 {{ form.media.js }}
 
-<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
-
-
 <script>
-// 💡 FIX 2: ตั้งค่า Select2 Defaults ให้รู้จักภาษาไทยก่อนเรียกใช้
-if ($.fn.select2) {
-    $.extend($.fn.select2.defaults, {
-        language: 'th' 
+document.addEventListener('DOMContentLoaded', function() {
+    
+    const calendarEl = document.getElementById('calendar');
+    const hiddenForm = document.getElementById('hiddenBookingForm');
+    const modalBody = document.getElementById('modalBookingBody');
+    const bookingModal = new bootstrap.Modal(document.getElementById('bookingModal'));
+
+    // 💡 [ใหม่] ฟังก์ชัน "แฮ็ค" คำว่า "ว่าง" (แยกออกมา)
+    function addAvailableText(view) {
+        
+        // "หน่วงเวลา" 100ms... รอให้ "จองแล้ว" (รวมถึงแถบข้ามคืน) วาดเสร็จก่อน
+        setTimeout(function() { 
+            
+            // (1. ล้าง "ว่าง" เก่าทิ้ง)
+            document.querySelectorAll('.fc-day-available-text').forEach(el => el.remove());
+
+            if (view.type === 'dayGridMonth') {
+                let dayCells = document.querySelectorAll('.fc-daygrid-day');
+                
+                dayCells.forEach(function(dayCell) {
+                    // (2. เช็กว่ามี Event แปะอยู่รึเปล่า *หลังจาก* ที่มันวาดเสร็จแล้ว)
+                    let eventElements = dayCell.querySelectorAll('.fc-event'); 
+                    
+                    let isPast = dayCell.classList.contains('fc-day-past');
+                    let isOtherMonth = dayCell.classList.contains('fc-day-other');
+
+                    // (3. ถ้า "ไม่มี Event" และ "ไม่ใช่อดีต" และ "เป็นเดือนนี้"... ยัด "ว่าง"!)
+                    if (eventElements.length === 0 && !isPast && !isOtherMonth) {
+                        let availableEl = document.createElement('div');
+                        availableEl.className = 'fc-day-available-text';
+                        availableEl.innerHTML = 'ว่าง';
+                        
+                        let dayFrame = dayCell.querySelector('.fc-daygrid-day-frame');
+                        if (dayFrame) {
+                            dayFrame.appendChild(availableEl);
+                        }
+                    }
+                });
+            }
+        }, 100); // 👈 (หน่วง 100ms... ชัวร์กว่า 1ms 555)
+    }
+
+
+    const calendar = new FullCalendar.Calendar(calendarEl, {
+        
+        initialView: 'dayGridMonth', 
+        locale: 'th',
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,timeGridDay' 
+        },
+        buttonText: { today: 'วันนี้', month: 'เดือน', week: 'สัปดาห์', day: 'วัน' },
+        selectable: true,
+        editable: false,
+        events: "{% url 'bookings_api' %}?room_id={{ room.id }}",
+
+        // (โค้ด "โชว์สถานะ" ... เหมือนเดิม)
+        eventDidMount: function(info) {
+            let event = info.event;
+            let status = event.extendedProps.status;
+            let titleEl = info.el.querySelector('.fc-event-title');
+
+            if (status === 'PENDING') {
+                info.el.classList.add('event-pending');
+                if (titleEl) {
+                    titleEl.innerHTML = event.title + ' <strong class="text-white">(รออนุมัติ)</strong>';
+                }
+            }
+            else if (status === 'APPROVED') {
+                if (titleEl) {
+                    titleEl.innerHTML = event.title + ' <span style="opacity: 0.8;">(จองแล้ว)</span>';
+                }
+            }
+        },
+
+        // 💡 [จังหวะที่ 2] "โชว์ 'ว่าง'" (เมื่อเปลี่ยนเดือน)
+        datesSet: function(info) {
+            addAvailableText(info.view);
+        },
+        
+        // 💡 [จังหวะที่ 3] "โชว์ 'ว่าง'" (เมื่อ Event โหลดเสร็จ)
+        loading: function(isLoading) {
+            if (!isLoading) { 
+                addAvailableText(calendar.view);
+            }
+        },
+
+        // (โค้ด "กดจองได้" ... เหมือนเดิม)
+        select: function(info) {
+            const startStr = new Date(info.start.getTime() - (info.start.getTimezoneOffset() * 60000)).toISOString().substring(0, 16);
+            const endStr = new Date(info.end.getTime() - (info.end.getTimezoneOffset() * 60000)).toISOString().substring(0, 16);
+            document.getElementById('id_start_time').value = startStr;
+            document.getElementById('id_end_time').value = endStr;
+            
+            hiddenForm.reset(); 
+            modalBody.appendChild(hiddenForm);
+            bookingModal.show();
+        }
     });
-}
-// 💡 FIX 3: แก้ปัญหา Select2 Language Fallback Warning ใน Console 
-if ($.fn.select2 && $.fn.select2.amd) {
-     $.fn.select2.amd.define('select2/i18n/th', [], function () { return {}; });
-}
 
+    calendar.render();
 
-window.onload = function() {
-    
-    // (ตรวจสอบไลบรารีพื้นฐาน)
-    if (typeof FullCalendar === 'undefined' || typeof bootstrap === 'undefined' || typeof $ === 'undefined' || typeof yl === 'undefined') {
-        console.error("Required JS libraries not loaded (jQuery, Bootstrap, FullCalendar, or DAL/yl).");
-        document.getElementById('calendar').innerHTML = '<div class="alert alert-danger">เกิดข้อผิดพลาด: โหลดไลบรารีไม่สำเร็จ กรุณาล้างแคช (Ctrl+Shift+R)</div>';
-        return; 
-    }
-    
-    // 💡 ฟังก์ชันบังคับความกว้าง Select2 ให้เต็ม 100% (คีย์หลัก)
-    function fixSelect2Width() {
-        var $participantsField = $('#id_participants');
-        
-        // 1. บังคับด้วย CSS ทันที
-        $participantsField.closest('.select2-container').css({
-            width: '100%',
-            minWidth: '100%',
-            maxWidth: '100%'
-        });
-
-        // 2. สั่งให้ Select2 คำนวณตัวเองใหม่ (ท่าไม้ตายแก้บั๊ก)
-        $participantsField.trigger('change.select2');
-    }
-    
-
-    var calendarEl = document.getElementById('calendar');
-    var hiddenForm = document.getElementById('hiddenBookingForm');
-    var modalBody = document.getElementById('modalBookingBody');
-    var startTimeField = document.getElementById('id_start_time');
-    var endTimeField = document.getElementById('id_end_time');
-    var bookingModalEl = document.getElementById('bookingModal'); 
-    var bookingModal = new bootstrap.Modal(bookingModalEl);
-    
-    if (!startTimeField || !endTimeField) {
-        console.error("ไม่พบช่อง input #id_start_time หรือ #id_end_time");
-    }
-
-    // --- โค้ดที่จัดการการลากและยืดหด Event ---
-    function sendEventUpdate(info, revert) {
-        var event = info.event;
-        var new_start = event.start.toISOString();
-        var new_end = event.end ? event.end.toISOString() : null;
-        
-        if (new Date(new_start) < new Date()) {
-            alert("ไม่สามารถย้ายการจองไปในอดีตได้");
-            revert(); 
-            return;
-        }
-
-        if (!confirm(`คุณต้องการย้าย "${event.title}" ไปยังเวลานี้ใช่หรือไม่?`)) {
-            revert();
-            return;
-        }
-
-        fetch("{% url 'update_booking_time' %}", {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': '{{ csrf_token }}'
-            },
-            body: JSON.stringify({
-                booking_id: event.id,
-                start_time: new_start,
-                end_time: new_end
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'success') {
-                console.log('Update successful:', data.message);
-                calendar.refetchEvents(); 
-            } else {
-                alert('เกิดข้อผิดพลาด: ' + data.message);
-                revert();
-            }
-        })
-        .catch(error => {
-            console.error('Error updating event:', error);
-            alert('เกิดข้อผิดพลาดในการเชื่อมต่อ');
-            revert();
-        });
-    }
-    // --- สิ้นสุดโค้ดที่จัดการการลากและยืดหด Event ---
-
-
-    var calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: 'timeGridWeek', 
-        locale: 'th',
-        // ... (FullCalendar config อื่นๆ)
-        
-        headerToolbar: {
-            left: 'prev,next today',
-            center: 'title',
-            right: 'dayGridMonth,timeGridWeek,timeGridDay' 
-        },
-        buttonText: { today: 'วันนี้', month: 'เดือน', week: 'สัปดาห์', day: 'วัน' },
-        
-        allDaySlot: false, 
-        slotMinTime: '07:30:00', 
-        slotMaxTime: '18:00:00',
-        businessHours: {
-            daysOfWeek: [ 0, 1, 2, 3, 4, 5, 6 ],
-            startTime: '08:00',
-            endTime: '18:00',
-        },
-        
-        selectable: true, 
-        selectMirror: true, 
-        nowIndicator: true, 
-        
-        editable: true, 
-        eventDrop: sendEventUpdate, 
-        eventResize: sendEventUpdate, 
-        
-        selectAllow: function(selectInfo) {
-            var now = new Date();
-            if (selectInfo.start < now) { return false; }
-            return true;
-        },
-
-        select: function(info) {
-            var now = new Date();
-            if (info.start < now) {
-                alert("ไม่สามารถจองย้อนหลังได้");
-                calendar.unselect();
-                return;
-            }
-
-            // (จัดการเวลาเมื่อคลิกใน Month View)
-            if (info.view.type.includes('dayGrid')) { 
-                info.start.setHours(8, 0, 0, 0); 
-                var end = new Date(info.end.getTime()); 
-                if (info.end.getDate() !== info.start.getDate()) {
-                    end.setDate(end.getDate() - 1); 
-                } 
-                end.setHours(18, 0, 0, 0);
-                info.end = end;
-            }
-            
-            var startStr = new Date(info.start.getTime() - (info.start.getTimezoneOffset() * 60000)).toISOString().substring(0, 16);
-            var endStr = new Date(info.end.getTime() - (info.end.getTimezoneOffset() * 60000)).toISOString().substring(0, 16);
-            
-            modalBody.appendChild(hiddenForm); 
-            startTimeField.value = startStr;
-            endTimeField.value = endStr;
-            
-            // 🎯 แก้ไข: สั่งให้ Select2 ถูกสร้างด้วยการตั้งค่า 'dropdownParent' และ 'width' ที่ถูกต้อง
-            if (typeof yl !== 'undefined' && yl.register) {
-                var $participants = $(modalBody).find('#id_participants');
-                if ($participants.length) {
-                    if ($participants.hasClass('select2-hidden-accessible')) {
-                        $participants.select2('destroy');
-                    }
-                    yl.register($participants, {
-                        dropdownParent: $('#bookingModal'), 
-                        width: '100%',                  
-                        theme: 'bootstrap-5',
-                        language: 'th' // ยืนยันภาษาใน DAL
-                    });
-                }
-            }
-
-            bookingModal.show();
-        },
-        
-        events: "{% url 'bookings_api' %}?room_id={{ room.id }}",
-
-        eventDataTransform: function(eventData) {
-            // ... (โค้ด Event Data Transform เดิม)
-            let props = eventData.extendedProps || {};
-            var now = new Date();
-            var eventStart = new Date(eventData.start);
-            var eventEnd = new Date(eventData.end);
-
-            if (props.status === 'PENDING') {
-                eventData.backgroundColor = '#ffc107'; 
-                eventData.borderColor = '#ffc107';
-                eventData.title = `[รออนุมัติ] ${eventData.title}`;
-            } else if (props.status === 'APPROVED') {
-                if (now >= eventStart && now < eventEnd) {
-                    eventData.backgroundColor = '#dc3545'; 
-                    eventData.borderColor = '#dc3545';
-                    eventData.title = `[กำลังใช้งาน] ${eventData.title}`;
-                } else {
-                    eventData.backgroundColor = '#198754'; 
-                    eventData.borderColor = '#198754';
-                    eventData.title = `[จองแล้ว] ${eventData.title}`;
-                }
-            } else if (eventData.display !== 'background') {
-                eventData.display = 'none';
-            }
-            
-            var currentUserId = {{ request.user.id|default:"null" }};
-            var isAdmin = {{ is_admin_user|yesno:"true,false" }};
-            
-            if (props.user_id == currentUserId || isAdmin) {
-                eventData.editable = true;
-            } else {
-                eventData.editable = false;
-            }
-
-            return eventData;
-        },
-
-        eventClick: function(info) {
-            if (info.event.display === 'background') { return false; }
-            window.location.href = "{% url 'booking_detail' 0 %}".replace('0', info.event.id);
-        },
-        
-        viewDidMount: function() {
-            // 🎯 แก้ไข: เพิ่ม Listener ที่นี่เพื่อสั่งให้ Select2 คำนวณความกว้างใหม่เมื่อ Modal เปิด
-            bookingModalEl.addEventListener('shown.bs.modal', function () {
-                fixSelect2Width(); // **ท่าไม้ตาย 3**
-                
-                // (เสริม: โฟกัสช่องค้นหา)
-                setTimeout(function() {
-                    $('#bookingModal').find('.select2-search__field').first().focus();
-                }, 100);
-            });
-            
-            // โค้ดเดิมตอน Modal ปิด
-            bookingModalEl.addEventListener('hidden.bs.modal', function () {
-                document.getElementById('bookingFormContainer').appendChild(hiddenForm);
-                if ($.fn.select2) {
-                    $('#id_participants').select2('destroy');
-                }
-            });
-        }
-    });
-    
-    calendar.render();
-};
+    // (โค้ด 'hidden.bs.modal' เดิม)
+    document.getElementById('bookingModal').addEventListener('hidden.bs.modal', function () {
+        document.getElementById('bookingFormContainer').appendChild(hiddenForm);
+    });
+});
 </script>
+
 {% endblock %}

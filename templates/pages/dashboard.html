@@ -220,24 +220,25 @@
 
 {# --- Modal สำหรับแจ้งเตือน ปิดปรับปรุง (ปรับปรุงให้สวยงาม) --- #}
 <div class="modal fade" id="maintenanceAlertModal" tabindex="-1" aria-labelledby="maintenanceAlertModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-sm modal-dialog-centered maintenance-modal"> 
+  <div class="modal-dialog  modal-dialog-centered maintenance-modal"> 
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <div class="modal-body">
-        <i class="bi bi-exclamation-triangle-fill display-3 text-warning mb-3"></i> 
-        <h4 class="mb-2 fw-bold text-danger">ไม่สามารถจองได้!</h4>
+      <div class="modal-body text-center">
+        <i class="bi bi-exclamation-triangle-fill display-5 text-warning mb-5"></i> 
+        <h4 class="mb-2 fw-bold text-danger"><center>ไม่สามารถจองได้!</center></h4>
         <p class="mb-2 lead">
-            ห้องประชุม <span id="roomNameAlert" class="fw-bold text-primary"></span>
+           <span id="roomNameAlert" class="fw-bold text-primary"></span>
         </p>
         <p class="mb-4 text-muted">
-            **กำลังปิดปรับปรุงชั่วคราว** <br>
-            กรุณาเลือกห้องอื่น หรือติดต่อผู้ดูแลระบบเพื่อสอบถามข้อมูลเพิ่มเติม
+            <center>**กำลังปิดปรับปรุงชั่วคราว** <br>
+            กรุณาเลือกห้องอื่นหรือติดต่อผู้ดูแลระบบ
+            </center>
         </p>
       </div>
       <div class="modal-footer justify-content-center">
-        <button type="button" class="btn btn-primary px-4" data-bs-dismiss="modal">รับทราบ</button>
+        <button type="button" class="btn btn-outline-danger px-5" data-bs-dismiss="modal">ปิด</button>
       </div>
     </div>
   </div>

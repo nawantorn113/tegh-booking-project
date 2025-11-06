@@ -16,6 +16,11 @@ INSTALLED_APPS = [
     'booking',
     'dal',
     'dal_select2',
+    
+    # 💡 1. เพิ่ม 2 บรรทัดนี้สำหรับ CRISPY
+    'crispy_forms',
+    'crispy_bootstrap5',
+    'widget_tweaks',
 ]
 
 MIDDLEWARE = [
@@ -28,12 +33,13 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'mysite.urls'
+# (ผมใช้ 'mysite.urls' ตามไฟล์ที่คุณส่งมา... ถูกต้องแล้ว)
+ROOT_URLCONF = 'mysite.urls' 
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'],
+        'DIRS': [BASE_DIR / 'templates'], # (ใช้ 'templates' ตามไฟล์ที่คุณส่งมา)
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -63,7 +69,7 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 LANGUAGE_CODE = 'en-us'
-TIME_ZONE = 'Asia/Bangkok'
+TIME_ZONE = 'Asia/Bangkok' # (ใช้ 'Asia/BangKOK' ตามไฟล์ที่คุณส่งมา)
 USE_I18N = True
 USE_TZ = True
 
@@ -79,3 +85,7 @@ LOGIN_REDIRECT_URL = 'dashboard'
 LOGOUT_REDIRECT_URL = 'login'
 
 X_FRAME_OPTIONS = 'SAMEORIGIN'
+
+# 💡 2. เพิ่ม 2 บรรทัดนี้ไว้ที่ "ล่างสุด" ของไฟล์
+CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
+CRISPY_TEMPLATE_PACK = "bootstrap5"

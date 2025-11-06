@@ -1,177 +1,91 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load crispy_forms_tags %}
 
 {% block title %}แก้ไขการจอง: {{ booking.title }}{% endblock %}
-{% block page_title %}แก้ไขการจอง{% endblock %}
+{% block page_title %}<i class="bi bi-pencil-square me-2"></i>แก้ไขการจอง{% endblock %}
 
 {% block extra_head %}
-{# Select2 CSS #}
 {{ form.media.css }}
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
 
 <style>
-    body {
-        background-color: #f8f9fa;
-    }
+/* 🎨 จัดกล่องฟอร์มให้ดูโดดเด่น */
+.form-card {
+    background: #ffffff;
+    border-radius: 1.5rem;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+    padding: 3rem;
+    max-width: 700px;
+    margin: 60px auto;
+    transition: all 0.3s ease;
+}
+.form-card:hover {
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+}
 
-    .form-container {
-        max-width: 480px;
-        margin: 50px auto;
-        padding: 25px 30px;
-        background: #ffffff;
-        border-radius: 20px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    }
+/* 🏷️ หัวข้อใหญ่ตรงกลาง */
+.form-card h4 {
+    font-weight: 700;
+    color: #0d6efd;
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
 
-    .form-label {
-        font-weight: 600;
-        margin-top: 10px;
-    }
+/* 🧭 ปุ่ม */
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 1.5rem;
+}
+.form-actions a, .form-actions button {
+    min-width: 130px;
+}
 
-    .form-control, .select2-selection {
-        border-radius: 10px !important;
-    }
-
-    /* 🎯 CSS บังคับความกว้าง: คีย์หลักอยู่ที่นี่ */
-    .select2-container {
-        min-width: 100% !important;
-        width: 100% !important;
-        display: block !important;
-    }
-
-    /* ปรับให้สูงขึ้นหน่อย */
-    .select2-selection--multiple {
-        min-height: 45px !important;
-    }
-
-    .btn {
-        border-radius: 10px;
-        padding: 8px 20px;
-    }
-
-    .text-center {
-        margin-top: 20px;
-    }
+/* 📱 Responsive ปรับขนาดอัตโนมัติ */
+@media (max-width: 576px) {
+    .form-card {
+        padding: 1.5rem;
+        margin: 30px 1rem;
+    }
+}
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="form-container">
-    <h5 class="text-center mb-4"><strong>แก้ไขการจองห้อง: {{ booking.room.name }}</strong></h5>
+<div class="form-card animate__animated animate__fadeIn">
+    <h4>แก้ไขการจองห้อง: {{ booking.room.name }}</h4>
 
-    <form method="POST" enctype="multipart/form-data" id="bookingForm">
-        {% csrf_token %}
-        <div class="mb-3">
-            <label class="form-label">หัวข้อการประชุม</label>
-            {{ form.title }}
-        </div>
+    <form method="POST" enctype="multipart/form-data" id="bookingForm">
+        {% csrf_token %}
+        {{ form|crispy }}
 
-        <div class="row">
-            <div class="col">
-                <label class="form-label">ประเภท (ถ้ามี)</label>
-                {{ form.meeting_type }}
-            </div>
-            <div class="col">
-                <label class="form-label">แผนกผู้จอง</label>
-                {{ form.department }}
-            </div>
-        </div>
-
-        <div class="row">
-            <div class="col">
-                <label class="form-label">วัน/เวลา เริ่มต้น</label>
-                {{ form.start_time }}
-            </div>
-            <div class="col">
-                <label class="form-label">วัน/เวลา สิ้นสุด</label>
-                {{ form.end_time }}
-            </div>
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label">จำนวนผู้เข้าร่วม</label>
-            {{ form.participants_count }}
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label">รายชื่อผู้เข้าร่วม</label>
-            <div class="participant-select">
-                {{ form.participants }}
-            </div>
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label">รายละเอียดการประชุม / วาระการประชุม</label>
-            {{ form.details }}
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label">ไฟล์เอกสาร</label>
-            {{ form.attachment }}
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label">อุปกรณ์เพิ่มเติม</label>
-            {{ form.equipment }}
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label">หมายเหตุ</label>
-            {{ form.note }}
-        </div>
-
-        <div class="text-center">
-            <button type="button" class="btn btn-secondary" onclick="window.location.href='{% url 'history' %}'">ยกเลิก</button>
-            <button type="submit" class="btn btn-primary">ยืนยัน</button>
-        </div>
-    </form>
+        <div class="form-actions">
+            <a href="{% url 'rooms' %}" class="btn btn-outline-danger me-2">
+                <i class=""></i> ยกเลิก
+            </a>
+            <button type="submit" class="btn btn-outline-primary px-4">
+                <i class=""></i> บันทึกข้อมูล
+            </button>
+        </div>
+    </form>
 </div>
 {% endblock %}
 
 {% block extra_scripts %}
-{# Select2 JS #}
 {{ form.media.js }}
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.full.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/i18n/th.js"></script>
 
 <script>
 $(document).ready(function() {
-    
-    // 💡 ฟังก์ชันบังคับความกว้าง Select2 ให้เต็ม 100% (คีย์หลัก)
-    function fixSelect2Width() {
-        // ใช้ #bookingForm เพื่อให้เลือก Select2 ที่ถูกต้องและเจาะจง
-        $('#bookingForm .select2-container').css({
-            width: '100%',
-            minWidth: '100%',
-            maxWidth: '100%'
-        });
-    }
-
-    // 1. สร้าง Select2 ด้วยการบังคับ width: '100%' ตรงๆ
-    const $selects = $('select').select2({
+    // ✅ ตั้งค่า Select2 ให้ดูเข้ากับ Bootstrap
+    $('select').select2({
         theme: 'bootstrap-5',
         language: 'th',
-        width: '100%' // 👈 ใช้ '100%' ตรงๆ
+        width: '100%'
     });
-
-    // 2. บังคับความกว้างด้วย CSS ทันที (เผื่อไว้)
-    fixSelect2Width(); 
-    
-    // 3. ทริกเกอร์: สั่งให้ Select2 คำนวณความกว้างใหม่ทันที! (ท่าไม้ตายแก้บั๊ก)
-    var $participantsField = $('#id_participants');
-    $participantsField.trigger('change.select2');
-    
-    // 4. เรียกซ้ำในช่วงสั้นๆ เพื่อความชัวร์
-    setTimeout(function() {
-        fixSelect2Width();
-        $participantsField.trigger('change.select2'); // ย้ำการคำนวณซ้ำ
-    }, 100); 
-    
-    // 5. บังคับความกว้างเมื่อมีการเปลี่ยนขนาดหน้าจอ
-    $(window).on('resize', fixSelect2Width);
-
 });
 </script>
 {% endblock %}

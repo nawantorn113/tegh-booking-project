@@ -178,17 +178,17 @@ def login_view(request):
         form = AuthenticationForm(request, data=request.POST);
         if form.is_valid():
             user = form.get_user(); login(request, user)
-            next_url = request.GET.get('next', 'dashboard'); messages.success(f"ยินดีต้อนรับ, {user.get_full_name() or user.username}!")
+            next_url = request.GET.get('next', 'dashboard'); messages.success(request, f"ยินดีต้อนรับ, {user.get_full_name() or user.username}!")
             return redirect(next_url)
         else:
-            if '__all__' in form.errors: messages.error(f"ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง โปรดลองอีกครั้ง")
-            else: messages.error(f"ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง โปรดลองอีกครั้ง")
+            if '__all__' in form.errors: messages.error(request, f"ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง โปรดลองอีกครั้ง")
+            else: messages.error(request, f"ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง โปรดลองอีกครั้ง")
     else: form = AuthenticationForm()
     return render(request, 'login.html', {'form': form})
 @login_required
 def logout_view(request):
     logout(request)
-    messages.success(f"คุณได้ออกจากระบบเรียบร้อยแล้ว");
+    messages.success(request, f"คุณได้ออกจากระบบเรียบร้อยแล้ว");
     return redirect('login') 
 
 # --- Smart Search ---
@@ -348,7 +348,7 @@ def room_calendar_view(request, room_id):
     
     # 💡 [แก้ไข] ใช้ is_currently_under_maintenance เพื่อตรวจสอบสถานะปัจจุบัน
     if room.is_currently_under_maintenance and not is_admin(request.user):
-        messages.error(f"ห้อง '{room.name}' กำลังปิดปรับปรุงชั่วคราว ไม่สามารถเข้าดูปฏิทินได้")
+        messages.error(request, f"ห้อง '{room.name}' กำลังปิดปรับปรุงชั่วคราว ไม่สามารถเข้าดูปฏิทินได้")
         return redirect('dashboard')
         
     if request.method == 'POST':
@@ -388,19 +388,19 @@ def history_view(request): # 👈 ฟังก์ชันนี้คือต�
         try:
             bookings = bookings.filter(start_time__date=datetime.strptime(date_f, '%Y-%m-%d').date())
         except ValueError:
-            messages.warning(f"รูปแบบวันที่ไม่ถูกต้อง กรุณาใช้ YYYY-MM-DD")
+            messages.warning(request, f"รูปแบบวันที่ไม่ถูกต้อง กรุณาใช้ YYYY-MM-DD")
             date_f = None
     if room_f:
         try:
             room_id_int = int(room_f)
             bookings = bookings.filter(room_id=room_id_int)
         except (ValueError, TypeError):
-            messages.warning(f"Room ID ไม่ถูกต้อง")
+            messages.warning(request, f"Room ID ไม่ถูกต้อง")
             room_f = None
     if status_f and status_f in dict(Booking.STATUS_CHOICES):
         bookings = bookings.filter(status=status_f)
     elif status_f:
-        messages.warning(f"สถานะการจองไม่ถูกต้อง")
+        messages.warning(request, f"สถานะการจองไม่ถูกต้อง")
         status_f = None
     
     if q_f:
@@ -437,7 +437,7 @@ def booking_detail_view(request, booking_id):
     )
     is_participant = request.user in booking.participants.all()
     if (booking.user != request.user and not is_admin(request.user) and not is_participant):
-        messages.error(f"คุณไม่มีสิทธิ์เข้าดูรายละเอียดการจองนี้");
+        messages.error(request, f"คุณไม่มีสิทธิ์เข้าดูรายละเอียดการจองนี้");
         return redirect('dashboard')
         
     context = get_base_context(request)
@@ -454,10 +454,10 @@ def change_password_view(request):
         if password_form.is_valid():
             user = password_form.save()
             update_session_auth_hash(request, user)
-            messages.success(f"เปลี่ยนรหัสผ่านเรียบร้อยแล้ว");
+            messages.success(request, f"เปลี่ยนรหัสผ่านเรียบร้อยแล้ว");
             return redirect('change_password')
         else:
-            messages.error(f"ไม่สามารถเปลี่ยนรหัสผ่านได้ กรุณาตรวจสอบข้อผิดพลาด")
+            messages.error(request, f"ไม่สามารถเปลี่ยนรหัสผ่านได้ กรุณาตรวจสอบข้อผิดพลาด")
     else: 
         password_form = CustomPasswordChangeForm(request.user)
     
@@ -551,8 +551,8 @@ def update_booking_time_api(request):
         booking.end_time = new_end
         status_message = "Booking time updated successfully."
         if booking.participant_count >= 15 and booking.status not in ['PENDING', 'REJECTED', 'CANCELLED']:
-             booking.status = 'PENDING'
-             status_message = "Booking time updated. Approval now required."
+            booking.status = 'PENDING'
+            status_message = "Booking time updated. Approval now required."
         booking.save()
         
         AuditLog.objects.create(
@@ -579,7 +579,7 @@ def delete_booking_api(request, booking_id):
         
         # 💡 [ใหม่] ตรวจสอบ Maintenance ก่อนการยกเลิก (ป้องกันการยกเลิกในช่วงปิดปรับปรุงที่ไม่เกี่ยวข้อง)
         if booking.room.is_currently_under_maintenance and not is_admin(request.user):
-            messages.error(f"ไม่สามารถยกเลิกการจองได้: ห้อง '{booking.room.name}' กำลังปิดปรับปรุง")
+            messages.error(request, f"ไม่สามารถยกเลิกการจองได้: ห้อง '{booking.room.name}' กำลังปิดปรับปรุง")
             return JsonResponse({'success': False, 'error': f"ห้องกำลังปิดปรับปรุง"}, status=400)
             
         booking.status = 'CANCELLED'
@@ -607,7 +607,7 @@ def create_booking_view(request, room_id):
     
     # 💡 [แก้ไข] ใช้ is_currently_under_maintenance เพื่อตรวจสอบสถานะปัจจุบัน
     if room.is_currently_under_maintenance and not is_admin(request.user):
-        messages.error(f"ไม่สามารถจองได้: ห้อง '{room.name}' กำลังปิดปรับปรุง")
+        messages.error(request, f"ไม่สามารถจองได้: ห้อง '{room.name}' กำลังปิดปรับปรุง")
         context = get_base_context(request)
         form = BookingForm(request.POST, request.FILES)
         context.update({'room': room, 'form': form})
@@ -643,17 +643,17 @@ def create_booking_view(request, room_id):
             ).exists()
             
             if conflicts:
-                messages.error(f"ไม่สามารถจองได้: ช่วงเวลาที่คุณเลือกทับซ้อนกับการจองอื่น")
+                messages.error(request, f"")
                 context = get_base_context(request)
                 context.update({'room': room, 'form': form})
                 return render(request, 'pages/room_calendar.html', context)
 
             if participant_count >= 15:
                 parent_booking.status = 'PENDING'
-                messages.success(f"จอง '{parent_booking.title}' ({room.name}) เรียบร้อย **รออนุมัติ**")
+                messages.success(request, f"จอง '{parent_booking.title}' ({room.name}) เรียบร้อย **รออนุมัติ**")
             else:
                 parent_booking.status = 'APPROVED'
-                messages.success(f"จอง '{parent_booking.title}' ({room.name}) **อนุมัติอัตโนมัติ**")
+                messages.success(request, f"จอง '{parent_booking.title}' ({room.name}) **อนุมัติอัตโนมัติ**")
             
             parent_booking.save() 
             form.save_m2m() 
@@ -680,18 +680,21 @@ def create_booking_view(request, room_id):
                 bookings_to_create = []
 
                 while True:
+                    # Calculate next time slot
                     if recurrence == 'WEEKLY':
                         next_start_time += timedelta(weeks=1)
+                        next_end_time += timedelta(weeks=1) # 💡 [แก้ไข] ต้องเพิ่ม end_time ด้วย!
                     elif recurrence == 'MONTHLY':
                         next_start_time += relativedelta(months=1)
+                        next_end_time += relativedelta(months=1) # 💡 [แก้ไข] ต้องเพิ่ม end_time ด้วย!
                     
                     if next_start_time.date() > recurrence_end_date:
                         break
                         
-                    # 💡 [แก้ไข] ตรวจสอบ Maintenance ในช่วงเวลาซ้ำ
-                    if room.is_currently_under_maintenance_during_period(next_start_time, next_end_time): # สมมติว่ามี Helper function ใน Room Model
-                        print(f"Skipping recurring booking on {next_start_time.date()} due to maintenance.")
-                        continue # ข้ามรอบนี้ไป
+                    # 💡 [แก้ไข] ตรวจสอบ Maintenance ในช่วงเวลาซ้ำ (สมมติว่ามี Helper function ใน Room Model)
+                    # if room.is_currently_under_maintenance_during_period(next_start_time, next_end_time): 
+                    #     print(f"Skipping recurring booking on {next_start_time.date()} due to maintenance.")
+                    #     continue 
                         
                     child_conflicts = Booking.objects.filter(
                         room=room,
@@ -734,14 +737,14 @@ def create_booking_view(request, room_id):
 
         except ValidationError as e:
             error_str = ", ".join(e.messages)
-            messages.error(f"ไม่สามารถสร้างการจองได้: {error_str}")
+            messages.error(request, f"ไม่สามารถสร้างการจองได้: {error_str}")
     
     error_list = []
     for field, errors in form.errors.items():
         field_label = form.fields.get(field).label if field != '__all__' and field in form.fields else (field if field != '__all__' else 'Form')
         error_list.append(f"{field_label}: {', '.join(errors)}")
     error_str = "; ".join(error_list)
-    messages.error(f"ไม่สามารถสร้างการจองได้: {error_str}")
+    messages.error(request, f"ไม่สามารถสร้างการจองได้: {error_str}")
     
     context = get_base_context(request)
     context.update({'room': room, 'form': form})
@@ -751,7 +754,7 @@ def create_booking_view(request, room_id):
 def edit_booking_view(request, booking_id):
     booking = get_object_or_404(Booking, pk=booking_id)
     if booking.user != request.user and not is_admin(request.user):
-        messages.error(f"คุณไม่มีสิทธิ์แก้ไขการจองนี้")
+        messages.error(request, f"คุณไม่มีสิทธิ์แก้ไขการจองนี้")
         return redirect('history')
         
     if request.method == 'POST':
@@ -762,7 +765,7 @@ def edit_booking_view(request, booking_id):
                 
                 # 💡 [ใหม่] ตรวจสอบ Maintenance ก่อนการแก้ไข
                 if updated_booking.room.is_currently_under_maintenance and not is_admin(request.user):
-                     messages.error(f"ไม่สามารถแก้ไขการจองได้: ห้อง '{updated_booking.room.name}' กำลังปิดปรับปรุง")
+                     messages.error(request, f"ไม่สามารถแก้ไขการจองได้: ห้อง '{updated_booking.room.name}' กำลังปิดปรับปรุง")
                      context = get_base_context(request)
                      context.update({'form': form, 'booking': booking})
                      return render(request, 'pages/edit_booking.html', context)
@@ -771,11 +774,11 @@ def edit_booking_view(request, booking_id):
                 new_count = form.cleaned_data.get('participant_count', 1)
                 changed_for_approval = any(f in form.changed_data for f in ['start_time', 'end_time', 'participant_count'])
                 if new_count >= 15 and changed_for_approval and updated_booking.status not in ['PENDING', 'REJECTED', 'CANCELLED']:
-                     updated_booking.status = 'PENDING'
-                     messages.info(f"การแก้ไขต้องรอการอนุมัติใหม่")
+                    updated_booking.status = 'PENDING'
+                    messages.info(request, f"การแก้ไขต้องรอการอนุมัติใหม่")
                 updated_booking.save()
                 form.save_m2m() 
-                messages.success(f"แก้ไขข้อมูลการจองเรียบร้อยแล้ว")
+                messages.success(request, f"แก้ไขข้อมูลการจองเรียบร้อยแล้ว")
                 
                 AuditLog.objects.create(
                     user=request.user,
@@ -785,12 +788,12 @@ def edit_booking_view(request, booking_id):
                 )
                 
                 if updated_booking.status == 'PENDING' and changed_for_approval:
-                     send_booking_notification(updated_booking, 'emails/new_booking_pending.html', 'โปรดอนุมัติ (แก้ไข)')
+                    send_booking_notification(updated_booking, 'emails/new_booking_pending.html', 'โปรดอนุมัติ (แก้ไข)')
                 return redirect('history')
             except ValidationError as e:
                 error_str = ", ".join(e.messages)
                 form.add_error(None, e)
-                messages.error(f"ไม่สามารถบันทึกได้: {error_str}")
+                messages.error(request, f"ไม่สามารถบันทึกได้: {error_str}")
     else: 
         form = BookingForm(instance=booking)
     
@@ -802,15 +805,15 @@ def edit_booking_view(request, booking_id):
 def delete_booking_view(request, booking_id):
     booking = get_object_or_404(Booking, pk=booking_id)
     if booking.user != request.user and not is_admin(request.user):
-        messages.error(f"ไม่มีสิทธิ์ยกเลิกการจองนี้")
+        messages.error(request, f"ไม่มีสิทธิ์ยกเลิกการจองนี้")
         return redirect('history')
     if booking.status in ['CANCELLED', 'REJECTED']:
-        messages.warning(f"การจองนี้ถูกยกเลิกหรือปฏิเสธไปแล้ว")
+        messages.warning(request, f"การจองนี้ถูกยกเลิกหรือปฏิเสธไปแล้ว")
         return redirect('history')
         
     # 💡 [ใหม่] ตรวจสอบ Maintenance ก่อนการยกเลิก
     if booking.room.is_currently_under_maintenance and not is_admin(request.user):
-        messages.error(f"ไม่สามารถยกเลิกการจองได้: ห้อง '{booking.room.name}' กำลังปิดปรับปรุง")
+        messages.error(request, f"ไม่สามารถยกเลิกการจองได้: ห้อง '{booking.room.name}' กำลังปิดปรับปรุง")
         return redirect('history')
         
     booking.status = 'CANCELLED'
@@ -823,7 +826,7 @@ def delete_booking_view(request, booking_id):
         details=f"Cancelled Booking ID {booking.id} ('{booking.title}')"
     )
     
-    messages.success(f"ยกเลิกการจอง '{booking.title}' เรียบร้อย")
+    messages.success(request, f"ยกเลิกการจอง '{booking.title}' เรียบร้อย")
     return redirect('history')
 
 # --- Approvals ---
@@ -851,11 +854,11 @@ def approve_booking_view(request, booking_id):
     
     # 💡 [ใหม่] ตรวจสอบ Maintenance ก่อนการอนุมัติ
     if booking.room.is_currently_under_maintenance:
-        messages.error(f"ไม่สามารถอนุมัติได้: ห้อง '{booking.room.name}' กำลังปิดปรับปรุงในช่วงเวลานี้")
+        messages.error(request, f"ไม่สามารถอนุมัติได้: ห้อง '{booking.room.name}' กำลังปิดปรับปรุงในช่วงเวลานี้")
         return redirect('approvals')
     
     if not (is_admin(request.user) or (booking.room.approver == request.user)):
-        messages.error(f"คุณไม่มีสิทธิ์อนุมัติการจองนี้")
+        messages.error(request, f"คุณไม่มีสิทธิ์อนุมัติการจองนี้")
         return redirect('approvals')
 
     booking.status = 'APPROVED'
@@ -869,7 +872,7 @@ def approve_booking_view(request, booking_id):
     )
     send_booking_notification(booking, 'emails/booking_approved_user.html', 'การจองของคุณอนุมัติแล้ว')
     
-    messages.success(f"อนุมัติการจอง '{booking.title}' เรียบร้อย")
+    messages.success(request, f"อนุมัติการจอง '{booking.title}' เรียบร้อย")
     return redirect('approvals')
 @login_required
 @user_passes_test(is_approver_or_admin)
@@ -878,7 +881,7 @@ def reject_booking_view(request, booking_id):
     booking = get_object_or_404(Booking.objects.select_related('user', 'room'), id=booking_id, status='PENDING')
 
     if not (is_admin(request.user) or (booking.room.approver == request.user)):
-        messages.error(f"คุณไม่มีสิทธิ์ปฏิเสธการจองนี้")
+        messages.error(request, f"คุณไม่มีสิทธิ์ปฏิเสธการจองนี้")
         return redirect('approvals')
         
     booking.status = 'REJECTED'
@@ -892,7 +895,7 @@ def reject_booking_view(request, booking_id):
     )
     send_booking_notification(booking, 'emails/booking_rejected_user.html', 'การจองของคุณถูกปฏิเสธ')
     
-    messages.warning(f"ปฏิเสธการจอง '{booking.title}' เรียบร้อย")
+    messages.warning(request, f"ปฏิเสธการจอง '{booking.title}' เรียบร้อย")
     return redirect('approvals')
 
 # --- Management ---
@@ -914,7 +917,7 @@ def edit_user_roles_view(request, user_id):
         user_to_edit.groups.set(selected_groups)
         user_to_edit.is_staff = (is_admin(user_to_edit) or user_to_edit.is_superuser)
         user_to_edit.save()
-        messages.success(f"อัปเดตสิทธิ์ผู้ใช้ '{user_to_edit.username}' เรียบร้อย")
+        messages.success(request, f"อัปเดตสิทธิ์ผู้ใช้ '{user_to_edit.username}' เรียบร้อย")
         return redirect('user_management')
     context = get_base_context(request)
     context.update({
@@ -937,10 +940,10 @@ def add_room_view(request):
         form = RoomForm(request.POST, request.FILES)
         if form.is_valid():
             form.save()
-            messages.success(f"เพิ่มห้องประชุมใหม่เรียบร้อย")
+            messages.success(request, f"เพิ่มห้องประชุมใหม่เรียบร้อย")
             return redirect('rooms')
         else:
-            messages.error(f"ไม่สามารถเพิ่มห้องได้ กรุณาตรวจสอบข้อผิดพลาด")
+            messages.error(request, f"ไม่สามารถเพิ่มห้องได้ กรุณาตรวจสอบข้อผิดพลาด")
     else: 
         form = RoomForm()
     context = get_base_context(request)
@@ -954,10 +957,10 @@ def edit_room_view(request, room_id):
         form = RoomForm(request.POST, request.FILES, instance=room)
         if form.is_valid():
             form.save()
-            messages.success(f"แก้ไขข้อมูลห้อง '{room.name}' เรียบร้อย")
-            return redirect('rooms')
+            messages.success(request, f"แก้ไขข้อมูลห้อง '{room.name}' เรียบร้อย")
         else:
-            messages.error(f"ไม่สามารถแก้ไขห้อง '{room.name}' ได้ กรุณาตรวจสอบข้อผิดพลาด")
+            # 💡 [แก้ไขแล้ว] โค้ดที่ทำให้เกิด TypeError ถูกแก้ไขให้ใช้ request แล้ว
+            messages.error(request, f"ไม่สามารถแก้ไขห้อง '{room.name}' ได้ กรุณาตรวจสอบข้อผิดพลาด") 
     else: 
         form = RoomForm(instance=room)
     context = get_base_context(request)
@@ -971,9 +974,9 @@ def delete_room_view(request, room_id):
     room_name = room.name
     try:
         room.delete()
-        messages.success(f"ลบห้อง '{room_name}' เรียบร้อย")
+        messages.success(request, f"ลบห้อง '{room_name}' เรียบร้อย")
     except Exception as e:
-        messages.error(f"ไม่สามารถลบห้อง '{room_name}' ได้: {e}")
+        messages.error(request, f"ไม่สามารถลบห้อง '{room_name}' ได้: {e}")
     return redirect('rooms')
 
 @login_required
@@ -1023,14 +1026,14 @@ def reports_view(request):
     room_usage_labels = [r.name for r in room_usage_stats[:10]]
     room_usage_data = [r.booking_count for r in room_usage_stats[:10]]
     dept_usage_query = recent_bookings.exclude(department__exact='').exclude(department__isnull=True) \
-                                         .values('department') \
-                                         .annotate(count=Count('id')) \
-                                         .order_by('-count')
+                                     .values('department') \
+                                     .annotate(count=Count('id')) \
+                                     .order_by('-count')
     dept_usage_labels = [d['department'] for d in dept_usage_query[:10] if d.get('department')]
     dept_usage_data = [d['count'] for d in dept_usage_query[:10] if d.get('department')]
     departments_dropdown = Booking.objects.exclude(department__exact='').exclude(department__isnull=True) \
-                                         .values_list('department', flat=True) \
-                                         .distinct().order_by('department')
+                                     .values_list('department', flat=True) \
+                                     .distinct().order_by('department')
     
     context = get_base_context(request)
     context.update({
@@ -1054,7 +1057,7 @@ def reports_view(request):
 @user_passes_test(is_admin)
 def export_reports_excel(request):
     if not OPENPYXL_AVAILABLE:
-        messages.error(f"ไม่สามารถส่งออกเป็น Excel ได้: ไม่ได้ติดตั้งไลบรารี openpyxl")
+        messages.error(request, f"ไม่สามารถส่งออกเป็น Excel ได้: ไม่ได้ติดตั้งไลบรารี openpyxl")
         return redirect('reports')
     period = request.GET.get('period', 'monthly'); department = request.GET.get('department', '')
     today = timezone.now().date()
@@ -1105,5 +1108,5 @@ def export_reports_excel(request):
 @login_required
 @user_passes_test(is_admin)
 def export_reports_pdf(request):
-    messages.error(f"ฟังก์ชัน Export PDF ยังไม่พร้อมใช้งาน")
+    messages.error(request, f"ฟังก์ชัน Export PDF ยังไม่พร้อมใช้งาน")
     return redirect('reports')

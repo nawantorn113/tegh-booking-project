@@ -7,7 +7,7 @@ class Room(models.Model):
     building = models.CharField(max_length=100, blank=True, null=True)
     floor = models.CharField(max_length=50, blank=True, null=True)
     
-    location = models.CharField(max_length=255, blank=True, null=True, help_text="เช่น 'ใกล้ฝ่ายบุคคล'")
+    location = models.CharField(max_length=255, blank=True, null=True, help_text="")
     capacity = models.PositiveIntegerField(default=1)
     equipment_in_room = models.TextField(blank=True, null=True, help_text="ระบุอุปกรณ์แต่ละอย่างในบรรทัดใหม่")
     image = models.ImageField(upload_to='room_images/', blank=True, null=True, verbose_name="รูปภาพห้อง")
