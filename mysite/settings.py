@@ -17,7 +17,6 @@ INSTALLED_APPS = [
     'dal',
     'dal_select2',
     
-    # 💡 1. เพิ่ม 2 บรรทัดนี้สำหรับ CRISPY
     'crispy_forms',
     'crispy_bootstrap5',
     'widget_tweaks',
@@ -33,13 +32,12 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-# (ผมใช้ 'mysite.urls' ตามไฟล์ที่คุณส่งมา... ถูกต้องแล้ว)
 ROOT_URLCONF = 'mysite.urls' 
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'], # (ใช้ 'templates' ตามไฟล์ที่คุณส่งมา)
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -54,12 +52,35 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'mysite.wsgi.application'
 
+# -----------------------------------------------
+# [แก้ไข] เปลี่ยนกลับไปใช้ Windows Authentication
+# (แบบเดียวกับที่ SSMS ต่อติด)
+# -----------------------------------------------
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'mssql',
+        'NAME': 'tegh_booking_db',
+        
+        # (ลบ User/Pass ทิ้ง... กลับไปใช้ Windows Auth)
+        'USER': '',
+        'PASSWORD': '',
+        
+        'HOST': 'localhost\\SQLEXPRESS',
+        'PORT': '',                      
+
+        'OPTIONS': {
+            'driver': 'ODBC Driver 17 for SQL Server',
+            
+            # (เอา "บัตร Windows" กลับมา)
+            'trusted_connection': 'yes', 
+            
+            # ( "หัวใจ" ที่แก้บั๊ก "Login failed" / "Certificate not trusted")
+            'TrustServerCertificate': 'yes', 
+        },
     }
 }
+# -----------------------------------------------
+
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',},
@@ -69,7 +90,7 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 LANGUAGE_CODE = 'en-us'
-TIME_ZONE = 'Asia/Bangkok' # (ใช้ 'Asia/BangKOK' ตามไฟล์ที่คุณส่งมา)
+TIME_ZONE = 'Asia/Bangkok'
 USE_I18N = True
 USE_TZ = True
 
@@ -86,6 +107,5 @@ LOGOUT_REDIRECT_URL = 'login'
 
 X_FRAME_OPTIONS = 'SAMEORIGIN'
 
-# 💡 2. เพิ่ม 2 บรรทัดนี้ไว้ที่ "ล่างสุด" ของไฟล์
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"

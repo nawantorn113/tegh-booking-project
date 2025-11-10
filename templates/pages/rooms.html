@@ -1,10 +1,13 @@
 {% extends 'base.html' %}
+{% load static %}
+
 {% block title %}จัดการห้องประชุม - {{ block.super }}{% endblock %}
+
 {% block content %}
-<!-- <div class="d-flex justify-content-between align-items-center mb-4">
+<div class="d-flex justify-content-between align-items-center mb-4">
     <h1><i class="bi bi-door-open-fill me-2"></i>จัดการห้องประชุม</h1>
     <a href="{% url 'add_room' %}" class="btn btn-primary"><i class="bi bi-plus-circle-fill me-1"></i> เพิ่มห้องใหม่</a>
-</div> -->
+</div>
 <div class="card shadow-sm">
     <div class="card-body p-0">
         <div class="table-responsive">
@@ -28,21 +31,6 @@
                             <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteRoomModal-{{ room.id }}"><i class="bi bi-trash-fill"></i></button>
                         </td>
                     </tr>
-                    <div class="modal fade" id="deleteRoomModal-{{ room.id }}" tabindex="-1">
-                        <div class="modal-dialog">
-                            <div class="modal-content">
-                                <div class="modal-header"><h5 class="modal-title">ยืนยันการลบ</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-                                <div class="modal-body"><p>คุณแน่ใจหรือไม่ว่าต้องการลบห้อง "{{ room.name }}"?</p></div>
-                                <div class="modal-footer">
-                                    <form action="{% url 'delete_room' room.id %}" method="post">
-                                        {% csrf_token %}
-                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
-                                        <button type="submit" class="btn btn-danger">ยืนยัน</button>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
                     {% empty %}
                     <tr><td colspan="4" class="text-center text-muted py-4">ยังไม่มีห้องประชุมในระบบ</td></tr>
                     {% endfor %}
@@ -51,4 +39,23 @@
         </div>
     </div>
 </div>
+
+{% for room in rooms %}
+<div class="modal fade" id="deleteRoomModal-{{ room.id }}" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header"><h5 class="modal-title">ยืนยันการลบ</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body"><p>คุณแน่ใจหรือไม่ว่าต้องการลบห้อง "{{ room.name }}"?</p></div>
+            <div class="modal-footer">
+                <form action="{% url 'delete_room' room.id %}" method="post">
+                    {% csrf_token %}
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+                    <button type="submit" class="btn btn-danger">ยืนยัน</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
 {% endblock %}

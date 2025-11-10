@@ -1,134 +1,98 @@
-{% extends "base_minimal.html" %}
+<!-- {% extends "base_minimal.html" %}
 {% load static %}
+{% load widget_tweaks %}
 
 {% block title %}เข้าสู่ระบบ - TEGH Booking{% endblock %}
 
 {% block extra_head %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 
 <style>
-    body {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        min-height: 100vh;
-        background-color: #f8f9fa;
-    }
-    .login-card {
-        width: 100%;
-        max-width: 420px;
-        border-radius: 1rem;
-        box-shadow: 0 0.5rem 1.5rem rgba(0,0,0,.1);
-        border: 0;
-    }
-    
-    /* --- CSS สำหรับ Form (โมเดิร์น) --- */
-    #loginForm label {
-        display: none;
-    }
-    #loginForm input[type="text"],
-    #loginForm input[type="password"] {
-        display: block;
-        width: 100%;
-        padding: 0.85rem 1.1rem;
-        font-size: 1rem;
-        font-weight: 400;
-        line-height: 1.5;
-        color: #212529;
-        background-color: #fff;
-        background-clip: padding-box;
-        border: 1px solid #ced4da;
-        appearance: none;
-        transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
-    }
-    #loginForm input[type="text"]:focus,
-    #loginForm input[type="password"]:focus {
-        color: #212529;
-        background-color: #fff;
-        border-color: #86b7fe; 
-        outline: 0;
-        box-shadow: 0 0 0 0.25rem rgba(13,110,253,.25);
-    }
-    #loginForm #id_username {
-        border-bottom-left-radius: 0;
-        border-bottom-right-radius: 0;
-        margin-bottom: -1px; /* ขอบชนกัน */
-        border-radius: 0.5rem 0.5rem 0 0;
-    }
-    #loginForm #id_password {
-        border-top-left-radius: 0;
-        border-top-right-radius: 0;
-        margin-bottom: 1.5rem; /* เว้นที่ก่อนปุ่ม */
-        border-radius: 0 0 0.5rem 0.5rem;
-    }
+    body {
+        background-color: #f8f9fa;
+        
+        /* 💡 [แก้ไข] 1. "ลด" ความยาว... (เว้นน้อยลง) */
+        padding-top: 5rem; 
+        padding-bottom: 5rem;
+    }
+    .login-card {
+        width: 50%;
+        
+        /* 💡 [แก้ไข] 2. "ลด" ความใหญ่... (บีบให้แคบลง) */
+        max-width: 200px; 
+        
+        margin-left: auto;
+        margin-right: auto;
+        border-radius: 1rem;
+        box-shadow: 0 0.5rem 1rem rgba(0,0,0,.1);
+        border: 0;
+    }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="login-card">
-    <div class="card-body p-4 p-md-5">
-        
-        <div class="text-center mb-4">
-            <i class="bi bi-calendar-week-fill fs-1 text-primary"></i>
-            <h3 class="fw-bold mt-2 mb-0">TEGH Booking</h3>
-            <p class="text-muted">ระบบจองห้องประชุม</p>
-        </div>
+    <div class="card-body p-2 p-md-2">
+        
+        <div class="text-center mb-2">
+            <i class="bi bi-calendar-week-fill fs-1 text-primary"></i>
+            <h3 class="fw-bold mt-2 mb-0">TEGH Booking</h3>
+            <p class="text-muted">ระบบจองห้องประชุม (E.Q. Rubber)</p>
+        </div>
 
-        {# แสดงข้อความ Error (ถ้า Login ผิด) #}
-        {% if form.non_field_errors %}
-             <div class="alert alert-danger small p-2" role="alert">
-                {% for error in form.non_field_errors %}
-                    {{ error }}
-                {% endfor %}
-            </div>
-        {% endif %}
+                <div class="d-grid mb-2">
+            <a href="#" class="btn btn-primary btn-lg rounded-pill">
+                <i class="bi bi-microsoft me-2"></i> ล็อกอินด้วยบัญชี TEGH
+            </a>
+        </div>
+        
+        <div class="text-center mb-3">
+            <small class="text-muted">หรือ</small>
+        </div>
 
+                <div id="adminLoginForm">
+            <form method="post" action="{% url 'login' %}" id="loginForm">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ next|default:'/' }}">
 
-        {# --- 1. นี่คือฟอร์มล็อกอิน --- #}
-        <form method="post" action="{% url 'login' %}">
-            
-            {# --- 2. ✅ ต้องมีบรรทัดนี้! ✅ --- #}
-            {% csrf_token %}
-            
-            {# (ถ้ามี next URL ซ่อนไว้) #}
-            <input type="hidden" name="next" value="{{ next|default:'/' }}">
+                {# (ส่วนแสดง Error... เหมือนเดิม) #}
+                {% if form.non_field_errors %}
+                   <div class="alert alert-danger small p-2" role="alert">
+                       {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+                   </div>
+                {% endif %}
 
-            {# ช่อง Username #}
-            <div class="form-floating mb-3">
-                {{ form.username }}
-                <label for="{{ form.username.id_for_label }}">ชื่อผู้ใช้ (Username)</label>
-                 {% if form.username.errors %}
-                    <div class="invalid-feedback d-block">{{ form.username.errors|first }}</div>
-                 {% endif %}
-            </div>
-            
-            {# ช่อง Password #}
-            <div class="form-floating mb-3">
-                {{ form.password }}
-                <label for="{{ form.password.id_for_label }}">รหัสผ่าน</label>
-                 {% if form.password.errors %}
-                    <div class="invalid-feedback d-block">{{ form.password.errors|first }}</div>
-                 {% endif %}
-            </div>
+                {# ช่อง Username (แบบ Floating Label) #}
+                <div class="form-floating mb-3">
+                    {{ form.username|add_class:"form-control"|add_error_class:"is-invalid"|attr:"placeholder:Username" }}
+                    <label for="{{ form.username.id_for_label }}">ชื่อผู้ใช้ (Admin)</label>
+                    {% if form.username.errors %}
+                        <div class="invalid-feedback d-block">{{ form.username.errors|first }}</div>
+                    {% endif %}
+                </div>
+                
+                {# ช่อง Password (แบบ Floating Label) #}
+                <div class="form-floating mb-3">
+                    {{ form.password|add_class:"form-control"|add_error_class:"is-invalid"|attr:"placeholder:Password" }}
+                    <label for="{{ form.password.id_for_label }}">รหัสผ่าน</label>
+                    {% if form.password.errors %}
+                        <div class="invalid-feedback d-block">{{ form.password.errors|first }}</div>
+                    {% endif %}
+                </div>
 
-            <div class="d-grid">
-                <button class="btn btn-primary btn-lg rounded-pill" type="submit">
-                    <i class="bi bi-box-arrow-in-right me-2"></i>เข้าสู่ระบบ
-                </button>
-            </div>
-            
-        </form>
-        {# --- สิ้นสุดฟอร์ม --- #}
-    </div>
+                <div class="d-grid">
+                    <button class="btn btn-outline-secondary rounded-pill" type="submit">
+                        <i class="bi bi-box-arrow-in-right me-2"></i>เข้าสู่ระบบ (Admin)
+                    </button>
+                </div>
+                
+            </form>
+        </div>
+    </div>
 </div>
 {% endblock %}
 
 
 {% block extra_scripts %}
-<script>
-$(document).ready(function() {
-    // เพิ่ม Bootstrap class ให้ช่องกรอกของ Django
-    $("#{{ form.username.id_for_label }}").addClass("form-control {% if form.username.errors %}is-invalid{% endif %}");
-    $("#{{ form.password.id_for_label }}").addClass("form-control {% if form.password.errors %}is-invalid{% endif %}");
-});
-</script>
-{% endblock %}
+{% endblock %} -->
