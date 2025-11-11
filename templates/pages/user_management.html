@@ -4,6 +4,12 @@
 {% block content %}
 <!-- <h1 class="mb-4"><i class="bi bi-people-fill me-2"></i>จัดการผู้ใช้</h1> -->
 
+<div class="d-flex justify-content-end align-items-center mb-4">
+            <a href="{% url 'admin:auth_user_add' %}" class="btn btn-outline-primary">
+            <i class="bi bi-person-plus-fill me-1"></i> เพิ่มผู้ใช้ใหม่
+        </a>
+</div>
+</div>
 <div class="card shadow-sm">
     <div class="table-responsive">
         <table class="table table-hover table-striped mb-0">
@@ -34,7 +40,7 @@
                         {% endfor %}
                     </td>
                     <td class="text-end">
-                        <a href="{% url 'edit_user_roles' u.id %}" class="btn btn-sm btn-outline-primary">
+                        <a href="{% url 'edit_user_roles' u.id %}" class="btn btn-outline-success">
                             <i class="bi bi-shield-lock-fill"></i> จัดการสิทธิ์
                         </a>
                     </td>

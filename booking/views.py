@@ -156,10 +156,21 @@ def send_booking_notification(booking, template_name, subject_prefix):
     context = {'booking': booking, 'settings': settings}
     try:
         message_html = render_to_string(template_name, context)
-        if hasattr(settings, 'EMAIL_HOST') and settings.EMAIL_HOST:
+        
+        # (ใช้ Console Backend ที่ตั้งค่าใน settings.py)
+        if settings.EMAIL_BACKEND == 'django.core.mail.backends.smtp.EmailBackend':
             send_mail(subject, message_html, settings.DEFAULT_FROM_EMAIL, recipients, fail_silently=False, html_message=message_html)
             print(f"Email '{subject}' sent to: {', '.join(recipients)}")
-        else: print(f"--- (Email Simulation) ---\nSubject: {subject}\nTo: {', '.join(recipients)}\n--- End Sim ---")
+        else:
+            # (จำลองการส่ง ถ้าใช้ Console Backend)
+            print("--- (Email Simulation via Console) ---")
+            print(f"Subject: {subject}")
+            print(f"To: {', '.join(recipients)}")
+            print(f"From: {settings.DEFAULT_FROM_EMAIL}")
+            print("--- (End Simulation) ---")
+            # ตัว ConsoleBackend จริงจะพิมพ์เนื้อหาเต็มๆ เอง นี่แค่ Log เพิ่ม
+            send_mail(subject, "Fallback text", settings.DEFAULT_FROM_EMAIL, recipients, html_message=message_html)
+
     except Exception as e: print(f"Error preparing/sending email '{subject}': {e}")
 
 
@@ -419,7 +430,7 @@ def history_view(request):
 def booking_detail_view(request, booking_id):
     booking = get_object_or_404(
         Booking.objects.select_related('room', 'user')
-                       .prefetch_related('participants'), 
+                          .prefetch_related('participants'), 
         pk=booking_id
     )
     is_participant = request.user in booking.participants.all()
@@ -637,8 +648,8 @@ def create_booking_view(request, room_id):
                 parent_booking.status = 'APPROVED'
                 messages.success(request, f"จอง '{parent_booking.title}' ({room.name}) **อนุมัติอัตโนมัติ**")
             
-            parent_booking.save() 
-            form.save_m2m() 
+            parent_booking.save() # บันทึกตัวหลัก (ได้ ID)
+            form.save_m2m() # บันทึก M2M (Participants)
             
             AuditLog.objects.create(
                 user=request.user,
@@ -659,7 +670,9 @@ def create_booking_view(request, room_id):
                 
                 next_start_time = start_time
                 next_end_time = end_time
-                bookings_to_create = []
+                
+                # 💡 [แก้ไข] ดึง participants มาเก็บไว้ 1 ครั้ง
+                participants = list(parent_booking.participants.all())
 
                 while True:
                     if recurrence == 'WEEKLY':
@@ -684,31 +697,37 @@ def create_booking_view(request, room_id):
                     ).exists()
 
                     if not child_conflicts:
-                        new_booking = Booking(
-                            parent_booking=parent_booking, 
-                            room=room,
-                            user=request.user,
-                            title=parent_booking.title,
-                            start_time=next_start_time,
-                            end_time=next_end_time,
-                            chairman=parent_booking.chairman,
-                            department=parent_booking.department,
-                            participant_count=parent_booking.participant_count,
-                            description=parent_booking.description,
-                            additional_requests=parent_booking.additional_requests,
-                            additional_notes=parent_booking.additional_notes,
-                            status=new_status,
-                            recurrence_rule=recurrence
-                        )
-                        bookings_to_create.append(new_booking)
+                        # 💡 [แก้ไข] เปลี่ยนจาก .append ไปเป็น .save()
+                        try:
+                            new_booking = Booking(
+                                parent_booking=parent_booking, 
+                                room=room,
+                                user=request.user,
+                                title=parent_booking.title,
+                                start_time=next_start_time,
+                                end_time=next_end_time,
+                                chairman=parent_booking.chairman,
+                                department=parent_booking.department,
+                                participant_count=parent_booking.participant_count,
+                                description=parent_booking.description,
+                                additional_requests=parent_booking.additional_requests,
+                                additional_notes=parent_booking.additional_notes,
+                                status=new_status,
+                                recurrence_rule=recurrence
+                            )
+                            new_booking.save() # 1. บันทึก (จะได้ ID)
+                            new_booking.participants.set(participants) # 2. บันทึก M2M
+                        except Exception as e:
+                            print(f"Error creating recurring child booking: {e}")
+                            # (ข้ามการจองนี้ไป แต่ทำงานต่อ)
                     else:
                         print(f"Skipping recurring booking on {next_start_time.date()} due to conflict.")
-
-                created_bookings = Booking.objects.bulk_create(bookings_to_create)
                 
-                participants = list(parent_booking.participants.all())
-                for booking in created_bookings:
-                    booking.participants.set(participants)
+                # 💡 [แก้ไข] ลบโค้ด bulk_create และ loop ที่ไม่จำเป็นออก
+                # created_bookings = Booking.objects.bulk_create(bookings_to_create)
+                # participants = list(parent_booking.participants.all())
+                # for booking in created_bookings:
+                #     booking.participants.set(participants)
 
             return HttpResponse(
                 '<script>window.parent.location.reload();</script>',
@@ -1026,18 +1045,18 @@ def reports_view(request):
         dept_booking_filter &= Q(department=department)
 
     dept_usage_query = Booking.objects.filter(dept_booking_filter) \
-                                      .exclude(department__exact='') \
-                                      .exclude(department__isnull=True) \
-                                      .values('department') \
-                                      .annotate(count=Count('id')) \
-                                      .order_by('-count')
+                                     .exclude(department__exact='') \
+                                     .exclude(department__isnull=True) \
+                                     .values('department') \
+                                     .annotate(count=Count('id')) \
+                                     .order_by('-count')
 
     # (โค้ดที่เหลือ... เหมือนเดิม)
     dept_usage_labels = [d['department'] for d in dept_usage_query[:10] if d.get('department')]
     dept_usage_data = [d['count'] for d in dept_usage_query[:10] if d.get('department')]
     departments_dropdown = Booking.objects.exclude(department__exact='').exclude(department__isnull=True) \
-                                        .values_list('department', flat=True) \
-                                        .distinct().order_by('department')
+                                           .values_list('department', flat=True) \
+                                           .distinct().order_by('department')
     
     context = get_base_context(request)
     context.update({

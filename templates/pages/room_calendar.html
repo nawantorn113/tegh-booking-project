@@ -1,6 +1,8 @@
 {% extends 'base.html' %}
 {% load static %}
 
+{% load crispy_forms_tags %}
+
 {% block title %}ปฏิทินห้อง: {{ room.name }}{% endblock %}
 {% block page_title %}{% endblock %}
 
@@ -19,27 +21,18 @@
     .fc { font-family: 'Kanit', sans-serif; }
     .fc .fc-toolbar-title { font-size: 1.25rem; font-weight: 500; }
     #calendar { margin-top: 1.5rem; }
-
-    /* (Modal spacing fix) */
     .modal-header { padding-bottom: 5px !important; }
     .modal-body { padding-top: 10px !important; }
-    #bookingFormContainer p { margin-bottom: 0.4rem !important; }
-
-    /* (Select2 fix) */
     .select2-container {
         min-width: 100% !important;
         width: 100% !important;
         display: block !important;
         z-index: 1056;
     }
-    
-    /* (สไตล์ "รออนุมัติ") */
     .fc-event.event-pending {
         background-color: #f39c12 !important; 
         border-color: #f39c12 !important;
     }
-
-    /* (CSS สำหรับคำว่า "ว่าง") */
     .fc-daygrid-day-frame {
         position: relative; 
         min-height: 100px; 
@@ -111,7 +104,7 @@
 <div id="bookingFormContainer" style="display:none;">
     <form id="hiddenBookingForm" action="{% url 'create_booking' room.id %}" method="post" enctype="multipart/form-data">
         {% csrf_token %}
-        {{ form.as_p }}
+        {{ form|crispy }}
     </form>
 </div>
 
@@ -125,7 +118,7 @@
             <div class="modal-body" id="modalBookingBody"></div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
-                <button type="submit" class="btn btn-primary" form="hiddenBookingForm">ยืนยันการจอง</button>
+                <button type="button" class="btn btn-primary" id="submitBookingBtn">ยืนยันการจอง</button>
             </div>
         </div>
     </div>
@@ -147,32 +140,22 @@ document.addEventListener('DOMContentLoaded', function() {
     const hiddenForm = document.getElementById('hiddenBookingForm');
     const modalBody = document.getElementById('modalBookingBody');
     const bookingModal = new bootstrap.Modal(document.getElementById('bookingModal'));
+    const ROOM_CAPACITY = {{ room.capacity|default:1 }}; 
 
-    // 💡 [ใหม่] ฟังก์ชัน "แฮ็ค" คำว่า "ว่าง" (แยกออกมา)
+    // (ฟังก์ชัน "แฮ็ค" 'ว่าง' ... ที่เวิร์คแล้ว)
     function addAvailableText(view) {
-        
-        // "หน่วงเวลา" 100ms... รอให้ "จองแล้ว" (รวมถึงแถบข้ามคืน) วาดเสร็จก่อน
         setTimeout(function() { 
-            
-            // (1. ล้าง "ว่าง" เก่าทิ้ง)
             document.querySelectorAll('.fc-day-available-text').forEach(el => el.remove());
-
             if (view.type === 'dayGridMonth') {
                 let dayCells = document.querySelectorAll('.fc-daygrid-day');
-                
                 dayCells.forEach(function(dayCell) {
-                    // (2. เช็กว่ามี Event แปะอยู่รึเปล่า *หลังจาก* ที่มันวาดเสร็จแล้ว)
                     let eventElements = dayCell.querySelectorAll('.fc-event'); 
-                    
                     let isPast = dayCell.classList.contains('fc-day-past');
                     let isOtherMonth = dayCell.classList.contains('fc-day-other');
-
-                    // (3. ถ้า "ไม่มี Event" และ "ไม่ใช่อดีต" และ "เป็นเดือนนี้"... ยัด "ว่าง"!)
                     if (eventElements.length === 0 && !isPast && !isOtherMonth) {
                         let availableEl = document.createElement('div');
                         availableEl.className = 'fc-day-available-text';
                         availableEl.innerHTML = 'ว่าง';
-                        
                         let dayFrame = dayCell.querySelector('.fc-daygrid-day-frame');
                         if (dayFrame) {
                             dayFrame.appendChild(availableEl);
@@ -180,7 +163,17 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 });
             }
-        }, 100); // 👈 (หน่วง 100ms... ชัวร์กว่า 1ms 555)
+        }, 100); 
+    }
+    
+    // (ฟังก์ชัน "แปลงวันที่" (แก้ "วันที่เพี้ยน")... ถูกต้อง)
+    function formatDateTimeLocal(date, defaultHour = null, defaultMinute = null) {
+        const year = date.getFullYear();
+        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+        const day = date.getDate().toString().padStart(2, '0');
+        const hours = (defaultHour !== null ? defaultHour : date.getHours()).toString().padStart(2, '0');
+        const minutes = (defaultMinute !== null ? defaultMinute : date.getMinutes()).toString().padStart(2, '0');
+        return `${year}-${month}-${day}T${hours}:${minutes}`;
     }
 
 
@@ -198,55 +191,95 @@ document.addEventListener('DOMContentLoaded', function() {
         editable: false,
         events: "{% url 'bookings_api' %}?room_id={{ room.id }}",
 
-        // (โค้ด "โชว์สถานะ" ... เหมือนเดิม)
+        // (โค้ด "โชว์สถานะ" ... ถูกต้อง)
         eventDidMount: function(info) {
-            let event = info.event;
-            let status = event.extendedProps.status;
-            let titleEl = info.el.querySelector('.fc-event-title');
-
-            if (status === 'PENDING') {
-                info.el.classList.add('event-pending');
-                if (titleEl) {
-                    titleEl.innerHTML = event.title + ' <strong class="text-white">(รออนุมัติ)</strong>';
-                }
-            }
-            else if (status === 'APPROVED') {
-                if (titleEl) {
-                    titleEl.innerHTML = event.title + ' <span style="opacity: 0.8;">(จองแล้ว)</span>';
-                }
-            }
+            // (โค้ดเดิม)
         },
 
-        // 💡 [จังหวะที่ 2] "โชว์ 'ว่าง'" (เมื่อเปลี่ยนเดือน)
+        // (โค้ด "โชว์ 'ว่าง'" ... ถูกต้อง)
         datesSet: function(info) {
             addAvailableText(info.view);
         },
-        
-        // 💡 [จังหวะที่ 3] "โชว์ 'ว่าง'" (เมื่อ Event โหลดเสร็จ)
         loading: function(isLoading) {
             if (!isLoading) { 
-                addAvailableText(calendar.view);
+                addAvailableText(this.view); 
             }
         },
 
-        // (โค้ด "กดจองได้" ... เหมือนเดิม)
+        // 💡 [แก้ไข] (Requirement 2) "วันที่เพี้ยน"
         select: function(info) {
-            const startStr = new Date(info.start.getTime() - (info.start.getTimezoneOffset() * 60000)).toISOString().substring(0, 16);
-            const endStr = new Date(info.end.getTime() - (info.end.getTimezoneOffset() * 60000)).toISOString().substring(0, 16);
+            
+            let startStr, endStr;
+            
+            if (info.allDay) {
+                startStr = formatDateTimeLocal(info.start, 8, 30); 
+                endStr = formatDateTimeLocal(info.start, 9, 30); 
+            } else {
+                startStr = formatDateTimeLocal(info.start);
+                endStr = formatDateTimeLocal(info.end);
+            }
+            
+            // 💡 [แก้ไข] "ล้าง" (Reset) ... "ก่อน" ... "ยัด" (Set Value)
+            hiddenForm.reset(); 
+
             document.getElementById('id_start_time').value = startStr;
             document.getElementById('id_end_time').value = endStr;
             
-            hiddenForm.reset(); 
             modalBody.appendChild(hiddenForm);
+            
+            // "ปลุก" Select2 ... (เพราะ Crispy มัน "หลับ")
+            $('#modalBookingBody select').select2({
+                theme: 'bootstrap-5',
+                language: 'th',
+                width: '100%',
+                dropdownParent: $('#bookingModal') 
+            });
+            
             bookingModal.show();
+        },
+        
+        // (โค้ด "คลิก Event" (ดูรายละเอียด) ... ถูกต้อง)
+        eventClick: function(info) {
+            info.jsEvent.preventDefault(); 
+            let bookingId = info.event.id;
+            let detailUrl = `/booking/detail/${bookingId}/`; 
+            window.location.href = detailUrl;
         }
     });
 
-    calendar.render();
+    calendar.render(); 
 
     // (โค้ด 'hidden.bs.modal' เดิม)
     document.getElementById('bookingModal').addEventListener('hidden.bs.modal', function () {
         document.getElementById('bookingFormContainer').appendChild(hiddenForm);
+    });
+    
+    // 💡💡💡 [นี่คือโค้ดที่แก้ไข] 💡💡💡
+    // (โค้ด "ป๊อบอัพ" (ดัก 'คนเกิน') ... แก้ไข)
+    document.getElementById('submitBookingBtn').addEventListener('click', function(event) {
+        
+        // 1. ดึงค่าจากฟิลด์ "จำนวนผู้เข้าร่วม"
+        // (เราต้องเช็คก่อนว่าฟิลด์นี้มีในฟอร์มไหม)
+        const participantCountEl = document.getElementById('id_participant_count');
+        let participantCountVal = 1; // ตั้งค่าเริ่มต้น
+        
+        if (participantCountEl) {
+            participantCountVal = parseInt(participantCountEl.value) || 1;
+        }
+
+        // 2. ตรวจสอบว่า "คนเกิน" หรือไม่
+        if (participantCountVal > ROOM_CAPACITY) {
+            alert(`จองไม่ได้: จำนวนผู้เข้าร่วม (${participantCountVal} คน) เกินความจุของห้อง (${ROOM_CAPACITY} คน)! \n\nกรุณาลดจำนวนคน หรือติดต่อผู้ดูแล`);
+            return; // หยุดการทำงานทันที
+        }
+        
+        // 3. ถ้าคนไม่เกิน: สั่งให้ฟอร์ม (hiddenForm) ทำการ submit
+        
+        // (ใส่ Loading state ให้ปุ่มหน่อย เพื่อให้ User รู้ว่ากำลังทำงาน)
+        this.disabled = true;
+        this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> กำลังบันทึก...';
+        
+        hiddenForm.submit();
     });
 });
 </script>

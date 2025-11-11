@@ -83,6 +83,22 @@
                     {% if form.approver.errors %}<div class="invalid-feedback d-block">{{ form.approver.errors }}</div>{% endif %}
                 </div>
 
+
+                <hr class="my-4">
+                <p class="text-muted">ตั้งค่าการปิดปรับปรุง (Maintenance)</p>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.maintenance_start.id_for_label }}" class="form-label">{{ form.maintenance_start.label }}</label>
+                        {{ form.maintenance_start }}
+                        {% if form.maintenance_start.errors %}<div class="invalid-feedback d-block">{{ form.maintenance_start.errors }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.maintenance_end.id_for_label }}" class="form-label">{{ form.maintenance_end.label }}</label>
+                        {{ form.maintenance_end }}
+                        {% if form.maintenance_end.errors %}<div class="invalid-feedback d-block">{{ form.maintenance_end.errors }}</div>{% endif %}
+                    </div>
+                </div>
                 <div class="mb-3">
                     <div class="form-check form-switch fs-7">
                         {{ form.is_maintenance }}
@@ -99,10 +115,11 @@
                     <a href="{% url 'rooms' %}" class="btn btn-outline-secondary me-2">
                         <i class=""></i>ยกเลิก
                     </a>
-                    <a href="{% url 'rooms' %}" class="btn btn-primary px-4">
+
+                    <button type="submit" class="btn btn-primary px-4">
                         <i class=""></i>บันทึกข้อมูล
-                    </a>
-                </div>
+                    </button>
+                    </div>
             </form>
         </div>
     </div>

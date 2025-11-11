@@ -1,0 +1,8 @@
+<p>มีการจองห้องประชุมใหม่รอการอนุมัติ:</p>
+<ul>
+    <li><strong>หัวข้อ:</strong> {{ booking.title }}</li>
+    <li><strong>ห้อง:</strong> {{ booking.room.name }}</li>
+    <li><strong>ผู้จอง:</strong> {{ booking.user.first_name }} {{ booking.user.last_name }}</li>
+    <li><strong>เวลา:</strong> {{ booking.start_time|date:"d M Y H:i" }} - {{ booking.end_time|date:"H:i" }}</li>
+</ul>
+<p>กรุณาตรวจสอบและอนุมัติในระบบ</p>

@@ -1,9 +1,20 @@
 from pathlib import Path
+
+# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Quick-start development settings - unsuitable for production
+# See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
+
+# SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-=+c(!!5a&e&d#p#^g$q@d#... (ใช้คีย์เดิมของคุณ)'
+
+# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
+
 ALLOWED_HOSTS = []
+
+# Application definition
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -13,10 +24,12 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     
+    # My apps
     'booking',
     'dal',
     'dal_select2',
     
+    # Third-party apps
     'crispy_forms',
     'crispy_bootstrap5',
     'widget_tweaks',
@@ -32,7 +45,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'mysite.urls' 
+ROOT_URLCONF = 'mysite.urls'
 
 TEMPLATES = [
     {
@@ -52,10 +65,10 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'mysite.wsgi.application'
 
-# -----------------------------------------------
-# [แก้ไข] เปลี่ยนกลับไปใช้ Windows Authentication
-# (แบบเดียวกับที่ SSMS ต่อติด)
-# -----------------------------------------------
+
+# Database
+# https://docs.djangoproject.com/en/5.0/ref/settings/#databases
+
 DATABASES = {
     'default': {
         'ENGINE': 'mssql',
@@ -66,7 +79,7 @@ DATABASES = {
         'PASSWORD': '',
         
         'HOST': 'localhost\\SQLEXPRESS',
-        'PORT': '',                      
+        'PORT': '',              
 
         'OPTIONS': {
             'driver': 'ODBC Driver 17 for SQL Server',
@@ -79,8 +92,10 @@ DATABASES = {
         },
     }
 }
-# -----------------------------------------------
 
+
+# Password validation
+# https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',},
@@ -89,23 +104,49 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',},
 ]
 
+# -----------------------------------------------
+# [แก้ไข] EMAIL CONFIGURATION (โหมดทดสอบ)
+# -----------------------------------------------
+# เปลี่ยนเป็น "พิมพ์อีเมลออกทาง Console" เพื่อทดสอบ
+# จะได้ไม่เจอ Error 535 (Password)
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# -----------------------------------------------
+
+
+# Internationalization
+# https://docs.djangoproject.com/en/5.0/topics/i18n/
+
 LANGUAGE_CODE = 'en-us'
+
 TIME_ZONE = 'Asia/Bangkok'
+
 USE_I18N = True
+
 USE_TZ = True
+
+
+# Static files (CSS, JavaScript, Images)
+# https://docs.djangoproject.com/en/5.0/howto/static-files/
 
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [ BASE_DIR / "static" ]
+
+# Media files (User uploaded content)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
+# Default primary key field type
+# https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# Authentication URLs
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'dashboard'
 LOGOUT_REDIRECT_URL = 'login'
 
 X_FRAME_OPTIONS = 'SAMEORIGIN'
 
+# Crispy Forms Settings
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"

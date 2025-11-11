@@ -1,0 +1,8 @@
+มีการจองห้องประชุมใหม่:
+
+หัวข้อ: {{ booking.title }}
+ห้อง: {{ booking.room.name }}
+ผู้จอง: {{ booking.user.first_name }} {{ booking.user.last_name }}
+เวลา: {{ booking.start_time|date:"d M Y H:i" }} - {{ booking.end_time|date:"H:i" }}
+
+กรุณาตรวจสอบและอนุมัติ
