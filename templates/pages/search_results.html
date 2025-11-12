@@ -1,87 +1,154 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 {% load static %}
 
-{% block title %}ผลการค้นหา: {{ query_text }}{% endblock %}
-{% block page_title %}ผลการค้นหาห้องว่าง{% endblock %}
+{% block title %}ผลการค้นหา{% endblock %}
+
+{% block extra_head %}
+<style>
+    /* ปรับแต่งการ์ดแนวนอนให้สวยงาม */
+    .room-list-item {
+        background-color: #ffffff;
+        padding: 1rem;
+        border-radius: 1rem;
+        /* [ปรับปรุง] เพิ่มสีขอบด้านซ้าย */
+        border: 1px solid #dee2e6; /* ขอบปกติ */
+        border-left: 5px solid var(--bs-primary); /* ขอบซ้ายสีหลัก */
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        margin-bottom: 1.25rem; /* เว้นระยะห่างระหว่างห้อง */
+        display: flex; /* เพื่อให้เนื้อหาภายในจัดเรียงได้ดีขึ้น */
+        align-items: center; /* จัดให้อยู่กึ่งกลางในแนวตั้ง */
+    }
+    .room-list-item:hover {
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08); /* เพิ่มเงาเมื่อ hover */
+        transform: translateY(-2px); /* ขยับขึ้นเล็กน้อย */
+        transition: all 0.2s ease-in-out;
+        /* [ปรับปรุง] เปลี่ยนสีขอบซ้ายเมื่อ hover */
+        border-left-color: var(--bs-success); /* เปลี่ยนเป็นสีเขียวเมื่อ hover */
+    }
+
+    /* ปรับขนาดรูปภาพในรายการ */
+    .room-list-item .room-image-wrapper {
+        flex-shrink: 0; /* ป้องกันรูปภาพหดตัว */
+        width: 120px; /* กำหนดความกว้างของรูปภาพ */
+        height: 120px; /* กำหนดความสูงของรูปภาพ */
+        margin-right: 1.5rem; /* เว้นระยะห่างจากเนื้อหา */
+    }
+
+    .room-list-item .room-image-wrapper img,
+    .room-list-item .room-image-wrapper .no-image-placeholder {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 0.75rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .room-list-item .room-details {
+        flex-grow: 1; /* ให้รายละเอียดขยายเต็มพื้นที่ */
+    }
+
+    .room-list-item .room-action {
+        flex-shrink: 0; /* ป้องกันปุ่มหดตัว */
+        margin-left: 1.5rem; /* เว้นระยะห่างจากรายละเอียด */
+    }
+
+    /* ปรับสำหรับหน้าจอมือถือ */
+    @media (max-width: 767.98px) {
+        .room-list-item {
+            flex-direction: column; /* เรียงจากบนลงล่าง */
+            align-items: flex-start; /* จัดชิดซ้าย */
+        }
+        .room-list-item .room-image-wrapper {
+            width: 100%; /* รูปภาพเต็มความกว้าง */
+            height: 180px; /* เพิ่มความสูงรูปภาพ */
+            margin-right: 0;
+            margin-bottom: 1rem;
+        }
+        .room-list-item .room-action {
+            width: 100%; /* ปุ่มเต็มความกว้าง */
+            margin-left: 0;
+            margin-top: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
 
 {% block content %}
-<div class="container-fluid py-4">
+<div class="page-header mb-4">
+    <h5 class="mb-0">ผลการค้นหาสำหรับ: "{{ query_text }}"</h5>
+</div>
 
-    <div class="content-card shadow-sm border p-3 p-md-4 mb-4">
-        <h5 class="mb-3">ค้นหาอีกครั้ง</h5>
-        <form method="GET" action="{% url 'smart_search' %}" class="row g-3 align-items-end">
-            <div class="col-md-8">
-                <label for="searchQuery" class="form-label">คำค้นหา</label>
-                <input type="text" 
-                       class="form-control" 
-                       placeholder="เช่น 10 คน, พรุ่งนี้เช้า, ห้อง RD1" 
-                       name="q" 
-                       id="searchQuery"
-                       value="{{ query_text|default:'' }}">
-            </div>
-            <div class="col-md-4 d-grid">
-                <button class="btn btn-primary" type="submit">
-                    <i class="bi bi-search me-1"></i> ค้นหา
-                </button>
-            </div>
-            {% if search_params.capacity or search_params.start_time %}
-            <div class="col-12 small text-muted mt-2">
-                <strong>เงื่อนไขที่ใช้งาน:</strong>
-                {% if search_params.capacity %} ความจุ ≥ {{ search_params.capacity }} คน; {% endif %}
-                {% if search_params.start_time %} ว่างระหว่าง {{ search_params.start_time|date:"d M H:i" }} ถึง {{ search_params.end_time|date:"H:i" }}{% endif %}
-            </div>
-            {% endif %}
-        </form>
-    </div>
+{% if available_rooms %}
+    <p class="text-muted fs-5">
+        พบห้องที่ว่าง <strong>{{ available_rooms|length }}</strong> ห้อง
+        
+        {% if search_params.capacity %}
+            สำหรับ <strong>{{ search_params.capacity }} คน</strong>
+        {% endif %}
+        
+        {% if search_params.start_time %}
+            ในช่วงเวลา <strong>{{ search_params.start_time|date:"d M Y H:i" }}</strong> - <strong>{{ search_params.end_time|date:"H:i" }} น.</strong>
+        {% endif %}
+    </p>
 
-    <div class="content-card shadow-sm border p-3 p-md-4">
-        <h5 class="mb-4">
-            ผลลัพธ์สำหรับ "{{ query_text|default:'' }}": 
-            <span class="text-primary fw-bold">{{ available_rooms|length }} ห้อง</span>
-        </h5>
-
-        {% if available_rooms %}
-        <div class="row g-4 row-cols-1 row-cols-md-2 row-cols-lg-3">
-            {% for room in available_rooms %}
-            <div class="col">
-                <div class="card h-90 shadow-sm border-start border-2 border-primary room-card-hover">
-                    <div class="card-body">
-                        <h5 class="card-title">{{ room.name }}</h5>
-                        <p class="card-subtitle mb-2 text-muted small">
-                            ชั้น {{ room.floor|default:"-" }} ({{ room.building|default:"-" }})
-                        </p>
-                        <p class="card-text small mb-1"><i class="bi bi-people-fill me-1"></i>{{ room.capacity }} คน</p>
-                        <p class="card-text small mb-3">
-                            <i class="bi bi-tools me-1"></i>
-                            {{ room.equipment_in_room|truncatewords:4|default:"-" }}
-                        </p>
-                        
-                        {% if is_admin_user %}
-                            <a href="{% url 'room_calendar' room.id %}" class="btn btn-outline-success w-100 mt-2">
-                                <!-- <button type="button" class="btn btn-outline-warning">Warning</button> -->
-                                <i class="bi bi-calendar-check-fill me-1"></i> ดูตาราง / จอง
-                            </a>
-                        {% else %}
-                             <button type="button" class="btn btn-sm btn-primary mt-2 w-100 book-modal-trigger" 
-                                     data-bs-toggle="modal" 
-                                     data-bs-target="#bookingModal" 
-                                     data-room-url="{% url 'room_calendar' room.id %}"
-                                     data-room-name="{{ room.name }}">
-                                 <i class="bi bi-calendar3 me-1"></i> ดูตาราง / จอง
-                             </button>
-                        {% endif %}
-
+    <div class="mt-4">
+        {% for room in available_rooms %}
+        <div class="room-list-item"> 
+            
+            <div class="room-image-wrapper">
+                {% if room.image %}
+                    <img src="{{ room.image.url }}" alt="{{ room.name }}">
+                {% else %}
+                    <div class="no-image-placeholder bg-light text-muted">
+                        <i class="bi bi-image" style="font-size: 3rem;"></i>
                     </div>
+                {% endif %}
+            </div>
+            
+            <div class="room-details">
+                <h5 class="fw-bold mb-1">{{ room.name }}</h5>
+                <p class="text-muted mb-2">
+                    <i class="bi bi-people-fill me-1"></i> {{ room.capacity }} คน
+                    <span class="mx-2">|</span>
+                    <i class="bi bi-building me-1"></i> 
+                    {{ room.building|default_if_none:room.location|default:"-" }} (ชั้น {{ room.floor|default:"-" }})
+                </p>
+                
+                <div class="mt-2">
+                    {% for item in room.equipment_list|slice:":3" %}
+                        <span class="badge bg-light text-dark border me-1">
+                            <i class="bi bi-check text-success"></i> {{ item }}
+                        </span>
+                    {% endfor %}
+                    {% if room.equipment_list|length > 3 %}
+                        <span class="badge bg-light text-dark border me-1">...</span>
+                    {% endif %}
                 </div>
             </div>
-            {% endfor %}
+            
+            <div class="room-action">
+                <a href="{% url 'room_calendar' room.id %}" class="btn btn-primary">
+                    <i class="bi bi-calendar-check-fill me-1"></i> ดูตาราง / จอง
+                </a>
+            </div>
+            
         </div>
-        {% else %}
-        <div class="alert alert-warning text-center">
-            <i class="bi bi-exclamation-triangle-fill me-2"></i> ไม่พบห้องประชุมที่ว่างตามเงื่อนไข
-        </div>
-        {% endif %}
-
+        {% endfor %}
     </div>
-</div>
+
+{% else %}
+    <div class="content-card text-center py-5">
+        <h4 class="text-danger fw-bold">ไม่พบห้องว่าง</h4>
+        <p class="text-muted mb-0 fs-5">
+            ไม่พบห้องประชุมที่ว่างตามเงื่อนไข: "{{ query_text }}"
+        </p>
+        <a href="{% url 'dashboard' %}" class="btn btn-outline-primary mt-4">
+            <i class="bi bi-arrow-left"></i> กลับไปหน้าหลัก
+        </a>
+    </div>
+{% endif %}
+
 {% endblock %}
