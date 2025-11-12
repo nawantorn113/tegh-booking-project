@@ -2,6 +2,22 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone 
 
+# ----------------------------------------------------
+# 💡 [ใหม่] Model สำหรับเก็บ Access Token ของ Outlook
+# ----------------------------------------------------
+class OutlookToken(models.Model):
+    """
+    ใช้เก็บ OAuth Tokens สำหรับ Admin ที่เชื่อมต่อกับ Microsoft Graph API
+    """
+    user = models.OneToOneField(User, on_delete=models.CASCADE) 
+    access_token = models.TextField() # โทเค็นสำหรับ API Calls (หมดอายุเร็ว)
+    refresh_token = models.TextField() # โทเค็นสำหรับขอ access_token ใหม่
+    expires_at = models.DateTimeField() # วันหมดอายุของ Access Token
+    
+    def __str__(self):
+        return f"Token for {self.user.username}"
+
+
 class Room(models.Model):
     name = models.CharField(max_length=100)
     building = models.CharField(max_length=100, blank=True, null=True)
@@ -21,7 +37,6 @@ class Room(models.Model):
         help_text="เลือก User ที่มีสิทธิ์อนุมัติห้องนี้ (ถ้าเว้นว่าง = Admin กลาง)"
     )
     
-    # --- 💡💡💡 ฟิลด์และฟังก์ชันใหม่ที่ขาดหายไป 💡💡💡 ---
     is_maintenance = models.BooleanField(
         default=False, 
         verbose_name="ปิดปรับปรุง (โหมดแมนนวล)",
@@ -37,24 +52,35 @@ class Room(models.Model):
         verbose_name="สิ้นสุดปิดปรับปรุง (อัตโนมัติ)"
     )
     
+    # 💡 [เพิ่ม] ฟิลด์สำหรับ LINE/Teams
+    line_notify_token = models.CharField(
+        max_length=50, 
+        blank=True, 
+        null=True, 
+        verbose_name="LINE Notify Token",
+        help_text="โทเคนสำหรับแจ้งเตือนไปยังกลุ่ม LINE ประจำห้อง (ถ้ามี)"
+    )
+    teams_webhook_url = models.TextField(
+        blank=True, 
+        null=True, 
+        verbose_name="Teams Webhook URL",
+        help_text="URL สำหรับแจ้งเตือนไปยัง Channel Teams ประจำห้อง (ถ้ามี)"
+    )
+    
     @property
     def is_currently_under_maintenance(self):
         now = timezone.now()
         
-        # 1. ตรวจสอบโหมดแมนนวล/ปิดถาวร (ถ้า is_maintenance ถูกติ๊ก และไม่ได้กำหนดช่วงเวลา)
         if self.is_maintenance and (not self.maintenance_start or not self.maintenance_end):
             return True
         
-        # 2. ตรวจสอบโหมดกำหนดเวลา
         if self.maintenance_start and self.maintenance_end:
             if self.maintenance_start <= now <= self.maintenance_end:
                 return True
         
         return False
-    # --- 💡💡💡 สิ้นสุดฟิลด์และฟังก์ชันใหม่ 💡💡💡 ---
 
     def __str__(self):
-        # 💡 [ปรับปรุง] แสดงสถานะใน __str__ ด้วย
         status = " (ปิดปรับปรุง)" if self.is_currently_under_maintenance else ""
         return f"{self.name}{status}"
 
@@ -64,8 +90,9 @@ class Room(models.Model):
             return [item.strip() for item in self.equipment_in_room.split('\n') if item.strip()]
         return []
 
+
 class Booking(models.Model):
-    # ... (โค้ด Booking Model เดิม) ...
+    
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='bookings')
     room = models.ForeignKey(Room, on_delete=models.CASCADE, related_name='bookings')
     
@@ -101,7 +128,16 @@ class Booking(models.Model):
         related_name='child_bookings',
         help_text="การจองนี้ เป็นส่วนหนึ่งของการจองซ้ำ (ชี้ไปที่การจองแรก)"
     )
-    recurrence_rule = models.CharField(max_length=20, blank=True, null=True) 
+    recurrence_rule = models.CharField(max_length=20, blank=True, null=True)
+    
+    # 💡 [ใหม่] ฟิลด์สำหรับเก็บ ID ของ Event ที่สร้างใน Outlook
+    outlook_event_id = models.CharField(
+        max_length=255, 
+        blank=True, 
+        null=True, 
+        verbose_name="Outlook Event ID",
+        help_text="ID ของ Event ที่ถูกสร้างใน Microsoft Calendar"
+    )
 
     def __str__(self):
         return f"{self.title} - {self.room.name}"
@@ -122,7 +158,7 @@ class Booking(models.Model):
         return self.user == user
 
 class AuditLog(models.Model):
-    # ... (โค้ด AuditLog Model เดิม) ...
+    
     ACTION_CHOICES = [
         ('LOGIN', 'User Logged In'),
         ('BOOKING_CREATED', 'Booking Created'),

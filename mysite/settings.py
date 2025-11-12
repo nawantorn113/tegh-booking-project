@@ -1,7 +1,9 @@
 from pathlib import Path
+import os # 💡 [เพิ่ม] Import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
@@ -12,7 +14,8 @@ SECRET_KEY = 'django-insecure-=+c(!!5a&e&d#p#^g$q@d#... (ใช้คีย์�
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '.ngrok-free.app', 'serveo.net']
+
 
 # Application definition
 
@@ -23,13 +26,12 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_xhtml2pdf',
     
-    # My apps
     'booking',
     'dal',
     'dal_select2',
     
-    # Third-party apps
     'crispy_forms',
     'crispy_bootstrap5',
     'widget_tweaks',
@@ -45,12 +47,25 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'mysite.urls'
 
+STATIC_URL = '/static/'
+
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'),
+]
+
+ROOT_URLCONF = 'mysite.urls' 
+
+# 💡 [แก้ไข] เพิ่ม Path ของ booking/templates/
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'],
+        
+        'DIRS': [
+            BASE_DIR / 'templates',
+            os.path.join(BASE_DIR, 'booking', 'templates'), # 💡 เพิ่มบรรทัดนี้
+        ],
+        
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -74,7 +89,6 @@ DATABASES = {
         'ENGINE': 'mssql',
         'NAME': 'tegh_booking_db',
         
-        # (ลบ User/Pass ทิ้ง... กลับไปใช้ Windows Auth)
         'USER': '',
         'PASSWORD': '',
         
@@ -83,11 +97,7 @@ DATABASES = {
 
         'OPTIONS': {
             'driver': 'ODBC Driver 17 for SQL Server',
-            
-            # (เอา "บัตร Windows" กลับมา)
             'trusted_connection': 'yes', 
-            
-            # ( "หัวใจ" ที่แก้บั๊ก "Login failed" / "Certificate not trusted")
             'TrustServerCertificate': 'yes', 
         },
     }
@@ -105,11 +115,11 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 # -----------------------------------------------
-# [แก้ไข] EMAIL CONFIGURATION (โหมดทดสอบ)
+# 💡 [แก้ไข] EMAIL CONFIGURATION (โหมดทดสอบ)
 # -----------------------------------------------
 # เปลี่ยนเป็น "พิมพ์อีเมลออกทาง Console" เพื่อทดสอบ
-# จะได้ไม่เจอ Error 535 (Password)
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+DEFAULT_FROM_EMAIL = 'ระบบจองห้องประชุม <no-reply@tegh.com>'
 # -----------------------------------------------
 
 
@@ -117,11 +127,8 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
 
 LANGUAGE_CODE = 'en-us'
-
 TIME_ZONE = 'Asia/Bangkok'
-
 USE_I18N = True
-
 USE_TZ = True
 
 
@@ -130,8 +137,6 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [ BASE_DIR / "static" ]
-
-# Media files (User uploaded content)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
@@ -150,3 +155,18 @@ X_FRAME_OPTIONS = 'SAMEORIGIN'
 # Crispy Forms Settings
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"
+
+
+# =========================================================================
+# 💡 [ใหม่] MICROSOFT AZURE / OUTLOOK CALENDAR INTEGRATION SETTINGS
+# =========================================================================
+
+# 💡 1. Client ID (Application ID from Azure)
+AZURE_CLIENT_ID = "YOUR_AZURE_CLIENT_ID_HERE" 
+
+# 💡 2. Client Secret (The secret value generated in Azure AD)
+AZURE_CLIENT_SECRET = "YOUR_AZURE_CLIENT_SECRET_HERE" 
+
+# 💡 3. Redirect URI (Must exactly match the URI registered in Azure AD)
+AZURE_REDIRECT_URI = 'http://127.0.0.1:8000/outlook/callback/' 
+# =========================================================================

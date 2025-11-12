@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ report_title }}</title>
+    
+    <style type="text/css">
+        @font-face {
+            font-family: 'Sarabun'; 
+            
+            /* 💡 Pyppeteer (Chrome) จะไปดาวน์โหลดฟอนต์จาก URL นี้ */
+            src: url("{{ font_url }}"); 
+        }
+
+        /* 💡 ใช้งานชื่อ 'Sarabun' ตามปกติ */
+        body, table, th, td, div, p, h1, h2, h3, span {
+            font-family: 'Sarabun', sans-serif !important;
+            font-size: 12pt;
+        }
+        
+        /* ... (CSS ที่เหลือเหมือนเดิม) ... */
+        h1 { font-size: 18pt; text-align: center; margin-bottom: 5px; }
+        .subtitle { text-align: center; font-size: 10pt; color: #555; margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; word-wrap: break-word; }
+        th { background-color: #f2f2f2; font-size: 13pt; font-weight: bold; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+    </style>
+</head>
+<body>
+
+    <h1>{{ report_title }}</h1>
+    <p class="subtitle">
+        ส่งออกเมื่อวันที่: {{ export_date }}
+    </p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>หัวข้อการจอง</th>
+                <th>ห้อง</th>
+                <th>ผู้จอง</th>
+                <th>แผนก</th>
+                <th>เวลาเริ่ม</th>
+                <th>เวลาสิ้นสุด</th>
+                <th>จำนวน (คน)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for booking in bookings %}
+            <tr>
+                <td>{{ booking.id }}</td>
+                <td>{{ booking.title }}</td>
+                <td>{{ booking.room.name }}</td>
+                <td>{{ booking.user.get_full_name|default:booking.user.username }}</td>
+                <td>{{ booking.department|default:"-" }}</td>
+                <td>{{ booking.start_time|date:"d/m/Y H:i" }}</td>
+                <td>{{ booking.end_time|date:"d/m/Y H:i" }}</td>
+                <td>{{ booking.participant_count }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="8" style="text-align: center; color: #777;">
+                    --- ไม่พบข้อมูลการจองในช่วงเวลาที่กำหนด ---
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+</body>
+</html>

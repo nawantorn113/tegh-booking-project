@@ -1,37 +1,37 @@
 from django import forms
 from django.contrib.auth.forms import PasswordChangeForm
-from .models import Booking, Room
+from .models import Booking, Room 
 from django.contrib.auth.models import User
-from django.urls import reverse_lazy
+from django.urls import reverse_lazy 
 
 from dal import autocomplete
 from django.utils import timezone
 from django.core.exceptions import ValidationError
-from django.db.models import Q
+from django.db.models import Q 
 
 # Import "ผู้ช่วย" ของ Crispy
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Row, Column, Field, HTML
 
 # -----------------------------------------------
-# class BookingForm (โค้ดเดิม)
+# class BookingForm
 # -----------------------------------------------
 class BookingForm(forms.ModelForm):
-    
+    # ... (โค้ด BookingForm เดิม) ...
     RECURRENCE_CHOICES = [
         ('NONE', 'ไม่จองซ้ำ'),
         ('WEEKLY', 'จองซ้ำทุกสัปดาห์ (ในวันเดียวกัน)'),
         ('MONTHLY', 'จองซ้ำทุกเดือน (ในวันที่เดียวกัน)'),
     ]
     recurrence = forms.ChoiceField(
-        choices=RECURRENCE_CHOICES,
-        required=False,
+        choices=RECURRENCE_CHOICES, 
+        required=False, 
         label="การจองซ้ำ",
         widget=forms.Select(attrs={'class': 'form-select'})
     )
     recurrence_end_date = forms.DateField(
-        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
-        required=False,
+        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}), 
+        required=False, 
         label="สิ้นสุดการจองซ้ำ"
     )
 
@@ -39,9 +39,9 @@ class BookingForm(forms.ModelForm):
         model = Booking
         fields = [
             'room', 'title', 'chairman', 'department', 'start_time',
-            'end_time', 'participant_count',
-            'participants',
-            'presentation_file',
+            'end_time', 'participant_count', 
+            'participants', 
+            'presentation_file', 
             'description', 'additional_requests', 'additional_notes',
         ]
         
@@ -84,7 +84,7 @@ class BookingForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         
-        self.fields['participants'].required = False
+        self.fields['participants'].required = False 
         self.fields['title'].required = True
         self.fields['participant_count'].required = False
         
@@ -92,11 +92,11 @@ class BookingForm(forms.ModelForm):
         self.fields['end_time'].input_formats = ['%Y-%m-%dT%H:%M']
         
         self.fields['start_time'].widget = forms.DateTimeInput(
-            attrs={'type': 'datetime-local', 'class': 'form-control', 'required': 'required'},
+            attrs={'type': 'datetime-local', 'class': 'form-control', 'required': 'required'}, 
             format='%Y-%m-%dT%H:%M'
         )
         self.fields['end_time'].widget = forms.DateTimeInput(
-            attrs={'type': 'datetime-local', 'class': 'form-control', 'required': 'required'},
+            attrs={'type': 'datetime-local', 'class': 'form-control', 'required': 'required'}, 
             format='%Y-%m-%dT%H:%M'
         )
         
@@ -105,7 +105,7 @@ class BookingForm(forms.ModelForm):
             'start_time', 'end_time',
             'recurrence', 'recurrence_end_date',
             'participant_count', 'participants',
-            'presentation_file', 'description',
+            'presentation_file', 'description', 
             'additional_requests', 'additional_notes',
             'room'
         ]
@@ -114,7 +114,7 @@ class BookingForm(forms.ModelForm):
     def clean(self):
         cleaned_data = super().clean()
         start_time = cleaned_data.get('start_time')
-        end_time = cleaned_data.get('end_time')
+        end_time = cleaned_data.get('end_time') 
         recurrence = cleaned_data.get('recurrence')
         recurrence_end_date = cleaned_data.get('recurrence_end_date')
         
@@ -143,7 +143,7 @@ class BookingForm(forms.ModelForm):
                 self.add_error('recurrence_end_date', 'วันที่สิ้นสุด ต้องอยู่หลังจาก วันที่เริ่มต้น')
         
         if 'participant_count' not in cleaned_data or cleaned_data.get('participant_count') is None:
-            cleaned_data['participant_count'] = 1
+            cleaned_data['participant_count'] = 1 
         
         participant_count = cleaned_data.get('participant_count')
 
@@ -158,34 +158,34 @@ class BookingForm(forms.ModelForm):
         return cleaned_data
 
 # -----------------------------------------------
-# class CustomPasswordChangeForm (แก้ไขตัวอักษร _ ที่ผิดพลาด)
+# class CustomPasswordChangeForm
 # -----------------------------------------------
 class CustomPasswordChangeForm(PasswordChangeForm):
-    old_password = forms.CharField(
-        label="รหัสผ่านเก่า",
-        strip=False,
-        widget=forms.PasswordInput(attrs={'autocomplete': 'current-password', 'autofocus': True, 'class':'form-control'}),
+    old_password = forms.CharField( 
+        label="รหัสผ่านเก่า", 
+        strip=False, 
+        widget=forms.PasswordInput(attrs={'autocomplete': 'current-password', 'autofocus': True, 'class':'form-control'}), 
     )
-    new_password1 = forms.CharField(
-        label="รหัสผ่านใหม่",
-        widget=forms.PasswordInput(attrs={'autocomplete': 'new-password', 'class':'form-control'}),
-        strip=False,
+    new_password1 = forms.CharField( 
+        label="รหัสผ่านใหม่", 
+        widget=forms.PasswordInput(attrs={'autocomplete': 'new-password', 'class':'form-control'}), 
+        strip=False, 
     )
-    new_password2 = forms.CharField(
-        label="ยืนยันรหัสผ่านใหม่",
-        strip=False, # 💡 [แก้ไข] ลบตัวอักษร '_' ที่ผิดพลาดหน้าบรรทัดนี้
-        widget=forms.PasswordInput(attrs={'autocomplete': 'new-password', 'class':'form-control'}),
+    new_password2 = forms.CharField( 
+        label="ยืนยันรหัสผ่านใหม่", 
+        strip=False, 
+        widget=forms.PasswordInput(attrs={'autocomplete': 'new-password', 'class':'form-control'}), 
     )
 
 # -----------------------------------------------
-# class RoomForm (โค้ดที่แก้ไขแล้ว)
+# class RoomForm (เพิ่ม Token และ Webhook URL)
 # -----------------------------------------------
 class RoomForm(forms.ModelForm):
     
     approver = forms.ModelChoiceField(
         queryset=User.objects.filter(Q(groups__name__in=['Approver', 'Admin']) | Q(is_superuser=True)).distinct(),
         widget=autocomplete.ModelSelect2(
-            url='user-autocomplete',
+            url='user-autocomplete', 
             attrs={'data-placeholder': 'พิมพ์ค้นหา Admin หรือ Approver...', 'data-theme': 'bootstrap-5'}
         ),
         required=False,
@@ -195,13 +195,14 @@ class RoomForm(forms.ModelForm):
     class Meta:
         model = Room
         
-        # 💡 [แก้ไขจุดที่ 1] เพิ่มฟิลด์ maintenance_start, maintenance_end
         fields = [
-            'name', 'building', 'floor', 'capacity', 'equipment_in_room',
-            'location', 'image', 'approver',
-            'maintenance_start', 'maintenance_end', # <-- เพิ่มตรงนี้
-            'is_maintenance'
-        ]
+            'name', 'building', 'floor', 'capacity', 'equipment_in_room', 
+            'location', 'image', 'approver', 
+            'maintenance_start', 'maintenance_end',
+            'is_maintenance',
+            'line_notify_token',
+            'teams_webhook_url'
+        ] 
         
         labels = {
             'name': 'ชื่อห้องประชุม', 'building': 'อาคาร', 'floor': 'ชั้น',
@@ -209,18 +210,20 @@ class RoomForm(forms.ModelForm):
             'location': 'ตำแหน่ง ',
             'image': 'รูปภาพ (รูปหลัก)',
             'approver': 'ผู้อนุมัติประจำห้อง',
-            # (Label สำหรับฟิลด์ใหม่ จะถูกดึงมาจาก verbose_name ใน models.py อัตโนมัติ)
-            'is_maintenance': 'ปิดปรับปรุง (Maintenance)',
+            'is_maintenance': 'ปิดปรับปรุง (Maintenance)', 
+            'line_notify_token': 'LINE Notify Token', 
+            'teams_webhook_url': 'Teams Webhook URL',
         }
         help_texts = {
             'equipment_in_room': 'ระบุอุปกรณ์แต่ละอย่างในบรรทัดใหม่ เช่น โปรเจคเตอร์, ไวท์บอร์ด',
             'image': 'เลือกไฟล์รูปภาพ .jpg, .png',
             'capacity': 'ระบุเป็นตัวเลขเท่านั้น',
             'approver': 'หากเว้นว่าง ระบบจะใช้ Admin กลางในการอนุมัติ',
-            'is_maintenance': 'ติ๊ก [✓] เพื่อปิดการจองห้องนี้ชั่วคราว (โหมด Manual)',
+            'is_maintenance': 'ติ๊ก [✓] เพื่อปิดการจองห้องนี้ชั่วคราว (โหมด Manual)', 
+            'line_notify_token': 'วาง Token 43 ตัวอักษร จาก LINE Notify', 
+            'teams_webhook_url': 'วาง URL ที่คัดลอกจาก Teams Incoming Webhook',
         }
         
-        # 💡 [แก้ไขจุดที่ 2] เพิ่ม Widgets สำหรับฟิลด์ใหม่
         widgets = {
             'name': forms.TextInput(attrs={'placeholder': 'เช่น ห้องประชุม O1-1', 'class':'form-control'}),
             'building': forms.TextInput(attrs={'placeholder': 'เช่น สำนักงาน 1, อาคาร R&D', 'class':'form-control'}),
@@ -230,28 +233,26 @@ class RoomForm(forms.ModelForm):
             'location': forms.TextInput(attrs={'placeholder': ' ', 'class':'form-control'}),
             'image': forms.ClearableFileInput(attrs={'accept': 'image/*', 'class':'form-control'}),
             
-            # --- เพิ่มตรงนี้ ---
             'maintenance_start': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'form-control'}),
             'maintenance_end': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'form-control'}),
-            # --- สิ้นสุด ---
-            
             'is_maintenance': forms.CheckboxInput(attrs={'class': 'form-check-input', 'role': 'switch'}),
+            
+            'line_notify_token': forms.TextInput(attrs={'class':'form-control', 'placeholder': 'วาง Token ที่คัดลอกมาที่นี่...'}),
+            'teams_webhook_url': forms.Textarea(attrs={'class':'form-control', 'rows': 3, 'placeholder': 'วาง URL ที่คัดลอกมาที่นี่...'}),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # 💡 [แก้ไขจุดที่ 4] ตั้งค่าฟิลด์ใหม่ไม่บังคับกรอก
         self.fields['maintenance_start'].required = False
         self.fields['maintenance_end'].required = False
         
         self.helper = FormHelper()
         self.helper.form_method = 'post'
-        self.helper.form_tag = False
+        self.helper.form_tag = False 
 
-        # 💡 [แก้ไขจุดที่ 3] เพิ่มฟิลด์ใหม่ลงใน Layout
         self.helper.layout = Layout(
-            'non_field_errors',
+            'non_field_errors', 
             
             Row(
                 Column('name', css_class='col-md-6 mb-3'),
@@ -267,16 +268,16 @@ class RoomForm(forms.ModelForm):
             
             HTML('<hr class="my-4">'),
             'approver',
+            'line_notify_token',
+            'teams_webhook_url',
             
             HTML('<hr class="my-4">'),
             HTML('<p class="text-muted">ตั้งค่าการปิดปรับปรุง (Maintenance)</p>'),
             
-            # --- เพิ่ม Row นี้ ---
             Row(
                 Column('maintenance_start', css_class='col-md-6 mb-3'),
                 Column('maintenance_end', css_class='col-md-6 mb-3')
             ),
-            # --- สิ้นสุด ---
             
             Field('is_maintenance', css_class="form-check form-switch fs-6 mb-3"),
         )
