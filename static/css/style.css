@@ -1,0 +1,5 @@
+.dal-select2-widget .select2-selection__rendered {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+}
