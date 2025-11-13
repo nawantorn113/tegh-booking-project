@@ -26,7 +26,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'django_xhtml2pdf',
+    # 'django_xhtml2pdf', # <--- 1. [แก้ไข] ลบบรรทัดนี้ออก (นี่คือตัวที่ทำให้แครช)
     
     'booking',
     'dal',
@@ -48,11 +48,11 @@ MIDDLEWARE = [
 ]
 
 
-STATIC_URL = '/static/'
-
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static'),
-]
+# ❌ [แก้ไข] ลบส่วน STATIC_URL / STATICFILES_DIRS ที่ซ้ำซ้อนตรงนี้ออก
+# STATIC_URL = '/static/'
+# STATICFILES_DIRS = [
+#     os.path.join(BASE_DIR, 'static'),
+# ]
 
 ROOT_URLCONF = 'mysite.urls' 
 
@@ -136,7 +136,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
 STATIC_URL = 'static/'
-STATICFILES_DIRS = [ BASE_DIR / "static" ]
+STATICFILES_DIRS = [ BASE_DIR / "static" ] # <--- 2. [ถูกต้อง] เก็บอันนี้ไว้ (อันบนถูกลบไปแล้ว)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
