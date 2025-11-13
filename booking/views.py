@@ -1407,4 +1407,5 @@ def export_reports_pdf(request):
         print(f"!!! CRITICAL WEASYPRINT ERROR: {e}")
         # (นี่คือจุดที่ 'Fontconfig error' อาจจะแสดงผลถ้า GTK3 หายไป)
         messages.error(request, f"เกิดข้อผิดพลาดร้ายแรงกับ WeasyPrint: {e}. กรุณาตรวจสอบว่าติดตั้ง GTK3 บน Windows และรีสตาร์ทเครื่องแล้ว")
+
         return redirect('reports')
