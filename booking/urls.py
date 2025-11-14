@@ -9,9 +9,16 @@ urlpatterns = [
     path('logout/', views.logout_view, name='logout'),
     path('change-password/', views.change_password_view, name='change_password'),
     
-    # --- Main Pages ---
-    path('', views.dashboard_view, name='dashboard'),
-    path('master-calendar/', views.master_calendar_view, name='master_calendar'),
+    # 🚨 [CRITICAL FIX] 
+    # 1. ตั้งค่า Master Calendar (ปฏิทินรวม) ให้เป็น Root URL (หน้าแรก)
+    path('', views.master_calendar_view, name='master_calendar'),
+    
+    # 2. ย้าย Dashboard ไปที่ /dashboard/
+    path('dashboard/', views.dashboard_view, name='dashboard'),
+    
+    # 3. ลบ path('master-calendar/', ...) เดิมออก เพราะมันซ้ำกับ Root
+    # path('master-calendar/', views.master_calendar_view, name='master_calendar'), 
+
     path('history/', views.history_view, name='history'),
     path('search/', views.smart_search_view, name='smart_search'),
     
@@ -44,7 +51,6 @@ urlpatterns = [
     path('reports/export/pdf/', views.export_reports_pdf, name='export_pdf'), 
     
     # --- APIs / Autocomplete ---
-    # 💡 [FIX] เพิ่ม Autocomplete Path เพื่อแก้ NoReverseMatch
     path('api/user-autocomplete/', UserAutocomplete.as_view(), name='user-autocomplete'), 
     path('api/rooms/', views.rooms_api, name='rooms_api'),
     path('api/bookings/', views.bookings_api, name='bookings_api'),
@@ -54,4 +60,7 @@ urlpatterns = [
     # --- Outlook Integration ---
     path('outlook/connect/', views.outlook_connect, name='outlook_connect'),
     path('outlook/callback/', views.outlook_callback, name='outlook_callback'),
+    
+    # --- Teams Receiver ---
+    path('teams/action/', views.teams_action_receiver, name='teams_action_receiver'),
 ]

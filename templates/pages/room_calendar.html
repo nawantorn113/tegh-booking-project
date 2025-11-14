@@ -12,7 +12,6 @@
     <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
 
     <style>
-        /* ... (CSS ทั้งหมดของคุณ... ผมจะคัดลอกมาทั้งหมด) ... */
         :root {
             --fc-border-color: #e9ecef;
             --fc-today-bg-color: #f8f9fa;
@@ -23,10 +22,6 @@
         .modal-header { padding-bottom: 5px !important; }
         .modal-body { padding-top: 10px !important; }
         
-        /* 💡 [FIX] เราจะใช้ CSS ที่ "แรงกว่า" จาก base.html
-           (คุณควรย้ายโค้ด 3 บล็อกนี้ไปไว้ใน <style> ของ base.html
-           เหมือนที่ผมเคยแนะนำครับ)
-        */
         .select2-selection__rendered {
             display: flex !important;
             flex-wrap: wrap !important;
@@ -147,8 +142,7 @@
     {{ form.media.js }}
 
     <script>
-    // 💡 [FIX] 5. ห่อทุกอย่างใน $(document).ready()
-    // เพื่อให้แน่ใจว่า jQuery จาก base.html โหลดเสร็จแล้ว
+    
     $(document).ready(function() {
         
         const calendarEl = document.getElementById('calendar');
