@@ -57,7 +57,6 @@ def get_client_ip(request):
         ip = request.META.get('REMOTE_ADDR')
     return ip
 
-# ✅✅✅ [FIX] get_base_context อยู่ที่นี่แล้ว ✅✅✅
 # --- Context Function (สำหรับ Navbar) ---
 def get_base_context(request):
     current_url_name = request.resolver_match.url_name if request.resolver_match else ''
@@ -490,9 +489,7 @@ def change_password_view(request):
     context.update({'password_form': password_form})
     return render(request, 'pages/change_password.html', context)
 
-# ✅✅✅ [FIX] โค้ด Outlook ทั้งหมดอยู่ที่นี่แล้ว ✅✅✅
-# ----------------------------------------------------
-# 💡 [ใหม่] OUTLOOK CALENDAR INTEGRATION LOGIC (Helper)
+# OUTLOOK CALENDAR INTEGRATION LOGIC (Helper)
 # ----------------------------------------------------
 def _get_valid_outlook_token():
     """
@@ -656,7 +653,7 @@ def update_booking_time_api(request):
         
         booking = get_object_or_404(Booking, pk=booking_id)
         
-        # 💡 [FIX] ใช้วิธีเช็คสิทธิ์แบบใหม่ (จาก model)
+        # ใช้วิธีเช็คสิทธิ์แบบใหม่ (จาก model)
         if not booking.can_user_edit_or_cancel(request.user):
             return JsonResponse({'status': 'error', 'message': f"Permission denied (อาจจะเลยเวลาแล้ว)."}, status=403)
 
@@ -715,7 +712,7 @@ def delete_booking_api(request, booking_id):
     try:
         booking = get_object_or_404(Booking, pk=booking_id)
         
-        # 💡 [FIX] ใช้วิธีเช็คสิทธิ์แบบใหม่ (จาก model)
+        #  ใช้วิธีเช็คสิทธิ์แบบใหม่ (จาก model)
         if not booking.can_user_edit_or_cancel(request.user):
             return JsonResponse({'success': False, 'error': f"ไม่มีสิทธิ์ยกเลิก (อาจจะเลยเวลาแล้ว)"}, status=403)
 
@@ -794,7 +791,7 @@ def create_booking_view(request, room_id):
             ).exists()
             
             if conflicts:
-                # 💡 [FIX] ตอบกลับด้วย 400 Bad Request เพื่อให้ Ajax รู้ว่าล้มเหลว
+                # ตอบกลับด้วย 400 Bad Request เพื่อให้ Ajax รู้ว่าล้มเหลว
                 return HttpResponse(f"Validation Error: ไม่สามารถจองได้: ช่วงเวลาที่คุณเลือกทับซ้อนกับการจองอื่น", status=400)
 
             if participant_count >= 15:
@@ -885,15 +882,15 @@ def create_booking_view(request, room_id):
                     else:
                         print(f"Skipping recurring booking on {next_start_time.date()} due to conflict.")
                 
-            # 💡 [FIX] ตอบกลับด้วย 200 OK เพื่อให้ Ajax (ใน room_calendar.html) รู้ว่าสำเร็จ
+            #  ตอบกลับด้วย 200 OK เพื่อให้ Ajax (ใน room_calendar.html) รู้ว่าสำเร็จ
             return HttpResponse("Booking created successfully.", status=200)
 
         except ValidationError as e:
             error_str = ", ".join(e.messages)
-            # 💡 [FIX] ตอบกลับด้วย 400 Bad Request เพื่อให้ Ajax รู้ว่าล้มเหลว
+            #  ตอบกลับด้วย 400 Bad Request เพื่อให้ Ajax รู้ว่าล้มเหลว
             return HttpResponse(f"Validation Error: {error_str}", status=400)
     
-    # 💡 [FIX] ถ้าฟอร์มไม่ valid (เช่น ขาด Title)
+    #  ถ้าฟอร์มไม่ valid (เช่น ขาด Title)
     error_list = []
     for field, errors in form.errors.items():
         field_label = form.fields.get(field).label if field != '__all__' and field in form.fields else (field if field != '__all__' else 'Form')
@@ -905,11 +902,11 @@ def create_booking_view(request, room_id):
 def edit_booking_view(request, booking_id):
     booking = get_object_or_404(Booking, pk=booking_id)
     
-    # 💡 [FIX] ใช้วิธีเช็คสิทธิ์แบบใหม่ (จาก model)
+    #  ใช้วิธีเช็คสิทธิ์แบบใหม่ (จาก model)
     if not booking.can_user_edit_or_cancel(request.user):
         messages.error(request, f"คุณไม่มีสิทธิ์แก้ไขการจองนี้ (อาจจะเนื่องจากเวลาผ่านไปแล้ว)")
         
-        # 💡 [FIX] ถ้ามาจาก Ajax (Modal) ให้ส่ง Error กลับไป
+        #  ถ้ามาจาก Ajax (Modal) ให้ส่ง Error กลับไป
         if request.headers.get('x-requested-with') == 'XMLHttpRequest':
             return HttpResponse("Permission Denied: คุณไม่มีสิทธิ์แก้ไขการจองนี้ (อาจจะเลยเวลาแล้ว)", status=403)
         return redirect('history')
@@ -921,7 +918,7 @@ def edit_booking_view(request, booking_id):
                 updated_booking = form.save(commit=False)
                 
                 if updated_booking.room.is_currently_under_maintenance and not is_admin(request.user):
-                    # 💡 [FIX] ตอบกลับ Error ให้ Ajax
+                    #  ตอบกลับ Error ให้ Ajax
                     error_msg = f"ไม่สามารถแก้ไขการจองได้: ห้อง '{updated_booking.room.name}' กำลังปิดปรับปรุง"
                     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
                         return HttpResponse(error_msg, status=400)
@@ -962,7 +959,7 @@ def edit_booking_view(request, booking_id):
                 if updated_booking.status == 'PENDING' and changed_for_approval:
                     send_booking_notification(updated_booking, 'emails/new_booking_pending.html', 'โปรดอนุมัติ (แก้ไข)')
                 
-                # 💡 [FIX] ตรวจสอบว่า request มาจาก Ajax (Modal) หรือไม่
+                #  ตรวจสอบว่า request มาจาก Ajax (Modal) หรือไม่
                 if request.headers.get('x-requested-with') == 'XMLHttpRequest':
                     return JsonResponse({'status': 'success', 'message': 'Booking updated'})
                 
@@ -986,7 +983,7 @@ def edit_booking_view(request, booking_id):
 def delete_booking_view(request, booking_id):
     booking = get_object_or_404(Booking, pk=booking_id)
     
-    # 💡 [FIX] ใช้วิธีเช็คสิทธิ์แบบใหม่ (จาก model)
+    #  ใช้วิธีเช็คสิทธิ์แบบใหม่ (จาก model)
     if not booking.can_user_edit_or_cancel(request.user):
         messages.error(request, f"คุณไม่มีสิทธิ์ยกเลิกการจองนี้ (อาจจะเนื่องจากเวลาผ่านไปแล้ว)")
         return redirect('history')
@@ -1055,7 +1052,7 @@ def approve_booking_view(request, booking_id):
         messages.error(request, f"คุณไม่มีสิทธิ์อนุมัติการจองนี้")
         return redirect('approvals')
 
-    # --- 💡 [ใหม่] OUTLOOK CALENDAR INTEGRATION (CREATE/UPDATE) ---
+    # ---  OUTLOOK CALENDAR INTEGRATION (CREATE/UPDATE) ---
     try:
         access_token = _get_valid_outlook_token()
         if access_token:
@@ -1264,10 +1261,10 @@ def audit_log_view(request):
     return render(request, 'pages/audit_log.html', context)
 
 # -----------------------------------------------
-# 💡 [FIX 4] REPORTS & PDF EXPORT (เปลี่ยนมาใช้ WeasyPrint)
+#  REPORTS & PDF EXPORT (เปลี่ยนมาใช้ WeasyPrint)
 # -----------------------------------------------
 
-# ❌ เราลบฟังก์ชัน render_to_pdf() (ของ xhtml2pdf) ทิ้งไป
+#  เราลบฟังก์ชัน render_to_pdf() (ของ xhtml2pdf) ทิ้งไป
 
 @login_required
 @user_passes_test(is_admin)
@@ -1387,7 +1384,7 @@ def export_reports_pdf(request):
         'bookings': recent_bookings,
         'report_title': report_title,
         'export_date': timezone.localtime().strftime('%Y-%m-%d %H:%M:%S'), # 💡 [FIX] ใช้ localtime
-        'font_url': font_url, # 💡 ส่ง /static/fonts/...
+        'font_url': font_url, # ส่ง /static/fonts/...
     }
 
     # 4. Render PDF ด้วย WeasyPrint
