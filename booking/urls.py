@@ -1,24 +1,19 @@
 from django.urls import path
 from . import views
-# 💡 [สำคัญ] ต้อง Import UserAutocomplete View เพื่อใช้ใน URL
-from .views import UserAutocomplete 
+# 💡 [CRITICAL] ต้อง Import Class-based View 
+from .views import UserAutocomplete, rooms_api, bookings_api, update_booking_time_api, delete_booking_api 
 
 urlpatterns = [
     # --- Auth Views ---
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
     path('change-password/', views.change_password_view, name='change_password'),
+    path('sso-login/', views.sso_login_view, name='sso_login'), 
+    path('public/calendar/', views.public_calendar_view, name='public_calendar'), 
     
-    # 🚨 [CRITICAL FIX] 
-    # 1. ตั้งค่า Master Calendar (ปฏิทินรวม) ให้เป็น Root URL (หน้าแรก)
-    path('', views.master_calendar_view, name='master_calendar'),
-    
-    # 2. ย้าย Dashboard ไปที่ /dashboard/
+    # --- Core Views ---
+    path('', views.master_calendar_view, name='master_calendar'), 
     path('dashboard/', views.dashboard_view, name='dashboard'),
-    
-    # 3. ลบ path('master-calendar/', ...) เดิมออก เพราะมันซ้ำกับ Root
-    # path('master-calendar/', views.master_calendar_view, name='master_calendar'), 
-
     path('history/', views.history_view, name='history'),
     path('search/', views.smart_search_view, name='smart_search'),
     
@@ -29,7 +24,7 @@ urlpatterns = [
     path('booking/edit/<int:booking_id>/', views.edit_booking_view, name='edit_booking'),
     path('booking/delete/<int:booking_id>/', views.delete_booking_view, name='delete_booking'),
     
-    # --- Approvals Views ---
+    # --- Approvals Views (แก้ AttributeError) ---
     path('approvals/', views.approvals_view, name='approvals'),
     path('approvals/approve/<int:booking_id>/', views.approve_booking_view, name='approve_booking'),
     path('approvals/reject/<int:booking_id>/', views.reject_booking_view, name='reject_booking'),

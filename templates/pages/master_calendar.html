@@ -1,131 +1,147 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}ปฏิทินรวม{% endblock %}
+{% block title %}ปฏิทินรวม{% if is_public_view %} (สาธารณะ){% endif %}{% endblock %}
 
 {% block extra_head %}
 <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/main.min.css" rel="stylesheet" />
-
 <style>
-    :root {
-        --fc-border-color: #e9ecef;
-        --fc-today-bg-color: #f8f9fa;
-    }
-    .fc { font-family: 'Kanit', sans-serif; }
-    .fc .fc-toolbar-title { font-size: 1.25rem; font-weight: 500; }
     #calendar { min-height: 700px; }
+    .fc-event { cursor: pointer; border: none; } /* ลบขอบออกเพื่อให้สีสวยขึ้น */
     
-    /* (สไตล์สำหรับ Event) */
-    .fc-event-main-frame {
-        padding: 2px 4px;
-        font-size: 0.8rem;
-    }
-    .fc-event-title-container {
-        font-weight: 500;
-    }
+    /* ปรับแต่ง Badge ใน Legend */
+    .badge-legend { font-size: 0.9rem; font-weight: 400; padding: 6px 10px; }
 </style>
 {% endblock %}
 
-
 {% block content %}
-<div class="container-fluid py-4">
+<div class="page-header d-flex align-items-center w-100 mb-3" id="page-header">
+    <h5 class="mb-0 text-primary">
+        <i class="bi bi-calendar3-range me-2"></i> 
+        ปฏิทินรวมห้องประชุม 
+        {% if is_public_view %} <span class="text-muted fs-6">(มุมมองสาธารณะ)</span>{% endif %}
+    </h5>
+    
+    <div class="ms-auto"> 
+        {% if not user.is_authenticated %}
+        <a href="{% url 'login' %}" class="btn btn-primary rounded-pill px-4 shadow-sm">
+            <i class="bi bi-box-arrow-in-right me-2"></i> เข้าสู่ระบบ
+        </a>
+        {% else %}
+         <span class="text-muted me-2">สวัสดี, {{ user.get_full_name|default:user.username }}</span>
+        {% endif %}
+    </div>
+</div>
 
-    {# --- ส่วนปฏิทินการจอง --- #}
+<div class="container-fluid px-0">
     <div class="content-card shadow-sm border p-3 p-md-4">
-        <h5 class="mb-3">ตารางรวมการจอง</h5>
+        
+        <div class="alert alert-light border mb-3 d-flex flex-wrap gap-2 align-items-center">
+            <span class="badge badge-legend" style="background-color: #198754;">สีเขียว = จองแล้ว</span>
+            <span class="badge badge-legend text-dark" style="background-color: #0dcaf0;">สีฟ้า = กำลังใช้งาน</span>
+            <span class="badge badge-legend text-dark" style="background-color: #ffc107;">สีเหลือง = รออนุมัติ</span>
+            <span class="badge badge-legend" style="background-color: #fd7e14;">สีส้ม = ใช้งานแล้ว</span>
+            <span class="badge badge-legend" style="background-color: #dc3545;">สีแดง = ยกเลิก/ไม่ว่าง</span>
+            <span class="text-muted small ms-auto d-none d-md-block"><i class="bi bi-info-circle"></i> คลิกรายการเพื่อดูรายละเอียด</span>
+        </div>
+        
         <div id="calendar"></div>
     </div>
 </div>
 {% endblock %}
 
-
 {% block extra_scripts %}
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
 
 <script>
-window.onload = function() {
-    
-    if (typeof FullCalendar === 'undefined' || typeof $ === 'undefined') {
-        console.error("Required JS libraries not loaded (jQuery or FullCalendar).");
-        document.getElementById('calendar').innerHTML = '<div class="alert alert-danger">เกิดข้อผิดพลาด: โหลดปฏิทินไม่สำเร็จ กรุณาล้างแคช (Ctrl+Shift+R)</div>';
-        return; 
-    }
+document.addEventListener('DOMContentLoaded', function() { 
     
     var calendarEl = document.getElementById('calendar');
+    var isPublicView = '{{ is_public_view|yesno:"true,false" }}' === 'true';
 
     var calendar = new FullCalendar.Calendar(calendarEl, {
         
-        // --- 💡💡💡 [นี่คือจุดที่แก้ไข] 💡💡💡 ---
-        // (เปลี่ยน View เป็น 'dayGridMonth' (รายเดือน))
         initialView: 'dayGridMonth', 
-        locale: 'th',
-        firstDay: 0, // (0 = Sunday)
         
         headerToolbar: {
             left: 'prev,next today',
             center: 'title',
             right: 'dayGridMonth,timeGridWeek,timeGridDay' 
         },
-        buttonText: { 
-            today:'วันนี้', 
-            month:'เดือน', 
-            week:'สัปดาห์',
-            day:'วัน'     
+        
+        events: {
+            url: "{% url 'bookings_api' %}", 
+            method: 'GET',
+            extraParams: {
+                public: isPublicView ? 'true' : 'false'
+            },
+            failure: function() {
+                console.error('โหลดข้อมูลไม่สำเร็จ');
+            }
         },
-        
-        // (เราจะแสดง Event ทั้งหมดในช่อง All-day ของ 'timeGrid')
-        allDaySlot: true, 
-        slotMinTime: '07:30:00', 
-        slotMaxTime: '18:00:00',
-        
-        selectable: false, // (ปิดการคลิกจองในหน้านี้)
-        nowIndicator: true, 
-        
-        events: "{% url 'bookings_api' %}", 
 
-        // (ฟังก์ชันแปลง Event ให้แสดงสถานะ)
-        eventDataTransform: function(eventData) {
-            let props = eventData.extendedProps || {};
-            var now = new Date();
-            var eventStart = new Date(eventData.start);
-            var eventEnd = new Date(eventData.end);
+        locale: 'th',
+        firstDay: 0, 
+        height: 'auto',
+        dayMaxEvents: true,
+        
+        // 🚨 [CRITICAL UPDATE] Logic การเลือกสีตามสถานะและเวลา
+        eventDidMount: function(info) {
+            var props = info.event.extendedProps;
+            var now = new Date(); // เวลาปัจจุบัน
+            var start = info.event.start;
+            var end = info.event.end;
+            var el = info.el;
             
-            var statusText = "";
-            
+            // Default Style
+            el.style.color = '#ffffff'; 
+
             if (props.status === 'PENDING') {
-                eventData.backgroundColor = '#ffc107'; 
-                eventData.borderColor = '#ffc107';
-                statusText = "[รออนุมัติ] "; 
+                // 🟡 รออนุมัติ -> สีเหลือง
+                el.style.backgroundColor = '#ffc107'; 
+                el.style.color = '#000000'; // ตัวหนังสือดำ
             
             } else if (props.status === 'APPROVED') {
-                if (now >= eventStart && now < eventEnd) {
-                    eventData.backgroundColor = '#dc3545'; 
-                    eventData.borderColor = '#dc3545';
-                    statusText = "[กำลังใช้งาน] ";
+                
+                if (now >= end) {
+                    // 🟠 ใช้งานแล้ว (จบไปแล้ว) -> สีส้มเข้ม
+                    el.style.backgroundColor = '#fd7e14'; 
+                
+                } else if (now >= start && now < end) {
+                    // 🔵 กำลังใช้งาน (ณ ตอนนี้) -> สีฟ้า
+                    el.style.backgroundColor = '#0dcaf0'; 
+                    el.style.color = '#000000'; // ตัวหนังสือดำ
+                
                 } else {
-                    eventData.backgroundColor = '#198754'; 
-                    eventData.borderColor = '#198754';
-                    statusText = "[จองแล้ว] ";
+                    // 🟢 จองแล้ว (ยังไม่ถึงเวลา) -> สีเขียว
+                    el.style.backgroundColor = '#198754'; 
                 }
                 
-            } else {
-                eventData.display = 'none';
+            } else if (props.status === 'CANCELLED' || props.status === 'REJECTED') {
+                // 🔴 ยกเลิก/ปฏิเสธ -> สีแดง
+                el.style.backgroundColor = '#dc3545'; 
             }
-            
-            // (เพิ่มชื่อห้อง และ สถานะ เข้าไปใน Title)
-            eventData.title = `[${props.room_name}] ${statusText}${eventData.title}`;
-            
-            return eventData;
         },
-        // --- 💡💡💡 [สิ้นสุดการแก้ไข] 💡💡💡 ---
-
+        
         eventClick: function(info) {
-            // (เมื่อคลิก Event ให้ไปหน้า Detail)
             window.location.href = "{% url 'booking_detail' 0 %}".replace('0', info.event.id);
+        },
+
+        selectable: true,
+        select: function(info) {
+            {% if not user.is_authenticated %}
+                if(confirm('ต้องการจองห้องประชุมใช่หรือไม่? (ต้องเข้าสู่ระบบก่อน)')) {
+                    window.location.href = "{% url 'login' %}";
+                }
+            {% else %}
+                // จองห้องแรกเป็นค่าเริ่มต้น
+                window.location.href = "{% url 'create_booking' all_rooms.0.id %}?start=" + info.startStr + "&end=" + info.endStr;
+            {% endif %}
         }
     });
     
     calendar.render();
-};
+});
 </script>
 {% endblock %}

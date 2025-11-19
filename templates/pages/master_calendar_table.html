@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}ปฏิทินรวม (ตาราง){% endblock %}
+
+{% block content %}
+<div class="page-header" id="page-header">
+    <h5 class="mb-0">
+        <i class="bi bi-list-columns-reverse me-2"></i> 
+        รายการจองห้องประชุมทั้งหมด 
+        {% if is_public_view %} (สาธารณะ){% endif %}
+    </h5>
+</div>
+
+<div class="content-card shadow-sm border p-3 p-md-4">
+    <p class="text-muted">รายการจองที่ได้รับการอนุมัติแล้วทั้งหมดในระบบ</p>
+
+    {% if all_bookings %}
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead>
+                <tr>
+                    <th>ห้องประชุม</th>
+                    <th>หัวข้อ</th>
+                    <th>วัน/เวลาเริ่ม</th>
+                    <th>เวลาสิ้นสุด</th>
+                    <th>ผู้จอง</th>
+                    <th>สถานะ</th>
+                    <th>รายละเอียด</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for booking in all_bookings %}
+                <tr>
+                    <td>{{ booking.room.name }}</td>
+                    <td>{{ booking.title }}</td>
+                    <td>{{ booking.start_time|date:"d/m/Y H:i" }}</td>
+                    <td>{{ booking.end_time|date:"H:i" }}</td>
+                    <td>{{ booking.user.get_full_name|default:booking.user.username }}</td>
+                    <td><span class="badge bg-success">อนุมัติแล้ว</span></td>
+                    <td><a href="{% url 'booking_detail' booking.id %}" class="btn btn-sm btn-info">ดู</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="alert alert-warning text-center mt-4">
+        <i class="bi bi-info-circle-fill me-2"></i> ไม่มีรายการจองที่ได้รับการอนุมัติในช่วงนี้
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
