@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ title }} - TEGH Booking{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-md-10">
+            
+            <div class="card shadow border-0 rounded-3">
+                
+                <div class="card-header bg-primary text-white py-3 px-4">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-person-plus-fill fs-4 me-3"></i>
+                        <h5 class="mb-0 fw-bold">{{ title }}</h5>
+                    </div>
+                </div>
+
+                <div class="card-body p-4 p-md-5 bg-white">
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        {% if form.errors %}
+                            <div class="alert alert-danger shadow-sm" role="alert">
+                                <i class="bi bi-exclamation-triangle-fill me-2"></i> 
+                                โปรดตรวจสอบข้อมูลด้านล่าง
+                            </div>
+                        {% endif %}
+
+                        <div class="mb-4">
+                            {{ form|crispy }}
+                        </div>
+
+                        <hr class="my-4 text-muted">
+
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{% url 'user_management' %}" class="btn btn-light border px-4">
+                                <i class="bi bi-x-lg me-1"></i> ยกเลิก
+                            </a>
+                            <button type="submit" class="btn btn-primary px-4 shadow-sm">
+                                <i class="bi bi-save me-1"></i> บันทึกข้อมูล
+                            </button>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+            
+            <div class="text-center mt-3 text-muted small">
+                * ข้อมูลที่บันทึกจะถูกนำไปใช้ในการเข้าสู่ระบบทันที
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

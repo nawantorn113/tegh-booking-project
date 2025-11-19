@@ -2,127 +2,188 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TEGH Booking - เข้าสู่ระบบ</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เข้าสู่ระบบ - TEGH Booking</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.min.css" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Kanit', sans-serif; /* แนะนำให้ใช้ font ที่อ่านง่าย เช่น Kanit, Prompt */
+            background: linear-gradient(135deg, #f0f2f5 0%, #e0e6ed 100%); /* พื้นหลังไล่เฉดสีอ่อนๆ */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/main.min.css" rel="stylesheet" />
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;500;600;700&display=swap" rel="stylesheet">
+        .login-container {
+            width: 100%;
+            max-width: 420px; /* กำหนดความกว้างสูงสุด */
+            text-align: center;
+        }
 
-    <style>
-        /* (Styles for body, login-card, btn-primary-custom, btn-outline-success-custom, etc. - ตามโค้ดเดิม) */
-        body { 
-            background-color: #f8f9fa; 
-            font-family: 'Kanit', sans-serif; 
-            font-weight: 400; 
-            margin: 0; 
-            padding: 0; 
-        }
-        .login-card { max-width: 400px; width: 100%; background-color: #ffffff; padding: 2.5rem !important; border-radius: 1rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 15px 35px rgba(0, 0, 0, 0.1); border: none; transition: transform 0.3s ease, box-shadow 0.3s ease; }
-        .btn-primary-custom { background-image: linear-gradient(135deg, #6c76e2 0%, #4a55a8 100%); border: none; color: white; border-radius: 8px; font-size: 1.05rem; padding: 14px 20px; box-shadow: 0 4px 10px rgba(74, 85, 168, 0.4); transition: all 0.2s ease; font-weight: 600 !important; }
-        .btn-outline-success-custom { color: #28a745; border: 2px solid #28a745; background-color: #fff; border-radius: 8px; font-size: 1.05rem; padding: 14px 20px; transition: all 0.2s ease; font-weight: 600 !important; }
-        .form-control { border-radius: 8px; }
-    </style>
+        .login-card {
+            background: #ffffff;
+            border-radius: 15px; /* มุมโค้งมนมากขึ้น */
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15), 0 4px 10px rgba(0, 0, 0, 0.08); /* เงา 2 ชั้น ดูมีมิติ */
+            padding: 35px;
+            transition: transform 0.3s ease-in-out; /* เพิ่ม transition ให้ดู smooth */
+            border: none;
+        }
+        
+        .login-card:hover {
+            transform: translateY(-5px); /* เลื่อนขึ้นเล็กน้อยเมื่อ Hover */
+        }
 
+        .login-header h1 {
+            font-weight: 700;
+            color: #343a40;
+            font-size: 2.2rem; /* ขนาดใหญ่ขึ้น */
+            letter-spacing: -0.5px;
+            margin-bottom: 10px;
+        }
+
+        .login-header p {
+            color: #6c757d;
+            font-size: 0.95rem;
+            margin-bottom: 30px;
+        }
+
+        .input-group-login .form-control {
+            border-radius: 8px; /* ช่อง Input โค้งมน */
+            border: 1px solid #ced4da;
+            padding: 12px 15px;
+            font-size: 1rem;
+        }
+        .input-group-login .input-group-text {
+            border-radius: 8px 0 0 8px;
+            background-color: #e9ecef;
+            border: 1px solid #ced4da;
+        }
+
+        .btn-main {
+            background-color: #6f42c1; /* สีม่วงหลัก */
+            border-color: #6f42c1;
+            color: white;
+            padding: 12px 25px;
+            border-radius: 8px; /* ปุ่มโค้งมน */
+            font-weight: 600;
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 4px 10px rgba(111, 66, 193, 0.25); /* เงาปุ่ม */
+        }
+
+        .btn-main:hover {
+            background-color: #5a359b; /* สีเข้มขึ้นเมื่อ Hover */
+            border-color: #5a359b;
+            transform: translateY(-2px); /* ปุ่มลอยขึ้นเล็กน้อย */
+            box-shadow: 0 6px 15px rgba(111, 66, 193, 0.35);
+        }
+
+        .btn-outline-public {
+            border-color: #28a745; /* สีเขียว */
+            color: #28a745;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.2s ease-in-out;
+        }
+        .btn-outline-public:hover {
+            background-color: #28a745;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(40, 167, 69, 0.2);
+        }
+
+        .form-control:focus {
+            box-shadow: 0 0 0 0.25rem rgba(111, 66, 193, 0.25); /* Focus Ring สีม่วง */
+            border-color: #6f42c1;
+        }
+        
+        /* Font Kanit (ถ้าต้องการใช้) */
+        @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap');
+    </style>
 </head>
 <body>
-    <main class="container-fluid" id="main-content">
-                <div class="d-flex align-items-center justify-content-center" style="min-height: 100vh;">
-                        <div class="login-card text-center">
-                
-                <i class="bi bi-calendar-week-fill app-icon mb-3" style="font-size: 2.5rem;"></i>
-                <h2 class="fw-bold mb-1">TEGH Booking</h2>
-                <p class="text-muted mb-4">โปรดเข้าสู่ระบบเพื่อดำเนินการต่อ</p>
-                
-                <div id="login-form-area" class="mb-4">
-                                        <button id="toggle-login-btn" class="btn btn-primary-custom w-100 mb-3 py-2 fw-semibold shadow-sm">
-                        <i class="bi bi-box-arrow-in-right me-2"></i> เข้าสู่ระบบ (Username/Pass)
-                    </button>
+    <div class="login-container">
+        <!-- {# 🚨 [แก้ไขตรงนี้] เปลี่ยน Path โลโก้ของคุณ #}
+        <img src="{% static 'img/your_logo.png' %}" alt="Your Company Logo" width="100" class="mb-4 d-inline-block"> -->
+        
+        <h1 class="mb-2 fw-bolder text-dark">TEGH Booking</h1>
+        <p class="text-secondary mb-4">โปรดเข้าสู่ระบบเพื่อดำเนินการต่อ</p>
 
-                                                            <form method="post" action="{% url 'login' %}" id="actual-login-form" style="display:none;">
-                        {% csrf_token %}
-                        
-                                                {% for message in messages %}
-                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                                {{ message }}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                            </div>
-                        {% endfor %}
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm small" role="alert">
+                    <i class="bi bi-info-circle-fill me-2"></i>{{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
 
-                        {% if form.non_field_errors %}
-                            <div class="alert alert-danger mt-3" role="alert">
-                                {% for error in form.non_field_errors %}
-                                    <p class="mb-0">{{ error }}</p>
-                                {% endfor %}
-                            </div>
-                        {% endif %}
+        <div class="card login-card mt-4">
+            <div class="card-body">
+                <form method="post" action="{% url 'login' %}" class="needs-validation" novalidate>
+                    {% csrf_token %}
 
-                        <div class="mb-3">
-                            <label for="{{ form.username.id_for_label }}" class="form-label visually-hidden">ชื่อผู้ใช้</label>
-                            <input type="text" name="{{ form.username.name }}" id="{{ form.username.id_for_label }}" class="form-control" placeholder="ชื่อผู้ใช้ (Username)" required>
-                            {% if form.username.errors %}<div class="text-danger small mt-1">{{ form.username.errors }}</div>{% endif %}
-                        </div>
-                        <div class="mb-4">
-                            <label for="{{ form.password.id_for_label }}" class="form-label visually-hidden">รหัสผ่าน</label>
-                            <input type="password" name="{{ form.password.name }}" id="{{ form.password.id_for_label }}" class="form-control" placeholder="รหัสผ่าน (Password)" required>
-                            {% if form.password.errors %}<div class="text-danger small mt-1">{{ form.password.errors }}</div>{% endif %}
-                        </div>
-                        
-                        <button type="submit" class="btn btn-primary-custom w-100 py-2 fw-semibold mb-3">
-                            <i class="bi bi-door-open me-2"></i> ยืนยันเข้าสู่ระบบ
-                        </button>
-                    </form>
-                </div>
-                                <a href="{% url 'public_calendar' %}" class="btn btn-outline-success-custom w-100 py-2 fw-semibold">
-                    <i class="bi bi-calendar-check me-2"></i> ดูปฏิทินรวม (สาธารณะ)
-                </a>
-            </div>
-        </div>
-    </main>
+                    <div class="mb-3 input-group input-group-login">
+                        <span class="input-group-text"><i class="bi bi-person-fill"></i></span>
+                        <input type="text" name="username" class="form-control" placeholder="ชื่อผู้ใช้" required autofocus>
+                        <div class="invalid-feedback">กรุณากรอกชื่อผู้ใช้</div>
+                    </div>
 
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
-    
-    <script>
-    $(document).ready(function() {
-        const toggleBtn = $('#toggle-login-btn');
-        const loginForm = $('#actual-login-form');
-        
-        // ตรวจสอบว่ามีการส่งฟอร์มที่ไม่สำเร็จมาหรือไม่ (มี error message)
-        const hasErrors = $('.alert-danger, .errorlist').length > 0 || {{ form.errors|length|default:0 }} > 0;
+                    <div class="mb-4 input-group input-group-login">
+                        <span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
+                        <input type="password" name="password" class="form-control" placeholder="รหัสผ่าน" required>
+                        <div class="invalid-feedback">กรุณากรอกรหัสผ่าน</div>
+                    </div>
 
-        // ถ้ามี Error หรือมี POST request (พยายามล็อกอินแล้ว) ให้แสดงฟอร์มทันที
-        if (hasErrors || '{{ request.method }}' === 'POST') {
-            loginForm.show();
-            toggleBtn.html('ซ่อนฟอร์มเข้าสู่ระบบ').removeClass('shadow-sm btn-primary-custom').addClass('btn-outline-danger');
-        } else {
-            // ซ่อนฟอร์มถ้าไม่มี Error และไม่มีการ Submit มาก่อน
-            loginForm.hide();
-            toggleBtn.html('<i class="bi bi-box-arrow-in-right me-2"></i> เข้าสู่ระบบ (Username/Pass)').removeClass('btn-outline-danger').addClass('btn-primary-custom shadow-sm');
-        }
+                    <button type="submit" class="btn btn-main w-100 mb-3">
+                        <i class="bi bi-box-arrow-in-right me-2"></i> เข้าสู่ระบบ (Username/Pass)
+                    </button>
+                </form>
 
-        // Toggle การแสดง/ซ่อนฟอร์มเมื่อคลิกปุ่ม
-        toggleBtn.on('click', function(e) {
-            e.preventDefault();
-            
-            if (loginForm.is(':visible')) {
-                // ซ่อนฟอร์ม
-                loginForm.slideUp(200);
-                toggleBtn.html('<i class="bi bi-box-arrow-in-right me-2"></i> เข้าสู่ระบบ (Username/Pass)').removeClass('btn-outline-danger').addClass('btn-primary-custom shadow-sm');
-            } else {
-                // แสดงฟอร์ม
-                loginForm.slideDown(200);
-                toggleBtn.text('ซ่อนฟอร์มเข้าสู่ระบบ').removeClass('btn-primary-custom shadow-sm').addClass('btn-outline-danger');
-            }
-        });
-    });
-    </script>
+                {% if enable_sso %}
+                <button type="button" onclick="location.href='{% url 'sso_login' %}'" class="btn btn-outline-secondary w-100 mb-3">
+                    <i class="bi bi-microsoft me-2"></i> เข้าสู่ระบบด้วย Microsoft 365
+                </button>
+                {% endif %}
 
+                <hr class="my-4 text-muted opacity-25">
+
+                <a href="{% url 'public_calendar' %}" class="btn btn-outline-public w-100">
+                    <i class="bi bi-calendar3-range me-2"></i> ดูปฏิทิน (สาธารณะ)
+                </a>
+            </div>
+        </div>
+        
+        <div class="text-center mt-4 text-muted small">
+            &copy; {% now "Y" %} TEGH Booking. All rights reserved.
+        </div>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Enable Bootstrap's form validation
+        (function () {
+            'use strict'
+            var forms = document.querySelectorAll('.needs-validation')
+            Array.prototype.slice.call(forms)
+                .forEach(function (form) {
+                    form.addEventListener('submit', function (event) {
+                        if (!form.checkValidity()) {
+                            event.preventDefault()
+                            event.stopPropagation()
+                        }
+                        form.classList.add('was-validated')
+                    }, false)
+                })
+        })()
+    </script>
 </body>
 </html>

@@ -10,6 +10,7 @@ urlpatterns = [
     path('change-password/', views.change_password_view, name='change_password'),
     path('sso-login/', views.sso_login_view, name='sso_login'), 
     path('public/calendar/', views.public_calendar_view, name='public_calendar'), 
+    path('manage/users/add/', views.add_user_view, name='add_user'),
     
     # --- Core Views ---
     path('', views.master_calendar_view, name='master_calendar'), 

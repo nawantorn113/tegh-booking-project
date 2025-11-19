@@ -1,23 +1,20 @@
 from django import forms
-from django.contrib.auth.forms import PasswordChangeForm
+from django.contrib.auth.forms import PasswordChangeForm, UserCreationForm
+from django.contrib.auth.models import User, Group
 from .models import Booking, Room 
-from django.contrib.auth.models import User
-from django.urls import reverse_lazy 
-
 from dal import autocomplete
 from django.utils import timezone
 from django.core.exceptions import ValidationError
 from django.db.models import Q 
 
-# Import "ผู้ช่วย" ของ Crispy
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Row, Column, Field, HTML
 
 # -----------------------------------------------
-# class BookingForm
+# 1. BookingForm
 # -----------------------------------------------
 class BookingForm(forms.ModelForm):
-    # ... (โค้ด BookingForm เดิม) ...
+    # ... (โค้ด BookingForm เดิมของคุณ ถูกต้องแล้ว) ...
     RECURRENCE_CHOICES = [
         ('NONE', 'ไม่จองซ้ำ'),
         ('WEEKLY', 'จองซ้ำทุกสัปดาห์ (ในวันเดียวกัน)'),
@@ -44,7 +41,7 @@ class BookingForm(forms.ModelForm):
             'presentation_file', 
             'description', 'additional_requests', 'additional_notes',
         ]
-        
+        # ... (Labels, Help texts, Widgets เดิมของคุณ) ...
         labels = {
             'room': 'ห้องประชุม',
             'title': 'หัวข้อการประชุม',
@@ -58,11 +55,6 @@ class BookingForm(forms.ModelForm):
             'description': 'รายละเอียด/วาระการประชุม',
             'additional_requests': 'คำขอเพิ่มเติม (เช่น อุปกรณ์พิเศษ)',
             'additional_notes': 'หมายเหตุเพิ่มเติม',
-        }
-        
-        help_texts = {
-            'participant_count': '',
-            'presentation_file': 'ไฟล์ที่ต้องการนำเสนอ',
         }
         
         widgets = {
@@ -157,8 +149,9 @@ class BookingForm(forms.ModelForm):
 
         return cleaned_data
 
+
 # -----------------------------------------------
-# class CustomPasswordChangeForm
+# 2. CustomPasswordChangeForm
 # -----------------------------------------------
 class CustomPasswordChangeForm(PasswordChangeForm):
     old_password = forms.CharField( 
@@ -177,8 +170,9 @@ class CustomPasswordChangeForm(PasswordChangeForm):
         widget=forms.PasswordInput(attrs={'autocomplete': 'new-password', 'class':'form-control'}), 
     )
 
+
 # -----------------------------------------------
-# class RoomForm (เพิ่ม Token และ Webhook URL)
+# 3. RoomForm
 # -----------------------------------------------
 class RoomForm(forms.ModelForm):
     
@@ -281,3 +275,29 @@ class RoomForm(forms.ModelForm):
             
             Field('is_maintenance', css_class="form-check form-switch fs-6 mb-3"),
         )
+
+# -----------------------------------------------
+# 4. CustomUserCreationForm (แยกออกมาข้างนอกแล้ว ✅)
+# -----------------------------------------------
+class CustomUserCreationForm(UserCreationForm):
+    groups = forms.ModelMultipleChoiceField(
+        queryset=Group.objects.all(),
+        widget=forms.CheckboxSelectMultiple,
+        required=False,
+        label="กำหนดสิทธิ์ (Groups)"
+    )
+
+    class Meta:
+        model = User
+        fields = ['username', 'first_name', 'last_name', 'email', 'groups']
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        if commit:
+            user.save()
+            self.save_m2m()
+            if user.groups.filter(name='Admin').exists():
+                user.is_staff = True
+                user.is_superuser = True
+                user.save()
+        return user

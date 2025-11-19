@@ -12,6 +12,7 @@ class BookingAdmin(admin.ModelAdmin):
 class RoomAdmin(admin.ModelAdmin):
     list_display = ('name', 'building', 'floor', 'capacity', 'is_maintenance')
     list_filter = ('building', 'is_maintenance')
+    search_fields = ('name',)
 
 # 3. ลงทะเบียน Model
 admin.site.register(Room, RoomAdmin)

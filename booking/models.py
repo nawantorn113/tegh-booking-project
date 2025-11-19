@@ -40,7 +40,6 @@ class Room(models.Model):
     is_maintenance = models.BooleanField(
         default=False, 
         verbose_name="ปิดปรับปรุง (โหมดแมนนวล)",
-        help_text="ติ๊กถูก [✓] เพื่อ 'ปิดปรับปรุง' ห้องนี้"
     )
     
     maintenance_start = models.DateTimeField(
