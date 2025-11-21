@@ -7,42 +7,45 @@
 <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/main.min.css" rel="stylesheet" />
 <style>
     #calendar { min-height: 700px; }
-    .fc-event { cursor: pointer; border: none; } /* ลบขอบออกเพื่อให้สีสวยขึ้น */
+    .fc-event { cursor: pointer; border: none; transition: transform 0.1s; } 
+    .fc-event:hover { transform: scale(1.01); z-index: 10; }
     
-    /* ปรับแต่ง Badge ใน Legend */
-    .badge-legend { font-size: 0.9rem; font-weight: 400; padding: 6px 10px; }
+    /* Legend Badge */
+    .badge-legend { font-size: 0.85rem; font-weight: 400; padding: 5px 10px; }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="page-header d-flex align-items-center w-100 mb-3" id="page-header">
-    <h5 class="mb-0 text-primary">
-        <i class="bi bi-calendar3-range me-2"></i> 
-        ปฏิทินรวมห้องประชุม 
-        {% if is_public_view %} <span class="text-muted fs-6">(มุมมองสาธารณะ)</span>{% endif %}
-    </h5>
+<div class="container-fluid px-4 py-4">
     
-    <div class="ms-auto"> 
-        {% if not user.is_authenticated %}
-        <a href="{% url 'login' %}" class="btn text-white rounded-pill px-4 shadow-sm" style="background-color: #0d6efd; border-color: #0d6efd;">
-            <i class="bi bi-box-arrow-in-right me-2"></i> เข้าสู่ระบบ
-        </a>
-        {% else %}
-         <span class="text-muted me-2">สวัสดี, {{ user.get_full_name|default:user.username }}</span>
-        {% endif %}
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="mb-0 text-primary fw-bold">
+            <i class="bi bi-calendar3-range me-2"></i> 
+            ปฏิทินรวมห้องประชุม 
+            {% if is_public_view %} <span class="text-muted fs-6 fw-normal">(มุมมองสาธารณะ)</span>{% endif %}
+        </h4>
+        
+        <div class="d-flex align-items-center gap-2">
+            {% if not user.is_authenticated %}
+                <a href="{% url 'login' %}" class="btn btn-primary rounded-pill px-4 shadow-sm">
+                    <i class="bi bi-box-arrow-in-right me-2"></i> เข้าสู่ระบบ
+                </a>
+            {% else %}
+                 <span class="text-muted small d-none d-md-block">
+                    <i class="bi bi-hand-index-thumb"></i> ลากแถบเพื่อย้ายเวลาได้ทันที
+                 </span>
+            {% endif %}
+        </div>
     </div>
-</div>
 
-<div class="container-fluid px-0">
     <div class="content-card shadow-sm border p-3 p-md-4">
         
-        <div class="alert alert-light border mb-3 d-flex flex-wrap gap-2 align-items-center">
+        <div class="d-flex flex-wrap gap-2 align-items-center mb-3 pb-3 border-bottom">
             <span class="badge badge-legend" style="background-color: #198754;">สีเขียว = จองแล้ว</span>
-            <span class="badge badge-legend text-dark" style="background-color: #0dcaf0;">สีฟ้า = กำลังใช้งาน</span>
             <span class="badge badge-legend text-dark" style="background-color: #ffc107;">สีเหลือง = รออนุมัติ</span>
+            <span class="badge badge-legend text-dark" style="background-color: #0dcaf0;">สีฟ้า = กำลังใช้งาน</span>
             <span class="badge badge-legend" style="background-color: #fd7e14;">สีส้ม = ใช้งานแล้ว</span>
-            <span class="badge badge-legend" style="background-color: #dc3545;">สีแดง = ยกเลิก/ไม่ว่าง</span>
-            <span class="text-muted small ms-auto d-none d-md-block"><i class="bi bi-info-circle"></i> คลิกรายการเพื่อดูรายละเอียด</span>
+            <span class="badge badge-legend" style="background-color: #dc3545;">สีแดง = ยกเลิก</span>
         </div>
         
         <div id="calendar"></div>
@@ -59,6 +62,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     var calendarEl = document.getElementById('calendar');
     var isPublicView = '{{ is_public_view|yesno:"true,false" }}' === 'true';
+    var isAuthenticated = {% if user.is_authenticated %}true{% else %}false{% endif %};
 
     var calendar = new FullCalendar.Calendar(calendarEl, {
         
@@ -70,15 +74,16 @@ document.addEventListener('DOMContentLoaded', function() {
             right: 'dayGridMonth,timeGridWeek,timeGridDay' 
         },
         
+        // 🖐️ เปิดใช้งาน Drag & Drop (เฉพาะสมาชิก)
+        editable: isAuthenticated, 
+        droppable: isAuthenticated,
+        
+        // 📥 ดึงข้อมูล
         events: {
             url: "{% url 'bookings_api' %}", 
             method: 'GET',
-            extraParams: {
-                public: isPublicView ? 'true' : 'false'
-            },
-            failure: function() {
-                console.error('โหลดข้อมูลไม่สำเร็จ');
-            }
+            extraParams: { public: isPublicView ? 'true' : 'false' },
+            failure: function() { console.error('โหลดข้อมูลไม่สำเร็จ'); }
         },
 
         locale: 'th',
@@ -86,62 +91,94 @@ document.addEventListener('DOMContentLoaded', function() {
         height: 'auto',
         dayMaxEvents: true,
         
-        // [CRITICAL UPDATE] Logic การเลือกสีตามสถานะและเวลา
+        // 🎨 Logic สี
         eventDidMount: function(info) {
             var props = info.event.extendedProps;
-            var now = new Date(); // เวลาปัจจุบัน
+            var now = new Date();
             var start = info.event.start;
             var end = info.event.end;
             var el = info.el;
             
-            // Default Style
             el.style.color = '#ffffff'; 
 
             if (props.status === 'PENDING') {
-                // 🟡 รออนุมัติ -> สีเหลือง
-                el.style.backgroundColor = '#ffc107'; 
-                el.style.color = '#000000'; // ตัวหนังสือดำ
-            
+                el.style.backgroundColor = '#ffc107'; el.style.color = '#000';
             } else if (props.status === 'APPROVED') {
-                
-                if (now >= end) {
-                    // 🟠 ใช้งานแล้ว (จบไปแล้ว) -> สีส้มเข้ม
-                    el.style.backgroundColor = '#fd7e14'; 
-                
-                } else if (now >= start && now < end) {
-                    // 🔵 กำลังใช้งาน (ณ ตอนนี้) -> สีฟ้า
-                    el.style.backgroundColor = '#0dcaf0'; 
-                    el.style.color = '#000000'; // ตัวหนังสือดำ
-                
-                } else {
-                    // 🟢 จองแล้ว (ยังไม่ถึงเวลา) -> สีเขียว
-                    el.style.backgroundColor = '#198754'; 
-                }
-                
+                if (now >= end) { el.style.backgroundColor = '#fd7e14'; }
+                else if (now >= start && now < end) { el.style.backgroundColor = '#0dcaf0'; el.style.color = '#000'; }
+                else { el.style.backgroundColor = '#198754'; }
             } else if (props.status === 'CANCELLED' || props.status === 'REJECTED') {
-                // 🔴 ยกเลิก/ปฏิเสธ -> สีแดง
                 el.style.backgroundColor = '#dc3545'; 
             }
         },
         
+        // 🖱️ คลิกดูรายละเอียด
         eventClick: function(info) {
             window.location.href = "{% url 'booking_detail' 0 %}".replace('0', info.event.id);
         },
 
+        // 🖱️ คลิกจองพื้นที่ว่าง
         selectable: true,
         select: function(info) {
-            {% if not user.is_authenticated %}
+            if(!isAuthenticated) {
                 if(confirm('ต้องการจองห้องประชุมใช่หรือไม่? (ต้องเข้าสู่ระบบก่อน)')) {
                     window.location.href = "{% url 'login' %}";
                 }
-            {% else %}
-                // จองห้องแรกเป็นค่าเริ่มต้น
+            } else {
                 window.location.href = "{% url 'create_booking' all_rooms.0.id %}?start=" + info.startStr + "&end=" + info.endStr;
-            {% endif %}
+            }
+        },
+
+        // 🚚 เมื่อมีการลากแล้วปล่อย (ย้ายวัน/เวลา)
+        eventDrop: function(info) {
+            handleEventUpdate(info);
+        },
+
+        // ↔️ เมื่อมีการดึงขอบ (ยืด/หดเวลา)
+        eventResize: function(info) {
+            handleEventUpdate(info);
         }
     });
     
     calendar.render();
+
+    // --- ฟังก์ชันบันทึกการแก้ไข (AJAX) ---
+    function handleEventUpdate(info) {
+        if (!confirm("คุณต้องการเปลี่ยนเวลาการจองใช่หรือไม่?")) {
+            info.revert(); // ถ้ากดยกเลิก ให้ดีดกลับที่เดิม
+            return;
+        }
+
+        var event = info.event;
+        
+        // ส่งข้อมูลไป Backend
+        fetch("{% url 'update_booking_time_api' %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({
+                booking_id: event.id,
+                start_time: event.start.toISOString(),
+                end_time: event.end ? event.end.toISOString() : event.start.toISOString()
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                // สำเร็จ (ไม่ต้องทำอะไร)
+            } else {
+                alert('แก้ไขไม่ได้: ' + data.message);
+                info.revert(); // ดีดกลับ
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('เกิดข้อผิดพลาดในการเชื่อมต่อ');
+            info.revert();
+        });
+    }
 });
 </script>
 {% endblock %}

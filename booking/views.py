@@ -60,7 +60,6 @@ def get_admin_emails():
     return list(User.objects.filter(Q(groups__name='Admin') | Q(is_superuser=True), is_active=True).distinct().exclude(email__exact='').values_list('email', flat=True))
 
 def get_base_context(request):
-    """ 🚨 [FIXED] แก้ไขให้ส่งรายการแจ้งเตือน (notifications) ไปด้วย """
     current_url_name = request.resolver_match.url_name if request.resolver_match else ''
     is_admin_user = is_admin(request.user)
     
@@ -91,7 +90,7 @@ def get_base_context(request):
             admin_menu_items.append(item)
             
     pending_count = 0
-    pending_notifications = [] # 1. สร้าง list เปล่ารอไว้
+    pending_notifications = []
     
     if request.user.is_authenticated and is_approver_or_admin(request.user):
         rooms_we_approve = Q(room__approver=request.user)
@@ -102,18 +101,18 @@ def get_base_context(request):
         else:
             pending_query = rooms_we_approve
 
-        # 2. ดึงข้อมูลจริง เรียงจากใหม่ไปเก่า
+        # เรียงลำดับการแจ้งเตือนจากใหม่ไปเก่า
         pending_bookings = Booking.objects.filter(pending_query, status='PENDING').order_by('-created_at')
         
         pending_count = pending_bookings.count()
-        pending_notifications = pending_bookings[:5] # 3. ตัดมาแค่ 5 รายการล่าสุด
+        pending_notifications = pending_bookings[:5] # ตัดมา 5 รายการล่าสุด
 
     return {
         'menu_items': menu_items,
         'admin_menu_items': admin_menu_items,
         'is_admin_user': is_admin_user,
         'pending_count': pending_count,
-        'pending_notifications': pending_notifications, # 4. ส่งไปที่ Template
+        'pending_notifications': pending_notifications,
     }
 
 # --- Callbacks / Notification Helpers ---
@@ -312,6 +311,7 @@ def smart_search_view(request):
 
 @login_required
 def dashboard_view(request):
+    """ แสดง Dashboard พร้อมข้อมูลสถิติและสถานะห้อง """
     now = timezone.now(); sort_by = request.GET.get('sort', 'floor')
     all_rooms = Room.objects.all()
     
@@ -391,7 +391,6 @@ def room_calendar_view(request, room_id):
                 
                 # Logic อนุมัติอัตโนมัติ (<15 คน และไม่มีอุปกรณ์)
                 participant_count = form.cleaned_data.get('participant_count', 0)
-                
                 has_equipment = False
                 if 'equipments' in form.cleaned_data:
                     has_equipment = form.cleaned_data['equipments'].exists()
@@ -409,7 +408,10 @@ def room_calendar_view(request, room_id):
                 form.save_m2m() # บันทึก ManyToMany
                 
                 messages.success(request, f"บันทึกการจองเรียบร้อย: {status_msg}")
-                return redirect('room_calendar', room_id=room.id)
+                
+                # 🚨 [IMPORTANT] กลับไป Dashboard เมื่อจองเสร็จ
+                return redirect('dashboard')
+
             except Exception as e:
                 messages.error(request, f"เกิดข้อผิดพลาดระบบ: {e}")
         else:
@@ -473,7 +475,7 @@ def history_view(request):
 
 
 def booking_detail_view(request, booking_id):
-    """ อนุญาตให้ผู้ใช้ทุกคนดูรายละเอียดการจองได้ """
+    """ 🚨 [FIXED] อนุญาตให้ผู้ใช้ทั่วไป (ไม่ได้ล็อกอิน) ดูรายละเอียดได้ """
     booking = get_object_or_404(Booking, pk=booking_id)
     is_public_view = not request.user.is_authenticated
     
@@ -522,8 +524,7 @@ def edit_booking_view(request, booking_id):
             if 'equipments' in form.cleaned_data: has_eq = form.cleaned_data['equipments'].exists()
             
             if p_count >= 15 or has_eq:
-                booking_obj.status = 'PENDING'
-                messages.info(request, "การแก้ไขนี้ต้องรอการอนุมัติใหม่")
+                booking_obj.status = 'PENDING'; messages.info(request, "การแก้ไขนี้ต้องรอการอนุมัติใหม่")
             
             booking_obj.save()
             form.save_m2m()
@@ -537,128 +538,9 @@ def edit_booking_view(request, booking_id):
     return render(request, 'pages/edit_booking.html', context)
 
 @login_required
-@require_POST
-def delete_booking_view(request, booking_id):
-    booking = get_object_or_404(Booking, pk=booking_id)
-    if booking.can_user_edit_or_cancel(request.user):
-        booking.status = 'CANCELLED'
-        booking.save()
-        messages.success(request, "ยกเลิกสำเร็จ")
-    return redirect('history')
-
-@login_required
-@user_passes_test(is_approver_or_admin)
-@require_POST
-def approve_booking_view(request, booking_id):
-    booking = get_object_or_404(Booking, pk=booking_id)
-    booking.status = 'APPROVED'
-    booking.save()
-    messages.success(request, "อนุมัติแล้ว")
-    return redirect('approvals')
-
-@login_required
-@user_passes_test(is_approver_or_admin)
-@require_POST
-def reject_booking_view(request, booking_id):
-    booking = get_object_or_404(Booking, pk=booking_id)
-    booking.status = 'REJECTED'
-    booking.save()
-    messages.success(request, "ปฏิเสธแล้ว")
-    return redirect('approvals')
-
-# ----------------------------------------------------------------------
-# F. OUTLOOK & APIs
-# ----------------------------------------------------------------------
-
-def _get_valid_outlook_token():
-    return None
-@login_required
-@user_passes_test(is_admin)
-def outlook_connect(request): pass
-@login_required
-@user_passes_test(is_admin)
-def outlook_callback(request): pass
-
-def rooms_api(request):
-    """ 💡 API ปลดล็อก ให้ Public เข้าถึงได้ """
-    rooms = Room.objects.all().exclude(is_maintenance=True).order_by('building', 'name')
-    resources = [{'id': r.id, 'title': r.name or "", 'building': r.building or "", 'capacity': r.capacity, 'floor': r.floor or ""} for r in rooms]
-    return JsonResponse(resources, safe=False)
-
-def bookings_api(request):
-    """ 💡 API ปลดล็อก + แสดง Pending """
-    start_str = request.GET.get('start'); end_str = request.GET.get('end'); room_id = request.GET.get('room_id')
-    if not start_str or not end_str: return JsonResponse({'error': 'Missing params'}, status=400)
-    
-    try:
-        start_dt = datetime.fromisoformat(start_str.replace('Z', '+00:00').replace(' ', '+'))
-        end_dt = datetime.fromisoformat(end_str.replace('Z', '+00:00').replace(' ', '+'))
-    except: return JsonResponse({'error': 'Invalid date'}, status=400)
-    
-    is_public_view = request.GET.get('public', 'false').lower() == 'true' or not request.user.is_authenticated
-    status_filter = ['APPROVED', 'PENDING'] 
-    
-    bookings = Booking.objects.filter(start_time__lt=end_dt, end_time__gt=start_dt, status__in=status_filter).select_related('room', 'user')
-    if room_id: bookings = bookings.filter(room_id=room_id)
-        
-    events = []
-    for b in bookings:
-        event_title = b.title or "ไม่มีหัวข้อ"
-        description = b.description or ""
-        
-        if is_public_view:
-            description = "" 
-            if b.status == 'PENDING': event_title = "⏳ รออนุมัติ"
-            else: event_title = "🔒 ไม่ว่าง" 
-
-        events.append({
-            'id': b.id, 'title': event_title, 'start': b.start_time.isoformat(),
-            'end': b.end_time.isoformat(), 'resourceId': b.room.id,
-            'extendedProps': { 'status': b.status, 'description': description },
-        })
-    return JsonResponse(events, safe=False)
-
-@login_required
-@require_POST
-def update_booking_time_api(request): pass
-@login_required
-@require_http_methods(["POST"])
-def delete_booking_api(request, booking_id): pass
-@require_POST
-def teams_action_receiver(request): pass
-def _update_outlook_after_teams_action(booking): pass
-def _update_teams_card_after_action(booking, new_status, action_type): pass
-
-# ----------------------------------------------------------------------
-# I. MANAGEMENT, REPORTS, EXPORT
-# ----------------------------------------------------------------------
-@login_required
-@user_passes_test(is_admin)
-def user_management_view(request):
-    users = User.objects.all()
-    context = get_base_context(request); context.update({'users': users})
-    return render(request, 'pages/user_management.html', context)
-
-@login_required
-@user_passes_test(is_admin)
-def edit_user_roles_view(request, user_id):
-    user_to_edit = get_object_or_404(User, pk=user_id)
-    all_groups = Group.objects.all()
-    if request.method == 'POST':
-        selected_group_ids = request.POST.getlist('groups')
-        selected_groups = Group.objects.filter(pk__in=selected_group_ids)
-        user_to_edit.groups.set(selected_groups)
-        user_to_edit.is_staff = (is_admin(user_to_edit) or user_to_edit.is_superuser)
-        user_to_edit.save()
-        messages.success(request, f"อัปเดตสิทธิ์สำเร็จ")
-        return redirect('user_management')
-    context = get_base_context(request)
-    context.update({'user_to_edit': user_to_edit, 'all_groups': all_groups, 'user_group_pks': list(user_to_edit.groups.values_list('pk', flat=True))})
-    return render(request, 'pages/edit_user_roles.html', context)
-
-@login_required
 @user_passes_test(is_admin)
 def add_user_view(request):
+    """ ฟังก์ชันเพิ่มผู้ใช้งานใหม่ (หน้าขาว) """
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
@@ -705,6 +587,33 @@ def delete_room_view(request, room_id):
     Room.objects.filter(pk=room_id).delete()
     return redirect('rooms')
 @login_required
+@require_POST
+def delete_booking_view(request, booking_id):
+    booking = get_object_or_404(Booking, pk=booking_id)
+    if booking.can_user_edit_or_cancel(request.user):
+        booking.status = 'CANCELLED'; booking.save()
+        messages.success(request, "ยกเลิกสำเร็จ")
+    return redirect('history')
+
+@login_required
+@user_passes_test(is_approver_or_admin)
+@require_POST
+def approve_booking_view(request, booking_id):
+    booking = get_object_or_404(Booking, pk=booking_id)
+    booking.status = 'APPROVED'; booking.save()
+    messages.success(request, "อนุมัติแล้ว")
+    return redirect('approvals')
+
+@login_required
+@user_passes_test(is_approver_or_admin)
+@require_POST
+def reject_booking_view(request, booking_id):
+    booking = get_object_or_404(Booking, pk=booking_id)
+    booking.status = 'REJECTED'; booking.save()
+    messages.success(request, "ปฏิเสธแล้ว")
+    return redirect('approvals')
+
+@login_required
 @user_passes_test(is_admin) 
 def audit_log_view(request):
     log_list = AuditLog.objects.all().order_by('-timestamp')
@@ -715,7 +624,125 @@ def audit_log_view(request):
 
 @login_required
 @user_passes_test(is_admin)
+def user_management_view(request):
+    users = User.objects.all()
+    context = get_base_context(request); context.update({'users': users})
+    return render(request, 'pages/user_management.html', context)
+
+@login_required
+@user_passes_test(is_admin)
+def edit_user_roles_view(request, user_id):
+    user_to_edit = get_object_or_404(User, pk=user_id)
+    all_groups = Group.objects.all()
+    if request.method == 'POST':
+        selected_group_ids = request.POST.getlist('groups')
+        selected_groups = Group.objects.filter(pk__in=selected_group_ids)
+        user_to_edit.groups.set(selected_groups)
+        user_to_edit.is_staff = (is_admin(user_to_edit) or user_to_edit.is_superuser)
+        user_to_edit.save()
+        messages.success(request, f"อัปเดตสิทธิ์สำเร็จ")
+        return redirect('user_management')
+    context = get_base_context(request)
+    context.update({'user_to_edit': user_to_edit, 'all_groups': all_groups, 'user_group_pks': list(user_to_edit.groups.values_list('pk', flat=True))})
+    return render(request, 'pages/edit_user_roles.html', context)
+
+# ----------------------------------------------------------------------
+# F. OUTLOOK & APIs
+# ----------------------------------------------------------------------
+
+def _get_valid_outlook_token():
+    return None
+@login_required
+def outlook_connect(request): pass
+@login_required
+def outlook_callback(request): pass
+
+def rooms_api(request):
+    """ 💡 API ปลดล็อก ให้ Public เข้าถึงได้ """
+    rooms = Room.objects.all().exclude(is_maintenance=True).order_by('building', 'name')
+    resources = [{'id': r.id, 'title': r.name or "", 'building': r.building or "", 'capacity': r.capacity, 'floor': r.floor or ""} for r in rooms]
+    return JsonResponse(resources, safe=False)
+
+def bookings_api(request):
+    """ 💡 API ปลดล็อก + แสดง Pending """
+    start_str = request.GET.get('start'); end_str = request.GET.get('end'); room_id = request.GET.get('room_id')
+    if not start_str or not end_str: return JsonResponse({'error': 'Missing params'}, status=400)
+    
+    try:
+        start_dt = datetime.fromisoformat(start_str.replace('Z', '+00:00').replace(' ', '+'))
+        end_dt = datetime.fromisoformat(end_str.replace('Z', '+00:00').replace(' ', '+'))
+    except: return JsonResponse({'error': 'Invalid date'}, status=400)
+    
+    is_public_view = request.GET.get('public', 'false').lower() == 'true' or not request.user.is_authenticated
+    status_filter = ['APPROVED', 'PENDING'] 
+    
+    bookings = Booking.objects.filter(start_time__lt=end_dt, end_time__gt=start_dt, status__in=status_filter).select_related('room', 'user')
+    if room_id: bookings = bookings.filter(room_id=room_id)
+        
+    events = []
+    for b in bookings:
+        event_title = b.title or "ไม่มีหัวข้อ"
+        description = b.description or ""
+        
+        if is_public_view:
+            description = "" 
+            if b.status == 'PENDING': event_title = "⏳ รออนุมัติ"
+            else: event_title = "🔒 จองแล้ว" 
+
+        events.append({
+            'id': b.id, 'title': event_title, 'start': b.start_time.isoformat(),
+            'end': b.end_time.isoformat(), 'resourceId': b.room.id,
+            'extendedProps': { 'status': b.status, 'description': description },
+        })
+    return JsonResponse(events, safe=False)
+
+@login_required
+@require_POST
+def update_booking_time_api(request):
+    """ 💡 Drag & Drop API """
+    try:
+        data = json.loads(request.body)
+        booking_id = data.get('booking_id'); start_str = data.get('start_time'); end_str = data.get('end_time')
+        
+        booking = get_object_or_404(Booking, pk=booking_id)
+        
+        # เช็คสิทธิ์ง่ายๆ
+        is_owner = (booking.user == request.user)
+        is_admin_u = is_admin(request.user)
+        
+        if not (is_owner or is_admin_u):
+             return JsonResponse({'status': 'error', 'message': 'ไม่มีสิทธิ์แก้ไขรายการนี้'}, status=403)
+
+        new_start = datetime.fromisoformat(start_str.replace('Z', '+00:00'))
+        if end_str:
+            new_end = datetime.fromisoformat(end_str.replace('Z', '+00:00'))
+        else:
+            new_end = new_start + timedelta(hours=1)
+
+        booking.start_time = new_start
+        booking.end_time = new_end
+        booking.save()
+        
+        return JsonResponse({'status': 'success'})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
+@login_required
+@require_http_methods(["POST"])
+def delete_booking_api(request, booking_id): pass
+@require_POST
+def teams_action_receiver(request): pass
+def _update_outlook_after_teams_action(booking): pass
+def _update_teams_card_after_action(booking, new_status, action_type): pass
+
+# -----------------------------------------------
+# J. REPORTS & EXPORT
+# -----------------------------------------------
+
+@login_required
+@user_passes_test(is_admin)
 def reports_view(request):
+    """ แสดงหน้ารายงานสถิติ (ฉบับนับทุกเม็ด) """
     period = request.GET.get('period', 'monthly')
     department = request.GET.get('department', '')
     today = timezone.now().date()
@@ -732,32 +759,30 @@ def reports_view(request):
         title = "รายเดือน"
 
     report_title = f'รายงาน{title} ({start_date} - {end_date})'
-    
-    filter_criteria = Q(
+
+    # Filter (รวม PENDING)
+    booking_filter = Q(
         bookings__start_time__date__gte=start_date, 
         bookings__start_time__date__lte=end_date, 
         bookings__status__in=['APPROVED', 'PENDING']
     )
-    if department:
-        filter_criteria &= Q(bookings__department=department)
+    if department: booking_filter &= Q(bookings__department=department)
 
     room_usage_stats = Room.objects.filter(is_maintenance=False).annotate(
-        booking_count=Count('bookings', filter=filter_criteria)
+        booking_count=Count('bookings', filter=booking_filter)
     ).order_by('-booking_count')
     
     room_usage_labels = [r.name for r in room_usage_stats]
     room_usage_data = [r.booking_count for r in room_usage_stats]
     
-    dept_filter = Q(
-        start_time__date__gte=start_date, start_time__date__lte=end_date, status__in=['APPROVED', 'PENDING']
-    )
+    # Dept Filter (นับรวมไม่ระบุแผนก)
+    dept_filter = Q(start_time__date__gte=start_date, start_time__date__lte=end_date, status__in=['APPROVED', 'PENDING'])
     if department: dept_filter &= Q(department=department)
     
-    raw_bookings = Booking.objects.filter(dept_filter).values('department')
     dept_counts = defaultdict(int)
-    for b in raw_bookings:
-        d_name = b['department'].strip() if b['department'] else "ไม่ระบุ"
-        dept_counts[d_name] += 1
+    for b in Booking.objects.filter(dept_filter).values('department'):
+        d = b['department'].strip() if b['department'] else "ไม่ระบุแผนก"
+        dept_counts[d] += 1
         
     dept_usage_labels = list(dept_counts.keys())
     dept_usage_data = list(dept_counts.values())
@@ -769,6 +794,7 @@ def reports_view(request):
         'report_title': report_title,
         'current_period': period,
         'current_department': department,
+        'all_departments': departments_dropdown,
         'room_usage_labels': json.dumps(room_usage_labels),
         'room_usage_data': json.dumps(room_usage_data),
         'dept_usage_labels': json.dumps(dept_usage_labels),
@@ -800,7 +826,7 @@ def export_reports_excel(request):
 @login_required
 @user_passes_test(is_admin)
 def export_reports_pdf(request):
-    """ 🚨 [FIXED] Export PDF พร้อม user context """
+    """ 🚨 [FIXED] แก้ไข PDF Error (VariableDoesNotExist user) """
     today = timezone.now().date()
     start_date = today.replace(day=1)
     bookings = Booking.objects.filter(start_time__date__gte=start_date, status__in=['APPROVED', 'PENDING']).order_by('start_time')
@@ -814,7 +840,7 @@ def export_reports_pdf(request):
         'report_title': f"Monthly Report ({start_date.strftime('%B %Y')})",
         'export_date': timezone.now(),
         'font_url': font_url,
-        'user': request.user 
+        'user': request.user # 💡 เพิ่ม user ลงใน context
     }
     
     html_string = render_to_string('pages/reports_pdf.html', context)
