@@ -24,7 +24,7 @@
     
     <div class="ms-auto"> 
         {% if not user.is_authenticated %}
-        <a href="{% url 'login' %}" class="btn btn-primary rounded-pill px-4 shadow-sm">
+        <a href="{% url 'login' %}" class="btn text-white rounded-pill px-4 shadow-sm" style="background-color: #0d6efd; border-color: #0d6efd;">
             <i class="bi bi-box-arrow-in-right me-2"></i> เข้าสู่ระบบ
         </a>
         {% else %}

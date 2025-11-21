@@ -1,73 +1,67 @@
+{% load static %}
 <!DOCTYPE html>
-<html lang="th">
+<html>
 <head>
-    <meta charset="UTF-8">
+    <meta charset="utf-8">
     <title>{{ report_title }}</title>
-    
-    <style type="text/css">
+    <style>
+        /* กำหนดฟอนต์ภาษาไทย (ต้องมีไฟล์ฟอนต์ใน static หรือใช้ Google Fonts แบบ Base64) */
         @font-face {
-            font-family: 'Sarabun'; 
-            
-            /* 💡 Pyppeteer (Chrome) จะไปดาวน์โหลดฟอนต์จาก URL นี้ */
-            src: url("{{ font_url }}"); 
+            font-family: 'Kanit';
+            /* ถ้าไม่มีไฟล์ฟอนต์ในเครื่อง อาจจะแสดงผลภาษาไทยเป็นสี่เหลี่ยม */
+            /* แนะนำให้โหลดไฟล์ .ttf มาวางใน static/fonts/ แล้วชี้ path ให้ถูก */
+            src: local('Kanit'), local('Arial'); 
         }
-
-        /* 💡 ใช้งานชื่อ 'Sarabun' ตามปกติ */
-        body, table, th, td, div, p, h1, h2, h3, span {
-            font-family: 'Sarabun', sans-serif !important;
-            font-size: 12pt;
-        }
-        
-        /* ... (CSS ที่เหลือเหมือนเดิม) ... */
-        h1 { font-size: 18pt; text-align: center; margin-bottom: 5px; }
-        .subtitle { text-align: center; font-size: 10pt; color: #555; margin-bottom: 20px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; word-wrap: break-word; }
-        th { background-color: #f2f2f2; font-size: 13pt; font-weight: bold; }
-        tr:nth-child(even) { background-color: #f9f9f9; }
+        body { font-family: 'Kanit', 'Arial', sans-serif; font-size: 14px; }
+        h1 { text-align: center; color: #4a55a8; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; font-weight: bold; }
+        .badge { padding: 4px 8px; border-radius: 4px; color: white; font-size: 12px; }
+        .bg-success { background-color: #198754; }
+        .bg-warning { background-color: #ffc107; color: black; }
     </style>
 </head>
 <body>
-
     <h1>{{ report_title }}</h1>
-    <p class="subtitle">
-        ส่งออกเมื่อวันที่: {{ export_date }}
-    </p>
+    <p>ข้อมูล ณ วันที่: {{ export_date|date:"d/m/Y H:i" }}</p>
+    <p>ออกรายงานโดย: {{ user.get_full_name|default:user.username }}</p>
 
     <table>
         <thead>
             <tr>
-                <th>ID</th>
-                <th>หัวข้อการจอง</th>
+                <th>วันที่</th>
+                <th>เวลา</th>
                 <th>ห้อง</th>
+                <th>หัวข้อ</th>
                 <th>ผู้จอง</th>
                 <th>แผนก</th>
-                <th>เวลาเริ่ม</th>
-                <th>เวลาสิ้นสุด</th>
-                <th>จำนวน (คน)</th>
+                <th>สถานะ</th>
             </tr>
         </thead>
         <tbody>
-            {% for booking in bookings %}
+            {% for b in bookings %}
             <tr>
-                <td>{{ booking.id }}</td>
-                <td>{{ booking.title }}</td>
-                <td>{{ booking.room.name }}</td>
-                <td>{{ booking.user.get_full_name|default:booking.user.username }}</td>
-                <td>{{ booking.department|default:"-" }}</td>
-                <td>{{ booking.start_time|date:"d/m/Y H:i" }}</td>
-                <td>{{ booking.end_time|date:"d/m/Y H:i" }}</td>
-                <td>{{ booking.participant_count }}</td>
+                <td>{{ b.start_time|date:"d/m/Y" }}</td>
+                <td>{{ b.start_time|date:"H:i" }} - {{ b.end_time|date:"H:i" }}</td>
+                <td>{{ b.room.name }}</td>
+                <td>{{ b.title }}</td>
+                <td>{{ b.user.get_full_name|default:b.user.username }}</td>
+                <td>{{ b.department|default:"-" }}</td>
+                <td>
+                    {% if b.status == 'APPROVED' %}
+                        <span class="badge bg-success">อนุมัติ</span>
+                    {% else %}
+                        <span class="badge bg-warning">รออนุมัติ</span>
+                    {% endif %}
+                </td>
             </tr>
             {% empty %}
             <tr>
-                <td colspan="8" style="text-align: center; color: #777;">
-                    --- ไม่พบข้อมูลการจองในช่วงเวลาที่กำหนด ---
-                </td>
+                <td colspan="7" style="text-align: center;">ไม่มีข้อมูลการจองในช่วงเวลานี้</td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
-
 </body>
 </html>
