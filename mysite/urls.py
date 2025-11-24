@@ -11,7 +11,7 @@ def redirect_to_dashboard(request):
 
 urlpatterns = [
     # ปิดบรรทัดนี้ เพื่อไม่ให้เข้าหน้า Admin ของ Django ได้
-    # path('admin/', admin.site.urls), 
+    path('admin/', admin.site.urls), 
     
     # 💡 (Optional) ถ้าใครพยายามเข้า /admin/ ให้ดีดกลับไปหน้า Dashboard แทน
     path('admin/', redirect_to_dashboard),
