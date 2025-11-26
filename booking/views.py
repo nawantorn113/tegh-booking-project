@@ -272,7 +272,7 @@ def public_calendar_view(request):
     return render(request, 'pages/master_calendar.html', ctx)
 
 # ----------------------------------------------------------------------
-# C. SMART SEARCH (แก้ไขชื่อฟิลด์ facilities -> equipment_in_room)
+# C. SMART SEARCH (แก้ไขให้ชื่อ field ตรงกับ database แล้ว)
 # ----------------------------------------------------------------------
 def parse_search_query(text):
     """
@@ -308,12 +308,12 @@ def smart_search_view(request):
         if capacity:
             rooms = rooms.filter(capacity__gte=capacity) # หาห้องที่จุคนได้เพียงพอ
 
-        # 5. กรองตามชื่อห้อง (แก้ไขชื่อฟิลด์ตรงนี้ให้ถูกต้อง)
+        # 5. กรองตามชื่อห้อง
         if keyword:
             rooms = rooms.filter(
                 Q(name__icontains=keyword) | 
                 Q(building__icontains=keyword) |
-                Q(equipment_in_room__icontains=keyword)  # <--- แก้ไขจาก facilities เป็น equipment_in_room แล้ว
+                Q(equipment_in_room__icontains=keyword)  # <--- แก้ไขแล้ว ตรงนี้ครับ
             )
 
     # 6. ส่งผลลัพธ์ไปที่หน้าจอ
