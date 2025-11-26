@@ -192,7 +192,6 @@ def send_booking_notification(booking, template_name, subject_prefix):
     if email_recipients:
         try:
             send_mail(f"[{subject_prefix}] {booking.title}", f"ห้อง: {booking.room.name}", settings.DEFAULT_FROM_EMAIL, email_recipients, fail_silently=True)
-            print(f"   > ✅ Email sent to {email_recipients}")
         except: pass
 
     # 2. LINE OA
@@ -217,8 +216,7 @@ def send_booking_notification(booking, template_name, subject_prefix):
             except: pass
 
     if line_targets and line_bot_api:
-        
-        # 🚨 [NEW] เพิ่มข้อความแจ้งเตือนอุปกรณ์
+        # [NEW] เพิ่มข้อความแจ้งเตือนอุปกรณ์
         extra_msg = ""
         has_req = bool(booking.additional_requests and booking.additional_requests.strip())
         has_eq = booking.equipments.exists() if hasattr(booking, 'equipments') else False
@@ -232,11 +230,8 @@ def send_booking_notification(booking, template_name, subject_prefix):
             if uid:
                 try:
                     line_bot_api.push_message(uid, TextSendMessage(text=msg))
-                    print(f"   > ✅ LINE sent to {uid}")
                 except Exception as e:
-                    print(f"   > ❌ LINE Error ({uid}): {e}")
-    else:
-         print(f"   > ℹ️ No LINE targets found.")
+                    print(f" ❌ LINE Error ({uid}): {e}")
 
 class UserAutocomplete(Select2QuerySetView):
     def get_queryset(self):
@@ -277,11 +272,59 @@ def public_calendar_view(request):
     return render(request, 'pages/master_calendar.html', ctx)
 
 # ----------------------------------------------------------------------
-# C. SMART SEARCH
+# C. SMART SEARCH (แก้ไขให้ใช้งานได้จริง)
 # ----------------------------------------------------------------------
-def parse_search_query(text): return None, None, None 
+def parse_search_query(text):
+    """
+    แยกคำค้นหา: หาตัวเลข (จำนวนคน) และ ข้อความ (ชื่อห้อง)
+    เช่น "10 คน" -> capacity=10
+    """
+    text = text.strip()
+    capacity = None
+    keyword = text
+
+    # ใช้ Regex หาตัวเลข (เช่น 10, 20)
+    match = re.search(r'(\d+)', text)
+    if match:
+        capacity = int(match.group(1))
+        # ลบตัวเลขออกจาก Keyword เพื่อเอาส่วนที่เหลือไปหาชื่อห้อง
+        keyword = re.sub(r'\d+\s*(คน|ท่าน|seats?)?', '', text).strip()
+    
+    return keyword, capacity
+
 @login_required
-def smart_search_view(request): return render(request, 'pages/search_results.html', get_base_context(request))
+def smart_search_view(request):
+    # 1. รับค่าจากช่องค้นหา (URL: ?q=...)
+    query = request.GET.get('q', '').strip()
+    
+    # 2. เตรียม QuerySet เริ่มต้น (ห้องทั้งหมด)
+    rooms = Room.objects.all()
+    
+    if query:
+        # 3. แปลงคำค้นหา
+        keyword, capacity = parse_search_query(query)
+
+        # 4. กรองตามจำนวนคน (ถ้ามีตัวเลข)
+        if capacity:
+            rooms = rooms.filter(capacity__gte=capacity) # หาห้องที่จุคนได้เพียงพอ
+
+        # 5. กรองตามชื่อห้อง (ถ้ามีตัวหนังสือเหลืออยู่)
+        if keyword:
+            rooms = rooms.filter(
+                Q(name__icontains=keyword) | 
+                Q(building__icontains=keyword) |
+                Q(facilities__icontains=keyword)
+            )
+
+    # 6. ส่งผลลัพธ์ไปที่หน้าจอ
+    context = get_base_context(request)
+    context.update({
+        'query': query,             
+        'available_rooms': rooms,   
+        'search_count': rooms.count()
+    })
+    
+    return render(request, 'pages/search_results.html', context)
 
 # ----------------------------------------------------------------------
 # D. MAIN PAGES & BOOKING LOGIC
@@ -317,10 +360,10 @@ def room_calendar_view(request, room_id):
             booking = form.save(commit=False)
             booking.room = room; booking.user = request.user
             
-            # 🚨 [UPDATED LOGIC] เช็คทุกเงื่อนไขที่ต้องรออนุมัติ
+            # เช็คเงื่อนไขที่ต้องรออนุมัติ
             p_count = form.cleaned_data.get('participant_count', 0)
             req_text = form.cleaned_data.get('additional_requests', '')
-            has_req = bool(req_text and req_text.strip()) # มีข้อความขออุปกรณ์เพิ่ม
+            has_req = bool(req_text and req_text.strip()) 
             
             if p_count >= 15 or has_req: 
                 booking.status = 'PENDING'
@@ -332,7 +375,6 @@ def room_calendar_view(request, room_id):
             booking.save()
             form.save_m2m()
             
-            # เช็คอุปกรณ์ M2M (ถ้ามีฟิลด์ equipments)
             if hasattr(booking, 'equipments') and booking.equipments.exists() and booking.status == 'APPROVED':
                 booking.status = 'PENDING'; msg = "รอการอนุมัติ (อุปกรณ์)"; booking.save()
 
@@ -385,12 +427,10 @@ def edit_booking_view(request, booking_id):
         if form.is_valid():
             booking = form.save(commit=False)
             
-            # 🚨 เช็คเงื่อนไขตอนแก้ไขด้วย
             p_count = form.cleaned_data.get('participant_count', 0)
             req_text = form.cleaned_data.get('additional_requests', '')
             has_req = bool(req_text and req_text.strip())
             
-            # เช็ค M2M (ถ้ามี)
             has_eq = False
             if 'equipments' in form.cleaned_data and hasattr(booking, 'equipments'):
                  if form.cleaned_data['equipments'].exists(): has_eq = True
@@ -444,7 +484,6 @@ def bookings_api(request):
         for b in qs:
             title = b.title
             
-            # 🚨 [NEW] เพิ่มไอคอนถ้ามีอุปกรณ์เสริม
             has_req = bool(b.additional_requests and b.additional_requests.strip())
             has_eq = b.equipments.exists() if hasattr(b, 'equipments') else False
             if has_req or has_eq: title += " 🛠️"
