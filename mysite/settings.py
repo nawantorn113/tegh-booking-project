@@ -11,19 +11,18 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-change-me-please'
 
 # SECURITY WARNING: don't run with debug turned on in production!
+# บน Server จริง ควรเปลี่ยนเป็น False แต่ตอนนี้เปิด True ไว้ก่อนเผื่อแก้บั๊ก
 DEBUG = True
 
-# อนุญาตให้เครื่องอื่นเข้าถึงได้
-ALLOWED_HOSTS = ['*']
+# 1. อนุญาตให้ PythonAnywhere เข้าถึงได้
+ALLOWED_HOSTS = ['user01.pythonanywhere.com', '127.0.0.1', 'localhost']
 
-# [FIXED] อนุญาตให้ Ngrok ส่งข้อมูลเข้ามาได้ (แก้ปัญหา 403 Forbidden)
+# 2. อนุญาตให้ LINE Webhook ส่งข้อมูลเข้ามาได้
 CSRF_TRUSTED_ORIGINS = [
-    'https://chirographic-buffy-overfaithfully.ngrok-free.dev',
+    'https://user01.pythonanywhere.com',
 ]
 
-
 # Application definition
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -32,7 +31,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    # 3rd Party Apps
+    # 3rd Party Apps (ต้องลง pip install เพิ่มใน Console)
     'dal',
     'dal_select2',
     'crispy_forms',
@@ -78,7 +77,7 @@ WSGI_APPLICATION = 'mysite.wsgi.application'
 
 
 # Database
-# ใช้ SQLite สำหรับเครื่อง Dev
+# ใช้ SQLite เหมือนเดิม
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -104,11 +103,16 @@ USE_TZ = True
 
 
 # Static files (CSS, JavaScript, Images)
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+
+# โฟลเดอร์ที่เก็บ Static file ขณะพัฒนา
 STATICFILES_DIRS = [
     BASE_DIR / 'static',
     BASE_DIR / 'booking/static',
 ]
+
+# [สำคัญสำหรับ PythonAnywhere] โฟลเดอร์ปลายทางที่รวบรวมไฟล์ Static จริง
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # Media files (Uploaded files)
 MEDIA_URL = '/media/'
@@ -130,7 +134,7 @@ LOGOUT_REDIRECT_URL = 'login'
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"
 
-# 3. Email Settings (แบบจำลอง)
+# 3. Email Settings (จำลองการส่งใน Console เพราะยังไม่มี SMTP จริง)
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 DEFAULT_FROM_EMAIL = 'ระบบจองห้องประชุม <no-reply@tegh.com>'
 
@@ -138,11 +142,11 @@ DEFAULT_FROM_EMAIL = 'ระบบจองห้องประชุม <no-re
 # --------------------------------------------------
 LINE_CHANNEL_SECRET = '297c1a8c67e6a6f7fb6849e2674e46f7'
 
-# อย่าลืมเอารหัสยาวๆ มาใส่ตรงนี้นะครับ
+# Token ยาว
 LINE_CHANNEL_ACCESS_TOKEN = 'GnoNpDFeLx48BmqV+nv8I10XsdfSx0wqS3V6W9ZXnvBY3vEAav1fWM/Vy0aPYeUXQtcrLYzuJNTnNtnuQbgmXcGimHBBLz1pt/cyVbWi6yqzdIC9mzfR2CrHksKQOL/nDui7SieM0zRHt+6Pe8DGKQdB04t89/1O/w1cDnyilFU='
 # --------------------------------------------------
 
-# 5. Azure / Outlook
+# 5. Azure / Outlook (ถ้ายังไม่ได้ใช้ ปล่อยไว้ก่อนได้ครับ)
 AZURE_CLIENT_ID = 'YOUR_AZURE_CLIENT_ID'
 AZURE_CLIENT_SECRET = 'YOUR_AZURE_CLIENT_SECRET'
 AZURE_REDIRECT_URI = 'http://127.0.0.1:8000/outlook/callback/'
