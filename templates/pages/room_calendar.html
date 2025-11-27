@@ -24,7 +24,7 @@
             background-color: #0d6efd; border-color: #0d6efd; color: white; 
         }
 
-        /* --- 🎨 Color Scheme ใหม่ (ตามที่ขอ) --- */
+        /* --- 🎨 Color Scheme (สถานะสี) --- */
         /* 1. ใช้งานแล้ว (เทา) */
         .fc-event.status-past {
             background-color: #adb5bd !important; border-color: #adb5bd !important; opacity: 0.7;
@@ -36,7 +36,7 @@
         /* 3. กำลังใช้งาน (ฟ้า) */
         .fc-event.status-current {
             background-color: #0d6efd !important; border-color: #0d6efd !important; 
-            box-shadow: 0 0 10px rgba(13, 110, 253, 0.5); /* เพิ่มเงาให้เด่น */
+            box-shadow: 0 0 10px rgba(13, 110, 253, 0.5);
             border-left: 4px solid #0a58ca !important;
         }
         /* 4. รออนุมัติ (ส้ม) */
@@ -62,27 +62,55 @@
 {% block content %}
 <div class="container py-3 px-2 px-md-3">
     
-    <div class="card border-0 shadow-sm rounded-4 mb-4">
-        <div class="card-body p-3 p-md-4">
-            <div class="row align-items-center">
-                <div class="col-12 col-md-8">
-                    <h4 class="fw-bold text-primary mb-1">{{ room.name }}</h4>
-                    <p class="text-muted small mb-2">
-                        <i class="bi bi-geo-alt-fill"></i> {{ room.building|default:"-" }} ชั้น {{ room.floor|default:"-" }} | 
-                        <i class="bi bi-people-fill"></i> จุ {{ room.capacity }} คน
-                    </p>
-                    <div class="d-flex flex-wrap gap-2 small mt-2">
+    <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden">
+        <div class="row g-0">
+            <div class="col-md-4 position-relative" style="min-height: 200px;">
+                {% if room.image %}
+                    <img src="{{ room.image.url }}" 
+                         class="w-100 h-100 object-fit-cover position-absolute top-0 start-0" 
+                         alt="{{ room.name }}">
+                {% else %}
+                    <div class="bg-light w-100 h-100 d-flex align-items-center justify-content-center text-muted position-absolute top-0 start-0">
+                        <i class="bi bi-image" style="font-size: 3rem; opacity: 0.3;"></i>
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="col-md-8">
+                <div class="card-body p-3 p-md-4">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h4 class="fw-bold text-primary mb-1">{{ room.name }}</h4>
+                            <p class="text-muted small mb-2">
+                                <i class="bi bi-geo-alt-fill"></i> {{ room.building|default:"-" }} ชั้น {{ room.floor|default:"-" }} | 
+                                <i class="bi bi-people-fill"></i> จุ {{ room.capacity }} คน
+                            </p>
+                        </div>
+                        <div class="d-block d-md-none">
+                            <button class="btn btn-primary rounded-pill shadow-sm btn-sm px-3" onclick="openBookingModal()">
+                                <i class="bi bi-plus-lg"></i> จอง
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="d-flex flex-wrap gap-2 small mt-2 mb-3">
                         <span class="badge bg-secondary fw-normal"><i class="bi bi-check-circle me-1"></i>ใช้งานแล้ว</span>
                         <span class="badge bg-primary fw-normal"><i class="bi bi-play-circle me-1"></i>กำลังใช้</span>
                         <span class="badge bg-success fw-normal"><i class="bi bi-calendar-check me-1"></i>จองแล้ว</span>
                         <span class="badge bg-warning text-dark fw-normal"><i class="bi bi-hourglass-split me-1"></i>รออนุมัติ</span>
                     </div>
-                </div>
-                
-                <div class="col-12 col-md-4 mt-3 mt-md-0 text-md-end">
-                    <button class="btn btn-primary rounded-pill w-100 w-md-auto fw-bold shadow-sm py-2" onclick="openBookingModal()">
-                        <i class="bi bi-plus-lg me-1"></i> จองห้องนี้
-                    </button>
+
+                    {% if room.equipment_in_room %}
+                        <div class="p-2 bg-light rounded-3 small text-muted">
+                            <i class="bi bi-tools me-2"></i> {{ room.equipment_in_room }}
+                        </div>
+                    {% endif %}
+                    
+                    <div class="d-none d-md-block text-end mt-3">
+                        <button class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" onclick="openBookingModal()">
+                            <i class="bi bi-plus-lg me-1"></i> จองห้องนี้
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -171,29 +199,29 @@
             height: 'auto',
             events: "{% url 'bookings_api' %}?room_id={{ room.id }}",
 
-            // ✅ [Logic สีใหม่]
+            // ✅ Logic สีตามสถานะและเวลา
             eventDidMount: function(info) {
                 var status = info.event.extendedProps.status;
                 var now = new Date();
                 var start = info.event.start;
                 var end = info.event.end;
                 
-                // ล้าง class เก่าก่อน
+                // ล้าง class เก่า
                 info.el.classList.remove('status-past', 'status-future', 'status-current', 'status-pending', 'status-cancelled');
 
                 if (status === 'CANCELLED' || status === 'REJECTED') {
-                    info.el.classList.add('status-cancelled'); // สีแดง
+                    info.el.classList.add('status-cancelled');
                 } 
                 else if (status === 'PENDING') {
-                    info.el.classList.add('status-pending'); // สีส้ม
+                    info.el.classList.add('status-pending');
                 } 
                 else if (status === 'APPROVED') {
                     if (end < now) {
-                        info.el.classList.add('status-past'); // สีเทา (จบแล้ว)
+                        info.el.classList.add('status-past'); // จบแล้ว
                     } else if (start <= now && end >= now) {
-                        info.el.classList.add('status-current'); // สีฟ้า (กำลังใช้งาน)
+                        info.el.classList.add('status-current'); // กำลังใช้งาน
                     } else {
-                        info.el.classList.add('status-future'); // สีเขียว (ยังไม่ถึง)
+                        info.el.classList.add('status-future'); // อนาคต
                     }
                 }
             },
