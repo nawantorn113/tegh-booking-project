@@ -24,10 +24,16 @@
             background-color: #0d6efd; border-color: #0d6efd; color: white; 
         }
 
+         .fc-event {
+            color: #ffffff !important;  /* ตัวหนังสือสีขาว */
+            border: none !important;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
         /* --- 🎨 Color Scheme (สถานะสี) --- */
         /* 1. ใช้งานแล้ว (เทา) */
         .fc-event.status-past {
             background-color: #adb5bd !important; border-color: #adb5bd !important; opacity: 0.7;
+            color: #000000 !important; border: none !important; box-shadow: 0 1px 2px rgba(0,0,0,0.1);
         }
         /* 2. จองแล้ว/อนาคต (เขียว) */
         .fc-event.status-future {
@@ -92,6 +98,11 @@
                             </button>
                         </div>
                     </div>
+                    {% if room.equipment_in_room %}
+                        <div class="p-2 bg-light rounded-3 small text-muted">
+                            <i class="bi bi-tools me-2"></i> {{ room.equipment_in_room }}
+                        </div>
+                    {% endif %}
 
                     <div class="d-flex flex-wrap gap-2 small mt-2 mb-3">
                         <span class="badge bg-secondary fw-normal"><i class="bi bi-check-circle me-1"></i>ใช้งานแล้ว</span>
@@ -100,11 +111,6 @@
                         <span class="badge bg-warning text-dark fw-normal"><i class="bi bi-hourglass-split me-1"></i>รออนุมัติ</span>
                     </div>
 
-                    {% if room.equipment_in_room %}
-                        <div class="p-2 bg-light rounded-3 small text-muted">
-                            <i class="bi bi-tools me-2"></i> {{ room.equipment_in_room }}
-                        </div>
-                    {% endif %}
                     
                     <div class="d-none d-md-block text-end mt-3">
                         <button class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" onclick="openBookingModal()">
@@ -199,7 +205,7 @@
             height: 'auto',
             events: "{% url 'bookings_api' %}?room_id={{ room.id }}",
 
-            // ✅ Logic สีตามสถานะและเวลา
+            // Logic สีตามสถานะและเวลา
             eventDidMount: function(info) {
                 var status = info.event.extendedProps.status;
                 var now = new Date();
