@@ -14,7 +14,7 @@
         .fc { font-family: 'Kanit', sans-serif; }
         
         /* ปรับแต่งส่วนหัวปฏิทิน */
-        .fc .fc-toolbar-title { font-size: 1.25rem; font-weight: 600; color: #1e293b; }
+        .fc .fc-toolbar-title { font-size: 1.5rem; font-weight: 600; color: #1e293b; }
         .fc .fc-button-primary { 
             background-color: #fff; border-color: #cbd5e1; color: #475569; 
             font-weight: 500; box-shadow: none !important;
@@ -24,41 +24,40 @@
             background-color: #0d6efd; border-color: #0d6efd; color: white; 
         }
 
-         .fc-event {
-            color: #ffffff !important;  /* ตัวหนังสือสีขาว */
+        .fc-event {
+            color: #ffffff !important;
             border: none !important;
             box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            cursor: pointer;
         }
-        /* --- 🎨 Color Scheme (สถานะสี) --- */
+        
+        /* --- 🎨 Color Scheme --- */
         /* 1. ใช้งานแล้ว (เทา) */
         .fc-event.status-past {
-            background-color: #adb5bd !important; border-color: #adb5bd !important; opacity: 0.7;
-            color: #000000 !important; border: none !important; box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            background-color: #adb5bd !important; opacity: 0.7; color: #000 !important;
         }
-        /* 2. จองแล้ว/อนาคต (เขียว) */
+        /* 2. จองแล้ว (เขียว) */
         .fc-event.status-future {
-            background-color: #198754 !important; border-color: #198754 !important;
+            background-color: #198754 !important; 
         }
         /* 3. กำลังใช้งาน (ฟ้า) */
         .fc-event.status-current {
-            background-color: #0d6efd !important; border-color: #0d6efd !important; 
-            box-shadow: 0 0 10px rgba(13, 110, 253, 0.5);
-            border-left: 4px solid #0a58ca !important;
+            background-color: #0d6efd !important; 
+            box-shadow: 0 0 8px rgba(13, 110, 253, 0.5); border-left: 4px solid #0a58ca !important;
         }
         /* 4. รออนุมัติ (ส้ม) */
         .fc-event.status-pending {
-            background-color: #fd7e14 !important; border-color: #fd7e14 !important;
+            background-color: #fd7e14 !important; 
         }
         /* 5. ยกเลิก (แดง) */
         .fc-event.status-cancelled {
-            background-color: #dc3545 !important; border-color: #dc3545 !important;
-            text-decoration: line-through; opacity: 0.6;
+            background-color: #dc3545 !important; text-decoration: line-through; opacity: 0.6;
         }
 
         /* --- 📱 Mobile Fix --- */
         @media (max-width: 768px) {
             .fc .fc-toolbar { flexDirection: column; gap: 10px; }
-            .fc .fc-toolbar-title { font-size: 1.1rem; }
+            .fc .fc-toolbar-title { font-size: 1.2rem; }
             .fc-dayGridMonth-button, .fc-timeGridWeek-button { display: none !important; }
             .fc-view-harness { min-height: 400px; }
         }
@@ -70,6 +69,7 @@
     
     <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden">
         <div class="row g-0">
+            
             <div class="col-md-4 position-relative" style="min-height: 200px;">
                 {% if room.image %}
                     <img src="{{ room.image.url }}" 
@@ -98,20 +98,20 @@
                             </button>
                         </div>
                     </div>
+
                     {% if room.equipment_in_room %}
-                        <div class="p-2 bg-light rounded-3 small text-muted">
+                        <div class="p-2 bg-light rounded-3 small text-muted mb-3">
                             <i class="bi bi-tools me-2"></i> {{ room.equipment_in_room }}
                         </div>
                     {% endif %}
 
-                    <div class="d-flex flex-wrap gap-2 small mt-2 mb-3">
-                        <span class="badge bg-secondary fw-normal"><i class="bi bi-check-circle me-1"></i>ใช้งานแล้ว</span>
-                        <span class="badge bg-primary fw-normal"><i class="bi bi-play-circle me-1"></i>กำลังใช้</span>
-                        <span class="badge bg-success fw-normal"><i class="bi bi-calendar-check me-1"></i>จองแล้ว</span>
-                        <span class="badge bg-warning text-dark fw-normal"><i class="bi bi-hourglass-split me-1"></i>รออนุมัติ</span>
+                    <div class="d-flex flex-wrap gap-2 small">
+                        <span class="badge bg-secondary fw-normal">ใช้งานแล้ว</span>
+                        <span class="badge bg-primary fw-normal">กำลังใช้</span>
+                        <span class="badge bg-success fw-normal">จองแล้ว</span>
+                        <span class="badge bg-warning text-dark fw-normal">รออนุมัติ</span>
                     </div>
 
-                    
                     <div class="d-none d-md-block text-end mt-3">
                         <button class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" onclick="openBookingModal()">
                             <i class="bi bi-plus-lg me-1"></i> จองห้องนี้
@@ -137,8 +137,7 @@
                 <h5 class="modal-title fw-bold fs-5"><i class="bi bi-pencil-square me-2"></i>จองห้องประชุม</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body pt-3" id="modalBookingBody">
-                </div>
+            <div class="modal-body pt-3" id="modalBookingBody"></div>
             <div class="modal-footer bg-light border-0">
                 <button type="button" class="btn btn-light text-muted rounded-pill" data-bs-dismiss="modal">ยกเลิก</button>
                 <button type="button" class="btn btn-primary rounded-pill px-4" id="submitBookingBtn">ยืนยัน</button>
@@ -162,16 +161,34 @@
     {{ form.media.js }}
 
     <script>
+    // --- CSRF & API Config ---
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    const csrftoken = getCookie('csrftoken');
+    const API_UPDATE_URL = "{% url 'update_booking_time_api' %}";
+
+    // --- Modal Logic ---
     function openBookingModal(startStr = null, endStr = null) {
         const form = document.getElementById('hiddenBookingForm');
         const modalBody = document.getElementById('modalBookingBody');
-        
         if(!modalBody.contains(form)) modalBody.appendChild(form);
         form.reset();
 
         if(startStr && endStr) {
-            document.getElementById('id_start_time').value = startStr;
-            document.getElementById('id_end_time').value = endStr;
+            document.getElementById('id_start_time').value = startStr.substring(0, 16);
+            document.getElementById('id_end_time').value = endStr.substring(0, 16);
         } else {
             let now = new Date();
             now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
@@ -181,11 +198,33 @@
             document.getElementById('id_end_time').value = nextHour.toISOString().slice(0,16);
         }
 
-        $('#id_participants').select2({
-            theme: 'bootstrap-5', width: '100%', dropdownParent: $('#bookingModal')
-        });
-
+        $('#id_participants').select2({ theme: 'bootstrap-5', width: '100%', dropdownParent: $('#bookingModal') });
         new bootstrap.Modal(document.getElementById('bookingModal')).show();
+    }
+
+    // --- Drag & Drop API Call ---
+    function updateBookingOnServer(eventInfo) {
+        const event = eventInfo.event;
+        fetch(API_UPDATE_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrftoken },
+            body: JSON.stringify({
+                id: event.id,
+                start: event.start.toISOString(),
+                end: event.end ? event.end.toISOString() : null
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status !== 'success') {
+                eventInfo.revert();
+                alert('แก้ไขไม่ได้: ' + (data.message || 'ไม่มีสิทธิ์'));
+            }
+        })
+        .catch(err => {
+            eventInfo.revert();
+            alert('เชื่อมต่อ Server ไม่ได้');
+        });
     }
 
     document.addEventListener('DOMContentLoaded', function() {
@@ -193,57 +232,68 @@
         var isMobile = window.innerWidth < 768;
 
         var calendar = new FullCalendar.Calendar(calendarEl, {
-            initialView: isMobile ? 'listMonth' : 'dayGridMonth',
+            // ✅ Mobile: List, PC: Month (ตามที่ขอ)
+            initialView: isMobile ? 'listMonth' : 'dayGridMonth', 
             locale: 'th',
+            
             headerToolbar: {
                 left: 'prev,next',
                 center: 'title',
                 right: isMobile ? 'listMonth' : 'dayGridMonth,timeGridWeek,listMonth'
             },
             buttonText: { today: 'วันนี้', month: 'เดือน', week: 'สัปดาห์', list: 'รายการจอง' },
+            
             selectable: true,
+            selectMirror: true,
+            
+            // ✅ เปิด Drag & Drop
+            editable: true,
+            eventDurationEditable: true,
+            droppable: true,
+            
             height: 'auto',
             events: "{% url 'bookings_api' %}?room_id={{ room.id }}",
 
-            // Logic สีตามสถานะและเวลา
+            // ✅ Drag & Drop Handler
+            eventDrop: function(info) {
+                if (!confirm("ยืนยันการย้ายวัน/เวลา?")) { info.revert(); } 
+                else { updateBookingOnServer(info); }
+            },
+            eventResize: function(info) { updateBookingOnServer(info); },
+
+            // ✅ Color Logic
             eventDidMount: function(info) {
                 var status = info.event.extendedProps.status;
                 var now = new Date();
-                var start = info.event.start;
-                var end = info.event.end;
                 
-                // ล้าง class เก่า
                 info.el.classList.remove('status-past', 'status-future', 'status-current', 'status-pending', 'status-cancelled');
 
-                if (status === 'CANCELLED' || status === 'REJECTED') {
-                    info.el.classList.add('status-cancelled');
-                } 
-                else if (status === 'PENDING') {
-                    info.el.classList.add('status-pending');
-                } 
+                if (status === 'CANCELLED' || status === 'REJECTED') info.el.classList.add('status-cancelled');
+                else if (status === 'PENDING') info.el.classList.add('status-pending');
                 else if (status === 'APPROVED') {
-                    if (end < now) {
-                        info.el.classList.add('status-past'); // จบแล้ว
-                    } else if (start <= now && end >= now) {
-                        info.el.classList.add('status-current'); // กำลังใช้งาน
-                    } else {
-                        info.el.classList.add('status-future'); // อนาคต
-                    }
+                    if (info.event.end < now) info.el.classList.add('status-past');
+                    else if (info.event.start <= now && info.event.end >= now) info.el.classList.add('status-current');
+                    else info.el.classList.add('status-future');
                 }
             },
 
             select: function(info) {
                 if (isMobile && info.view.type === 'listMonth') return; 
-                let start = info.startStr.substring(0, 16);
-                let end = info.endStr.substring(0, 16);
+                
+                let start, end;
+                // ถ้าเลือกจาก Month View (All Day) ให้ใส่เวลา 08:00-09:00
                 if(info.allDay) {
                     start = info.startStr + 'T08:00';
-                    end = info.startStr + 'T09:00'; 
+                    end = info.startStr + 'T09:00';
+                } else {
+                    start = info.startStr.substring(0, 16);
+                    end = info.endStr.substring(0, 16);
                 }
                 openBookingModal(start, end);
             },
 
             eventClick: function(info) {
+                if (info.jsEvent.detail > 1) return;
                 info.jsEvent.preventDefault();
                 window.location.href = `/booking/detail/${info.event.id}/`;
             }

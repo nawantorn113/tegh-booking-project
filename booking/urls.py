@@ -47,6 +47,7 @@ urlpatterns = [
     path('api/rooms/', views.rooms_api, name='rooms_api'),
     path('api/bookings/', views.bookings_api, name='bookings_api'),
     path('api/booking/update/time/', views.update_booking_time_api, name='update_booking_time_api'),
+    path('api/booking/update/', views.update_booking_time_api, name='update_booking_time_api'),
     
     # Integrations
     path('outlook/connect/', views.outlook_connect, name='outlook_connect'),
