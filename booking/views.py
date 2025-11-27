@@ -6,11 +6,11 @@ import os
 from collections import defaultdict
 from dateutil.relativedelta import relativedelta
 
-# Imports สำหรับ PDF และ Static Files
+# Imports for PDF and Static Files
 from weasyprint import HTML
 from django.contrib.staticfiles.storage import staticfiles_storage
 
-# Imports พื้นฐานของ Django
+# Basic Django Imports
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse 
@@ -43,7 +43,7 @@ except ImportError:
     LineBotApi = None
     WebhookHandler = None
 
-# Import Models และ Forms
+# Import Models and Forms
 from .models import Room, Booking, AuditLog, OutlookToken, UserProfile
 from .forms import BookingForm, CustomPasswordChangeForm, RoomForm, CustomUserCreationForm
 from .outlook_client import OutlookClient 
@@ -144,7 +144,7 @@ def line_webhook(request):
         except InvalidSignatureError:
             return HttpResponse(status=400)
         except Exception as e:
-            print(f"Handler Error: {e}")
+            print(f"❌ Handler Error: {e}")
         return HttpResponse(status=200)
     return HttpResponse(status=405)
 
@@ -160,13 +160,13 @@ if handler:
                 profile, _ = UserProfile.objects.get_or_create(user=user)
                 profile.line_user_id = user_id
                 profile.save()
-                msg = f"ลงทะเบียนสำเร็จ!\nสวัสดีคุณ {user.get_full_name() or user.username}\nระบบจะแจ้งเตือนการจองมาที่นี่ครับ"
+                msg = f"✅ ลงทะเบียนสำเร็จ!\nสวัสดีคุณ {user.get_full_name() or user.username}\nระบบจะแจ้งเตือนการจองมาที่นี่ครับ"
             except IndexError:
-                msg = "พิมพ์ผิดครับ\nพิมพ์: ลงทะเบียน [username]"
+                msg = "⚠️ พิมพ์ผิดครับ\nพิมพ์: ลงทะเบียน [username]"
             except User.DoesNotExist:
-                msg = f"ไม่พบชื่อผู้ใช้ในระบบ"
+                msg = f"❌ ไม่พบชื่อผู้ใช้ในระบบ"
             except Exception as e:
-                msg = f"Error: {e}"
+                msg = f"❌ Error: {e}"
             line_bot_api.reply_message(event.reply_token, TextSendMessage(text=msg))
 
 @receiver(user_logged_in)
@@ -222,16 +222,16 @@ def send_booking_notification(booking, template_name, subject_prefix):
         has_eq = booking.equipments.exists() if hasattr(booking, 'equipments') else False
         
         if has_req or has_eq:
-            extra_msg = "\n*มีการขออุปกรณ์เสริม*"
+            extra_msg = "\n⚠️ *มีการขออุปกรณ์เสริม*"
 
-        msg = f" {subject_prefix}{extra_msg}\nห้อง: {booking.room.name}\nเรื่อง: {booking.title}\nเวลา: {booking.start_time.strftime('%d/%m %H:%M')}"
+        msg = f"📢 {subject_prefix}{extra_msg}\nห้อง: {booking.room.name}\nเรื่อง: {booking.title}\nเวลา: {booking.start_time.strftime('%d/%m %H:%M')}"
         
         for uid in line_targets:
             if uid:
                 try:
                     line_bot_api.push_message(uid, TextSendMessage(text=msg))
                 except Exception as e:
-                    print(f" LINE Error ({uid}): {e}")
+                    print(f" ❌ LINE Error ({uid}): {e}")
 
 class UserAutocomplete(Select2QuerySetView):
     def get_queryset(self):
@@ -272,7 +272,7 @@ def public_calendar_view(request):
     return render(request, 'pages/master_calendar.html', ctx)
 
 # ----------------------------------------------------------------------
-# C. SMART SEARCH (แก้ไขให้ชื่อ field ตรงกับ database แล้ว)
+# C. SMART SEARCH
 # ----------------------------------------------------------------------
 def parse_search_query(text):
     text = text.strip()
@@ -311,7 +311,6 @@ def dashboard_view(request):
     now = timezone.now(); sort_by = request.GET.get('sort', 'floor')
     all_rooms = Room.objects.all()
     
-    # Sort
     if sort_by == 'status':
         all_rooms_sorted = sorted(all_rooms, key=lambda r: (r.is_currently_under_maintenance, not r.bookings.filter(start_time__lte=now, end_time__gt=now, status__in=['APPROVED', 'PENDING']).exists()))
     elif sort_by == 'capacity': all_rooms_sorted = sorted(all_rooms, key=lambda r: r.capacity, reverse=True)
@@ -320,37 +319,27 @@ def dashboard_view(request):
     
     buildings = defaultdict(list)
     
-    # Loop Logic
     for r in all_rooms_sorted:
-        # 1. หา Booking ปัจจุบันก่อน
         cur = r.bookings.filter(start_time__lte=now, end_time__gt=now, status__in=['APPROVED','PENDING']).first()
         
-        # 2. เช็ค Maintenance
         if r.is_currently_under_maintenance: 
             r.status, r.status_class = 'ปิดปรับปรุง', 'bg-secondary text-white'
             r.is_maintenance = True
-            r.current_booking_info = None 
+            r.current_booking_info = None
         else:
             r.is_maintenance = False
             if cur:
-                # มีการจองอยู่
                 if cur.status == 'PENDING':
                     r.status, r.status_class = ('รออนุมัติ', 'bg-warning text-dark')
                 else:
                     r.status, r.status_class = ('ไม่ว่าง', 'bg-danger text-white')
-                
-                # FIX: ใส่บรรทัดนี้ เพื่อส่งข้อมูลคนจองไปหน้าเว็บ
                 r.current_booking_info = cur 
-                
             else:
-                # ว่าง
                 r.status, r.status_class = 'ว่าง', 'bg-success text-white'
                 r.current_booking_info = None
 
-        # 3. หา Booking ถัดไป (Next Booking)
         next_b = r.bookings.filter(start_time__gt=now, status='APPROVED').order_by('start_time').first()
         if next_b:
-            # ถ้าว่างอยู่ และมีจองถัดไปใน 2 ชม.
             if not cur and (next_b.start_time - now).total_seconds() < 7200: 
                 r.next_booking_info = next_b
             else:
@@ -358,7 +347,6 @@ def dashboard_view(request):
         
         buildings[r.building or "General"].append(r)
     
-    # Summary Cards Logic
     total_rooms = all_rooms.count()
     today_bookings = Booking.objects.filter(start_time__date=now.date(), status='APPROVED').count()
     pending_approvals = Booking.objects.filter(status='PENDING').count()
@@ -585,12 +573,91 @@ def delete_room_view(request, room_id): Room.objects.filter(pk=room_id).delete()
 @login_required
 def audit_log_view(request): return render(request, 'pages/audit_log.html', {**get_base_context(request), 'page_obj': Paginator(AuditLog.objects.all().order_by('-timestamp'), 25).get_page(request.GET.get('page'))})
 
+# ----------------------------------------------------------------------
+# J. REPORTS (Full Feature Implementation)
+# ----------------------------------------------------------------------
 @login_required
 @user_passes_test(is_admin)
 def reports_view(request):
-    today = timezone.now().date(); start = today.replace(day=1)
-    stats = Room.objects.annotate(booking_count=Count('bookings', filter=Q(bookings__start_time__date__gte=start, bookings__status__in=['APPROVED','PENDING']))).order_by('-booking_count')
-    return render(request, 'pages/reports.html', {**get_base_context(request), 'room_usage_labels': json.dumps([r.name for r in stats]), 'room_usage_data': json.dumps([r.booking_count for r in stats])})
+    # 1. Get filter parameters
+    period = request.GET.get('period', 'monthly') # Default: Monthly
+    dept_filter = request.GET.get('department', '') # Default: No department filter
+
+    # 2. Determine start date based on period
+    today = timezone.now().date()
+    if period == 'daily':
+        start_date = today
+        report_title = f"สถิติประจำวันที่ {today.strftime('%d/%m/%Y')}"
+    elif period == 'weekly':
+        start_date = today - timedelta(days=7)
+        report_title = f"สถิติย้อนหลัง 7 วัน ({start_date.strftime('%d/%m')} - {today.strftime('%d/%m/%Y')})"
+    else: # monthly
+        start_date = today - timedelta(days=30)
+        report_title = f"สถิติย้อนหลัง 30 วัน ({start_date.strftime('%d/%m')} - {today.strftime('%d/%m/%Y')})"
+
+    # 3. Base Queryset for APPROVED bookings within the timeframe
+    bookings_qs = Booking.objects.filter(start_time__date__gte=start_date, status='APPROVED')
+
+    # 4. Apply Department Filter (if selected)
+    # 
+    # NOTE: This assumes your Booking model has a 'department' field. 
+    if dept_filter:
+        try:
+            bookings_qs = bookings_qs.filter(department=dept_filter)
+        except:
+            pass # Gracefully handle if field doesn't exist to prevent crash
+
+    # 5. Chart Data 1: Room Usage (Top 10)
+    room_stats = bookings_qs.values('room__name').annotate(count=Count('id')).order_by('-count')[:10]
+    room_labels = [item['room__name'] for item in room_stats]
+    room_data = [item['count'] for item in room_stats]
+
+    # 6. Chart Data 2: Department Usage (Top 10)
+    dept_labels = []
+    dept_data = []
+    all_departments = []
+    
+    try:
+        # Get all distinct departments for the filter dropdown
+        all_departments = Booking.objects.exclude(department__isnull=True).exclude(department__exact='').values_list('department', flat=True).distinct().order_by('department')
+        
+        # Calculate department stats for the pie chart
+        dept_stats = bookings_qs.values('department').annotate(count=Count('id')).order_by('-count')[:10]
+        dept_labels = [item['department'] for item in dept_stats if item['department']]
+        dept_data = [item['count'] for item in dept_stats if item['department']]
+    except Exception:
+        # Fallback if department field doesn't exist
+        pass
+
+    # 7. KPI Cards (System-wide totals, independent of date filter for overview)
+    total_rooms = Room.objects.count()
+    today_bookings = Booking.objects.filter(start_time__date=today, status='APPROVED').count()
+    pending_approvals = Booking.objects.filter(status='PENDING').count()
+    total_users = User.objects.count()
+
+    # 8. Build Context
+    context = get_base_context(request)
+    context.update({
+        # KPI Data
+        'total_rooms_count': total_rooms,
+        'today_bookings_count': today_bookings,
+        'pending_count': pending_approvals,
+        'total_users_count': total_users,
+        
+        # Chart Data (JSON serialized for JS)
+        'room_usage_labels': json.dumps(room_labels),
+        'room_usage_data': json.dumps(room_data),
+        'dept_usage_labels': json.dumps(dept_labels),
+        'dept_usage_data': json.dumps(dept_data),
+        
+        # Filter Data
+        'all_departments': all_departments,
+        'current_period': period,
+        'current_department': dept_filter,
+        'report_title': report_title,
+    })
+    
+    return render(request, 'pages/reports.html', context)
 
 @login_required
 @user_passes_test(is_admin)

@@ -48,10 +48,10 @@
         <div class="col-12">
             <form action="{% url 'smart_search' %}" method="get">
                 <label for="smartSearchInput" class="form-label h5 fw-bold text-primary"><h5>ค้นหาห้องว่าง</h5></label>
-                <div class="input-group shadow-sm">
+                <div class="input-group ">
                     <input type="text" class="form-control rounded-start-pill border-end-0" 
                            name="q" id="smartSearchInput" 
-                           placeholder="ระบุชื่อห้อง, จำนวนคน..."
+                           placeholder=""
                            value="{{ query_text|default:'' }}">
                     <button class="btn btn-primary rounded-end-pill px-4" type="submit">
                         <i class="bi bi-search me-1"></i> <span class="d-none d-sm-inline">ค้นหา</span>
