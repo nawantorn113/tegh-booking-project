@@ -329,7 +329,7 @@ def dashboard_view(request):
         if r.is_currently_under_maintenance: 
             r.status, r.status_class = 'ปิดปรับปรุง', 'bg-secondary text-white'
             r.is_maintenance = True
-            r.current_booking_info = None # ปิดปรับปรุง = ไม่มีคนจอง
+            r.current_booking_info = None 
         else:
             r.is_maintenance = False
             if cur:
