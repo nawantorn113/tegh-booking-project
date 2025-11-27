@@ -144,7 +144,7 @@ def line_webhook(request):
         except InvalidSignatureError:
             return HttpResponse(status=400)
         except Exception as e:
-            print(f"❌ Handler Error: {e}")
+            print(f"Handler Error: {e}")
         return HttpResponse(status=200)
     return HttpResponse(status=405)
 
@@ -160,13 +160,13 @@ if handler:
                 profile, _ = UserProfile.objects.get_or_create(user=user)
                 profile.line_user_id = user_id
                 profile.save()
-                msg = f"✅ ลงทะเบียนสำเร็จ!\nสวัสดีคุณ {user.get_full_name() or user.username}\nระบบจะแจ้งเตือนการจองมาที่นี่ครับ"
+                msg = f"ลงทะเบียนสำเร็จ!\nสวัสดีคุณ {user.get_full_name() or user.username}\nระบบจะแจ้งเตือนการจองมาที่นี่ครับ"
             except IndexError:
-                msg = "⚠️ พิมพ์ผิดครับ\nพิมพ์: ลงทะเบียน [username]"
+                msg = "พิมพ์ผิดครับ\nพิมพ์: ลงทะเบียน [username]"
             except User.DoesNotExist:
-                msg = f"❌ ไม่พบชื่อผู้ใช้ในระบบ"
+                msg = f"ไม่พบชื่อผู้ใช้ในระบบ"
             except Exception as e:
-                msg = f"❌ Error: {e}"
+                msg = f"Error: {e}"
             line_bot_api.reply_message(event.reply_token, TextSendMessage(text=msg))
 
 @receiver(user_logged_in)
@@ -222,16 +222,16 @@ def send_booking_notification(booking, template_name, subject_prefix):
         has_eq = booking.equipments.exists() if hasattr(booking, 'equipments') else False
         
         if has_req or has_eq:
-            extra_msg = "\n⚠️ *มีการขออุปกรณ์เสริม*"
+            extra_msg = "\n*มีการขออุปกรณ์เสริม*"
 
-        msg = f"📢 {subject_prefix}{extra_msg}\nห้อง: {booking.room.name}\nเรื่อง: {booking.title}\nเวลา: {booking.start_time.strftime('%d/%m %H:%M')}"
+        msg = f" {subject_prefix}{extra_msg}\nห้อง: {booking.room.name}\nเรื่อง: {booking.title}\nเวลา: {booking.start_time.strftime('%d/%m %H:%M')}"
         
         for uid in line_targets:
             if uid:
                 try:
                     line_bot_api.push_message(uid, TextSendMessage(text=msg))
                 except Exception as e:
-                    print(f" ❌ LINE Error ({uid}): {e}")
+                    print(f" LINE Error ({uid}): {e}")
 
 class UserAutocomplete(Select2QuerySetView):
     def get_queryset(self):
@@ -339,7 +339,7 @@ def dashboard_view(request):
                 else:
                     r.status, r.status_class = ('ไม่ว่าง', 'bg-danger text-white')
                 
-                # ✅ FIX: ใส่บรรทัดนี้ เพื่อส่งข้อมูลคนจองไปหน้าเว็บ
+                # FIX: ใส่บรรทัดนี้ เพื่อส่งข้อมูลคนจองไปหน้าเว็บ
                 r.current_booking_info = cur 
                 
             else:

@@ -1,133 +1,150 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
 {% load static %}
 
 {% block title %}รายละเอียด: {{ booking.title }}{% endblock %}
 
 {% block extra_head %}
 <style>
-    /* (CSS นี้สำหรับจัด 'คำอธิบาย' กับ 'เนื้อหา' ให้ตรงกัน) 
-    */
-    .detail-grid {
-        display: grid;
-        /* ความกว้างของคอลัมน์ซ้าย (คำอธิบาย) */
-        grid-template-columns: 150px 1fr; 
-        gap: 1rem;
+    .detail-card {
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        background: white;
     }
-    .detail-grid dt {
-        font-weight: 600;
-        color: #555;
-        text-align: right;
+    .detail-label {
+        color: #65676b;
+        font-weight: 500;
     }
-    .detail-grid dd {
-        margin-bottom: 0.75rem;
-        color: #000;
+    .detail-value {
+        color: #050505;
+        font-weight: 400;
     }
-    
-    /* [ใหม่] จัดตำแหน่งปุ่มปิด */
-    .page-header-custom {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding-bottom: 0.5rem;
-        border-bottom: 1px solid #dee2e6;
-        margin-bottom: 1.5rem;
+    .status-badge {
+        font-size: 0.9rem;
+        padding: 0.4em 0.8em;
+        border-radius: 50px;
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-lg-10">
-
-        <div class="content-card">
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
             
-            <div class="page-header-custom">
-                <h4 class="mb-0 text-primary fw-bold">{{ booking.title }}</h4>
-                
-                <a href="javascript:history.back()" class="btn-close" aria-label="Close" title="ปิดหน้านี้"></a>
-
-            </div>
-            
-            <dl class="detail-grid mt-4">
-                <dt>ห้องประชุม:</dt>
-                <dd>{{ booking.room.name }}</dd>
-                
-                <dt>สถานะ:</dt>
-                <dd>
-                    {% if booking.status == 'APPROVED' %}
-                        <span class="badge bg-success">อนุมัติแล้ว</span>
-                    {% elif booking.status == 'PENDING' %}
-                        <span class="badge bg-warning text-dark">รออนุมัติ</span>
-                    {% elif booking.status == 'REJECTED' %}
-                        <span class="badge bg-danger">ไม่อนุมัติ</span>
-                    {% elif booking.status == 'CANCELLED' %}
-                        <span class="badge bg-secondary">ยกเลิกแล้ว</span>
-                    {% endif %}
-                </dd>
-
-                <dt>ผู้จอง:</dt>
-                <dd>{{ booking.user.get_full_name|default:booking.user.username }}</dd>
-
-                <dt>แผนก:</dt>
-                <dd>{{ booking.department|default:"-" }}</dd>
-
-                <dt>เวลาเริ่มต้น:</dt>
-                <dd>{{ booking.start_time|date:"l, d F Y - H:i" }} น.</dd>
-
-                <dt>เวลาสิ้นสุด:</dt>
-                <dd>{{ booking.end_time|date:"l, d F Y - H:i" }} น.</dd>
-
-                <dt>จำนวนคน:</dt>
-                <dd>{{ booking.participant_count }} คน</dd>
-
-                <dt>ผู้เข้าร่วม:</dt>
-                <dd>
-                    {% for p in booking.participants.all %}
-                        <span class="badge bg-light text-dark border me-1">{{ p.get_full_name|default:p.username }}</span>
-                    {% empty %}
-                        (ไม่มีรายชื่อผู้เข้าร่วม)
-                    {% endfor %}
-                </dd>
-                
-                {% if booking.description %}
-                    <dt>รายละเอียด:</dt>
-                    <dd>{{ booking.description|linebreaksbr }}</dd>
-                {% endif %}
-
-                {% if booking.additional_requests %}
-                    <dt>คำขอเพิ่มเติม:</dt>
-                    <dd>{{ booking.additional_requests|linebreaksbr }}</dd>
-                {% endif %}
-                
-                {% if booking.presentation_file %}
-                    <dt>ไฟล์แนบ:</dt>
-                    <dd>
-                        <a href="{{ booking.presentation_file.url }}" target="_blank">
-                            <i class="bi bi-file-earmark-arrow-down"></i> 
-                            {{ booking.presentation_file.name|cut:"presentations/" }}
-                        </a>
-                    </dd>
-                {% endif %}
-            </dl>
-            
-            {% if can_edit_or_cancel %}
-                <hr class="my-4">
-                <div class="d-flex justify-content-end gap-2">
-                    
-                    <form action="{% url 'delete_booking' booking.id %}" method="POST" onsubmit="return confirm('คุณแน่ใจหรือไม่ว่าต้องการยกเลิกการจองนี้?');">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-outline-danger">
-                            <i class="bi bi-trash-fill"></i> ยกเลิกการจอง
-                        </button>
-                    </form>
-
-                    <a href="{% url 'edit_booking' booking.id %}" class="btn btn-warning">
-                        <i class="bi bi-pencil-fill"></i> แก้ไข
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4 class="fw-bold mb-0">
+                    <a href="{% url 'history' %}" class="text-decoration-none text-dark me-2">
+                        <i class="bi bi-arrow-left-circle"></i>
                     </a>
+                    รายละเอียดการจอง
+                </h4>
+                
+                <div>
+                    {% if booking.status == 'APPROVED' %}
+                        <span class="badge bg-success status-badge"><i class="bi bi-check-circle me-1"></i>อนุมัติแล้ว</span>
+                    {% elif booking.status == 'PENDING' %}
+                        <span class="badge bg-warning text-dark status-badge"><i class="bi bi-clock me-1"></i>รออนุมัติ</span>
+                    {% elif booking.status == 'REJECTED' %}
+                        <span class="badge bg-danger status-badge"><i class="bi bi-x-circle me-1"></i>ไม่อนุมัติ</span>
+                    {% elif booking.status == 'CANCELLED' %}
+                        <span class="badge bg-secondary status-badge"><i class="bi bi-slash-circle me-1"></i>ยกเลิกแล้ว</span>
+                    {% endif %}
                 </div>
-            {% endif %}
+            </div>
+
+            <div class="card detail-card mb-4">
+                <div class="card-body p-4">
+                    
+                    <h5 class="text-primary fw-bold mb-4">{{ booking.title }}</h5>
+
+                    <div class="row g-3">
+                        <div class="col-sm-4 detail-label">ห้องประชุม</div>
+                        <div class="col-sm-8 detail-value fw-bold">{{ booking.room.name }}</div>
+
+                        <div class="col-12"><hr class="my-1 text-muted opacity-25"></div>
+
+                        <div class="col-sm-4 detail-label">ผู้จอง</div>
+                        <div class="col-sm-8 detail-value">
+                            {% if booking.user %}
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-person-circle text-secondary me-2 fs-5"></i>
+                                    {{ booking.user.get_full_name|default:booking.user.username }}
+                                </div>
+                            {% else %}
+                                <span class="text-muted fst-italic">(ไม่ระบุข้อมูล)</span>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-12"><hr class="my-1 text-muted opacity-25"></div>
+
+                        <div class="col-sm-4 detail-label">วันและเวลา</div>
+                        <div class="col-sm-8 detail-value">
+                            <div>เริ่ม: <strong>{{ booking.start_time|date:"d M Y, H:i" }} น.</strong></div>
+                            <div class="text-muted small">ถึง: {{ booking.end_time|date:"d M Y, H:i" }} น.</div>
+                        </div>
+
+                        <div class="col-12"><hr class="my-1 text-muted opacity-25"></div>
+
+                        <div class="col-sm-4 detail-label">จำนวนคน</div>
+                        <div class="col-sm-8 detail-value">{{ booking.participant_count }} ท่าน</div>
+
+                        {% if booking.additional_requests %}
+                        <div class="col-sm-4 detail-label">คำขอเพิ่มเติม</div>
+                        <div class="col-sm-8 detail-value text-muted">
+                            {{ booking.additional_requests|linebreaksbr }}
+                        </div>
+                        {% endif %}
+
+                        {% if booking.equipments.exists %}
+                        <div class="col-sm-4 detail-label">อุปกรณ์</div>
+                        <div class="col-sm-8 detail-value">
+                            {% for eq in booking.equipments.all %}
+                                <span class="badge bg-light text-dark border me-1">{{ eq.name }}</span>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                </div>
+                
+                {% if can_edit_or_cancel %}
+                    {% if booking.status == 'PENDING' or booking.status == 'APPROVED' %}
+                    <div class="card-footer bg-white border-top p-3 text-end">
+                        <a href="{% url 'edit_booking' booking.id %}" class="btn btn-outline-primary btn-sm rounded-pill px-3 me-2">
+                            <i class="bi bi-pencil me-1"></i> แก้ไข
+                        </a>
+                        <button type="button" class="btn btn-outline-danger btn-sm rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#cancelModal">
+                            <i class="bi bi-trash me-1"></i> ยกเลิกการจอง
+                        </button>
+                    </div>
+                    {% endif %}
+                {% endif %}
+            </div>
 
         </div>
     </div>
 </div>
+
+<div class="modal fade" id="cancelModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold text-danger">ยกเลิกการจอง?</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center text-muted">
+                คุณแน่ใจหรือไม่ที่จะยกเลิกรายการนี้?
+            </div>
+            <div class="modal-footer border-0 justify-content-center">
+                <button type="button" class="btn btn-light btn-sm rounded-pill px-4" data-bs-dismiss="modal">ไม่</button>
+                <form action="{% url 'delete_booking' booking.id %}" method="post" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger btn-sm rounded-pill px-4">ใช่, ยกเลิกเลย</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}

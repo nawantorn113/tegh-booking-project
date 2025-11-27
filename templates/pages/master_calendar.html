@@ -1,186 +1,215 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}ปฏิทินรวม{% if is_public_view %} (สาธารณะ){% endif %}{% endblock %}
+{% block title %}ปฏิทินรวมห้องประชุม{% endblock %}
 
 {% block extra_head %}
-<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/main.min.css" rel="stylesheet" />
-<style>
-    #calendar { min-height: 700px; }
-    .fc-event { cursor: pointer; border: none; transition: transform 0.1s; } 
-    .fc-event:hover { transform: scale(1.01); z-index: 10; }
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/main.min.css" rel="stylesheet" />
     
-    /* Legend Badge */
-    .badge-legend { font-size: 0.85rem; font-weight: 400; padding: 5px 10px; }
-</style>
+    <style>
+        .fc { font-family: 'Kanit', sans-serif; }
+        .fc-toolbar-title { font-size: 1.5rem !important; font-weight: bold; }
+        
+        /* --- 🎨 จัดการสี Event และตัวอักษร --- */
+        
+        /* บังคับตัวอักษรสีขาวทุกสถานะ */
+        .fc-event {
+            color: #ffffff !important;  /* ตัวหนังสือสีขาว */
+            border: none !important;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+        
+        /* 1. ใช้งานแล้ว (เทา) */
+        .fc-event.status-past {
+            background-color: #6c757d !important; 
+            opacity: 0.8;
+            cursor: default !important;
+            pointer-events: none;
+        }
+
+        /* 2. จองแล้ว (เขียว) */
+        .fc-event.status-future {
+            background-color: #198754 !important; 
+        }
+
+        /* 3. กำลังใช้งาน (ฟ้า) */
+        .fc-event.status-current {
+            background-color: #0d6efd !important; 
+            box-shadow: 0 0 8px rgba(13, 110, 253, 0.6);
+            border: 2px solid #fff !important;
+        }
+
+        /* 4. รออนุมัติ (ส้ม) */
+        .fc-event.status-pending {
+            background-color: #fd7e14 !important; 
+        }
+
+        /* 5. ยกเลิก (แดง) */
+        .fc-event.status-cancelled {
+            background-color: #dc3545 !important; 
+            text-decoration: line-through;
+            opacity: 0.6;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .fc .fc-toolbar { flex-direction: column; gap: 10px; }
+            .fc-toolbar-title { font-size: 1.2rem !important; }
+        }
+    </style>
 {% endblock %}
 
 {% block content %}
 <div class="container-fluid px-4 py-4">
     
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4 class="mb-0 text-primary fw-bold">
-            <i class="bi bi-calendar3-range me-2"></i> 
-            ปฏิทินรวมห้องประชุม 
-            {% if is_public_view %} <span class="text-muted fs-6 fw-normal">(มุมมองสาธารณะ)</span>{% endif %}
-        </h4>
-        
-        <div class="d-flex align-items-center gap-2">
-            {% if not user.is_authenticated %}
-                <a href="{% url 'login' %}" class="btn btn-primary rounded-pill px-4 shadow-sm">
-                    <i class="bi bi-box-arrow-in-right me-2"></i> เข้าสู่ระบบ
-                </a>
-            {% else %}
-                 <span class="text-muted small d-none d-md-block">
-                    <i class="bi bi-hand-index-thumb"></i> ลากแถบเพื่อย้ายเวลาได้ทันที
-                 </span>
-            {% endif %}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-bold text-primary"><i class="bi bi-calendar3-range me-2"></i>ปฏิทินรวมห้องประชุม</h3>
+        {% if not user.is_authenticated %}
+            <a href="{% url 'login' %}" class="btn btn-primary rounded-pill px-4">
+                <i class="bi bi-box-arrow-in-right me-2"></i>เข้าสู่ระบบ
+            </a>
+        {% endif %}
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 mb-4 bg-white">
+        <div class="card-body py-3">
+            <div class="d-flex flex-wrap gap-3 align-items-center justify-content-center justify-content-md-start small">
+                <span class="fw-bold text-dark me-2"><i class="bi bi-palette-fill"></i> สถานะ:</span>
+                
+                <div class="d-flex align-items-center">
+                    <span class="rounded-circle me-1" style="width: 12px; height: 12px; background-color: #198754;"></span> จองแล้ว (เขียว)
+                </div>
+                <div class="d-flex align-items-center">
+                    <span class="rounded-circle me-1" style="width: 12px; height: 12px; background-color: #0d6efd;"></span> กำลังใช้งาน (ฟ้า)
+                </div>
+                <div class="d-flex align-items-center">
+                    <span class="rounded-circle me-1" style="width: 12px; height: 12px; background-color: #fd7e14;"></span> รออนุมัติ (ส้ม)
+                </div>
+                <div class="d-flex align-items-center">
+                    <span class="rounded-circle me-1" style="width: 12px; height: 12px; background-color: #6c757d;"></span> ใช้งานแล้ว (เทา)
+                </div>
+                <div class="d-flex align-items-center">
+                    <span class="rounded-circle me-1" style="width: 12px; height: 12px; background-color: #dc3545;"></span> ยกเลิก (แดง)
+                </div>
+            </div>
         </div>
     </div>
 
-    <div class="content-card shadow-sm border p-3 p-md-4">
-        
-        <div class="d-flex flex-wrap gap-2 align-items-center mb-3 pb-3 border-bottom">
-            <span class="text-muted fs-6 fw-normal">สถานะการใช้งาน</span>
-            <span class="badge badge-legend" style="background-color: #198754;">สีเขียว = จองแล้ว</span>
-            <span class="badge badge-legend text-dark" style="background-color: #ffc107;">สีเหลือง = รออนุมัติ</span>
-            <span class="badge badge-legend text-dark" style="background-color: #0dcaf0;">สีฟ้า = กำลังใช้งาน</span>
-            <span class="badge badge-legend" style="background-color: #fd7e14;">สีส้ม = ใช้งานแล้ว</span>
-            <span class="badge badge-legend" style="background-color: #dc3545;">สีแดง = ยกเลิก</span>
-            <span class="text-muted fs-6 fw-normal">(คลิกเพื่อดูรายละเอียด)</span>
-        </div>
-        
+    <div class="card border-0 shadow-sm rounded-4 p-3">
         <div id="calendar"></div>
     </div>
+
 </div>
+
+<div class="modal fade" id="eventDetailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-primary text-white py-2">
+                <h6 class="modal-title fw-bold mb-0"><i class="bi bi-info-circle me-2"></i>รายละเอียด</h6>
+                <button type="button" class="btn-close btn-close-white btn-sm" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center p-4">
+                <h5 class="fw-bold text-dark mb-2" id="modalTitle"></h5>
+                <p class="text-muted small mb-3" id="modalTime"></p>
+                <div class="badge bg-light text-dark border px-3 py-2 rounded-pill" id="modalStatus">
+                    สถานะ
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block extra_scripts %}
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
-
 <script>
-document.addEventListener('DOMContentLoaded', function() { 
-    
-    var calendarEl = document.getElementById('calendar');
-    var isPublicView = '{{ is_public_view|yesno:"true,false" }}' === 'true';
-    var isAuthenticated = {% if user.is_authenticated %}true{% else %}false{% endif %};
+    document.addEventListener('DOMContentLoaded', function() {
+        var calendarEl = document.getElementById('calendar');
+        var isMobile = window.innerWidth < 768;
 
-    var calendar = new FullCalendar.Calendar(calendarEl, {
-        
-        initialView: 'dayGridMonth', 
-        
-        headerToolbar: {
-            left: 'prev,next today',
-            center: 'title',
-            right: 'dayGridMonth,timeGridWeek,timeGridDay' 
-        },
-        
-        // 🖐️ เปิดใช้งาน Drag & Drop (เฉพาะสมาชิก)
-        editable: isAuthenticated, 
-        droppable: isAuthenticated,
-        
-        // 📥 ดึงข้อมูล
-        events: {
-            url: "{% url 'bookings_api' %}", 
-            method: 'GET',
-            extraParams: { public: isPublicView ? 'true' : 'false' },
-            failure: function() { console.error('โหลดข้อมูลไม่สำเร็จ'); }
-        },
-
-        locale: 'th',
-        firstDay: 0, 
-        height: 'auto',
-        dayMaxEvents: true,
-        
-        // 🎨 Logic สี
-        eventDidMount: function(info) {
-            var props = info.event.extendedProps;
-            var now = new Date();
-            var start = info.event.start;
-            var end = info.event.end;
-            var el = info.el;
-            
-            el.style.color = '#ffffff'; 
-
-            if (props.status === 'PENDING') {
-                el.style.backgroundColor = '#ffc107'; el.style.color = '#000';
-            } else if (props.status === 'APPROVED') {
-                if (now >= end) { el.style.backgroundColor = '#fd7e14'; }
-                else if (now >= start && now < end) { el.style.backgroundColor = '#0dcaf0'; el.style.color = '#000'; }
-                else { el.style.backgroundColor = '#198754'; }
-            } else if (props.status === 'CANCELLED' || props.status === 'REJECTED') {
-                el.style.backgroundColor = '#dc3545'; 
-            }
-        },
-        
-        // 🖱️ คลิกดูรายละเอียด
-        eventClick: function(info) {
-            window.location.href = "{% url 'booking_detail' 0 %}".replace('0', info.event.id);
-        },
-
-        // 🖱️ คลิกจองพื้นที่ว่าง
-        selectable: true,
-        select: function(info) {
-            if(!isAuthenticated) {
-                if(confirm('ต้องการจองห้องประชุมใช่หรือไม่? (ต้องเข้าสู่ระบบก่อน)')) {
-                    window.location.href = "{% url 'login' %}";
-                }
-            } else {
-                window.location.href = "{% url 'create_booking' all_rooms.0.id %}?start=" + info.startStr + "&end=" + info.endStr;
-            }
-        },
-
-        // 🚚 เมื่อมีการลากแล้วปล่อย (ย้ายวัน/เวลา)
-        eventDrop: function(info) {
-            handleEventUpdate(info);
-        },
-
-        // ↔️ เมื่อมีการดึงขอบ (ยืด/หดเวลา)
-        eventResize: function(info) {
-            handleEventUpdate(info);
-        }
-    });
-    
-    calendar.render();
-
-    // --- ฟังก์ชันบันทึกการแก้ไข (AJAX) ---
-    function handleEventUpdate(info) {
-        if (!confirm("คุณต้องการเปลี่ยนเวลาการจองใช่หรือไม่?")) {
-            info.revert(); // ถ้ากดยกเลิก ให้ดีดกลับที่เดิม
-            return;
-        }
-
-        var event = info.event;
-        
-        // ส่งข้อมูลไป Backend
-        fetch("{% url 'update_booking_time_api' %}", {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': '{{ csrf_token }}'
+        var calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: isMobile ? 'listWeek' : 'dayGridMonth',
+            locale: 'th',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: isMobile ? 'listWeek,timeGridDay' : 'dayGridMonth,timeGridWeek,listWeek'
             },
-            body: JSON.stringify({
-                booking_id: event.id,
-                start_time: event.start.toISOString(),
-                end_time: event.end ? event.end.toISOString() : event.start.toISOString()
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'success') {
-                // สำเร็จ (ไม่ต้องทำอะไร)
-            } else {
-                alert('แก้ไขไม่ได้: ' + data.message);
-                info.revert(); // ดีดกลับ
+            buttonText: { today: 'วันนี้', month: 'เดือน', week: 'สัปดาห์', day: 'วัน', list: 'รายการ' },
+            height: 'auto',
+            events: "{% url 'bookings_api' %}",
+
+            eventDidMount: function(info) {
+                var now = new Date();
+                var start = info.event.start;
+                var end = info.event.end;
+                var status = info.event.extendedProps.status;
+                var titleText = "";
+
+                // ล้าง Class เก่า
+                info.el.classList.remove('status-past', 'status-future', 'status-current', 'status-pending', 'status-cancelled');
+
+                // Logic สีและข้อความ
+                if (status === 'CANCELLED' || status === 'REJECTED') {
+                    info.el.classList.add('status-cancelled');
+                    titleText = "ยกเลิก";
+                } 
+                else if (status === 'PENDING') {
+                    info.el.classList.add('status-pending');
+                    titleText = "รออนุมัติ";
+                } 
+                else {
+                    if (end < now) {
+                        info.el.classList.add('status-past');
+                        titleText = "ใช้งานแล้ว";
+                    } else if (start <= now && end >= now) {
+                        info.el.classList.add('status-current');
+                        titleText = "กำลังใช้งาน";
+                    } else {
+                        info.el.classList.add('status-future');
+                        titleText = "จองแล้ว";
+                    }
+                }
+
+                // เปลี่ยนข้อความในกล่อง
+                var titleEl = info.el.querySelector('.fc-event-title');
+                if (titleEl) {
+                    titleEl.innerHTML = '<span class="fw-bold">' + titleText + '</span>';
+                }
+                var listTitleEl = info.el.querySelector('.fc-list-event-title');
+                if (listTitleEl) {
+                    listTitleEl.innerHTML = titleText;
+                }
+            },
+
+            eventClick: function(info) {
+                var now = new Date();
+                if (info.event.end < now || info.event.extendedProps.status === 'CANCELLED' || info.event.extendedProps.status === 'REJECTED') {
+                    info.jsEvent.preventDefault();
+                    return; 
+                }
+
+                document.getElementById('modalTitle').innerText = info.event.title;
+                var start = info.event.start.toLocaleTimeString('th-TH', {hour: '2-digit', minute:'2-digit'});
+                var end = info.event.end.toLocaleTimeString('th-TH', {hour: '2-digit', minute:'2-digit'});
+                document.getElementById('modalTime').innerText = start + ' - ' + end + ' น.';
+                
+                var statusBadge = document.getElementById('modalStatus');
+                var status = info.event.extendedProps.status;
+                if(status === 'PENDING') {
+                    statusBadge.className = "badge bg-warning text-dark px-3 py-2 rounded-pill";
+                    statusBadge.innerText = "รอการอนุมัติ";
+                } else {
+                    statusBadge.className = "badge bg-success px-3 py-2 rounded-pill";
+                    statusBadge.innerText = "จองแล้ว (ไม่ว่าง)";
+                }
+
+                new bootstrap.Modal(document.getElementById('eventDetailModal')).show();
             }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('เกิดข้อผิดพลาดในการเชื่อมต่อ');
-            info.revert();
         });
-    }
-});
+
+        calendar.render();
+    });
 </script>
 {% endblock %}
