@@ -11,7 +11,7 @@
 <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
 
 <style>
-/* 🎨 จัดกล่องฟอร์มให้ดูโดดเด่น */
+/*  จัดกล่องฟอร์มให้ดูโดดเด่น */
 .form-card {
     background: #ffffff;
     border-radius: 1.5rem;
@@ -62,7 +62,7 @@
         {{ form|crispy }}
 
         <div class="form-actions">
-            <a href="{% url 'rooms' %}" class="btn btn-outline-danger me-2">
+            <a href="{% url 'history'%}" class="btn btn-outline-danger me-2">
                 <i class=""></i> ยกเลิก
             </a>
             <button type="submit" class="btn btn-outline-primary px-4">
@@ -80,7 +80,7 @@
 
 <script>
 $(document).ready(function() {
-    // ✅ ตั้งค่า Select2 ให้ดูเข้ากับ Bootstrap
+    //  ตั้งค่า Select2 ให้ดูเข้ากับ Bootstrap
     $('select').select2({
         theme: 'bootstrap-5',
         language: 'th',

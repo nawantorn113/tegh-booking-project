@@ -31,7 +31,7 @@
             cursor: pointer;
         }
         
-        /* --- 🎨 Color Scheme --- */
+        /* --- Color Scheme --- */
         /* 1. ใช้งานแล้ว (เทา) */
         .fc-event.status-past {
             background-color: #adb5bd !important; opacity: 0.7; color: #000 !important;
@@ -54,9 +54,9 @@
             background-color: #dc3545 !important; text-decoration: line-through; opacity: 0.6;
         }
 
-        /* --- 📱 Mobile Fix --- */
+        /* --- Mobile Fix --- */
         @media (max-width: 768px) {
-            .fc .fc-toolbar { flexDirection: column; gap: 10px; }
+            .fc .fc-toolbar { flex-direction: column; gap: 10px; }
             .fc .fc-toolbar-title { font-size: 1.2rem; }
             .fc-dayGridMonth-button, .fc-timeGridWeek-button { display: none !important; }
             .fc-view-harness { min-height: 400px; }
@@ -232,7 +232,7 @@
         var isMobile = window.innerWidth < 768;
 
         var calendar = new FullCalendar.Calendar(calendarEl, {
-            // ✅ Mobile: List, PC: Month (ตามที่ขอ)
+            // Mobile: List, PC: Month (ตามที่ขอ)
             initialView: isMobile ? 'listMonth' : 'dayGridMonth', 
             locale: 'th',
             
@@ -246,7 +246,7 @@
             selectable: true,
             selectMirror: true,
             
-            // ✅ เปิด Drag & Drop
+            //  เปิด Drag & Drop
             editable: true,
             eventDurationEditable: true,
             droppable: true,
@@ -254,14 +254,14 @@
             height: 'auto',
             events: "{% url 'bookings_api' %}?room_id={{ room.id }}",
 
-            // ✅ Drag & Drop Handler
+            //  Drag & Drop Handler
             eventDrop: function(info) {
                 if (!confirm("ยืนยันการย้ายวัน/เวลา?")) { info.revert(); } 
                 else { updateBookingOnServer(info); }
             },
             eventResize: function(info) { updateBookingOnServer(info); },
 
-            // ✅ Color Logic
+            //  Color Logic
             eventDidMount: function(info) {
                 var status = info.event.extendedProps.status;
                 var now = new Date();
