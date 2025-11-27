@@ -275,55 +275,32 @@ def public_calendar_view(request):
 # C. SMART SEARCH (แก้ไขให้ชื่อ field ตรงกับ database แล้ว)
 # ----------------------------------------------------------------------
 def parse_search_query(text):
-    """
-    แยกคำค้นหา: หาตัวเลข (จำนวนคน) และ ข้อความ (ชื่อห้อง)
-    เช่น "10 คน" -> capacity=10
-    """
     text = text.strip()
     capacity = None
     keyword = text
-
-    # ใช้ Regex หาตัวเลข (เช่น 10, 20)
     match = re.search(r'(\d+)', text)
     if match:
         capacity = int(match.group(1))
-        # ลบตัวเลขออกจาก Keyword เพื่อเอาส่วนที่เหลือไปหาชื่อห้อง
         keyword = re.sub(r'\d+\s*(คน|ท่าน|seats?)?', '', text).strip()
-    
     return keyword, capacity
 
 @login_required
 def smart_search_view(request):
-    # 1. รับค่าจากช่องค้นหา (URL: ?q=...)
     query = request.GET.get('q', '').strip()
-    
-    # 2. เตรียม QuerySet เริ่มต้น (ห้องทั้งหมด)
     rooms = Room.objects.all()
     
     if query:
-        # 3. แปลงคำค้นหา
         keyword, capacity = parse_search_query(query)
-
-        # 4. กรองตามจำนวนคน (ถ้ามีตัวเลข)
-        if capacity:
-            rooms = rooms.filter(capacity__gte=capacity) # หาห้องที่จุคนได้เพียงพอ
-
-        # 5. กรองตามชื่อห้อง
+        if capacity: rooms = rooms.filter(capacity__gte=capacity)
         if keyword:
             rooms = rooms.filter(
                 Q(name__icontains=keyword) | 
                 Q(building__icontains=keyword) |
-                Q(equipment_in_room__icontains=keyword)  # <--- แก้ไขแล้ว ตรงนี้ครับ
+                Q(equipment_in_room__icontains=keyword)
             )
 
-    # 6. ส่งผลลัพธ์ไปที่หน้าจอ
     context = get_base_context(request)
-    context.update({
-        'query': query,             
-        'available_rooms': rooms,   
-        'search_count': rooms.count()
-    })
-    
+    context.update({'query': query, 'available_rooms': rooms, 'search_count': rooms.count()})
     return render(request, 'pages/search_results.html', context)
 
 # ----------------------------------------------------------------------
@@ -333,22 +310,71 @@ def smart_search_view(request):
 def dashboard_view(request):
     now = timezone.now(); sort_by = request.GET.get('sort', 'floor')
     all_rooms = Room.objects.all()
+    
+    # Sort
     if sort_by == 'status':
         all_rooms_sorted = sorted(all_rooms, key=lambda r: (r.is_currently_under_maintenance, not r.bookings.filter(start_time__lte=now, end_time__gt=now, status__in=['APPROVED', 'PENDING']).exists()))
     elif sort_by == 'capacity': all_rooms_sorted = sorted(all_rooms, key=lambda r: r.capacity, reverse=True)
     elif sort_by == 'name': all_rooms_sorted = all_rooms.order_by('name')
     else: all_rooms_sorted = all_rooms.order_by('building', 'floor', 'name')
+    
     buildings = defaultdict(list)
+    
+    # Loop Logic
     for r in all_rooms_sorted:
-        if r.is_currently_under_maintenance: r.status, r.status_class = 'ปิดปรับปรุง', 'bg-secondary text-white'
+        # 1. หา Booking ปัจจุบันก่อน
+        cur = r.bookings.filter(start_time__lte=now, end_time__gt=now, status__in=['APPROVED','PENDING']).first()
+        
+        # 2. เช็ค Maintenance
+        if r.is_currently_under_maintenance: 
+            r.status, r.status_class = 'ปิดปรับปรุง', 'bg-secondary text-white'
+            r.is_maintenance = True
+            r.current_booking_info = None # ปิดปรับปรุง = ไม่มีคนจอง
         else:
-            cur = r.bookings.filter(start_time__lte=now, end_time__gt=now, status__in=['APPROVED','PENDING']).first()
-            if cur: r.status, r.status_class = ('รออนุมัติ', 'bg-warning text-dark') if cur.status=='PENDING' else ('ไม่ว่าง', 'bg-danger text-white')
-            else: r.status, r.status_class = 'ว่าง', 'bg-success text-white'
+            r.is_maintenance = False
+            if cur:
+                # มีการจองอยู่
+                if cur.status == 'PENDING':
+                    r.status, r.status_class = ('รออนุมัติ', 'bg-warning text-dark')
+                else:
+                    r.status, r.status_class = ('ไม่ว่าง', 'bg-danger text-white')
+                
+                # ✅ FIX: ใส่บรรทัดนี้ เพื่อส่งข้อมูลคนจองไปหน้าเว็บ
+                r.current_booking_info = cur 
+                
+            else:
+                # ว่าง
+                r.status, r.status_class = 'ว่าง', 'bg-success text-white'
+                r.current_booking_info = None
+
+        # 3. หา Booking ถัดไป (Next Booking)
+        next_b = r.bookings.filter(start_time__gt=now, status='APPROVED').order_by('start_time').first()
+        if next_b:
+            # ถ้าว่างอยู่ และมีจองถัดไปใน 2 ชม.
+            if not cur and (next_b.start_time - now).total_seconds() < 7200: 
+                r.next_booking_info = next_b
+            else:
+                r.next_booking_info = None
+        
         buildings[r.building or "General"].append(r)
     
+    # Summary Cards Logic
+    total_rooms = all_rooms.count()
+    today_bookings = Booking.objects.filter(start_time__date=now.date(), status='APPROVED').count()
+    pending_approvals = Booking.objects.filter(status='PENDING').count()
+    total_users = User.objects.count()
+
     ctx = get_base_context(request)
-    ctx.update({'buildings': dict(buildings), 'total_rooms': all_rooms.count(), 'today_bookings': Booking.objects.filter(start_time__date=now.date(), status='APPROVED').count()})
+    ctx.update({
+        'buildings': dict(buildings), 
+        'summary_cards': {
+            'total_rooms': total_rooms,
+            'today_bookings': today_bookings,
+            'pending_approvals': pending_approvals,
+            'total_users_count': total_users
+        },
+        'current_sort': sort_by
+    })
     return render(request, 'pages/dashboard.html', ctx)
 
 @login_required
@@ -360,7 +386,6 @@ def room_calendar_view(request, room_id):
             booking = form.save(commit=False)
             booking.room = room; booking.user = request.user
             
-            # เช็คเงื่อนไขที่ต้องรออนุมัติ
             p_count = form.cleaned_data.get('participant_count', 0)
             req_text = form.cleaned_data.get('additional_requests', '')
             has_req = bool(req_text and req_text.strip()) 
