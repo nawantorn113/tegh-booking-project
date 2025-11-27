@@ -1,240 +1,247 @@
-    {% load static %}
-    <!DOCTYPE html>
-    <html lang="th">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>{% block title %}TEGH Booking{% endblock %}</title>
+{% load static %}
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}TEGH Booking{% endblock %}</title>
 
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-        <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <style>
+        body { 
+            background-color: #f0f2f5; 
+            font-family: 'Kanit', sans-serif; 
+            /* ปรับระยะห่างด้านบนให้พอดีกับ Navbar เพื่อไม่ให้เนื้อหาโดนบัง */
+            padding-top: 65px; 
+        }
+        .main-content-wrapper { padding-bottom: 1.5rem; }
         
-        <style>
-            body { 
-                background-color: #f0f2f5; 
-                font-family: 'Kanit', sans-serif; 
-                padding-top: 56px; 
-            }
-            .main-content-wrapper { padding-bottom: 1.5rem; }
-            
-            /* --- Navbar Compact & Animation --- */
-            .navbar { 
-                background-color: #ffffff; 
-                box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1); 
-                height: 60px; 
-                padding: 0;
+        /* --- Navbar Compact & Animation --- */
+        .navbar { 
+            background-color: #ffffff; 
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1); 
+            min-height: 60px; /* ใช้ min-height เผื่อเนื้อหาเยอะในมือถือ */
+            padding: 0.5rem 0; /* เพิ่ม padding เล็กน้อยเพื่อความสวยงาม */
+            transition: top 0.3s ease-in-out; 
+        }
+        
+        .navbar-brand { 
+            color: #1877f2 !important; 
+            font-weight: 700; 
+            font-size: 1.25rem; 
+            display: flex;
+            align-items: center;
+        }
+
+        /* เมนูแบบ Pill */
+        .nav-pills .nav-link {
+            border-radius: 50px;
+            padding: 6px 15px; /* ปรับขนาดปุ่มสัมผัสให้ง่ายขึ้น */
+            font-size: 0.9rem;
+            color: #65676b;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .nav-pills .nav-link:hover { background-color: #f2f2f2; color: #1c1e21; }
+        .nav-pills .nav-link.active { background-color: #e7f3ff; color: #1877f2; font-weight: 600; }
+
+        /* ปุ่มวงกลม */
+        .btn-circle-fb {
+            width: 38px; height: 38px; /* ขยายเล็กน้อยให้นิ้วแตะง่ายขึ้น */
+            background-color: #e4e6eb;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            color: #050505;
+            text-decoration: none;
+            transition: background-color 0.2s;
+            cursor: pointer;
+            border: none;
+            position: relative;
+        }
+        .btn-circle-fb:hover, .show > .btn-circle-fb { background-color: #d8dadf; color: #1877f2; }
+        .btn-circle-fb i { font-size: 1.1rem; }
+
+        .badge-fb {
+            position: absolute; top: -2px; right: -2px;
+            background-color: #e41e3f; color: white;
+            font-size: 0.65rem; padding: 2px 5px;
+            border-radius: 6px; min-width: 18px;
+            border: 2px solid #fff;
+            line-height: 1;
+        }
+
+        /* Dropdown */
+        .dropdown-menu-fb {
+            width: 300px; /* ปรับให้พอดีกับจอมือถือ */
+            max-width: 90vw; /* ไม่ให้ล้นจอในมือถือจอเล็ก */
+            padding: 0; border-radius: 8px; border: none;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15); margin-top: 8px; overflow: hidden;
+        }
+        .dropdown-header-fb { padding: 8px 12px; font-size: 1rem; font-weight: 700; color: #050505; background-color: #fff; }
+
+        .notify-item-fb {
+            display: flex; align-items: center; padding: 8px 12px;
+            border-radius: 8px; text-decoration: none; color: inherit;
+            transition: background-color 0.2s; margin: 2px 4px;
+        }
+        .notify-item-fb:hover { background-color: #f0f2f5; }
+        
+        .notify-avatar {
+            width: 40px; height: 40px; border-radius: 50%;
+            background-color: #e7f3ff; color: #1877f2;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.2rem; margin-right: 10px; flex-shrink: 0;
+        }
+        .notify-content strong { font-size: 0.85rem; display: block; line-height: 1.2; margin-bottom: 2px; }
+        .notify-content span { font-size: 0.8rem; color: #65676b; }
+        .notify-time { font-size: 0.7rem; color: #1877f2; font-weight: 600; }
+        
+        /* สไตล์สำหรับ Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
+    </style>
+    
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+    {% if user.is_authenticated %}
+        <nav class="navbar navbar-expand-lg fixed-top" id="main-navbar">
+            <div class="container h-100"> 
                 
-                /* 💡 เพิ่ม Transition ให้เลื่อนขึ้น-ลงนุ่มนวล */
-                transition: top 0.3s ease-in-out; 
-            }
-            
-            .navbar-brand { 
-                color: #1877f2 !important; 
-                font-weight: 700; 
-                font-size: 1.25rem; 
-                display: flex;
-                align-items: center;
-            }
-
-            /* เมนูแบบ Pill */
-            .nav-pills .nav-link {
-                border-radius: 50px;
-                padding: 4px 12px;
-                font-size: 0.85rem;
-                color: #65676b;
-                font-weight: 500;
-                transition: all 0.2s;
-            }
-            .nav-pills .nav-link:hover { background-color: #f2f2f2; color: #1c1e21; }
-            .nav-pills .nav-link.active { background-color: #e7f3ff; color: #1877f2; font-weight: 600; }
-
-            /* ปุ่มวงกลม */
-            .btn-circle-fb {
-                width: 34px; height: 34px;
-                background-color: #e4e6eb;
-                border-radius: 50%;
-                display: flex; align-items: center; justify-content: center;
-                color: #050505;
-                text-decoration: none;
-                transition: background-color 0.2s;
-                cursor: pointer;
-                border: none;
-                position: relative;
-            }
-            .btn-circle-fb:hover, .show > .btn-circle-fb { background-color: #d8dadf; color: #1877f2; }
-            .btn-circle-fb i { font-size: 1rem; }
-
-            .badge-fb {
-                position: absolute; top: -2px; right: -2px;
-                background-color: #e41e3f; color: white;
-                font-size: 0.6rem; padding: 1px 4px;
-                border-radius: 6px; min-width: 15px;
-                border: 2px solid #fff;
-                line-height: 1;
-            }
-
-            /* Dropdown */
-            .dropdown-menu-fb {
-                width: 320px; padding: 0; border-radius: 8px; border: none;
-                box-shadow: 0 8px 24px rgba(0,0,0,0.15); margin-top: 8px; overflow: hidden;
-            }
-            .dropdown-header-fb { padding: 8px 12px; font-size: 1rem; font-weight: 700; color: #050505; background-color: #fff; }
-
-            .notify-item-fb {
-                display: flex; align-items: center; padding: 8px 12px;
-                border-radius: 8px; text-decoration: none; color: inherit;
-                transition: background-color 0.2s; margin: 2px 4px;
-            }
-            .notify-item-fb:hover { background-color: #f0f2f5; }
-            
-            .notify-avatar {
-                width: 40px; height: 40px; border-radius: 50%;
-                background-color: #e7f3ff; color: #1877f2;
-                display: flex; align-items: center; justify-content: center;
-                font-size: 1.2rem; margin-right: 10px; flex-shrink: 0;
-            }
-            .notify-content strong { font-size: 0.85rem; display: block; line-height: 1.2; margin-bottom: 2px; }
-            .notify-content span { font-size: 0.8rem; color: #65676b; }
-            .notify-time { font-size: 0.7rem; color: #1877f2; font-weight: 600; }
-        </style>
-        
-        {% block extra_head %}{% endblock %}
-    </head>
-    <body>
-
-        {% if user.is_authenticated %}
-            <nav class="navbar navbar-expand-lg fixed-top" id="main-navbar">
-                <div class="container h-100"> 
-                    
-                    <a class="navbar-brand me-3" href="{% url 'dashboard' %}">
-                        <i class="bi bi-calendar-week-fill me-1"></i> TEGH Booking
-                    </a>
-                    
-                    <button class="navbar-toggler btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar">
-                        <span class="navbar-toggler-icon" style="width: 1em; height: 1em;"></span>
-                    </button>
-
-                    <div class="collapse navbar-collapse" id="mainNavbar">
-                        <ul class="navbar-nav nav-pills me-auto mb-2 mb-lg-0 gap-1 align-items-center">
-                            {% for item in menu_items %}
-                                {% if item.show %}
-                                    <li class="nav-item">
-                                        <a class="nav-link {% if item.active %}active{% endif %}" href="{% url item.url_name %}">
-                                            <i class="{{ item.icon }} me-1 small"></i> {{ item.label }}
-                                        </a>
-                                    </li>
+                <a class="navbar-brand me-2" href="{% url 'dashboard' %}">
+                    <i class="bi bi-calendar-week-fill me-1"></i> TEGH Booking
+                </a>
+                
+                <div class="d-flex align-items-center gap-2 ms-auto order-lg-2">
+                     {% if is_admin_user or user.is_superuser %}
+                        <div class="dropdown">
+                            <a class="btn-circle-fb" href="#" id="fbNotifyDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-bell-fill small"></i>
+                                {% if pending_count > 0 %}
+                                    <span class="badge-fb">{{ pending_count }}</span>
                                 {% endif %}
-                            {% endfor %}
-
-                            {% if is_admin_user %}
-                                <li class="nav-item border-start mx-2 ps-2 d-none d-lg-block" style="height: 20px; border-color: #ddd;"></li>
-                                <li class="nav-item dropdown">
-                                    <a class="nav-link dropdown-toggle fw-bold small" href="#" role="button" data-bs-toggle="dropdown">
-                                        ผู้ดูแลระบบ
-                                    </a>
-                                    <ul class="dropdown-menu shadow border-0 rounded-3 mt-1">
-                                        {% for item in admin_menu_items %}
-                                            <li><a class="dropdown-item py-1 small" href="{% url item.url_name %}"><i class="{{ item.icon }} me-2 text-muted"></i>{{ item.label }}</a></li>
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-end dropdown-menu-fb p-0" aria-labelledby="fbNotifyDropdown">
+                                <div class="dropdown-header-fb border-bottom">การแจ้งเตือน</div>
+                                <div style="max-height: 300px; overflow-y: auto; padding: 4px 0;">
+                                    {% if pending_notifications %}
+                                        {% for booking in pending_notifications %}
+                                            <a href="{% url 'approvals' %}" class="notify-item-fb px-3">
+                                                <div class="notify-avatar"><i class="bi bi-calendar-check-fill"></i></div>
+                                                <div class="notify-content">
+                                                    <strong>{{ booking.user.get_full_name|default:booking.user.username }}</strong>
+                                                    <span>ขอจอง: <span class="fw-bold">{{ booking.room.name }}</span></span>
+                                                    <div class="notify-time">{{ booking.created_at|timesince }}</div>
+                                                </div>
+                                            </a>
                                         {% endfor %}
-                                    </ul>
-                                </li>
-                            {% endif %}
-                        </ul>
+                                    {% else %}
+                                        <div class="text-center py-4 text-muted"><span class="small">ไม่มีการแจ้งเตือน</span></div>
+                                    {% endif %}
+                                </div>
+                                <div class="p-2 text-center border-top bg-light"><a href="{% url 'approvals' %}" class="text-decoration-none fw-bold small text-primary">ดูทั้งหมด</a></div>
+                            </div>
+                        </div>
+                    {% endif %}
 
-                        <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-center gap-2">
-                            {% if is_admin_user or user.is_superuser %}
-                                <li class="nav-item dropdown">
-                                    <a class="btn-circle-fb" href="#" id="fbNotifyDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                        <i class="bi bi-bell-fill small"></i>
-                                        {% if pending_count > 0 %}
-                                            <span class="badge-fb">{{ pending_count }}</span>
-                                        {% endif %}
-                                    </a>
-                                    <div class="dropdown-menu dropdown-menu-end dropdown-menu-fb p-0" aria-labelledby="fbNotifyDropdown">
-                                        <div class="dropdown-header-fb border-bottom">การแจ้งเตือน</div>
-                                        <div style="max-height: 300px; overflow-y: auto; padding: 4px 0;">
-                                            {% if pending_notifications %}
-                                                {% for booking in pending_notifications %}
-                                                    <a href="{% url 'approvals' %}" class="notify-item-fb px-3">
-                                                        <div class="notify-avatar"><i class="bi bi-calendar-check-fill"></i></div>
-                                                        <div class="notify-content">
-                                                            <strong>{{ booking.user.get_full_name|default:booking.user.username }}</strong>
-                                                            <span>ขอจอง: <span class="fw-bold">{{ booking.room.name }}</span></span>
-                                                            <div class="notify-time">{{ booking.created_at|timesince }}</div>
-                                                        </div>
-                                                    </a>
-                                                {% endfor %}
-                                            {% else %}
-                                                <div class="text-center py-4 text-muted"><span class="small">ไม่มีการแจ้งเตือน</span></div>
-                                            {% endif %}
-                                        </div>
-                                        <div class="p-2 text-center border-top bg-light"><a href="{% url 'approvals' %}" class="text-decoration-none fw-bold small text-primary">ดูทั้งหมด</a></div>
-                                    </div>
-                                </li>
-                            {% endif %}
-                            
-                            <li class="nav-item dropdown">
-                                <a class="btn-circle-fb" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
-                                    <i class="bi bi-person-fill fs-5"></i>
-                                </a>
-                                <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2 p-1" style="width: 200px;">
-                                    <li class="px-3 py-2 border-bottom mb-1">
-                                        <span class="fw-bold d-block small text-dark">{{ user.get_full_name|default:user.username }}</span>
-                                        <span class="small text-muted">ผู้ใช้งาน</span>
-                                    </li>
-                                    <li><a class="dropdown-item py-1 small rounded" href="{% url 'change_password' %}">เปลี่ยนรหัสผ่าน</a></li>
-                                    <li>
-                                        <form action="{% url 'logout' %}" method="post" class="px-0">
-                                            {% csrf_token %}
-                                            <button type="submit" class="dropdown-item py-1 text-danger small rounded">ออกจากระบบ</button>
-                                        </form>
-                                    </li>
-                                </ul>
+                    <div class="dropdown">
+                        <a class="btn-circle-fb" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-fill fs-5"></i>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2 p-1" style="width: 200px;">
+                            <li class="px-3 py-2 border-bottom mb-1">
+                                <span class="fw-bold d-block small text-dark text-truncate">{{ user.get_full_name|default:user.username }}</span>
+                                <span class="small text-muted">ผู้ใช้งาน</span>
+                            </li>
+                            <li><a class="dropdown-item py-1 small rounded" href="{% url 'change_password' %}">เปลี่ยนรหัสผ่าน</a></li>
+                            <li>
+                                <form action="{% url 'logout' %}" method="post" class="px-0">
+                                    {% csrf_token %}
+                                    <button type="submit" class="dropdown-item py-1 text-danger small rounded">ออกจากระบบ</button>
+                                </form>
                             </li>
                         </ul>
                     </div>
+
+                    <button class="navbar-toggler border-0 p-1 ms-1" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar">
+                        <span class="navbar-toggler-icon" style="width: 1.2em; height: 1.2em;"></span>
+                    </button>
                 </div>
-            </nav>
+
+                <div class="collapse navbar-collapse order-lg-1" id="mainNavbar">
+                    <ul class="navbar-nav nav-pills me-auto mb-2 mb-lg-0 gap-1 mt-3 mt-lg-0">
+                        {% for item in menu_items %}
+                            {% if item.show %}
+                                <li class="nav-item">
+                                    <a class="nav-link {% if item.active %}active{% endif %}" href="{% url item.url_name %}">
+                                        <i class="{{ item.icon }} me-1 small"></i> {{ item.label }}
+                                    </a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if is_admin_user %}
+                            <li class="nav-item border-start mx-2 ps-2 d-none d-lg-block" style="height: 20px; border-color: #ddd;"></li>
+                            <li class="nav-item dropdown mt-2 mt-lg-0">
+                                <a class="nav-link dropdown-toggle fw-bold small" href="#" role="button" data-bs-toggle="dropdown">
+                                    ผู้ดูแลระบบ
+                                </a>
+                                <ul class="dropdown-menu shadow border-0 rounded-3 mt-1">
+                                    {% for item in admin_menu_items %}
+                                        <li><a class="dropdown-item py-1 small" href="{% url item.url_name %}"><i class="{{ item.icon }} me-2 text-muted"></i>{{ item.label }}</a></li>
+                                    {% endfor %}
+                                </ul>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </div>
+
+            </div>
+        </nav>
+    {% endif %}
+
+    <main class="container mt-3 main-content-wrapper" id="main-content">
+        {% if messages %}
+            <div class="mb-3">
+                {% for message in messages %}
+                    <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show shadow-sm border-0 py-2 small" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close btn-sm" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            </div>
         {% endif %}
+        {% block content %}{% endblock %}
+    </main>
 
-        <main class="container mt-3 main-content-wrapper" id="main-content">
-            {% if messages %}
-                <div class="mb-3">
-                    {% for message in messages %}
-                        <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show shadow-sm border-0 py-2 small" role="alert">
-                            {{ message }}
-                            <button type="button" class="btn-close btn-sm" data-bs-dismiss="alert" aria-label="Close"></button>
-                        </div>
-                    {% endfor %}
-                </div>
-            {% endif %}
-            {% block content %}{% endblock %}
-        </main>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        setTimeout(function() { $('.alert-success').alert('close'); }, 4000);
 
-        <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+        // [SCRIPT] Auto-hide Navbar Logic
+        var lastScrollTop = 0;
+        var navbar = document.getElementById("main-navbar");
         
-        <script>
-            setTimeout(function() { $('.alert-success').alert('close'); }, 4000);
+        window.addEventListener("scroll", function(){
+            var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            // ถ้าเลื่อนลงเกิน 60px ให้ซ่อนขึ้นไป
+            if (scrollTop > lastScrollTop && scrollTop > 60) {
+                navbar.style.top = "-80px"; // ปรับค่าเผื่อความสูง Navbar 
+            } else {
+                navbar.style.top = "0"; 
+            }
+            lastScrollTop = scrollTop;
+        });
+    </script>
+    {% block extra_scripts %}{% endblock %}
 
-            // 💡 [SCRIPT] Auto-hide Navbar Logic
-            var lastScrollTop = 0;
-            var navbar = document.getElementById("main-navbar");
-            
-            window.addEventListener("scroll", function(){
-                var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-                
-                // ถ้าเลื่อนลงเกิน 60px ให้ซ่อนขึ้นไป (top = -ความสูง navbar)
-                if (scrollTop > lastScrollTop && scrollTop > 60) {
-                    navbar.style.top = "-60px"; 
-                } else {
-                    navbar.style.top = "0"; 
-                }
-                lastScrollTop = scrollTop;
-            });
-        </script>
-        {% block extra_scripts %}{% endblock %}
-
-    </body>
-    </html>
+</body>
+</html>
