@@ -12,214 +12,192 @@
     <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
 
     <style>
-        :root {
-            --fc-border-color: #a8a8a8;
-            --fc-today-bg-color: #fffcfc;
-        }
+        :root { --fc-border-color: #e5e7eb; --fc-today-bg-color: #f8fafc; }
         .fc { font-family: 'Kanit', sans-serif; }
-        .fc .fc-toolbar-title { font-size: 1.25rem; font-weight: 500; }
-        #calendar { margin-top: 1.5rem; }
-        .modal-header { padding-bottom: 5px !important; }
-        .modal-body { padding-top: 10px !important; }
         
-        /* Select2 Styling */
-        .select2-selection__rendered { display: flex !important; flex-wrap: wrap !important; align-items: center !important; }
-        .select2-selection__choice { margin-top: 0 !important; margin-bottom: 2px !important; }
-        .select2-search--inline { float: none !important; flex-grow: 1 !important; }
-        
-        /* Calendar Event Styling */
-        .fc-event.event-pending { background-color: #f39c12 !important; border-color: #f39c12 !important; }
-        .fc-daygrid-day-frame { position: relative; min-height: 100px; }
-        .fc-day-available-text {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            font-size: 1.25rem; color: #c7c5c5; font-weight: 600;
-            z-index: 1; pointer-events: none;
+        /* ปรับแต่งส่วนหัวปฏิทิน */
+        .fc .fc-toolbar-title { font-size: 1.25rem; font-weight: 600; color: #1e293b; }
+        .fc .fc-button-primary { 
+            background-color: #fff; border-color: #cbd5e1; color: #475569; 
+            font-weight: 500; box-shadow: none !important;
         }
-        .fc-daygrid-event { z-index: 2 !important; }
+        .fc .fc-button-primary:hover { background-color: #f1f5f9; color: #1e293b; }
+        .fc .fc-button-primary:not(:disabled).fc-button-active { 
+            background-color: #3b82f6; border-color: #3b82f6; color: white; 
+        }
 
-        /* --- 📱 Responsive Fixes สำหรับมือถือ --- */
+        /* Event Styling */
+        .fc-event { border: none; border-radius: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .fc-event.event-pending { background-color: #f59e0b !important; border-left: 3px solid #b45309 !important; }
+        .fc-event.event-approved { background-color: #10b981 !important; border-left: 3px solid #047857 !important; }
+        .fc-event.event-maintenance { background-color: #64748b !important; border-left: 3px solid #334155 !important; }
+
+        /* 📱 Fix for Mobile (แก้ปัญหาปุ่มทับกัน) */
         @media (max-width: 768px) {
+            /* 1. จัด Toolbar เป็นแนวตั้ง */
             .fc .fc-toolbar {
-                flex-direction: column; /* จัดปุ่มเรียงแนวตั้ง */
+                flex-direction: column;
                 gap: 10px;
+                align-items: center;
             }
-            .fc .fc-toolbar-title {
-                font-size: 1.1rem;
+            /* 2. จัดปุ่มให้อยู่ตรงกลาง */
+            .fc-toolbar-chunk {
+                display: flex;
+                justify-content: center;
+                width: 100%; 
             }
-            .content-card {
-                padding: 1rem !important; /* ลด padding การ์ด */
-            }
-            /* ลดความสูงช่องวันในมือถือไม่ให้ยืดเกินไป */
-            .fc-daygrid-day-frame { min-height: 60px; } 
-            .fc-day-available-text { font-size: 0.9rem; }
+            /* 3. ลดขนาดตัวหนังสือ */
+            .fc .fc-toolbar-title { font-size: 1.1rem; }
+            
+            /* 4. ปรับความสูงของช่องในมือถือ */
+            .fc-timegrid-slot { height: 3em !important; } 
         }
     </style>
 {% endblock %}
 
-
 {% block content %}
-    <div class="py-4"> 
-        <div class="content-card shadow-sm border p-3 p-md-4 mb-4 bg-white rounded-3">
-            <div class="row g-4">
-                <div class="col-lg-5">
+    <div class="py-3"> 
+        <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden">
+            <div class="row g-0">
+                <div class="col-md-4 position-relative" style="min-height: 200px;">
                     {% if room.image %}
-                        <img src="{{ room.image.url }}" class="d-block w-100 shadow-sm" style="height: 250px; object-fit: cover; border-radius: 0.5rem;" alt="รูปห้อง {{ room.name }}">
+                        <img src="{{ room.image.url }}" class="w-100 h-100 object-fit-cover position-absolute top-0 start-0" alt="{{ room.name }}">
                     {% else %}
-                        <div class="bg-light text-muted d-flex align-items-center justify-content-center shadow-sm" style="height: 250px; border-radius: 0.5rem;">
-                            <i class="bi bi-image" style="font-size: 3rem;"></i>
+                        <div class="bg-light w-100 h-100 d-flex align-items-center justify-content-center text-muted">
+                            <i class="bi bi-image fs-1 opacity-25"></i>
                         </div>
                     {% endif %}
                 </div>
-                <div class="col-lg-7">
-                    <h4 class="fw-bold text-primary mb-2">{{ room.name }}</h4> 
-                    <p class="text-muted small mb-3">
-                        <i class="bi bi-geo-alt-fill me-1"></i>
-                        {{ room.location|default:"(ไม่ได้ระบุตำแหน่ง)" }}
-                    </p>
-                    <ul class="list-unstyled mb-0">
-                        <li class="mb-2">
-                            <i class="bi bi-people-fill me-2 text-muted" style="width: 1.25em;"></i>
-                            <strong>ความจุ:</strong> {{ room.capacity }} คน
-                        </li>
-                        <li class="mb-2">
-                            <i class="bi bi-building me-2 text-muted" style="width: 1.25em;"></i>
-                            <strong>อาคาร:</strong> {{ room.building|default:"-" }} (ชั้น {{ room.floor|default:"-" }})
-                        </li>
-                        <li class="mb-2">
-                            <i class="bi bi-tools me-2 text-muted" style="width: 1.25em;"></i>
-                            <strong>อุปกรณ์:</strong>
-                        </li>
-                    </ul>
-                    <div class="small text-muted ps-4" style="margin-left: 1.25em;">
-                        {{ room.equipment_in_room|default:"(ไม่มีข้อมูล)"|linebreaksbr }}
-                    </div>
-                    
-                    <div class="d-block d-md-none mt-3">
-                        <button class="btn btn-primary w-100 rounded-pill" data-bs-toggle="modal" data-bs-target="#bookingModal" onclick="prepareBookingModal()">
-                            <i class="bi bi-plus-circle me-1"></i> จองห้องนี้
-                        </button>
+                <div class="col-md-8">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h3 class="fw-bold text-dark mb-0">{{ room.name }}</h3>
+                            <span class="badge bg-primary rounded-pill">ชั้น {{ room.floor|default:"-" }}</span>
+                        </div>
+                        <p class="text-muted small mb-3"><i class="bi bi-geo-alt-fill me-1"></i> {{ room.location|default:"ไม่ระบุตำแหน่ง" }}</p>
+                        
+                        <div class="d-flex gap-3 mb-3">
+                            <div class="d-flex align-items-center text-secondary small">
+                                <i class="bi bi-people-fill fs-5 me-2"></i>
+                                <div><span class="d-block fw-bold text-dark">{{ room.capacity }}</span> คน</div>
+                            </div>
+                            <div class="vr"></div>
+                            <div class="d-flex align-items-center text-secondary small">
+                                <i class="bi bi-building fs-5 me-2"></i>
+                                <div><span class="d-block fw-bold text-dark">{{ room.building|default:"-" }}</span> อาคาร</div>
+                            </div>
+                        </div>
+
+                        {% if room.equipment_in_room %}
+                        <div class="bg-light rounded-3 p-2 small text-muted">
+                            <i class="bi bi-tools me-2"></i>{{ room.equipment_in_room }}
+                        </div>
+                        {% endif %}
+                        
+                        <div class="d-block d-md-none mt-3">
+                            <button class="btn btn-primary w-100 rounded-pill fw-bold shadow-sm" onclick="prepareBookingModal()">
+                                <i class="bi bi-plus-lg me-1"></i> จองห้องนี้
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="content-card shadow-sm border p-3 p-md-4 bg-white rounded-3">
-            <h5 class="mb-0"><i class="bi bi-calendar3 me-2 text-primary"></i>ตารางการจอง</h5>
-            <p class="text-muted small mb-0">คลิกที่ช่วงเวลาว่างเพื่อจอง</p>
+        <div class="card border-0 shadow-sm rounded-4 p-3">
+            <div class="alert alert-light border-0 d-flex align-items-center mb-3" role="alert">
+                <i class="bi bi-info-circle-fill text-primary me-2"></i>
+                <small class="text-muted">คลิกที่ช่องเวลาว่างในปฏิทินเพื่อทำการจอง</small>
+            </div>
             <div id="calendar"></div>
         </div>
     </div>
 
-    <div id="bookingFormContainer" style="display:none;">
+    <div id="bookingFormContainer" class="d-none">
         <form id="hiddenBookingForm" action="{% url 'create_booking' room.id %}" method="post" enctype="multipart/form-data">
             {% csrf_token %}
             {{ form|crispy }}
         </form>
     </div>
 
-    <div class="modal fade" id="bookingModal" tabindex="-1" aria-labelledby="bookingModalLabel" aria-hidden="true">
+    <div class="modal fade" id="bookingModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="bookingModalLabel">จองห้อง: {{ room.name }}</h5>
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header border-bottom-0 pb-0">
+                    <h5 class="modal-title fw-bold">📝 จองห้อง: {{ room.name }}</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body" id="modalBookingBody"></div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">ยกเลิก</button>
-                    <button type="button" class="btn btn-primary rounded-pill px-4" id="submitBookingBtn">ยืนยันการจอง</button>
+                <div class="modal-body pt-3" id="modalBookingBody">
+                    </div>
+                <div class="modal-footer border-top-0">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">ยกเลิก</button>
+                    <button type="button" class="btn btn-primary rounded-pill px-4 shadow-sm" id="submitBookingBtn">ยืนยันการจอง</button>
                 </div>
             </div>
         </div>
     </div>
 {% endblock %}
 
-
 {% block extra_scripts %} 
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/i18n/th.js"></script>
-    
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
     
     {{ form.media.js }}
 
     <script>
-    
-    // ฟังก์ชันสำหรับเปิด Modal จอง (ใช้ร่วมกับปุ่มกดบนมือถือ)
-    function prepareBookingModal() {
+    // ฟังก์ชันเปิด Modal (ใช้ได้ทั้งปุ่มกดและคลิกปฏิทิน)
+    function prepareBookingModal(startStr = null, endStr = null) {
         const hiddenForm = document.getElementById('hiddenBookingForm');
         const modalBody = document.getElementById('modalBookingBody');
-        const $participantsSelect = $('#id_participants');
-
-        // ย้ายฟอร์มเข้า Modal
+        const bookingModal = new bootstrap.Modal(document.getElementById('bookingModal'));
+        
+        // 1. ย้ายฟอร์มเข้า Modal
         if (!modalBody.contains(hiddenForm)) {
             modalBody.appendChild(hiddenForm);
         }
-        
-        // Re-init Select2 inside Modal
+        hiddenForm.reset(); // ล้างค่าเก่า
+
+        // 2. ถ้ามีเวลาส่งมา (จากการคลิกปฏิทิน) ให้เติมค่า
+        if (startStr && endStr) {
+            document.getElementById('id_start_time').value = startStr;
+            document.getElementById('id_end_time').value = endStr;
+        } else {
+            // ถ้ากดปุ่มจองเฉยๆ ให้ตั้งเวลาปัจจุบัน
+            // (Logic เพิ่มเติมได้ตามต้องการ)
+        }
+
+        // 3. Re-init Select2 (สำคัญมาก ต้องทำทุกครั้งที่เปิด Modal)
+        const $participantsSelect = $('#id_participants');
         if ($participantsSelect.data('select2')) { $participantsSelect.select2('destroy'); }
         $participantsSelect.select2({
             theme: 'bootstrap-5', language: 'th', width: '100%',
             dropdownParent: $('#bookingModal .modal-content')
         });
-        
-        // Set default date/time to now if not set
-        const now = new Date();
-        // (Optional: Logic to set default time if needed)
+
+        bookingModal.show();
+    }
+
+    function formatDateTimeLocal(date) {
+        const pad = (n) => n.toString().padStart(2, '0');
+        return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
     }
 
     $(document).ready(function() {
-        
         const calendarEl = document.getElementById('calendar');
-        const hiddenForm = document.getElementById('hiddenBookingForm');
-        const modalBody = document.getElementById('modalBookingBody');
-        const bookingModal = new bootstrap.Modal(document.getElementById('bookingModal'));
         const bookingModalEl = document.getElementById('bookingModal');
+        const hiddenForm = document.getElementById('hiddenBookingForm');
         const ROOM_CAPACITY = {{ room.capacity|default:1 }}; 
 
-        // 1. ตรวจสอบขนาดหน้าจอ
+        // ✅ ตรวจสอบขนาดหน้าจอ
         const isMobile = window.innerWidth < 768;
 
-        // ฟังก์ชัน "แฮ็ค" 'ว่าง' 
-        function addAvailableText(view) {
-            setTimeout(function() { 
-                document.querySelectorAll('.fc-day-available-text').forEach(el => el.remove());
-                // แสดงคำว่า "ว่าง" เฉพาะในมุมมองรายเดือนเท่านั้น
-                if (view.type === 'dayGridMonth') {
-                    let dayCells = document.querySelectorAll('.fc-daygrid-day');
-                    dayCells.forEach(function(dayCell) {
-                        let eventElements = dayCell.querySelectorAll('.fc-event'); 
-                        let isPast = dayCell.classList.contains('fc-day-past');
-                        let isOtherMonth = dayCell.classList.contains('fc-day-other');
-                        if (eventElements.length === 0 && !isPast && !isOtherMonth) {
-                            let availableEl = document.createElement('div');
-                            availableEl.className = 'fc-day-available-text';
-                            availableEl.innerHTML = 'ว่าง';
-                            let dayFrame = dayCell.querySelector('.fc-daygrid-day-frame');
-                            if (dayFrame) {
-                                dayFrame.appendChild(availableEl);
-                            }
-                        }
-                    });
-                }
-            }, 100); 
-        }
-        
-        function formatDateTimeLocal(date, defaultHour = null, defaultMinute = null) {
-            const year = date.getFullYear();
-            const month = (date.getMonth() + 1).toString().padStart(2, '0');
-            const day = date.getDate().toString().padStart(2, '0');
-            const hours = (defaultHour !== null ? defaultHour : date.getHours()).toString().padStart(2, '0');
-            const minutes = (defaultMinute !== null ? defaultMinute : date.getMinutes()).toString().padStart(2, '0');
-            return `${year}-${month}-${day}T${hours}:${minutes}`;
-        }
-
         const calendar = new FullCalendar.Calendar(calendarEl, {
-            // 2. ปรับ View ตามอุปกรณ์: มือถือใช้รายวัน (TimeGrid), คอมใช้รายเดือน
-            initialView: isMobile ? 'timeGridDay' : 'dayGridMonth', 
+            // ✅ ถ้าเป็นมือถือ ให้ใช้รายวัน (timeGridDay) ถ้าคอมใช้รายเดือน (dayGridMonth)
+            initialView: isMobile ? 'timeGridDay' : 'dayGridMonth',
             locale: 'th',
             
-            // 3. ปรับ Toolbar ให้เหมาะกับมือถือ
+            // ✅ ปรับแต่งปุ่มกด
             headerToolbar: {
                 left: isMobile ? 'prev,next' : 'prev,next today',
                 center: 'title',
@@ -227,95 +205,73 @@
             },
             
             buttonText: { today: 'วันนี้', month: 'เดือน', week: 'สัปดาห์', day: 'วัน', list: 'รายการ' },
+            
             selectable: true,
-            editable: false,
-            height: 'auto', // ปรับความสูงอัตโนมัติ
-            allDaySlot: false, // ซ่อนช่อง All Day เพื่อประหยัดที่ในมือถือ
-            slotMinTime: '08:00:00', // เริ่ม 8 โมง
-            slotMaxTime: '20:00:00', // จบ 2 ทุ่ม
+            navLinks: true, // คลิกว่านที่เพื่อดูรายวันได้
+            slotMinTime: '08:00:00',
+            slotMaxTime: '19:00:00',
+            allDaySlot: false, // ซ่อนช่อง All Day ในมือถือจะได้ไม่เปลืองที่
+            height: 'auto',
             
             events: "{% url 'bookings_api' %}?room_id={{ room.id }}",
 
+            // ปรับสี Event ตามสถานะ
             eventDidMount: function(info) {
-                 if (info.event.extendedProps.status === 'PENDING') {
+                if (info.event.extendedProps.status === 'PENDING') {
                     info.el.classList.add('event-pending');
+                } else if (info.event.extendedProps.status === 'APPROVED') {
+                    info.el.classList.add('event-approved');
                 }
             },
 
-            datesSet: function(info) {
-                addAvailableText(info.view);
-            },
-            loading: function(isLoading) {
-                if (!isLoading) { 
-                    addAvailableText(this.view); 
-                }
-            },
-
+            // เมื่อคลิกเลือกช่วงเวลา (จอง)
             select: function(info) {
-                let startStr, endStr;
+                let startStr = formatDateTimeLocal(info.start);
+                let endStr = formatDateTimeLocal(info.end);
                 
-                if (info.allDay) {
-                    // ถ้าเลือกทั้งวัน (จาก Month View) ให้ตั้งเวลา default 08:00 - 09:00
-                    startStr = formatDateTimeLocal(info.start, 8, 0); 
-                    endStr = formatDateTimeLocal(info.start, 9, 0); 
-                } else {
-                    // ถ้าเลือกช่วงเวลา (จาก TimeGrid View) ใช้เวลาตามที่เลือก
-                    startStr = formatDateTimeLocal(info.start);
-                    endStr = formatDateTimeLocal(info.end);
+                // กรณีคลิกใน Month View (All Day) ให้ตั้งเวลา Default 08:00-09:00
+                if(info.allDay) {
+                    let d = new Date(info.start);
+                    d.setHours(8,0,0);
+                    startStr = formatDateTimeLocal(d);
+                    d.setHours(9,0,0);
+                    endStr = formatDateTimeLocal(d);
                 }
-                
-                hiddenForm.reset(); 
 
-                document.getElementById('id_start_time').value = startStr;
-                document.getElementById('id_end_time').value = endStr;
-                
-                modalBody.appendChild(hiddenForm);
-                
-                var $participantsSelect = $('#id_participants');
-                if ($participantsSelect.data('select2')) { $participantsSelect.select2('destroy'); }
-                $participantsSelect.select2({
-                    theme: 'bootstrap-5', language: 'th', width: '100%',
-                    dropdownParent: $('#bookingModal .modal-content')
-                });
-                
-                bookingModal.show();
+                prepareBookingModal(startStr, endStr);
             },
             
+            // เมื่อคลิกที่ Event (ดูรายละเอียด - อาจจะทำ Modal แยก หรือลิงก์ไปหน้า Detail)
             eventClick: function(info) {
-                info.jsEvent.preventDefault(); 
-                let bookingId = info.event.id;
-                let detailUrl = `/booking/detail/${bookingId}/`; 
-                window.location.href = detailUrl;
+                info.jsEvent.preventDefault();
+                window.location.href = `/booking/detail/${info.event.id}/`;
             }
         });
 
-        calendar.render(); 
+        calendar.render();
 
+        // เมื่อปิด Modal ให้ย้ายฟอร์มกลับที่เดิม (เพื่อความปลอดภัยของ DOM)
         bookingModalEl.addEventListener('hidden.bs.modal', function () {
-            var $participantsSelect = $('#id_participants');
-            if ($participantsSelect.data('select2')) {
-                $participantsSelect.select2('destroy');
-            }
+            const $participantsSelect = $('#id_participants');
+            if ($participantsSelect.data('select2')) { $participantsSelect.select2('destroy'); }
             document.getElementById('bookingFormContainer').appendChild(hiddenForm);
         });
-        
-        document.getElementById('submitBookingBtn').addEventListener('click', function(event) {
-            const participantCountEl = document.getElementById('id_participant_count');
-            let participantCountVal = 1; 
-            if (participantCountEl) {
-                participantCountVal = parseInt(participantCountEl.value) || 1;
-            }
 
-            if (participantCountVal > ROOM_CAPACITY) {
-                alert(`จองไม่ได้: จำนวนผู้เข้าร่วม (${participantCountVal} คน) เกินความจุของห้อง (${ROOM_CAPACITY} คน)! \n\nกรุณาลดจำนวนคน หรือติดต่อผู้ดูแล`);
+        // ปุ่มยืนยันการจอง
+        document.getElementById('submitBookingBtn').addEventListener('click', function() {
+            const participantCountEl = document.getElementById('id_participant_count');
+            let count = participantCountEl ? (parseInt(participantCountEl.value) || 1) : 1;
+
+            if (count > ROOM_CAPACITY) {
+                alert(`❌ จองไม่ได้: จำนวน ${count} คน เกินความจุห้อง (${ROOM_CAPACITY} คน)`);
                 return;
             }
             
+            // Disable ปุ่มกันกดซ้ำ
             this.disabled = true;
-            this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> กำลังบันทึก...';
+            this.innerHTML = '<span class="spinner-border spinner-border-sm"></span> กำลังบันทึก...';
             hiddenForm.submit();
         });
     });
     </script>
-
 {% endblock %}
