@@ -145,7 +145,7 @@ def line_webhook(request):
         except InvalidSignatureError:
             return HttpResponse(status=400)
         except Exception as e:
-            print(f"❌ Handler Error: {e}")
+            print(f" Handler Error: {e}")
         return HttpResponse(status=200)
     return HttpResponse(status=405)
 
@@ -161,13 +161,13 @@ if handler:
                 profile, _ = UserProfile.objects.get_or_create(user=user)
                 profile.line_user_id = user_id
                 profile.save()
-                msg = f"✅ ลงทะเบียนสำเร็จ!\nสวัสดีคุณ {user.get_full_name() or user.username}\nระบบจะแจ้งเตือนการจองมาที่นี่ครับ"
+                msg = f" ลงทะเบียนสำเร็จ!\nสวัสดีคุณ {user.get_full_name() or user.username}\nระบบจะแจ้งเตือนการจองมาที่นี่ครับ"
             except IndexError:
-                msg = "⚠️ พิมพ์ผิดครับ\nพิมพ์: ลงทะเบียน [username]"
+                msg = " พิมพ์ผิดครับ\nพิมพ์: ลงทะเบียน [username]"
             except User.DoesNotExist:
-                msg = f"❌ ไม่พบชื่อผู้ใช้ในระบบ"
+                msg = f" ไม่พบชื่อผู้ใช้ในระบบ"
             except Exception as e:
-                msg = f"❌ Error: {e}"
+                msg = f" Error: {e}"
             line_bot_api.reply_message(event.reply_token, TextSendMessage(text=msg))
 
 @receiver(user_logged_in)
@@ -180,7 +180,7 @@ def user_logged_out_callback(sender, request, user, **kwargs): pass
 
 def send_booking_notification(booking, template_name, subject_prefix):
     """ ส่งแจ้งเตือน Email และ LINE """
-    print(f"\n--- 🔔 Notification Trigger: {subject_prefix} ---")
+    print(f"\n--- Notification Trigger: {subject_prefix} ---")
 
     # 1. Email
     email_recipients = []
@@ -223,16 +223,16 @@ def send_booking_notification(booking, template_name, subject_prefix):
         has_eq = booking.equipments.exists() if hasattr(booking, 'equipments') else False
         
         if has_req or has_eq:
-            extra_msg = "\n⚠️ *มีการขออุปกรณ์เสริม*"
+            extra_msg = "\n *มีการขออุปกรณ์เสริม*"
 
-        msg = f"📢 {subject_prefix}{extra_msg}\nห้อง: {booking.room.name}\nเรื่อง: {booking.title}\nเวลา: {booking.start_time.strftime('%d/%m %H:%M')}"
+        msg = f" {subject_prefix}{extra_msg}\nห้อง: {booking.room.name}\nเรื่อง: {booking.title}\nเวลา: {booking.start_time.strftime('%d/%m %H:%M')}"
         
         for uid in line_targets:
             if uid:
                 try:
                     line_bot_api.push_message(uid, TextSendMessage(text=msg))
                 except Exception as e:
-                    print(f" ❌ LINE Error ({uid}): {e}")
+                    print(f" LINE Error ({uid}): {e}")
 
 class UserAutocomplete(Select2QuerySetView):
     def get_queryset(self):
@@ -489,11 +489,13 @@ def reject_booking_view(request, booking_id):
 def rooms_api(request): return JsonResponse([{'id': r.id, 'title': r.name} for r in Room.objects.all()], safe=False)
 
 def bookings_api(request):
-    start = request.GET.get('start'); end = request.GET.get('end')
+    start = request.GET.get('start'); end = request.GET.get('end'); room_id = request.GET.get('room_id')
     try: 
         s_dt = datetime.fromisoformat(start.replace('Z','+00:00'))
         e_dt = datetime.fromisoformat(end.replace('Z','+00:00'))
         qs = Booking.objects.filter(start_time__lt=e_dt, end_time__gt=s_dt)
+        if room_id:
+            qs = qs.filter(room_id=room_id)
         events = []
         for b in qs:
             title = b.title
@@ -569,7 +571,7 @@ def edit_user_roles_view(request, user_id):
         return redirect('user_management')
     return render(request, 'pages/edit_user_roles.html', {**get_base_context(request), 'user_to_edit': u, 'all_groups': Group.objects.all(), 'user_group_pks': list(u.groups.values_list('pk', flat=True))})
 
-# ✅ ROOM MANAGEMENT (ฟังก์ชันนี้แหละที่หายไป)
+#  ROOM MANAGEMENT (ฟังก์ชันนี้แหละที่หายไป)
 @login_required
 @user_passes_test(is_admin)
 def room_management_view(request): 
