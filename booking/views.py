@@ -145,7 +145,7 @@ def line_webhook(request):
         except InvalidSignatureError:
             return HttpResponse(status=400)
         except Exception as e:
-            print(f"Handler Error: {e}")
+            print(f"❌ Handler Error: {e}")
         return HttpResponse(status=200)
     return HttpResponse(status=405)
 
@@ -161,13 +161,13 @@ if handler:
                 profile, _ = UserProfile.objects.get_or_create(user=user)
                 profile.line_user_id = user_id
                 profile.save()
-                msg = f"ลงทะเบียนสำเร็จ!\nสวัสดีคุณ {user.get_full_name() or user.username}\nระบบจะแจ้งเตือนการจองมาที่นี่ครับ"
+                msg = f"✅ ลงทะเบียนสำเร็จ!\nสวัสดีคุณ {user.get_full_name() or user.username}\nระบบจะแจ้งเตือนการจองมาที่นี่ครับ"
             except IndexError:
-                msg = "พิมพ์ผิดครับ\nพิมพ์: ลงทะเบียน [username]"
+                msg = "⚠️ พิมพ์ผิดครับ\nพิมพ์: ลงทะเบียน [username]"
             except User.DoesNotExist:
-                msg = f"ไม่พบชื่อผู้ใช้ในระบบ"
+                msg = f"❌ ไม่พบชื่อผู้ใช้ในระบบ"
             except Exception as e:
-                msg = f"Error: {e}"
+                msg = f"❌ Error: {e}"
             line_bot_api.reply_message(event.reply_token, TextSendMessage(text=msg))
 
 @receiver(user_logged_in)
@@ -178,11 +178,69 @@ def user_logged_in_callback(sender, request, user, **kwargs):
 @receiver(user_logged_out)
 def user_logged_out_callback(sender, request, user, **kwargs): pass 
 
+# ✅ [UPDATED] ฟังก์ชันแจ้งเตือน (ส่งหา Admin + อุปกรณ์)
 def send_booking_notification(booking, template_name, subject_prefix):
-    """ ส่งแจ้งเตือน Email และ LINE """
-    print(f"\n---  Notification Trigger: {subject_prefix} ---")
+    """ ส่งแจ้งเตือน Email และ LINE ไปยัง Admin และผู้เกี่ยวข้อง พร้อมรายละเอียดอุปกรณ์ """
+    print(f"\n--- 🔔 Notification Trigger: {subject_prefix} ---")
 
-    # 1. Email
+    # 1. เตรียมข้อมูลอุปกรณ์และคำขอเพิ่มเติม
+    equip_text = "-"
+    if hasattr(booking, 'equipments') and booking.equipments.exists():
+        equip_names = [eq.name for eq in booking.equipments.all()]
+        equip_text = ", ".join(equip_names)
+    
+    note_text = booking.additional_requests if booking.additional_requests else "-"
+    start_str = booking.start_time.strftime('%d/%m/%Y %H:%M')
+    end_str = booking.end_time.strftime('%H:%M')
+
+    # 2. ส่ง LINE
+    if line_bot_api:
+        line_targets = set()
+        
+        # A. คนจอง
+        try: 
+            if booking.user.profile.line_user_id: 
+                line_targets.add(booking.user.profile.line_user_id)
+        except: pass
+
+        # B. ผู้อนุมัติประจำห้อง
+        if booking.room.approver:
+            try: 
+                if booking.room.approver.profile.line_user_id: 
+                    line_targets.add(booking.room.approver.profile.line_user_id)
+            except: pass
+
+        # C. ✅ แอดมินทุกคน (Superuser)
+        admins = User.objects.filter(is_superuser=True)
+        for admin in admins:
+            try:
+                if hasattr(admin, 'profile') and admin.profile.line_user_id:
+                    line_targets.add(admin.profile.line_user_id)
+            except: pass
+
+        # D. ข้อความแจ้งเตือน
+        msg = (
+            f"📢 {subject_prefix}\n"
+            f"-------------------------\n"
+            f"👤 ผู้จอง: {booking.user.get_full_name() or booking.user.username}\n"
+            f"🏢 ห้อง: {booking.room.name}\n"
+            f"📝 เรื่อง: {booking.title}\n"
+            f"🕒 เวลา: {start_str} - {end_str}\n"
+            f"🛠️ อุปกรณ์: {equip_text}\n"
+            f"💬 เพิ่มเติม: {note_text}\n"
+            f"-------------------------\n"
+            f"สถานะ: {booking.get_status_display()}"
+        )
+
+        # E. ส่งข้อความ
+        for uid in line_targets:
+            if uid:
+                try:
+                    line_bot_api.push_message(uid, TextSendMessage(text=msg))
+                except Exception as e:
+                    print(f"   > ❌ LINE Error ({uid}): {e}")
+    
+    # 3. ส่ง Email
     email_recipients = []
     if 'โปรดอนุมัติ' in subject_prefix:
         if booking.room.approver and booking.room.approver.email: email_recipients = [booking.room.approver.email]
@@ -192,47 +250,12 @@ def send_booking_notification(booking, template_name, subject_prefix):
     
     if email_recipients:
         try:
-            send_mail(f"[{subject_prefix}] {booking.title}", f"ห้อง: {booking.room.name}", settings.DEFAULT_FROM_EMAIL, email_recipients, fail_silently=True)
+            send_mail(
+                f"[{subject_prefix}] {booking.title}", 
+                f"รายละเอียดการจอง:\n\nห้อง: {booking.room.name}\nอุปกรณ์: {equip_text}\nเพิ่มเติม: {note_text}", 
+                settings.DEFAULT_FROM_EMAIL, email_recipients, fail_silently=True
+            )
         except: pass
-
-    # 2. LINE OA
-    line_targets = set() 
-    
-    # A. คนจอง
-    try: 
-        if booking.user.profile.line_user_id: line_targets.add(booking.user.profile.line_user_id)
-    except: pass
-
-    # B. ผู้อนุมัติ
-    if 'โปรดอนุมัติ' in subject_prefix and booking.room.approver:
-        try: 
-            if booking.room.approver.profile.line_user_id: line_targets.add(booking.room.approver.profile.line_user_id)
-        except: pass
-
-    # C. ผู้เข้าร่วม
-    if booking.participants.exists():
-        for p in booking.participants.all():
-            try:
-                if p.profile.line_user_id: line_targets.add(p.profile.line_user_id)
-            except: pass
-
-    if line_targets and line_bot_api:
-        # [NEW] เพิ่มข้อความแจ้งเตือนอุปกรณ์
-        extra_msg = ""
-        has_req = bool(booking.additional_requests and booking.additional_requests.strip())
-        has_eq = booking.equipments.exists() if hasattr(booking, 'equipments') else False
-        
-        if has_req or has_eq:
-            extra_msg = "\n *มีการขออุปกรณ์เสริม*"
-
-        msg = f"{subject_prefix}{extra_msg}\nห้อง: {booking.room.name}\nเรื่อง: {booking.title}\nเวลา: {booking.start_time.strftime('%d/%m %H:%M')}"
-        
-        for uid in line_targets:
-            if uid:
-                try:
-                    line_bot_api.push_message(uid, TextSendMessage(text=msg))
-                except Exception as e:
-                    print(f" LINE Error ({uid}): {e}")
 
 class UserAutocomplete(Select2QuerySetView):
     def get_queryset(self):
@@ -484,35 +507,25 @@ def reject_booking_view(request, booking_id):
     return redirect('approvals')
 
 # ----------------------------------------------------------------------
-# F. APIS (Updated to send user & room name)
+# F. APIS
 # ----------------------------------------------------------------------
 def rooms_api(request): return JsonResponse([{'id': r.id, 'title': r.name} for r in Room.objects.all()], safe=False)
 
 def bookings_api(request):
     start = request.GET.get('start'); end = request.GET.get('end')
-    room_id = request.GET.get('room_id') # รับ room_id ถ้ามี
+    room_id = request.GET.get('room_id') 
 
     try: 
         s_dt = datetime.fromisoformat(start.replace('Z','+00:00'))
         e_dt = datetime.fromisoformat(end.replace('Z','+00:00'))
         
-        # ดึงมาให้หมด (รวมยกเลิกด้วย)
         qs = Booking.objects.filter(start_time__lt=e_dt, end_time__gt=s_dt)
-        
-        # ถ้ามี room_id ให้กรอง
         if room_id:
             qs = qs.filter(room_id=room_id)
 
         events = []
         for b in qs:
             title = b.title
-            has_req = bool(b.additional_requests and b.additional_requests.strip())
-            has_eq = b.equipments.exists() if hasattr(b, 'equipments') else False
-            if has_req or has_eq: title += " 🛠️"
-
-            if not request.user.is_authenticated: title = "ไม่ว่าง"
-            
-            # หาชื่อผู้จอง
             user_name = b.user.get_full_name() if b.user and b.user.get_full_name() else (b.user.username if b.user else "ไม่ระบุ")
 
             events.append({
@@ -523,15 +536,15 @@ def bookings_api(request):
                 'resourceId': b.room.id, 
                 'extendedProps': {
                     'status': b.status,
-                    'user': user_name,    #  ส่งชื่อผู้จอง
-                    'room': b.room.name,  #  ส่งชื่อห้อง
+                    'user': user_name,    
+                    'room': b.room.name,  
+                    'desc': b.additional_requests or "-" 
                 }
             })
         return JsonResponse(events, safe=False)
     except Exception as e:
         return JsonResponse([], safe=False)
 
-#  [API Update เวลา (Drag & Drop)]
 @login_required
 @require_POST
 def update_booking_time_api(request):
