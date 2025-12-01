@@ -13,6 +13,7 @@
     <style>
         .fc { font-family: 'Kanit', sans-serif; }
         
+        /* Toolbar */
         .fc .fc-toolbar-title { font-size: 1.25rem; font-weight: 600; color: #1e293b; }
         .fc .fc-button-primary { 
             background-color: #fff; border-color: #cbd5e1; color: #475569; 
@@ -23,6 +24,7 @@
             background-color: #0d6efd; border-color: #0d6efd; color: white; 
         }
 
+        /* Event Styling */
         .fc-event {
             color: #ffffff !important;
             border: none !important;
@@ -30,18 +32,14 @@
             cursor: pointer;
         }
         
-        /* --- Color Scheme --- */
-        .fc-event.status-past { background-color: #adb5bd !important; opacity: 0.7; color: #000 !important; }
+        /* --- 🎨 Color Scheme --- */
+        .fc-event.status-past { background-color: #adb5bd !important; opacity: 0.7; color: #000 !important; pointer-events: none; }
         .fc-event.status-future { background-color: #198754 !important; }
-        .fc-event.status-current { 
-            background-color: #0d6efd !important; 
-            box-shadow: 0 0 8px rgba(13, 110, 253, 0.5); border-left: 4px solid #0a58ca !important;
-        }
+        .fc-event.status-current { background-color: #0d6efd !important; box-shadow: 0 0 8px rgba(13, 110, 253, 0.5); border-left: 4px solid #0a58ca !important; pointer-events: none; }
         .fc-event.status-pending { background-color: #fd7e14 !important; }
-        .fc-event.status-cancelled { 
-            background-color: #dc3545 !important; text-decoration: line-through; opacity: 0.6; 
-        }
+        .fc-event.status-cancelled { background-color: #dc3545 !important; text-decoration: line-through; opacity: 0.6; pointer-events: none; }
 
+        /* --- 📱 Mobile Fix --- */
         @media (max-width: 768px) {
             .fc .fc-toolbar { flex-direction: column; gap: 10px; }
             .fc .fc-toolbar-title { font-size: 1.1rem; }
@@ -58,9 +56,7 @@
         <div class="row g-0">
             <div class="col-md-4 position-relative" style="min-height: 200px;">
                 {% if room.image %}
-                    <img src="{{ room.image.url }}" 
-                         class="w-100 h-100 object-fit-cover position-absolute top-0 start-0" 
-                         alt="{{ room.name }}">
+                    <img src="{{ room.image.url }}" class="w-100 h-100 object-fit-cover position-absolute top-0 start-0" alt="{{ room.name }}">
                 {% else %}
                     <div class="bg-light w-100 h-100 d-flex align-items-center justify-content-center text-muted position-absolute top-0 start-0">
                         <i class="bi bi-image" style="font-size: 3rem; opacity: 0.3;"></i>
@@ -110,6 +106,10 @@
 
     <div class="card border-0 shadow-sm rounded-4">
         <div class="card-body p-2 p-md-4">
+            <div class="alert alert-info border-0 d-flex align-items-center small mb-3">
+                <i class="bi bi-info-circle-fill me-2"></i>
+                <div><strong>ทริค:</strong> ลากรายการจองข้ามวันเพื่อเปลี่ยนวันได้ทันที (เฉพาะรายการในอนาคต)</div>
+            </div>
             <div id="calendar"></div>
         </div>
     </div>
@@ -147,8 +147,8 @@
     {{ form.media.js }}
 
     <script>
-    // รับค่าความจุห้องจาก Server มาเก็บไว้ในตัวแปร JS
-    const ROOM_CAPACITY = {{ room.capacity|default:0 }};
+    // 1. รับค่าความจุห้อง
+    const ROOM_CAPACITY = parseInt("{{ room.capacity|default:0 }}");
 
     function getCookie(name) {
         let cookieValue = null;
@@ -167,12 +167,16 @@
     const csrftoken = getCookie('csrftoken');
     const API_UPDATE_URL = "{% url 'update_booking_time_api' %}";
 
+    // เปิด Modal
     function openBookingModal(startStr = null, endStr = null) {
         const form = document.getElementById('hiddenBookingForm');
         const modalBody = document.getElementById('modalBookingBody');
+        
+        // ย้ายฟอร์มเข้าไปใน Modal
         if(!modalBody.contains(form)) modalBody.appendChild(form);
         form.reset();
 
+        // เติมเวลา
         if(startStr && endStr) {
             document.getElementById('id_start_time').value = startStr.substring(0, 16);
             document.getElementById('id_end_time').value = endStr.substring(0, 16);
@@ -185,10 +189,13 @@
             document.getElementById('id_end_time').value = nextHour.toISOString().slice(0,16);
         }
 
+        // Init Select2 ใน Modal
         $('#id_participants').select2({ theme: 'bootstrap-5', width: '100%', dropdownParent: $('#bookingModal') });
+        
         new bootstrap.Modal(document.getElementById('bookingModal')).show();
     }
 
+    // Drag & Drop Handler
     function updateBookingOnServer(eventInfo) {
         const event = eventInfo.event;
         fetch(API_UPDATE_URL, {
@@ -218,14 +225,14 @@
         var isMobile = window.innerWidth < 768;
 
         var calendar = new FullCalendar.Calendar(calendarEl, {
-            initialView: 'dayGridMonth', 
+            initialView: isMobile ? 'listMonth' : 'dayGridMonth', 
             locale: 'th',
             
             slotLabelFormat: { hour: '2-digit', minute: '2-digit', hour12: false }, 
             eventTimeFormat: { hour: '2-digit', minute: '2-digit', hour12: false },
 
             headerToolbar: {
-                left: 'prev,next',
+                left: 'prev,next today',
                 center: 'title',
                 right: isMobile ? 'listMonth' : 'dayGridMonth,timeGridWeek,listMonth'
             },
@@ -236,12 +243,7 @@
             editable: true,
             eventDurationEditable: true,
             droppable: true,
-            
-            slotMinTime: '08:00:00',
-            slotMaxTime: '20:00:00',
-            allDaySlot: false,
             height: 'auto',
-
             events: "{% url 'bookings_api' %}?room_id={{ room.id }}",
 
             eventDrop: function(info) {
@@ -268,7 +270,7 @@
                     } 
                     else if (info.event.start <= now && info.event.end >= now) {
                         info.el.classList.add('status-current');
-                        info.event.setProp('editable', false);
+                        info.event.setProp('editable', false); 
                     } 
                     else info.el.classList.add('status-future');
                 }
@@ -294,23 +296,28 @@
 
         calendar.render();
 
-        // ตรวจสอบจำนวนคนก่อนกดจอง
+        // ✅ [Fix] แก้ไขปุ่มยืนยันให้กดติดแน่นอน
         document.getElementById('submitBookingBtn').addEventListener('click', function() {
-            // 1. ดึงค่าจาก Input (id มาจาก Crispy Forms)
-            const participantInput = document.getElementById('id_participant_count');
-            const currentCount = participantInput ? parseInt(participantInput.value) : 0;
+            const pInput = document.getElementById('id_participant_count');
+            const count = pInput && pInput.value ? parseInt(pInput.value) : 0;
 
-            // 2. เช็คเงื่อนไข
-            if (currentCount > ROOM_CAPACITY) {
-                // แจ้งเตือนด้วย Alert
-                alert(`ไม่สามารถจองได้!\n\nจำนวนผู้เข้าร่วม (${currentCount} ท่าน) เกินความจุของห้องนี้ (${ROOM_CAPACITY} ท่าน)\nกรุณาลดจำนวนคน หรือเลือกห้องประชุมอื่น`);
-                return; // หยุดการทำงาน (ไม่ส่งฟอร์ม)
+            // เช็คความจุ (ถ้ามี)
+            if (ROOM_CAPACITY > 0 && count > ROOM_CAPACITY) {
+                alert(`⚠️ ไม่สามารถจองได้!\n\nจำนวน ${count} ท่าน เกินความจุห้อง (${ROOM_CAPACITY} ท่าน)`);
+                return; 
             }
 
-            // 3. ถ้าผ่าน ให้ส่งฟอร์ม
+            // Disable ปุ่มและส่งฟอร์ม
             this.disabled = true;
-            this.innerHTML = 'กำลังบันทึก...';
-            document.getElementById('hiddenBookingForm').submit();
+            this.innerHTML = '<span class="spinner-border spinner-border-sm"></span> กำลังบันทึก...';
+            
+            // บังคับ Submit Form ตรงๆ
+            const form = document.getElementById('hiddenBookingForm');
+            if (form) {
+                form.submit();
+            } else {
+                alert("Error: ไม่พบฟอร์ม กรุณารีเฟรชหน้าเว็บ");
+            }
         });
     });
     </script>

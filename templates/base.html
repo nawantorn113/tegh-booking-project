@@ -3,195 +3,83 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>{% block title %}TEGH Booking{% endblock %}</title>
-
+    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
     
-    <style>
-        body { 
-            background-color: #f0f2f5; 
-            font-family: 'Kanit', sans-serif; 
-            /* ปรับระยะห่างด้านบนให้พอดีกับ Navbar เพื่อไม่ให้เนื้อหาโดนบัง */
-            padding-top: 65px; 
-        }
-        .main-content-wrapper { padding-bottom: 1.5rem; }
-        
-        /* --- Navbar Compact & Animation --- */
-        .navbar { 
-            background-color: #ffffff; 
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1); 
-            min-height: 60px; /* ใช้ min-height เผื่อเนื้อหาเยอะในมือถือ */
-            padding: 0.5rem 0; /* เพิ่ม padding เล็กน้อยเพื่อความสวยงาม */
-            transition: top 0.3s ease-in-out; 
-        }
-        
-        .navbar-brand { 
-            color: #1877f2 !important; 
-            font-weight: 700; 
-            font-size: 1.25rem; 
-            display: flex;
-            align-items: center;
-        }
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
 
-        /* เมนูแบบ Pill */
-        .nav-pills .nav-link {
-            border-radius: 50px;
-            padding: 6px 15px; /* ปรับขนาดปุ่มสัมผัสให้ง่ายขึ้น */
-            font-size: 0.9rem;
-            color: #65676b;
-            font-weight: 500;
-            transition: all 0.2s;
-        }
+    <style>
+        body { background-color: #f0f2f5; font-family: 'Kanit', sans-serif; padding-top: 70px; }
+        .main-content-wrapper { padding-bottom: 2rem; }
+        .navbar { background-color: #ffffff; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08); min-height: 60px; padding: 0; }
+        .navbar-brand { color: #1877f2 !important; font-weight: 700; font-size: 1.3rem; display: flex; align-items: center; }
+        .nav-pills .nav-link { border-radius: 50px; padding: 5px 14px; font-size: 0.9rem; color: #606770; font-weight: 500; transition: all 0.2s; }
         .nav-pills .nav-link:hover { background-color: #f2f2f2; color: #1c1e21; }
         .nav-pills .nav-link.active { background-color: #e7f3ff; color: #1877f2; font-weight: 600; }
-
-        /* ปุ่มวงกลม */
-        .btn-circle-fb {
-            width: 38px; height: 38px; /* ขยายเล็กน้อยให้นิ้วแตะง่ายขึ้น */
-            background-color: #e4e6eb;
-            border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            color: #050505;
-            text-decoration: none;
-            transition: background-color 0.2s;
-            cursor: pointer;
-            border: none;
-            position: relative;
-        }
-        .btn-circle-fb:hover, .show > .btn-circle-fb { background-color: #d8dadf; color: #1877f2; }
-        .btn-circle-fb i { font-size: 1.1rem; }
-
-        .badge-fb {
-            position: absolute; top: -2px; right: -2px;
-            background-color: #e41e3f; color: white;
-            font-size: 0.65rem; padding: 2px 5px;
-            border-radius: 6px; min-width: 18px;
-            border: 2px solid #fff;
-            line-height: 1;
-        }
-
-        /* Dropdown */
-        .dropdown-menu-fb {
-            width: 300px; /* ปรับให้พอดีกับจอมือถือ */
-            max-width: 90vw; /* ไม่ให้ล้นจอในมือถือจอเล็ก */
-            padding: 0; border-radius: 8px; border: none;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.15); margin-top: 8px; overflow: hidden;
-        }
-        .dropdown-header-fb { padding: 8px 12px; font-size: 1rem; font-weight: 700; color: #050505; background-color: #fff; }
-
-        .notify-item-fb {
-            display: flex; align-items: center; padding: 8px 12px;
-            border-radius: 8px; text-decoration: none; color: inherit;
-            transition: background-color 0.2s; margin: 2px 4px;
-        }
+        .btn-circle-fb { width: 38px; height: 38px; background-color: #e4e6eb; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #050505; text-decoration: none; transition: background-color 0.2s; cursor: pointer; border: none; position: relative; }
+        .btn-circle-fb:hover { background-color: #d8dadf; color: #1877f2; }
+        .badge-fb { position: absolute; top: -2px; right: -2px; background-color: #e41e3f; color: white; font-size: 0.6rem; padding: 1px 4px; border-radius: 6px; min-width: 16px; border: 2px solid #fff; line-height: 1; }
+        .dropdown-menu-fb { width: 300px; border-radius: 8px; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-top: 8px; overflow: hidden; }
+        .dropdown-header-fb { padding: 10px 16px; font-size: 1rem; font-weight: 700; background-color: #fff; }
+        .notify-item-fb { display: flex; align-items: center; padding: 8px 16px; text-decoration: none; color: inherit; transition: background-color 0.2s; }
         .notify-item-fb:hover { background-color: #f0f2f5; }
+        .notify-avatar { width: 36px; height: 36px; border-radius: 50%; background-color: #e7f3ff; color: #1877f2; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; margin-right: 12px; flex-shrink: 0; }
+        .notify-content { flex: 1; min-width: 0; }
+        .notify-content strong { font-size: 0.9rem; display: block; line-height: 1.2; margin-bottom: 2px; }
+        .notify-content span { font-size: 0.8rem; color: #65676b; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .notify-time { font-size: 0.7rem; color: #1877f2; font-weight: 500; }
         
-        .notify-avatar {
-            width: 40px; height: 40px; border-radius: 50%;
-            background-color: #e7f3ff; color: #1877f2;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 1.2rem; margin-right: 10px; flex-shrink: 0;
+        /* ✅ ปรับฟอนต์ SweetAlert ให้เป็น Kanit เหมือนเว็บ */
+        div:where(.swal2-container) div:where(.swal2-popup) {
+            font-family: 'Kanit', sans-serif !important;
         }
-        .notify-content strong { font-size: 0.85rem; display: block; line-height: 1.2; margin-bottom: 2px; }
-        .notify-content span { font-size: 0.8rem; color: #65676b; }
-        .notify-time { font-size: 0.7rem; color: #1877f2; font-weight: 600; }
-        
-        /* สไตล์สำหรับ Scrollbar */
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: #f1f1f1; }
-        ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
     </style>
-    
     {% block extra_head %}{% endblock %}
 </head>
 <body>
+    
+    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 9999;">
+        <div id="liveToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="10000">
+            <div class="toast-header bg-primary text-white">
+                <i class="bi bi-bell-fill me-2"></i>
+                <strong class="me-auto">มีการจองใหม่!</strong>
+                <small>เมื่อสักครู่</small>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+            </div>
+            <div class="toast-body bg-white shadow-sm">
+                <p class="mb-1"><strong>ผู้จอง:</strong> <span id="toastUser"></span></p>
+                <p class="mb-1"><strong>ห้อง:</strong> <span id="toastRoom" class="text-primary"></span></p>
+                <p class="mb-1"><strong>อุปกรณ์:</strong> <span id="toastEquip" class="text-danger"></span></p>
+                <p class="mb-2"><strong>สถานะ:</strong> <span id="toastStatus" class="badge bg-warning text-dark"></span></p>
+                <div class="mt-2 pt-2 border-top text-end">
+                    <a href="{% url 'approvals' %}" class="btn btn-sm btn-outline-primary rounded-pill px-3">ดูรายการ</a>
+                </div>
+            </div>
+        </div>
+    </div>
 
     {% if user.is_authenticated %}
-        <nav class="navbar navbar-expand-lg fixed-top" id="main-navbar">
-            <div class="container h-100"> 
+        <nav class="navbar navbar-expand-lg fixed-top">
+            <div class="container"> 
+                <a class="navbar-brand me-3" href="{% url 'dashboard' %}"><i class="bi bi-calendar-week-fill me-2"></i> TEGH Booking</a>
+                <button class="navbar-toggler btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar"><span class="navbar-toggler-icon"></span></button>
                 
-                <a class="navbar-brand me-2" href="{% url 'dashboard' %}">
-                    <i class="bi bi-calendar-week-fill me-1"></i> TEGH Booking
-                </a>
-                
-                <div class="d-flex align-items-center gap-2 ms-auto order-lg-2">
-                     {% if is_admin_user or user.is_superuser %}
-                        <div class="dropdown">
-                            <a class="btn-circle-fb" href="#" id="fbNotifyDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="bi bi-bell-fill small"></i>
-                                {% if pending_count > 0 %}
-                                    <span class="badge-fb">{{ pending_count }}</span>
-                                {% endif %}
-                            </a>
-                            <div class="dropdown-menu dropdown-menu-end dropdown-menu-fb p-0" aria-labelledby="fbNotifyDropdown">
-                                <div class="dropdown-header-fb border-bottom">การแจ้งเตือน</div>
-                                <div style="max-height: 300px; overflow-y: auto; padding: 4px 0;">
-                                    {% if pending_notifications %}
-                                        {% for booking in pending_notifications %}
-                                            <a href="{% url 'approvals' %}" class="notify-item-fb px-3">
-                                                <div class="notify-avatar"><i class="bi bi-calendar-check-fill"></i></div>
-                                                <div class="notify-content">
-                                                    <strong>{{ booking.user.get_full_name|default:booking.user.username }}</strong>
-                                                    <span>ขอจอง: <span class="fw-bold">{{ booking.room.name }}</span></span>
-                                                    <div class="notify-time">{{ booking.created_at|timesince }}</div>
-                                                </div>
-                                            </a>
-                                        {% endfor %}
-                                    {% else %}
-                                        <div class="text-center py-4 text-muted"><span class="small">ไม่มีการแจ้งเตือน</span></div>
-                                    {% endif %}
-                                </div>
-                                <div class="p-2 text-center border-top bg-light"><a href="{% url 'approvals' %}" class="text-decoration-none fw-bold small text-primary">ดูทั้งหมด</a></div>
-                            </div>
-                        </div>
-                    {% endif %}
-
-                    <div class="dropdown">
-                        <a class="btn-circle-fb" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
-                            <i class="bi bi-person-fill fs-5"></i>
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2 p-1" style="width: 200px;">
-                            <li class="px-3 py-2 border-bottom mb-1">
-                                <span class="fw-bold d-block small text-dark text-truncate">{{ user.get_full_name|default:user.username }}</span>
-                                <span class="small text-muted">ผู้ใช้งาน</span>
-                            </li>
-                            <li><a class="dropdown-item py-1 small rounded" href="{% url 'change_password' %}">เปลี่ยนรหัสผ่าน</a></li>
-                            <li>
-                                <form action="{% url 'logout' %}" method="post" class="px-0">
-                                    {% csrf_token %}
-                                    <button type="submit" class="dropdown-item py-1 text-danger small rounded">ออกจากระบบ</button>
-                                </form>
-                            </li>
-                        </ul>
-                    </div>
-
-                    <button class="navbar-toggler border-0 p-1 ms-1" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar">
-                        <span class="navbar-toggler-icon" style="width: 1.2em; height: 1.2em;"></span>
-                    </button>
-                </div>
-
-                <div class="collapse navbar-collapse order-lg-1" id="mainNavbar">
-                    <ul class="navbar-nav nav-pills me-auto mb-2 mb-lg-0 gap-1 mt-3 mt-lg-0">
+                <div class="collapse navbar-collapse" id="mainNavbar">
+                    <ul class="navbar-nav nav-pills me-auto mb-2 mb-lg-0 gap-1 align-items-center mt-2 mt-lg-0">
                         {% for item in menu_items %}
                             {% if item.show %}
-                                <li class="nav-item">
-                                    <a class="nav-link {% if item.active %}active{% endif %}" href="{% url item.url_name %}">
-                                        <i class="{{ item.icon }} me-1 small"></i> {{ item.label }}
-                                    </a>
-                                </li>
+                                <li class="nav-item"><a class="nav-link {% if item.active %}active{% endif %}" href="{% url item.url_name %}"><i class="{{ item.icon }} me-1 small"></i> {{ item.label }}</a></li>
                             {% endif %}
                         {% endfor %}
-
                         {% if is_admin_user %}
                             <li class="nav-item border-start mx-2 ps-2 d-none d-lg-block" style="height: 20px; border-color: #ddd;"></li>
-                            <li class="nav-item dropdown mt-2 mt-lg-0">
-                                <a class="nav-link dropdown-toggle fw-bold small" href="#" role="button" data-bs-toggle="dropdown">
-                                    ผู้ดูแลระบบ
-                                </a>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle fw-bold small" href="#" role="button" data-bs-toggle="dropdown">ผู้ดูแลระบบ</a>
                                 <ul class="dropdown-menu shadow border-0 rounded-3 mt-1">
                                     {% for item in admin_menu_items %}
                                         <li><a class="dropdown-item py-1 small" href="{% url item.url_name %}"><i class="{{ item.icon }} me-2 text-muted"></i>{{ item.label }}</a></li>
@@ -200,48 +88,158 @@
                             </li>
                         {% endif %}
                     </ul>
-                </div>
 
+                    <ul class="navbar-nav ms-auto mb-2 mb-lg-0 flex-row align-items-center gap-2 mt-3 mt-lg-0 justify-content-end">
+                        {% if is_admin_user or user.is_superuser %}
+                            <li class="nav-item dropdown position-static position-lg-relative">
+                                <a class="btn-circle-fb" href="#" id="fbNotifyDropdown" role="button" data-bs-toggle="dropdown">
+                                    <i class="bi bi-bell-fill small"></i>
+                                    <span class="badge-fb" id="notifyBadge" style="display:none;">0</span>
+                                </a>
+                                <div class="dropdown-menu dropdown-menu-end dropdown-menu-fb p-0" aria-labelledby="fbNotifyDropdown">
+                                    <div class="dropdown-header-fb border-bottom d-flex justify-content-between align-items-center">
+                                        <span>การแจ้งเตือน</span>
+                                        <a href="{% url 'approvals' %}" class="text-decoration-none small text-primary">จัดการ</a>
+                                    </div>
+                                    <div style="max-height: 300px; overflow-y: auto;">
+                                        {% if pending_notifications %}
+                                            {% for booking in pending_notifications %}
+                                                <a href="{% url 'approvals' %}" class="notify-item-fb border-bottom">
+                                                    <div class="notify-avatar bg-warning bg-opacity-10 text-warning"><i class="bi bi-hourglass-split"></i></div>
+                                                    <div class="notify-content ms-2">
+                                                        <strong class="text-dark d-block small">{{ booking.user.username }}</strong>
+                                                        <span class="d-block text-muted small">{{ booking.room.name }}</span>
+                                                        <div class="text-primary small" style="font-size: 0.7rem;">{{ booking.created_at|timesince }}</div>
+                                                    </div>
+                                                </a>
+                                            {% endfor %}
+                                        {% else %}
+                                            <div class="text-center py-5 text-muted small">ไม่มีรายการใหม่</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </li>
+                        {% endif %}
+                        
+                        <li class="nav-item dropdown">
+                            <a class="btn-circle-fb" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown"><i class="bi bi-person-fill fs-5"></i></a>
+                            <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2 p-1" style="width: 200px;">
+                                <li class="px-3 py-2 border-bottom mb-1"><span class="fw-bold d-block small text-dark">{{ user.username }}</span></li>
+                                <li><a class="dropdown-item py-1 small rounded" href="{% url 'change_password' %}">เปลี่ยนรหัสผ่าน</a></li>
+                                <li><form action="{% url 'logout' %}" method="post" class="px-0 m-0">{% csrf_token %}<button type="submit" class="dropdown-item py-1 text-danger small rounded">ออกจากระบบ</button></form></li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
             </div>
         </nav>
     {% endif %}
 
     <main class="container mt-3 main-content-wrapper" id="main-content">
-        {% if messages %}
-            <div class="mb-3">
-                {% for message in messages %}
-                    <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show shadow-sm border-0 py-2 small" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close btn-sm" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                {% endfor %}
-            </div>
-        {% endif %}
         {% block content %}{% endblock %}
     </main>
 
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
     <script>
-        setTimeout(function() { $('.alert-success').alert('close'); }, 4000);
-
-        // [SCRIPT] Auto-hide Navbar Logic
+        // Auto-hide Navbar
         var lastScrollTop = 0;
-        var navbar = document.getElementById("main-navbar");
-        
-        window.addEventListener("scroll", function(){
-            var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-            // ถ้าเลื่อนลงเกิน 60px ให้ซ่อนขึ้นไป
-            if (scrollTop > lastScrollTop && scrollTop > 60) {
-                navbar.style.top = "-80px"; // ปรับค่าเผื่อความสูง Navbar 
-            } else {
-                navbar.style.top = "0"; 
-            }
-            lastScrollTop = scrollTop;
+        var navbar = document.getElementById("mainNavbar");
+        if(navbar){
+            window.addEventListener("scroll", function(){
+                var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+                // ซ่อน navbar เมื่อเลื่อนลงเกิน 60px
+                if (scrollTop > lastScrollTop && scrollTop > 60) { 
+                    // เนื่องจากเป็น class fixed-top ต้องปรับ style ให้ถูกต้อง
+                    document.querySelector('.navbar').style.transform = 'translateY(-100%)';
+                    document.querySelector('.navbar').style.transition = 'transform 0.3s ease-in-out';
+                } else { 
+                    document.querySelector('.navbar').style.transform = 'translateY(0)';
+                }
+                lastScrollTop = scrollTop;
+            });
+        }
+
+        // ✅ 3. Script แสดง Popup อัตโนมัติเมื่อมี Message (Error/Success)
+        document.addEventListener('DOMContentLoaded', function() {
+            {% if messages %}
+                {% for message in messages %}
+                    var msgType = "{{ message.tags }}"; 
+                    var msgText = "{{ message|escapejs }}";
+                    var titleText = "แจ้งเตือน";
+                    var iconType = "info";
+                    var confirmColor = "#3085d6";
+
+                    if (msgType.includes('success')) {
+                        titleText = "สำเร็จ!";
+                        iconType = "success";
+                        confirmColor = "#198754";
+                    } else if (msgType.includes('error')) {
+                        titleText = "เกิดข้อผิดพลาด";
+                        iconType = "error";
+                        confirmColor = "#dc3545";
+                    } else if (msgType.includes('warning')) {
+                        titleText = "คำเตือน";
+                        iconType = "warning";
+                        confirmColor = "#ffc107";
+                    }
+
+                    Swal.fire({
+                        title: titleText,
+                        text: msgText,
+                        icon: iconType,
+                        confirmButtonText: 'ตกลง',
+                        confirmButtonColor: confirmColor,
+                        // ถ้าสำเร็จปิดเองใน 2 วิ, ถ้า Error ให้กดปิดเอง
+                        timer: msgType.includes('success') ? 2000 : undefined
+                    });
+                {% endfor %}
+            {% endif %}
         });
+
+        // ✅ Script แจ้งเตือน Real-time (Toast)
+        let lastBookingId = null;
+
+        function checkNotifications() {
+            fetch("{% url 'api_pending_count' %}")
+                .then(res => res.json())
+                .then(data => {
+                    // 1. อัปเดตจุดแดง
+                    const badge = document.getElementById('notifyBadge');
+                    if(badge) {
+                        if (data.count > 0) {
+                            badge.style.display = 'flex'; // ใช้ flex เพื่อจัดกึ่งกลาง
+                            badge.innerText = data.count;
+                        } else {
+                            badge.style.display = 'none';
+                        }
+                    }
+
+                    // 2. เด้ง Toast มุมขวาล่าง ถ้ามีของใหม่
+                    if (data.latest_booking && data.latest_booking.id !== lastBookingId) {
+                        lastBookingId = data.latest_booking.id; 
+                        
+                        document.getElementById('toastUser').innerText = data.latest_booking.user;
+                        document.getElementById('toastRoom').innerText = data.latest_booking.room;
+                        document.getElementById('toastEquip').innerText = data.latest_booking.equipments;
+                        document.getElementById('toastStatus').innerText = data.latest_booking.status;
+                        
+                        const toastEl = document.getElementById('liveToast');
+                        const toast = new bootstrap.Toast(toastEl);
+                        toast.show();
+                    }
+                })
+                .catch(err => console.log('Notify Error:', err));
+        }
+
+        {% if is_admin_user or user.is_superuser %}
+            setInterval(checkNotifications, 5000); // เช็คทุก 5 วิ
+            checkNotifications();
+        {% endif %}
     </script>
     {% block extra_scripts %}{% endblock %}
-
 </body>
 </html>
