@@ -13,8 +13,7 @@
     <style>
         .fc { font-family: 'Kanit', sans-serif; }
         
-        /* ปรับแต่งส่วนหัวปฏิทิน */
-        .fc .fc-toolbar-title { font-size: 1.5rem; font-weight: 600; color: #1e293b; }
+        .fc .fc-toolbar-title { font-size: 1.25rem; font-weight: 600; color: #1e293b; }
         .fc .fc-button-primary { 
             background-color: #fff; border-color: #cbd5e1; color: #475569; 
             font-weight: 500; box-shadow: none !important;
@@ -31,33 +30,21 @@
             cursor: pointer;
         }
         
-        /* --- Color Scheme --- */
-        /* 1. ใช้งานแล้ว (เทา) */
-        .fc-event.status-past {
-            background-color: #adb5bd !important; opacity: 0.7; color: #000 !important;
-        }
-        /* 2. จองแล้ว (เขียว) */
-        .fc-event.status-future {
-            background-color: #198754 !important; 
-        }
-        /* 3. กำลังใช้งาน (ฟ้า) */
-        .fc-event.status-current {
+        /* --- 🎨 Color Scheme --- */
+        .fc-event.status-past { background-color: #adb5bd !important; opacity: 0.7; color: #000 !important; }
+        .fc-event.status-future { background-color: #198754 !important; }
+        .fc-event.status-current { 
             background-color: #0d6efd !important; 
             box-shadow: 0 0 8px rgba(13, 110, 253, 0.5); border-left: 4px solid #0a58ca !important;
         }
-        /* 4. รออนุมัติ (ส้ม) */
-        .fc-event.status-pending {
-            background-color: #fd7e14 !important; 
-        }
-        /* 5. ยกเลิก (แดง) */
-        .fc-event.status-cancelled {
-            background-color: #dc3545 !important; text-decoration: line-through; opacity: 0.6;
+        .fc-event.status-pending { background-color: #fd7e14 !important; }
+        .fc-event.status-cancelled { 
+            background-color: #dc3545 !important; text-decoration: line-through; opacity: 0.6; 
         }
 
-        /* --- Mobile Fix --- */
         @media (max-width: 768px) {
-            .fc .fc-toolbar { flex-direction: column; gap: 10px; }
-            .fc .fc-toolbar-title { font-size: 1.2rem; }
+            .fc .fc-toolbar { flexDirection: column; gap: 10px; }
+            .fc .fc-toolbar-title { font-size: 1.1rem; }
             .fc-dayGridMonth-button, .fc-timeGridWeek-button { display: none !important; }
             .fc-view-harness { min-height: 400px; }
         }
@@ -69,7 +56,6 @@
     
     <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden">
         <div class="row g-0">
-            
             <div class="col-md-4 position-relative" style="min-height: 200px;">
                 {% if room.image %}
                     <img src="{{ room.image.url }}" 
@@ -161,7 +147,6 @@
     {{ form.media.js }}
 
     <script>
-    // --- CSRF & API Config ---
     function getCookie(name) {
         let cookieValue = null;
         if (document.cookie && document.cookie !== '') {
@@ -179,7 +164,6 @@
     const csrftoken = getCookie('csrftoken');
     const API_UPDATE_URL = "{% url 'update_booking_time_api' %}";
 
-    // --- Modal Logic ---
     function openBookingModal(startStr = null, endStr = null) {
         const form = document.getElementById('hiddenBookingForm');
         const modalBody = document.getElementById('modalBookingBody');
@@ -202,7 +186,6 @@
         new bootstrap.Modal(document.getElementById('bookingModal')).show();
     }
 
-    // --- Drag & Drop API Call ---
     function updateBookingOnServer(eventInfo) {
         const event = eventInfo.event;
         fetch(API_UPDATE_URL, {
@@ -223,7 +206,7 @@
         })
         .catch(err => {
             eventInfo.revert();
-            alert('เชื่อมต่อ Server ไม่ได้');
+            alert('เกิดข้อผิดพลาดในการเชื่อมต่อ');
         });
     }
 
@@ -232,10 +215,13 @@
         var isMobile = window.innerWidth < 768;
 
         var calendar = new FullCalendar.Calendar(calendarEl, {
-            // Mobile: List, PC: Month (ตามที่ขอ)
-            initialView: isMobile ? 'listMonth' : 'dayGridMonth', 
+            initialView: isMobile ? 'listMonth' : 'timeGridWeek', 
             locale: 'th',
             
+            // ✅ ตั้งค่าเวลาเป็น 24 ชั่วโมง
+            slotLabelFormat: { hour: '2-digit', minute: '2-digit', hour12: false }, 
+            eventTimeFormat: { hour: '2-digit', minute: '2-digit', hour12: false },
+
             headerToolbar: {
                 left: 'prev,next',
                 center: 'title',
@@ -245,23 +231,23 @@
             
             selectable: true,
             selectMirror: true,
-            
-            //  เปิด Drag & Drop
             editable: true,
             eventDurationEditable: true,
             droppable: true,
             
+            slotMinTime: '08:00:00',
+            slotMaxTime: '20:00:00',
+            allDaySlot: false,
             height: 'auto',
+
             events: "{% url 'bookings_api' %}?room_id={{ room.id }}",
 
-            //  Drag & Drop Handler
             eventDrop: function(info) {
-                if (!confirm("ยืนยันการย้ายวัน/เวลา?")) { info.revert(); } 
+                if (!confirm("ยืนยันการย้ายเวลา?")) { info.revert(); } 
                 else { updateBookingOnServer(info); }
             },
             eventResize: function(info) { updateBookingOnServer(info); },
 
-            //  Color Logic
             eventDidMount: function(info) {
                 var status = info.event.extendedProps.status;
                 var now = new Date();
@@ -279,15 +265,11 @@
 
             select: function(info) {
                 if (isMobile && info.view.type === 'listMonth') return; 
-                
-                let start, end;
-                // ถ้าเลือกจาก Month View (All Day) ให้ใส่เวลา 08:00-09:00
+                let start = info.startStr.substring(0, 16);
+                let end = info.endStr.substring(0, 16);
                 if(info.allDay) {
                     start = info.startStr + 'T08:00';
                     end = info.startStr + 'T09:00';
-                } else {
-                    start = info.startStr.substring(0, 16);
-                    end = info.endStr.substring(0, 16);
                 }
                 openBookingModal(start, end);
             },
