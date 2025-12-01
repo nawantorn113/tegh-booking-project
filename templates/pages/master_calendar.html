@@ -10,22 +10,30 @@
         .fc { font-family: 'Kanit', sans-serif; }
         .fc-toolbar-title { font-size: 1.5rem !important; font-weight: bold; }
         
-        /* ---  จัดการสี Event และตัวอักษร --- */
+        /* =========================================
+           CSS จัดการสี Event
+           ========================================= */
         
-        /* บังคับตัวอักษรสีขาวทุกสถานะ */
+        .fc-daygrid-event, .fc-list-event {
+            cursor: pointer !important; 
+            transition: transform 0.1s;
+        }
+
         .fc-event {
             color: #ffffff !important;  /* ตัวหนังสือสีขาว */
             border: none !important;
             box-shadow: 0 1px 2px rgba(0,0,0,0.1);
         }
         
-        /* 1. ใช้งานแล้ว (เทา) */
-        .fc-event.status-past {
+        /* 1. ใช้งานแล้ว (เทา)  */
+        .fc-daygrid-event.status-past, .fc-list-event.status-past { 
             background-color: #6c757d !important; 
-            opacity: 0.8;
+            border-color: #6c757d !important;
+            opacity: 0.6; 
             cursor: default !important;
             pointer-events: none;
         }
+        .fc-list-event.status-past .fc-list-event-dot { border-color: #6c757d !important; }
 
         /* 2. จองแล้ว (เขียว) */
         .fc-daygrid-event.status-future, .fc-list-event.status-future { 
@@ -34,25 +42,35 @@
         .fc-list-event.status-future .fc-list-event-dot { border-color: #198754 !important; }
 
         /* 3. กำลังใช้งาน (ฟ้า) */
-        .fc-event.status-current {
+        .fc-daygrid-event.status-current { 
             background-color: #0d6efd !important; 
-            box-shadow: 0 0 8px rgba(13, 110, 253, 0.6);
-            border: 2px solid #fff !important;
+            border: 2px solid #fff !important; 
+            box-shadow: 0 0 8px rgba(13, 110, 253, 0.6); 
         }
+        .fc-list-event.status-current .fc-list-event-dot { border-color: #0d6efd !important; }
 
         /* 4. รออนุมัติ (ส้ม) */
-        .fc-event.status-pending {
-            background-color: #fd7e14 !important; 
+        .fc-daygrid-event.status-pending, .fc-list-event.status-pending { 
+            background-color: #fd7e14 !important; border-color: #fd7e14 !important;
         }
+        .fc-list-event.status-pending .fc-list-event-dot { border-color: #fd7e14 !important; }
 
-        /* 5. ยกเลิก (แดง) */
-        .fc-event.status-cancelled {
+        /* 5. ยกเลิก (แดง)  */
+        .fc-daygrid-event.status-cancelled, .fc-list-event.status-cancelled { 
             background-color: #dc3545 !important; 
-            text-decoration: line-through;
-            opacity: 0.6;
+            border-color: #dc3545 !important;
+            text-decoration: line-through; 
+            opacity: 0.5; 
+            cursor: default !important;
+            pointer-events: none;
         }
+        .fc-list-event.status-cancelled .fc-list-event-dot { border-color: #dc3545 !important; }
 
-        /* Responsive */
+        /* Mobile List View */
+        .fc-list-event-title, .fc-list-event-time { color: #333333 !important; font-weight: 500; }
+        .fc-list-event { background-color: #ffffff !important; }
+        .fc-list-event:hover td { background-color: #f8f9fa !important; }
+
         @media (max-width: 768px) {
             .fc .fc-toolbar { flex-direction: column; gap: 10px; }
             .fc-toolbar-title { font-size: 1.2rem !important; }
@@ -86,11 +104,11 @@
                 <div class="d-flex align-items-center">
                     <span class="rounded-circle me-1" style="width: 12px; height: 12px; background-color: #fd7e14;"></span> รออนุมัติ (ส้ม)
                 </div>
-                <div class="d-flex align-items-center">
-                    <span class="rounded-circle me-1" style="width: 12px; height: 12px; background-color: #6c757d;"></span> ใช้งานแล้ว (เทา)
+                <div class="d-flex align-items-center text-muted">
+                    <span class="rounded-circle me-1" style="width: 12px; height: 12px; background-color: #6c757d; opacity: 0.6;"></span> ใช้งานแล้ว (ดูไม่ได้)
                 </div>
-                <div class="d-flex align-items-center">
-                    <span class="rounded-circle me-1" style="width: 12px; height: 12px; background-color: #dc3545;"></span> ยกเลิก (แดง)
+                <div class="d-flex align-items-center text-muted">
+                    <span class="rounded-circle me-1" style="width: 12px; height: 12px; background-color: #dc3545; opacity: 0.6;"></span> ยกเลิก (ดูไม่ได้)
                 </div>
             </div>
         </div>
@@ -109,11 +127,15 @@
                 <h6 class="modal-title fw-bold mb-0"><i class="bi bi-info-circle me-2"></i>รายละเอียด</h6>
                 <button type="button" class="btn-close btn-close-white btn-sm" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body text-center p-4">
-                <h5 class="fw-bold text-dark mb-2" id="modalTitle"></h5>
-                <p class="text-muted small mb-3" id="modalTime"></p>
-                <div class="badge bg-light text-dark border px-3 py-2 rounded-pill" id="modalStatus">
-                    สถานะ
+            <div class="modal-body text-start p-4">
+                <h5 class="fw-bold text-dark mb-3" id="modalTitle"></h5>
+                
+                <p class="mb-2 text-muted"><i class="bi bi-clock me-2"></i><span id="modalTime"></span></p>
+                <p class="mb-2 text-dark"><i class="bi bi-geo-alt me-2 text-danger"></i><strong id="modalRoom"></strong></p>
+                <p class="mb-3 text-dark"><i class="bi bi-person me-2 text-primary"></i><span id="modalUser"></span></p>
+                
+                <div class="text-center mt-3">
+                    <span class="badge rounded-pill px-3 py-2" id="modalStatus">สถานะ</span>
                 </div>
             </div>
         </div>
@@ -141,6 +163,7 @@
             height: 'auto',
             events: "{% url 'bookings_api' %}",
 
+            // Logic: กำหนดสีและข้อความ
             eventDidMount: function(info) {
                 var now = new Date();
                 var start = info.event.start;
@@ -151,15 +174,17 @@
                 // ล้าง Class เก่า
                 info.el.classList.remove('status-past', 'status-future', 'status-current', 'status-pending', 'status-cancelled');
 
-                // Logic สีและข้อความ
+                // 1. ยกเลิก
                 if (status === 'CANCELLED' || status === 'REJECTED') {
                     info.el.classList.add('status-cancelled');
                     titleText = "ยกเลิก";
                 } 
+                // 2. รออนุมัติ
                 else if (status === 'PENDING') {
                     info.el.classList.add('status-pending');
                     titleText = "รออนุมัติ";
                 } 
+                // 3. อนุมัติแล้ว
                 else {
                     if (end < now) {
                         info.el.classList.add('status-past');
@@ -173,31 +198,33 @@
                     }
                 }
 
-                // เปลี่ยนข้อความในกล่อง
+                // เปลี่ยนข้อความ
                 var titleEl = info.el.querySelector('.fc-event-title');
-                if (titleEl) {
-                    titleEl.innerHTML = '<span class="fw-bold">' + titleText + '</span>';
-                }
+                if (titleEl) titleEl.innerHTML = '<span class="fw-bold">' + titleText + '</span>';
                 var listTitleEl = info.el.querySelector('.fc-list-event-title');
-                if (listTitleEl) {
-                    listTitleEl.innerHTML = titleText;
-                }
+                if (listTitleEl) listTitleEl.innerHTML = titleText;
             },
 
+            // Logic: การคลิก (โชว์รายละเอียดครบถ้วน)
             eventClick: function(info) {
                 var now = new Date();
+                // ถ้าจบแล้ว หรือ ยกเลิก -> ห้ามกด
                 if (info.event.end < now || info.event.extendedProps.status === 'CANCELLED' || info.event.extendedProps.status === 'REJECTED') {
                     info.jsEvent.preventDefault();
                     return; 
                 }
 
                 document.getElementById('modalTitle').innerText = info.event.title;
+                document.getElementById('modalRoom').innerText = info.event.extendedProps.room;
+                document.getElementById('modalUser').innerText = info.event.extendedProps.user;
+                
                 var start = info.event.start.toLocaleTimeString('th-TH', {hour: '2-digit', minute:'2-digit'});
                 var end = info.event.end.toLocaleTimeString('th-TH', {hour: '2-digit', minute:'2-digit'});
                 document.getElementById('modalTime').innerText = start + ' - ' + end + ' น.';
                 
                 var statusBadge = document.getElementById('modalStatus');
                 var status = info.event.extendedProps.status;
+                
                 if(status === 'PENDING') {
                     statusBadge.className = "badge bg-warning text-dark px-3 py-2 rounded-pill";
                     statusBadge.innerText = "รอการอนุมัติ";

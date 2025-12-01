@@ -145,7 +145,7 @@ def line_webhook(request):
         except InvalidSignatureError:
             return HttpResponse(status=400)
         except Exception as e:
-            print(f" Handler Error: {e}")
+            print(f"Handler Error: {e}")
         return HttpResponse(status=200)
     return HttpResponse(status=405)
 
@@ -161,13 +161,13 @@ if handler:
                 profile, _ = UserProfile.objects.get_or_create(user=user)
                 profile.line_user_id = user_id
                 profile.save()
-                msg = f" ลงทะเบียนสำเร็จ!\nสวัสดีคุณ {user.get_full_name() or user.username}\nระบบจะแจ้งเตือนการจองมาที่นี่ครับ"
+                msg = f"ลงทะเบียนสำเร็จ!\nสวัสดีคุณ {user.get_full_name() or user.username}\nระบบจะแจ้งเตือนการจองมาที่นี่ครับ"
             except IndexError:
-                msg = " พิมพ์ผิดครับ\nพิมพ์: ลงทะเบียน [username]"
+                msg = "พิมพ์ผิดครับ\nพิมพ์: ลงทะเบียน [username]"
             except User.DoesNotExist:
-                msg = f" ไม่พบชื่อผู้ใช้ในระบบ"
+                msg = f"ไม่พบชื่อผู้ใช้ในระบบ"
             except Exception as e:
-                msg = f" Error: {e}"
+                msg = f"Error: {e}"
             line_bot_api.reply_message(event.reply_token, TextSendMessage(text=msg))
 
 @receiver(user_logged_in)
@@ -180,7 +180,7 @@ def user_logged_out_callback(sender, request, user, **kwargs): pass
 
 def send_booking_notification(booking, template_name, subject_prefix):
     """ ส่งแจ้งเตือน Email และ LINE """
-    print(f"\n--- Notification Trigger: {subject_prefix} ---")
+    print(f"\n---  Notification Trigger: {subject_prefix} ---")
 
     # 1. Email
     email_recipients = []
@@ -225,7 +225,7 @@ def send_booking_notification(booking, template_name, subject_prefix):
         if has_req or has_eq:
             extra_msg = "\n *มีการขออุปกรณ์เสริม*"
 
-        msg = f" {subject_prefix}{extra_msg}\nห้อง: {booking.room.name}\nเรื่อง: {booking.title}\nเวลา: {booking.start_time.strftime('%d/%m %H:%M')}"
+        msg = f"{subject_prefix}{extra_msg}\nห้อง: {booking.room.name}\nเรื่อง: {booking.title}\nเวลา: {booking.start_time.strftime('%d/%m %H:%M')}"
         
         for uid in line_targets:
             if uid:
@@ -484,18 +484,25 @@ def reject_booking_view(request, booking_id):
     return redirect('approvals')
 
 # ----------------------------------------------------------------------
-# F. APIS
+# F. APIS (Updated to send user & room name)
 # ----------------------------------------------------------------------
 def rooms_api(request): return JsonResponse([{'id': r.id, 'title': r.name} for r in Room.objects.all()], safe=False)
 
 def bookings_api(request):
-    start = request.GET.get('start'); end = request.GET.get('end'); room_id = request.GET.get('room_id')
+    start = request.GET.get('start'); end = request.GET.get('end')
+    room_id = request.GET.get('room_id') # รับ room_id ถ้ามี
+
     try: 
         s_dt = datetime.fromisoformat(start.replace('Z','+00:00'))
         e_dt = datetime.fromisoformat(end.replace('Z','+00:00'))
+        
+        # ดึงมาให้หมด (รวมยกเลิกด้วย)
         qs = Booking.objects.filter(start_time__lt=e_dt, end_time__gt=s_dt)
+        
+        # ถ้ามี room_id ให้กรอง
         if room_id:
             qs = qs.filter(room_id=room_id)
+
         events = []
         for b in qs:
             title = b.title
@@ -504,13 +511,27 @@ def bookings_api(request):
             if has_req or has_eq: title += " 🛠️"
 
             if not request.user.is_authenticated: title = "ไม่ว่าง"
+            
+            # หาชื่อผู้จอง
+            user_name = b.user.get_full_name() if b.user and b.user.get_full_name() else (b.user.username if b.user else "ไม่ระบุ")
+
             events.append({
-                'id': b.id, 'title': title, 'start': b.start_time.isoformat(), 'end': b.end_time.isoformat(), 
-                'resourceId': b.room.id, 'extendedProps': {'status': b.status}
+                'id': b.id, 
+                'title': title, 
+                'start': b.start_time.isoformat(), 
+                'end': b.end_time.isoformat(), 
+                'resourceId': b.room.id, 
+                'extendedProps': {
+                    'status': b.status,
+                    'user': user_name,    #  ส่งชื่อผู้จอง
+                    'room': b.room.name,  #  ส่งชื่อห้อง
+                }
             })
         return JsonResponse(events, safe=False)
-    except: return JsonResponse([], safe=False)
+    except Exception as e:
+        return JsonResponse([], safe=False)
 
+#  [API Update เวลา (Drag & Drop)]
 @login_required
 @require_POST
 def update_booking_time_api(request):
@@ -546,7 +567,7 @@ def _update_outlook_after_teams_action(booking): pass
 def _update_teams_card_after_action(booking, new_status, action_type): pass
 
 # ----------------------------------------------------------------------
-# G. ROOM MANAGEMENT & REPORTS (ส่วนที่เคยหายไป)
+# G. ROOM MANAGEMENT & REPORTS
 # ----------------------------------------------------------------------
 @login_required
 @user_passes_test(is_admin)
@@ -571,7 +592,6 @@ def edit_user_roles_view(request, user_id):
         return redirect('user_management')
     return render(request, 'pages/edit_user_roles.html', {**get_base_context(request), 'user_to_edit': u, 'all_groups': Group.objects.all(), 'user_group_pks': list(u.groups.values_list('pk', flat=True))})
 
-#  ROOM MANAGEMENT (ฟังก์ชันนี้แหละที่หายไป)
 @login_required
 @user_passes_test(is_admin)
 def room_management_view(request): 
