@@ -215,7 +215,8 @@
         var isMobile = window.innerWidth < 768;
 
         var calendar = new FullCalendar.Calendar(calendarEl, {
-            initialView: isMobile ? 'listMonth' : 'timeGridWeek', 
+            // ✅ เปลี่ยน Default เป็นรายเดือน (Month View) ทั้ง PC และ Mobile
+            initialView: 'dayGridMonth', 
             locale: 'th',
             
             // ✅ ตั้งค่าเวลาเป็น 24 ชั่วโมง
@@ -223,11 +224,12 @@
             eventTimeFormat: { hour: '2-digit', minute: '2-digit', hour12: false },
 
             headerToolbar: {
-                left: 'prev,next',
+                left: 'prev,next today',
                 center: 'title',
-                right: isMobile ? 'listMonth' : 'dayGridMonth,timeGridWeek,listMonth'
+                // เพิ่มปุ่มให้ user เลือกเปลี่ยนมุมมองเองได้ (เดือน/สัปดาห์/วัน)
+                right: isMobile ? 'dayGridMonth,listMonth' : 'dayGridMonth,timeGridWeek,listMonth'
             },
-            buttonText: { today: 'วันนี้', month: 'เดือน', week: 'สัปดาห์', list: 'รายการจอง' },
+            buttonText: { today: 'วันนี้', month: 'เดือน', week: 'สัปดาห์', day: 'วัน', list: 'รายการ' },
             
             selectable: true,
             selectMirror: true,
@@ -243,7 +245,7 @@
             events: "{% url 'bookings_api' %}?room_id={{ room.id }}",
 
             eventDrop: function(info) {
-                if (!confirm("ยืนยันการย้ายเวลา?")) { info.revert(); } 
+                if (!confirm("ยืนยันการย้ายวัน/เวลา?")) { info.revert(); } 
                 else { updateBookingOnServer(info); }
             },
             eventResize: function(info) { updateBookingOnServer(info); },
@@ -264,12 +266,15 @@
             },
 
             select: function(info) {
-                if (isMobile && info.view.type === 'listMonth') return; 
-                let start = info.startStr.substring(0, 16);
-                let end = info.endStr.substring(0, 16);
+                // ถ้าจิ้มเลือกวัน (Month View)
+                let start, end;
                 if(info.allDay) {
+                    // ตั้งเวลา Default เป็น 08:00 - 09:00 ของวันที่เลือก
                     start = info.startStr + 'T08:00';
                     end = info.startStr + 'T09:00';
+                } else {
+                    start = info.startStr.substring(0, 16);
+                    end = info.endStr.substring(0, 16);
                 }
                 openBookingModal(start, end);
             },
