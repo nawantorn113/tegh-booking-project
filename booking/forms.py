@@ -277,7 +277,7 @@ class RoomForm(forms.ModelForm):
         )
 
 # -----------------------------------------------
-# 4. CustomUserCreationForm (แยกออกมาข้างนอกแล้ว ✅)
+# 4. CustomUserCreationForm (แยกออกมาข้างนอกแล้ว )
 # -----------------------------------------------
 class CustomUserCreationForm(UserCreationForm):
     groups = forms.ModelMultipleChoiceField(

@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 from django.utils import timezone 
 
 # ----------------------------------------------------
-# 💡 [ใหม่] Model สำหรับเก็บ Access Token ของ Outlook
+#  [ใหม่] Model สำหรับเก็บ Access Token ของ Outlook
 # ----------------------------------------------------
 class OutlookToken(models.Model):
     """
@@ -51,7 +51,7 @@ class Room(models.Model):
         verbose_name="สิ้นสุดปิดปรับปรุง (อัตโนมัติ)"
     )
     
-    # 💡 [เพิ่ม] ฟิลด์สำหรับ LINE/Teams
+    #  [เพิ่ม] ฟิลด์สำหรับ LINE/Teams
     line_notify_token = models.CharField(
         max_length=50, 
         blank=True, 
@@ -129,7 +129,7 @@ class Booking(models.Model):
     )
     recurrence_rule = models.CharField(max_length=20, blank=True, null=True)
     
-    # 💡 [ใหม่] ฟิลด์สำหรับเก็บ ID ของ Event ที่สร้างใน Outlook
+    # [ใหม่] ฟิลด์สำหรับเก็บ ID ของ Event ที่สร้างใน Outlook
     outlook_event_id = models.CharField(
         max_length=255, 
         blank=True, 
