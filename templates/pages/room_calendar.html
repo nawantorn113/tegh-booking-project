@@ -14,32 +14,38 @@
         .fc { font-family: 'Kanit', sans-serif; }
         
         .fc .fc-toolbar-title { font-size: 1.25rem; font-weight: 600; color: #1e293b; }
-        .fc .fc-button-primary { 
-            background-color: #fff; border-color: #cbd5e1; color: #475569; 
-            font-weight: 500; box-shadow: none !important;
-        }
+        .fc .fc-button-primary { background-color: #fff; border-color: #cbd5e1; color: #475569; }
         .fc .fc-button-primary:hover { background-color: #f1f5f9; color: #1e293b; }
         .fc .fc-button-primary:not(:disabled).fc-button-active { 
             background-color: #0d6efd; border-color: #0d6efd; color: white; 
         }
 
+        /* ปรับให้รู้ว่าลากได้ */
         .fc-event {
             color: #ffffff !important;
             border: none !important;
             box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-            cursor: pointer;
+            cursor: pointer; /* เมาส์รูปมือ */
         }
-        
-        /* ---  Color Scheme --- */
-        .fc-event.status-past { background-color: #adb5bd !important; opacity: 0.7; color: #000 !important; }
+        /* รายการที่ลากได้ ให้เมาส์เป็นรูปย้าย */
+        .fc-event:not(.status-past):not(.status-cancelled) {
+            cursor: move; 
+        }
+
+        /* --- Color Scheme --- */
+        .fc-event.status-past { 
+            background-color: #adb5bd !important; opacity: 0.7; color: #000 !important; 
+            pointer-events: none; /* อดีตห้ามลาก */
+        }
         .fc-event.status-future { background-color: #198754 !important; }
         .fc-event.status-current { 
             background-color: #0d6efd !important; 
-            box-shadow: 0 0 8px rgba(13, 110, 253, 0.5); border-left: 4px solid #0a58ca !important;
+            border-left: 4px solid #0a58ca !important;
         }
         .fc-event.status-pending { background-color: #fd7e14 !important; }
         .fc-event.status-cancelled { 
-            background-color: #dc3545 !important; text-decoration: line-through; opacity: 0.6; 
+            background-color: #dc3545 !important; text-decoration: line-through; opacity: 0.6;
+            pointer-events: none; /* ยกเลิกห้ามลาก */
         }
 
         @media (max-width: 768px) {
@@ -58,9 +64,7 @@
         <div class="row g-0">
             <div class="col-md-4 position-relative" style="min-height: 200px;">
                 {% if room.image %}
-                    <img src="{{ room.image.url }}" 
-                         class="w-100 h-100 object-fit-cover position-absolute top-0 start-0" 
-                         alt="{{ room.name }}">
+                    <img src="{{ room.image.url }}" class="w-100 h-100 object-fit-cover position-absolute top-0 start-0" alt="{{ room.name }}">
                 {% else %}
                     <div class="bg-light w-100 h-100 d-flex align-items-center justify-content-center text-muted position-absolute top-0 start-0">
                         <i class="bi bi-image" style="font-size: 3rem; opacity: 0.3;"></i>
@@ -110,6 +114,12 @@
 
     <div class="card border-0 shadow-sm rounded-4">
         <div class="card-body p-2 p-md-4">
+            <div class="alert alert-info border-0 d-flex align-items-center small mb-3">
+                <i class="bi bi-info-circle-fill me-2"></i>
+                <div>
+                    <strong>วิธีใช้งาน:</strong> ลากรายการจองข้ามวันเพื่อเปลี่ยนวันได้ทันที (เฉพาะรายการที่เป็นอนาคต)
+                </div>
+            </div>
             <div id="calendar"></div>
         </div>
     </div>
@@ -215,39 +225,39 @@
         var isMobile = window.innerWidth < 768;
 
         var calendar = new FullCalendar.Calendar(calendarEl, {
-            // ✅ เปลี่ยน Default เป็นรายเดือน (Month View) ทั้ง PC และ Mobile
-            initialView: 'dayGridMonth', 
+            // ✅ ตั้งค่าให้เป็น "รายเดือน" (dayGridMonth) ทั้งหมด
+            initialView: isMobile ? 'listMonth' : 'dayGridMonth', 
             locale: 'th',
             
-            // ✅ ตั้งค่าเวลาเป็น 24 ชั่วโมง
             slotLabelFormat: { hour: '2-digit', minute: '2-digit', hour12: false }, 
             eventTimeFormat: { hour: '2-digit', minute: '2-digit', hour12: false },
 
             headerToolbar: {
-                left: 'prev,next today',
+                left: 'prev,next',
                 center: 'title',
-                // เพิ่มปุ่มให้ user เลือกเปลี่ยนมุมมองเองได้ (เดือน/สัปดาห์/วัน)
-                right: isMobile ? 'dayGridMonth,listMonth' : 'dayGridMonth,timeGridWeek,listMonth'
+                // ปุ่มสลับมุมมอง
+                right: isMobile ? 'listMonth' : 'dayGridMonth,timeGridWeek,listMonth'
             },
-            buttonText: { today: 'วันนี้', month: 'เดือน', week: 'สัปดาห์', day: 'วัน', list: 'รายการ' },
+            buttonText: { today: 'วันนี้', month: 'เดือน', week: 'สัปดาห์', list: 'รายการ' },
             
             selectable: true,
             selectMirror: true,
+            
+            // ✅ เปิด Drag & Drop ในหน้าเดือน
             editable: true,
             eventDurationEditable: true,
             droppable: true,
             
-            slotMinTime: '08:00:00',
-            slotMaxTime: '20:00:00',
-            allDaySlot: false,
             height: 'auto',
-
             events: "{% url 'bookings_api' %}?room_id={{ room.id }}",
 
+            // Event Drop (ย้ายวัน)
             eventDrop: function(info) {
-                if (!confirm("ยืนยันการย้ายวัน/เวลา?")) { info.revert(); } 
+                if (!confirm("ยืนยันการย้ายวันจอง?")) { info.revert(); } 
                 else { updateBookingOnServer(info); }
             },
+            
+            // Event Resize (ยืดเวลา - ทำได้เฉพาะในหน้า Week/Day)
             eventResize: function(info) { updateBookingOnServer(info); },
 
             eventDidMount: function(info) {
@@ -256,25 +266,32 @@
                 
                 info.el.classList.remove('status-past', 'status-future', 'status-current', 'status-pending', 'status-cancelled');
 
-                if (status === 'CANCELLED' || status === 'REJECTED') info.el.classList.add('status-cancelled');
+                // ล็อคไม่ให้ลาก อันที่จบไปแล้ว หรือ ยกเลิก
+                if (status === 'CANCELLED' || status === 'REJECTED') {
+                    info.el.classList.add('status-cancelled');
+                    info.event.setProp('editable', false); 
+                } 
                 else if (status === 'PENDING') info.el.classList.add('status-pending');
                 else if (status === 'APPROVED') {
-                    if (info.event.end < now) info.el.classList.add('status-past');
-                    else if (info.event.start <= now && info.event.end >= now) info.el.classList.add('status-current');
+                    if (info.event.end < now) {
+                        info.el.classList.add('status-past');
+                        info.event.setProp('editable', false); 
+                    } 
+                    else if (info.event.start <= now && info.event.end >= now) {
+                        info.el.classList.add('status-current');
+                        info.event.setProp('editable', false);
+                    } 
                     else info.el.classList.add('status-future');
                 }
             },
 
             select: function(info) {
-                // ถ้าจิ้มเลือกวัน (Month View)
-                let start, end;
+                if (isMobile && info.view.type === 'listMonth') return; 
+                let start = info.startStr.substring(0, 16);
+                let end = info.endStr.substring(0, 16);
                 if(info.allDay) {
-                    // ตั้งเวลา Default เป็น 08:00 - 09:00 ของวันที่เลือก
                     start = info.startStr + 'T08:00';
                     end = info.startStr + 'T09:00';
-                } else {
-                    start = info.startStr.substring(0, 16);
-                    end = info.endStr.substring(0, 16);
                 }
                 openBookingModal(start, end);
             },
