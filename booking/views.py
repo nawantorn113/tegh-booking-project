@@ -1,6 +1,7 @@
 import json
 import re
 import requests
+import csv
 from datetime import datetime, timedelta, time
 import os
 from collections import defaultdict
@@ -492,7 +493,6 @@ def bookings_api(request):
     try: 
         s_dt = datetime.fromisoformat(start.replace('Z','+00:00'))
         e_dt = datetime.fromisoformat(end.replace('Z','+00:00'))
-        # ดึงมาให้หมด (รวม Cancelled/Rejected เพื่อให้แสดงสีแดง)
         qs = Booking.objects.filter(start_time__lt=e_dt, end_time__gt=s_dt)
         events = []
         for b in qs:
@@ -509,38 +509,30 @@ def bookings_api(request):
         return JsonResponse(events, safe=False)
     except: return JsonResponse([], safe=False)
 
-# ✅ [API ใหม่] อัปเดตเวลาจอง (Drag & Drop)
 @login_required
 @require_POST
 def update_booking_time_api(request):
     try:
         data = json.loads(request.body)
-        booking_id = data.get('id')
-        start_str = data.get('start')
-        end_str = data.get('end')
-
-        booking = get_object_or_404(Booking, pk=booking_id)
-
-        # 🔒 ตรวจสอบสิทธิ์ (เจ้าของ หรือ Admin)
+        booking = get_object_or_404(Booking, pk=data.get('id'))
+        
         if booking.user != request.user and not is_admin(request.user):
-            return JsonResponse({'status': 'error', 'message': 'ไม่มีสิทธิ์แก้ไขรายการนี้'}, status=403)
+            return JsonResponse({'status': 'error', 'message': 'ไม่มีสิทธิ์แก้ไข'}, status=403)
 
-        # แปลงเวลา
-        start_dt = datetime.fromisoformat(start_str.replace('Z', ''))
-        end_dt = datetime.fromisoformat(end_str.replace('Z', '')) if end_str else None
-
-        # ถ้าไม่มี End time (กรณี Drop) ใช้ระยะเวลาเดิม
-        if not end_dt:
+        start_dt = datetime.fromisoformat(data.get('start').replace('Z', ''))
+        end_str = data.get('end')
+        
+        if end_str:
+            end_dt = datetime.fromisoformat(end_str.replace('Z', ''))
+        else:
             duration = booking.end_time - booking.start_time
             end_dt = start_dt + duration
 
         booking.start_time = start_dt
         booking.end_time = end_dt
         booking.save()
-
         return JsonResponse({'status': 'success'})
-
-    except Exception as e:
+    except Exception as e: 
         return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 
 @login_required
@@ -552,7 +544,7 @@ def _update_outlook_after_teams_action(booking): pass
 def _update_teams_card_after_action(booking, new_status, action_type): pass
 
 # ----------------------------------------------------------------------
-# I. MANAGEMENT, REPORTS, EXPORT
+# G. ROOM MANAGEMENT & REPORTS (ส่วนที่เคยหายไป)
 # ----------------------------------------------------------------------
 @login_required
 @user_passes_test(is_admin)
@@ -577,23 +569,38 @@ def edit_user_roles_view(request, user_id):
         return redirect('user_management')
     return render(request, 'pages/edit_user_roles.html', {**get_base_context(request), 'user_to_edit': u, 'all_groups': Group.objects.all(), 'user_group_pks': list(u.groups.values_list('pk', flat=True))})
 
+# ✅ ROOM MANAGEMENT (ฟังก์ชันนี้แหละที่หายไป)
 @login_required
 @user_passes_test(is_admin)
-def room_management_view(request): return render(request, 'pages/rooms.html', {**get_base_context(request), 'rooms': Room.objects.all()})
+def room_management_view(request): 
+    return render(request, 'pages/rooms.html', {
+        **get_base_context(request), 
+        'rooms': Room.objects.all()
+    })
+
 @login_required
 @user_passes_test(is_admin)
 def add_room_view(request):
-    if request.method=='POST': form=RoomForm(request.POST, request.FILES); form.save(); return redirect('rooms')
-    return render(request, 'pages/room_form.html', {**get_base_context(request), 'form': RoomForm()})
+    if request.method=='POST': 
+        form=RoomForm(request.POST, request.FILES)
+        if form.is_valid(): form.save(); return redirect('rooms')
+    else: form = RoomForm()
+    return render(request, 'pages/room_form.html', {**get_base_context(request), 'form': form, 'title': 'เพิ่มห้อง'})
+
 @login_required
 @user_passes_test(is_admin)
 def edit_room_view(request, room_id):
     r = get_object_or_404(Room, pk=room_id)
-    if request.method=='POST': form=RoomForm(request.POST, request.FILES, instance=r); form.save(); return redirect('rooms')
-    return render(request, 'pages/room_form.html', {**get_base_context(request), 'form': RoomForm(instance=r)})
+    if request.method=='POST': 
+        form=RoomForm(request.POST, request.FILES, instance=r)
+        if form.is_valid(): form.save(); return redirect('rooms')
+    else: form = RoomForm(instance=r)
+    return render(request, 'pages/room_form.html', {**get_base_context(request), 'form': form, 'title': 'แก้ไขห้อง'})
+
 @login_required
 @require_POST
 def delete_room_view(request, room_id): Room.objects.filter(pk=room_id).delete(); return redirect('rooms')
+
 @login_required
 def audit_log_view(request): return render(request, 'pages/audit_log.html', {**get_base_context(request), 'page_obj': Paginator(AuditLog.objects.all().order_by('-timestamp'), 25).get_page(request.GET.get('page'))})
 
@@ -643,12 +650,34 @@ def reports_view(request):
         'room_usage_labels': json.dumps(room_labels), 'room_usage_data': json.dumps(room_data),
         'dept_usage_labels': json.dumps(dept_labels), 'dept_usage_data': json.dumps(dept_data),
         'all_departments': all_departments, 'current_period': period, 'current_department': dept_filter, 'report_title': report_title,
+        'stats': Room.objects.annotate(booking_count=Count('bookings', filter=Q(bookings__start_time__date__gte=start_date, bookings__status='APPROVED'))).order_by('-booking_count'),
+        'report_month': today.strftime('%B %Y')
     })
     return render(request, 'pages/reports.html', context)
 
 @login_required
 @user_passes_test(is_admin)
-def export_reports_excel(request): return HttpResponse("Excel Export")
+def export_reports_excel(request):
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="booking_report.csv"'
+    response.write(u'\ufeff'.encode('utf8')) 
+
+    writer = csv.writer(response)
+    writer.writerow(['วันที่', 'เวลาเริ่ม', 'เวลาสิ้นสุด', 'หัวข้อ', 'ห้อง', 'ผู้จอง', 'สถานะ'])
+
+    bookings = Booking.objects.all().order_by('-start_time')
+    for b in bookings:
+        writer.writerow([
+            b.start_time.strftime('%d/%m/%Y'),
+            b.start_time.strftime('%H:%M'),
+            b.end_time.strftime('%H:%M'),
+            b.title,
+            b.room.name,
+            b.user.get_full_name() if b.user else 'Unknown',
+            b.get_status_display()
+        ])
+    return response
+
 @login_required
 @user_passes_test(is_admin)
 def export_reports_pdf(request): 

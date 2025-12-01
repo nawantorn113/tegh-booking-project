@@ -28,9 +28,10 @@
         }
 
         /* 2. จองแล้ว (เขียว) */
-        .fc-event.status-future {
-            background-color: #198754 !important; 
+        .fc-daygrid-event.status-future, .fc-list-event.status-future { 
+            background-color: #198754 !important; border-color: #198754 !important;
         }
+        .fc-list-event.status-future .fc-list-event-dot { border-color: #198754 !important; }
 
         /* 3. กำลังใช้งาน (ฟ้า) */
         .fc-event.status-current {
