@@ -2,10 +2,12 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
+    path('', views.dashboard_view, name='home'),
+
     # --- Main Pages ---
     path('dashboard/', views.dashboard_view, name='dashboard'),
     path('calendar/master/', views.master_calendar_view, name='master_calendar'),
-    path('calendar/public/', views.public_calendar_view, name='public_calendar'), # หน้าปฏิทินรวมแบบ Public
+    path('calendar/public/', views.public_calendar_view, name='public_calendar'),
     
     path('history/', views.history_view, name='history'),
     path('approvals/', views.approvals_view, name='approvals'),
