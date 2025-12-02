@@ -2,10 +2,11 @@ import json
 import re
 import requests
 import csv
+import uuid # สำหรับการจองซ้ำ
 from datetime import datetime, timedelta, time
 import os
 from collections import defaultdict
-from dateutil.relativedelta import relativedelta
+from dateutil.relativedelta import relativedelta # สำหรับการจองซ้ำรายเดือน
 
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
@@ -30,15 +31,14 @@ from django.core.exceptions import ValidationError
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import View
 
-# --- START: PDF Imports สำหรับ WeasyPrint ---
+# --- PDF Imports (WeasyPrint) ---
 try:
     from weasyprint import HTML, CSS
 except ImportError:
     HTML = None
     CSS = None
-# --- END: PDF Imports ---
 
-# LINE SDK
+# --- LINE SDK ---
 try:
     from linebot import LineBotApi, WebhookHandler
     from linebot.models import TextSendMessage, MessageEvent, TextMessage
@@ -315,46 +315,117 @@ def dashboard_view(request):
 @login_required
 def room_calendar_view(request, room_id):
     room = get_object_or_404(Room, pk=room_id)
+    
     if request.method == 'POST':
         form = BookingForm(request.POST, request.FILES)
         if form.is_valid():
-            booking = form.save(commit=False)
-            booking.room = room
-            booking.user = request.user
+            # --- ส่วนจัดการการจองซ้ำ (Recurring Logic) ---
+            recurrence = form.cleaned_data.get('recurrence')
+            recurrence_end_date = form.cleaned_data.get('recurrence_end_date')
+            
+            base_booking = form.save(commit=False)
+            base_booking.room = room
+            base_booking.user = request.user
+            
+            duration = base_booking.end_time - base_booking.start_time
+            
+            current_start = base_booking.start_time
+            current_end = base_booking.end_time
+            bookings_to_create = []
+            conflict_dates = []
+            
+            group_id = uuid.uuid4() if recurrence != 'NONE' else None
+            
+            if recurrence != 'NONE' and recurrence_end_date:
+                loop_limit_date = recurrence_end_date
+            else:
+                loop_limit_date = current_start.date()
 
-            # --- Time Overlap Check ---
-            is_overlap = Booking.objects.filter(
-                room=room,
-                start_time__lt=booking.end_time,
-                end_time__gt=booking.start_time,
-                status__in=['APPROVED', 'PENDING']
-            ).exists()
+            # Loop ตรวจสอบและสร้างรายการจอง
+            while current_start.date() <= loop_limit_date:
+                is_overlap = Booking.objects.filter(
+                    room=room,
+                    start_time__lt=current_end,
+                    end_time__gt=current_start,
+                    status__in=['APPROVED', 'PENDING']
+                ).exists()
+                
+                if is_overlap:
+                    conflict_dates.append(current_start.strftime('%d/%m/%Y %H:%M'))
+                
+                bookings_to_create.append({
+                    'start': current_start,
+                    'end': current_end
+                })
+                
+                # ขยับเวลาไปรอบถัดไป
+                if recurrence == 'WEEKLY':
+                    current_start += timedelta(weeks=1)
+                elif recurrence == 'MONTHLY':
+                    current_start += relativedelta(months=1)
+                else:
+                    break
+                
+                current_end = current_start + duration
 
-            if is_overlap:
-                messages.error(request, "จองไม่สำเร็จ: ช่วงเวลานี้มีการจองแล้ว")
+            # --- ตรวจสอบผลลัพธ์ ---
+            if conflict_dates:
+                messages.error(request, f"จองไม่สำเร็จ! มีรายการซ้ำกับผู้อื่นในวันเวลา: {', '.join(conflict_dates)}")
                 ctx = get_base_context(request)
                 ctx.update({'room': room, 'form': form})
                 return render(request, 'pages/room_calendar.html', ctx)
-
-            p_count = form.cleaned_data.get('participant_count', 0)
-            req_text = form.cleaned_data.get('additional_requests', '')
-            has_req = bool(req_text and req_text.strip())
-
-            if p_count >= 15 or has_req:
-                booking.status = 'PENDING'; msg = "รอการอนุมัติ"
+            
             else:
-                booking.status = 'APPROVED'; msg = "จองสำเร็จ"
+                # บันทึกข้อมูลจริง (Save)
+                count = 0
+                for info in bookings_to_create:
+                    new_booking = Booking(
+                        title=base_booking.title,
+                        room=base_booking.room,
+                        user=base_booking.user,
+                        start_time=info['start'],
+                        end_time=info['end'],
+                        participant_count=base_booking.participant_count,
+                        description=base_booking.description,
+                        additional_requests=base_booking.additional_requests,
+                        additional_notes=base_booking.additional_notes,
+                        department=base_booking.department,
+                        chairman=base_booking.chairman,
+                        presentation_file=base_booking.presentation_file,
+                        recurrence_id=group_id
+                    )
+                    
+                    has_req = bool(new_booking.additional_requests and new_booking.additional_requests.strip())
+                    has_notes = bool(new_booking.additional_notes and new_booking.additional_notes.strip())
+                    
+                    if (new_booking.participant_count and new_booking.participant_count >= 15) or has_req or has_notes:
+                        new_booking.status = 'PENDING'
+                    else:
+                        new_booking.status = 'APPROVED'
+                    
+                    new_booking.save()
+                    
+                    # จัดการ Many-to-Many (Participants, Equipments)
+                    if 'participants' in form.cleaned_data:
+                         new_booking.participants.set(form.cleaned_data['participants'])
+                    if 'equipments' in form.cleaned_data:
+                         new_booking.equipments.set(form.cleaned_data['equipments'])
 
-            booking.save()
-            form.save_m2m()
-            if hasattr(booking, 'equipments') and booking.equipments.exists() and booking.status == 'APPROVED':
-                booking.status = 'PENDING'; msg = "รอการอนุมัติ (อุปกรณ์)"; booking.save()
+                    # ส่งแจ้งเตือน (ส่งเฉพาะรายการแรก)
+                    if count == 0: 
+                         send_booking_notification(new_booking, '', ('โปรดอนุมัติ' if new_booking.status == 'PENDING' else 'จองสำเร็จ'))
+                    
+                    count += 1
 
-            messages.success(request, f"บันทึกสำเร็จ: {msg}")
-            send_booking_notification(booking, '', ('โปรดอนุมัติ' if booking.status == 'PENDING' else 'จองสำเร็จ'))
-            return redirect('dashboard')
-    else: form = BookingForm(initial={'room': room})
-    ctx = get_base_context(request); ctx.update({'room': room, 'form': form})
+                msg_success = f"จองสำเร็จ {count} รายการ" + (" (แบบต่อเนื่อง)" if count > 1 else "")
+                messages.success(request, msg_success)
+                return redirect('dashboard')
+                
+    else: 
+        form = BookingForm(initial={'room': room})
+    
+    ctx = get_base_context(request)
+    ctx.update({'room': room, 'form': form})
     return render(request, 'pages/room_calendar.html', ctx)
 
 @login_required
@@ -407,6 +478,8 @@ def edit_booking_view(request, booking_id):
     if request.method == 'POST':
         form = BookingForm(request.POST, request.FILES, instance=b)
         if form.is_valid():
+            # NOTE: โค้ดนี้ไม่ได้รองรับการแก้ไขการจองซ้ำทั้งซีรีส์
+            
             booking = form.save(commit=False)
 
             # --- Time Overlap Check (Exclude self) ---
@@ -430,7 +503,7 @@ def edit_booking_view(request, booking_id):
             if 'equipments' in form.cleaned_data and hasattr(booking, 'equipments'):
                  if form.cleaned_data['equipments'].exists(): has_eq = True
 
-            if p_count >= 15 or has_req or has_eq:
+            if (p_count and p_count >= 15) or has_req or has_eq:
                 booking.status = 'PENDING'; subj = 'โปรดอนุมัติ (แก้ไข)'
             else:
                 booking.status = 'APPROVED' if b.status == 'APPROVED' else 'PENDING'
@@ -504,9 +577,15 @@ def update_booking_time_api(request):
         data = json.loads(request.body)
         booking = get_object_or_404(Booking, pk=data.get('id'))
 
-        if booking.user != request.user and not is_admin(request.user):
-            return JsonResponse({'status': 'error', 'message': 'ไม่มีสิทธิ์แก้ไข'}, status=403)
-
+        # --- [FINAL SECURITY CHECK: Only Owner OR System Admin] ---
+        is_owner = booking.user == request.user
+        is_system_admin = is_admin(request.user)
+        
+        # ถ้าไม่ใช่เจ้าของ AND ไม่ใช่ System Admin -> ไม่อนุญาต
+        if not (is_owner or is_system_admin):
+            return JsonResponse({'status': 'error', 'message': 'ไม่มีสิทธิ์แก้ไข/ลากวางการจองนี้'}, status=403)
+        # --- [END: Drag & Drop Permission Check] ---
+        
         start_dt = datetime.fromisoformat(data.get('start').replace('Z', ''))
         end_str = data.get('end')
 
@@ -728,16 +807,15 @@ def export_reports_pdf(request):
     }
 
     # 3. Render Template เป็น HTML String
+    # ใช้ path 'pages/reports_pdf.html' ตามที่แก้ไขล่าสุด
     html_string = render_to_string('pages/reports_pdf.html', context)
 
     # 4. สร้าง PDF
     try:
-        # base_url ช่วยให้ WeasyPrint สามารถหา static files/font ในระบบได้
         pdf_file = HTML(string=html_string, base_url=request.build_absolute_uri()).write_pdf()
 
         # 5. ส่งไฟล์ PDF เป็น Response
         response = HttpResponse(pdf_file, content_type='application/pdf')
-        # กำหนดชื่อไฟล์สำหรับดาวน์โหลด
         response['Content-Disposition'] = f'attachment; filename="booking_report_{timezone.now().strftime("%Y%m%d_%H%M%S")}.pdf"'
         return response
 
