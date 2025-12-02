@@ -46,7 +46,7 @@
                 <td>{{ b.start_time|date:"H:i" }} - {{ b.end_time|date:"H:i" }}</td>
                 <td>{{ b.room.name }}</td>
                 <td>{{ b.title }}</td>
-                <td>{{ b.user.get_full_name|default:b.user.username }}</td>
+                <td>{{ b.user.get_full_name|default:"-" }}</td>
                 <td>{{ b.department|default:"-" }}</td>
                 <td>
                     {% if b.status == 'APPROVED' %}

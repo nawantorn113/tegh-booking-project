@@ -9,7 +9,7 @@ from dateutil.relativedelta import relativedelta
 
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
-from django.urls import reverse 
+from django.urls import reverse
 from django.template.loader import get_template, render_to_string
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required, user_passes_test
@@ -21,7 +21,7 @@ from django.core.paginator import Paginator
 from dal_select2.views import Select2QuerySetView
 from django.core.mail import send_mail
 from django.conf import settings
-from django.db import transaction 
+from django.db import transaction
 from django.utils import timezone
 from django.contrib.auth.signals import user_logged_in, user_logged_out
 from django.dispatch import receiver
@@ -29,6 +29,14 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.core.exceptions import ValidationError
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import View
+
+# --- START: PDF Imports สำหรับ WeasyPrint ---
+try:
+    from weasyprint import HTML, CSS
+except ImportError:
+    HTML = None
+    CSS = None
+# --- END: PDF Imports ---
 
 # LINE SDK
 try:
@@ -49,10 +57,11 @@ if hasattr(settings, 'LINE_CHANNEL_ACCESS_TOKEN') and hasattr(settings, 'LINE_CH
     try:
         line_bot_api = LineBotApi(settings.LINE_CHANNEL_ACCESS_TOKEN)
         handler = WebhookHandler(settings.LINE_CHANNEL_SECRET)
-    except: pass
-    
+    except:
+        pass
+
 # ----------------------------------------------------------------------
-# A. HELPER FUNCTIONS & CONTEXT 
+# A. HELPER FUNCTIONS & CONTEXT
 # ----------------------------------------------------------------------
 
 def is_admin(user):
@@ -61,7 +70,7 @@ def is_admin(user):
 def is_approver_or_admin(user):
     return user.is_authenticated and (user.is_superuser or user.groups.filter(name__in=['Approver', 'Admin']).exists())
 
-def get_admin_emails(): 
+def get_admin_emails():
     return list(User.objects.filter(Q(groups__name='Admin') | Q(is_superuser=True), is_active=True).distinct().exclude(email__exact='').values_list('email', flat=True))
 
 def get_client_ip(request):
@@ -75,19 +84,19 @@ def get_client_ip(request):
 def get_base_context(request):
     current_url_name = request.resolver_match.url_name if request.resolver_match else ''
     is_admin_user = is_admin(request.user)
-    
+
     menu_structure = [
         {'label': 'หน้าหลัก', 'url_name': 'dashboard', 'icon': 'bi-house-fill', 'show': True},
         {'label': 'ปฏิทินรวม', 'url_name': 'master_calendar', 'icon': 'bi-calendar3-range', 'show': True},
         {'label': 'ประวัติการจอง', 'url_name': 'history', 'icon': 'bi-clock-history', 'show': True},
         {'label': 'รออนุมัติ', 'url_name': 'approvals', 'icon': 'bi-check2-circle', 'show': is_approver_or_admin(request.user)},
     ]
-    
+
     admin_menu_structure = [
         {'label': 'จัดการห้องประชุม', 'url_name': 'rooms', 'icon': 'bi-door-open-fill', 'show': is_admin_user},
         {'label': 'จัดการผู้ใช้งาน', 'url_name': 'user_management', 'icon': 'bi-people-fill', 'show': is_admin_user},
         {'label': 'รายงานและสถิติ', 'url_name': 'reports', 'icon': 'bi-bar-chart-fill', 'show': is_admin_user},
-        {'label': 'ประวัติการใช้งาน', 'url_name': 'audit_log', 'icon': 'bi-clipboard-data-fill', 'show': is_admin_user}, 
+        {'label': 'ประวัติการใช้งาน', 'url_name': 'audit_log', 'icon': 'bi-clipboard-data-fill', 'show': is_admin_user},
     ]
 
     menu_items = []
@@ -95,20 +104,20 @@ def get_base_context(request):
         if item['show']:
             item['active'] = (item['url_name'] == current_url_name)
             menu_items.append(item)
-            
+
     admin_menu_items = []
     for item in admin_menu_structure:
         if item['show']:
             item['active'] = (item['url_name'] == current_url_name)
             admin_menu_items.append(item)
-            
+
     pending_count = 0
     pending_notifications = []
-    
+
     if request.user.is_authenticated and is_approver_or_admin(request.user):
         rooms_we_approve = Q(room__approver=request.user)
         rooms_for_central_admin = Q(room__approver__isnull=True)
-        
+
         if is_admin(request.user):
             pending_query = rooms_we_approve | rooms_for_central_admin
         else:
@@ -116,7 +125,7 @@ def get_base_context(request):
 
         pending_bookings = Booking.objects.filter(pending_query, status='PENDING').order_by('-created_at')
         pending_count = pending_bookings.count()
-        pending_notifications = pending_bookings[:5] 
+        pending_notifications = pending_bookings[:5]
 
     return {
         'menu_items': menu_items,
@@ -164,7 +173,7 @@ def send_booking_notification(booking, template_name, subject_prefix):
     if hasattr(booking, 'equipments') and booking.equipments.exists():
         equip_names = [eq.name for eq in booking.equipments.all()]
         equip_text = ", ".join(equip_names)
-    
+
     note_text = booking.additional_requests if booking.additional_requests else "-"
     start_str = booking.start_time.strftime('%d/%m/%Y %H:%M')
     end_str = booking.end_time.strftime('%H:%M')
@@ -172,14 +181,14 @@ def send_booking_notification(booking, template_name, subject_prefix):
     # LINE
     if line_bot_api:
         line_targets = set()
-        try: 
+        try:
             if booking.user.profile.line_user_id: line_targets.add(booking.user.profile.line_user_id)
         except: pass
         if booking.room.approver:
-            try: 
+            try:
                 if booking.room.approver.profile.line_user_id: line_targets.add(booking.room.approver.profile.line_user_id)
             except: pass
-            
+
         # ส่งหา Superuser ทุกคน
         admins = User.objects.filter(is_superuser=True)
         for admin in admins:
@@ -196,25 +205,25 @@ def send_booking_notification(booking, template_name, subject_prefix):
                f"เพิ่มเติม: {note_text}\n"
                f"-------------------------\n"
                f"สถานะ: {booking.get_status_display()}")
-        
+
         for uid in line_targets:
             if uid:
                 try: line_bot_api.push_message(uid, TextSendMessage(text=msg))
                 except: pass
-    
+
     # Email
     email_recipients = []
     if 'โปรดอนุมัติ' in subject_prefix:
         if booking.room.approver and booking.room.approver.email: email_recipients = [booking.room.approver.email]
-        else: 
+        else:
             email_recipients = get_admin_emails()
     elif booking.user.email:
         email_recipients = [booking.user.email]
-    
+
     if email_recipients:
-        try: 
-            send_mail(f"[{subject_prefix}] {booking.title}", 
-                      f"รายละเอียดการจอง:\n\nห้อง: {booking.room.name}\nอุปกรณ์: {equip_text}\nเพิ่มเติม: {note_text}", 
+        try:
+            send_mail(f"[{subject_prefix}] {booking.title}",
+                      f"รายละเอียดการจอง:\n\nห้อง: {booking.room.name}\nอุปกรณ์: {equip_text}\nเพิ่มเติม: {note_text}",
                       settings.DEFAULT_FROM_EMAIL, email_recipients, fail_silently=True)
         except: pass
 
@@ -238,7 +247,7 @@ def login_view(request):
 def sso_login_view(request): return redirect('login')
 
 @login_required
-def logout_view(request): logout(request); return redirect('login') 
+def logout_view(request): logout(request); return redirect('login')
 
 @login_required
 def change_password_view(request):
@@ -275,11 +284,11 @@ def dashboard_view(request):
     elif sort_by == 'capacity': all_rooms_sorted = sorted(all_rooms, key=lambda r: r.capacity, reverse=True)
     elif sort_by == 'name': all_rooms_sorted = all_rooms.order_by('name')
     else: all_rooms_sorted = all_rooms.order_by('building', 'floor', 'name')
-    
+
     buildings = defaultdict(list)
     for r in all_rooms_sorted:
         cur = r.bookings.filter(start_time__lte=now, end_time__gt=now, status__in=['APPROVED','PENDING']).first()
-        if r.is_currently_under_maintenance: 
+        if r.is_currently_under_maintenance:
             r.status, r.status_class = 'ปิดปรับปรุง', 'bg-secondary text-white'
             r.is_maintenance = True
             r.current_booking_info = None
@@ -287,12 +296,12 @@ def dashboard_view(request):
             r.is_maintenance = False
             if cur:
                 r.status, r.status_class = ('รออนุมัติ', 'bg-warning text-dark') if cur.status == 'PENDING' else ('ไม่ว่าง', 'bg-danger text-white')
-                r.current_booking_info = cur 
+                r.current_booking_info = cur
             else:
                 r.status, r.status_class = 'ว่าง', 'bg-success text-white'
                 r.current_booking_info = None
         buildings[r.building or "General"].append(r)
-    
+
     summary_cards = {
         'total_rooms': all_rooms.count(),
         'today_bookings': Booking.objects.filter(start_time__date=now.date(), status='APPROVED').count(),
@@ -312,7 +321,7 @@ def room_calendar_view(request, room_id):
             booking = form.save(commit=False)
             booking.room = room
             booking.user = request.user
-            
+
             # --- Time Overlap Check ---
             is_overlap = Booking.objects.filter(
                 room=room,
@@ -326,16 +335,16 @@ def room_calendar_view(request, room_id):
                 ctx = get_base_context(request)
                 ctx.update({'room': room, 'form': form})
                 return render(request, 'pages/room_calendar.html', ctx)
-            
+
             p_count = form.cleaned_data.get('participant_count', 0)
             req_text = form.cleaned_data.get('additional_requests', '')
             has_req = bool(req_text and req_text.strip())
-            
-            if p_count >= 15 or has_req: 
+
+            if p_count >= 15 or has_req:
                 booking.status = 'PENDING'; msg = "รอการอนุมัติ"
-            else: 
+            else:
                 booking.status = 'APPROVED'; msg = "จองสำเร็จ"
-            
+
             booking.save()
             form.save_m2m()
             if hasattr(booking, 'equipments') and booking.equipments.exists() and booking.status == 'APPROVED':
@@ -368,10 +377,10 @@ def booking_detail_view(request, booking_id):
 
     ctx = get_base_context(request)
     can_edit = b.can_user_edit_or_cancel(request.user) if request.user.is_authenticated else False
-    
+
     ctx.update({
-        'booking': b, 
-        'can_edit_or_cancel': can_edit, 
+        'booking': b,
+        'can_edit_or_cancel': can_edit,
         'is_public_view': not request.user.is_authenticated
     })
     return render(request, 'pages/booking_detail.html', ctx)
@@ -399,7 +408,7 @@ def edit_booking_view(request, booking_id):
         form = BookingForm(request.POST, request.FILES, instance=b)
         if form.is_valid():
             booking = form.save(commit=False)
-            
+
             # --- Time Overlap Check (Exclude self) ---
             is_overlap = Booking.objects.filter(
                 room=booking.room,
@@ -420,13 +429,13 @@ def edit_booking_view(request, booking_id):
             has_eq = False
             if 'equipments' in form.cleaned_data and hasattr(booking, 'equipments'):
                  if form.cleaned_data['equipments'].exists(): has_eq = True
-            
-            if p_count >= 15 or has_req or has_eq: 
+
+            if p_count >= 15 or has_req or has_eq:
                 booking.status = 'PENDING'; subj = 'โปรดอนุมัติ (แก้ไข)'
-            else: 
+            else:
                 booking.status = 'APPROVED' if b.status == 'APPROVED' else 'PENDING'
                 subj = 'แก้ไขการจอง'
-            
+
             booking.save(); form.save_m2m(); messages.success(request, "แก้ไขเรียบร้อย")
             send_booking_notification(booking, '', subj)
             return redirect('history')
@@ -462,8 +471,8 @@ def rooms_api(request): return JsonResponse([{'id': r.id, 'title': r.name} for r
 
 def bookings_api(request):
     start = request.GET.get('start'); end = request.GET.get('end')
-    room_id = request.GET.get('room_id') 
-    try: 
+    room_id = request.GET.get('room_id')
+    try:
         s_dt = datetime.fromisoformat(start.replace('Z','+00:00'))
         e_dt = datetime.fromisoformat(end.replace('Z','+00:00'))
         qs = Booking.objects.filter(start_time__lt=e_dt, end_time__gt=s_dt).exclude(status='CANCELLED').exclude(status='REJECTED')
@@ -473,16 +482,16 @@ def bookings_api(request):
             title = b.title
             user_name = b.user.get_full_name() if b.user and b.user.get_full_name() else (b.user.username if b.user else "ไม่ระบุ")
             events.append({
-                'id': b.id, 
-                'title': title, 
-                'start': b.start_time.isoformat(), 
-                'end': b.end_time.isoformat(), 
-                'resourceId': b.room.id, 
+                'id': b.id,
+                'title': title,
+                'start': b.start_time.isoformat(),
+                'end': b.end_time.isoformat(),
+                'resourceId': b.room.id,
                 'extendedProps': {
                     'status': b.status,
-                    'user': user_name,    
-                    'room': b.room.name,  
-                    'desc': b.additional_requests or "-" 
+                    'user': user_name,
+                    'room': b.room.name,
+                    'desc': b.additional_requests or "-"
                 }
             })
         return JsonResponse(events, safe=False)
@@ -494,19 +503,19 @@ def update_booking_time_api(request):
     try:
         data = json.loads(request.body)
         booking = get_object_or_404(Booking, pk=data.get('id'))
-        
+
         if booking.user != request.user and not is_admin(request.user):
             return JsonResponse({'status': 'error', 'message': 'ไม่มีสิทธิ์แก้ไข'}, status=403)
 
         start_dt = datetime.fromisoformat(data.get('start').replace('Z', ''))
         end_str = data.get('end')
-        
+
         if end_str:
             end_dt = datetime.fromisoformat(end_str.replace('Z', ''))
         else:
             duration = booking.end_time - booking.start_time
             end_dt = start_dt + duration
-            
+
         # Check Overlap for Drag & Drop
         is_overlap = Booking.objects.filter(
             room=booking.room,
@@ -514,7 +523,7 @@ def update_booking_time_api(request):
             end_time__gt=start_dt,
             status__in=['APPROVED', 'PENDING']
         ).exclude(pk=booking.id).exists()
-        
+
         if is_overlap:
              return JsonResponse({'status': 'error', 'message': 'ช่วงเวลาซ้อนทับกับการจองอื่น'}, status=400)
 
@@ -522,28 +531,28 @@ def update_booking_time_api(request):
         booking.end_time = end_dt
         booking.save()
         return JsonResponse({'status': 'success'})
-    except Exception as e: 
+    except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 
 @login_required
 def api_pending_count(request):
     count = 0
     latest_booking = None
-    
+
     if is_approver_or_admin(request.user):
         rooms_we_approve = Q(room__approver=request.user)
         rooms_for_central_admin = Q(room__approver__isnull=True)
-        
+
         if is_admin(request.user):
             base_query = rooms_we_approve | rooms_for_central_admin
         else:
             base_query = rooms_we_approve
-            
+
         count = Booking.objects.filter(base_query, status='PENDING').count()
-        
+
         last_10_sec = timezone.now() - timedelta(seconds=10)
         new_b = Booking.objects.filter(created_at__gte=last_10_sec).order_by('-created_at').first()
-        
+
         if new_b:
             eq_list = [e.name for e in new_b.equipments.all()]
             eq_str = ", ".join(eq_list) if eq_list else "ไม่มี"
@@ -626,7 +635,7 @@ def reports_view(request):
     elif period == 'weekly':
         start_date = today - timedelta(days=7)
         report_title = f"สถิติย้อนหลัง 7 วัน ({start_date.strftime('%d/%m')} - {today.strftime('%d/%m/%Y')})"
-    else: 
+    else:
         start_date = today - timedelta(days=30)
         report_title = f"สถิติย้อนหลัง 30 วัน ({start_date.strftime('%d/%m')} - {today.strftime('%d/%m/%Y')})"
 
@@ -673,9 +682,9 @@ def export_reports_excel(request):
     """
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="booking_report.csv"'
-    
+
     # เขียน BOM (Byte Order Mark) เพื่อให้ Excel อ่านภาษาไทยออก
-    response.write(u'\ufeff'.encode('utf8')) 
+    response.write(u'\ufeff'.encode('utf8'))
 
     writer = csv.writer(response)
     # เขียนหัวตาราง
@@ -683,7 +692,7 @@ def export_reports_excel(request):
 
     # ดึงข้อมูลการจองทั้งหมด (หรือจะกรองตามเดือนก็ได้ถ้าต้องการ)
     bookings = Booking.objects.all().order_by('-start_time')
-    
+
     for b in bookings:
         writer.writerow([
             b.start_time.strftime('%d/%m/%Y'),
@@ -700,6 +709,38 @@ def export_reports_excel(request):
 @user_passes_test(is_admin)
 def export_reports_pdf(request):
     """
-    ฟังก์ชันสำหรับ Export PDF (Placeholder)
+    ฟังก์ชันสำหรับ Export รายงานการจองเป็นไฟล์ PDF โดยใช้ WeasyPrint
     """
-    return HttpResponse("PDF Export Function - Coming Soon")
+    # 1. ตรวจสอบ WeasyPrint
+    if HTML is None:
+        messages.error(request, "ไม่สามารถสร้าง PDF ได้: กรุณาติดตั้งไลบรารี WeasyPrint และ GTK3 runtime")
+        return redirect('reports')
+
+    # กรองข้อมูลการจอง (ดึงเฉพาะที่ อนุมัติ หรือ รออนุมัติ)
+    bookings = Booking.objects.filter(status__in=['APPROVED', 'PENDING']).order_by('-start_time')
+
+    # 2. เตรียม Context สำหรับ Template
+    context = {
+        'bookings': bookings,
+        'report_title': 'รายงานการจองห้องประชุม',
+        'export_date': timezone.now(),
+        'user': request.user,
+    }
+
+    # 3. Render Template เป็น HTML String
+    html_string = render_to_string('pages/reports_pdf.html', context)
+
+    # 4. สร้าง PDF
+    try:
+        # base_url ช่วยให้ WeasyPrint สามารถหา static files/font ในระบบได้
+        pdf_file = HTML(string=html_string, base_url=request.build_absolute_uri()).write_pdf()
+
+        # 5. ส่งไฟล์ PDF เป็น Response
+        response = HttpResponse(pdf_file, content_type='application/pdf')
+        # กำหนดชื่อไฟล์สำหรับดาวน์โหลด
+        response['Content-Disposition'] = f'attachment; filename="booking_report_{timezone.now().strftime("%Y%m%d_%H%M%S")}.pdf"'
+        return response
+
+    except Exception as e:
+        messages.error(request, f"เกิดข้อผิดพลาดในการสร้าง PDF: {e}")
+        return redirect('reports')
