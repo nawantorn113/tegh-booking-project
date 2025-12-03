@@ -8,36 +8,52 @@
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
-    
     <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
 
     <style>
         body { background-color: #f0f2f5; font-family: 'Kanit', sans-serif; padding-top: 70px; }
         .main-content-wrapper { padding-bottom: 2rem; }
+        
+        /* Navbar */
         .navbar { background-color: #ffffff; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08); min-height: 60px; padding: 0; }
         .navbar-brand { color: #1877f2 !important; font-weight: 700; font-size: 1.3rem; display: flex; align-items: center; }
+        
+        /* Nav Links */
         .nav-pills .nav-link { border-radius: 50px; padding: 5px 14px; font-size: 0.9rem; color: #606770; font-weight: 500; transition: all 0.2s; }
         .nav-pills .nav-link:hover { background-color: #f2f2f2; color: #1c1e21; }
         .nav-pills .nav-link.active { background-color: #e7f3ff; color: #1877f2; font-weight: 600; }
-        .btn-circle-fb { width: 38px; height: 38px; background-color: #e4e6eb; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #050505; text-decoration: none; transition: background-color 0.2s; cursor: pointer; border: none; position: relative; }
+        
+        /* Circle Buttons (Notification/Profile) */
+        .btn-circle-fb { width: 40px; height: 40px; background-color: #e4e6eb; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #050505; text-decoration: none; transition: background-color 0.2s; cursor: pointer; border: none; position: relative; }
         .btn-circle-fb:hover { background-color: #d8dadf; color: #1877f2; }
-        .badge-fb { position: absolute; top: -2px; right: -2px; background-color: #e41e3f; color: white; font-size: 0.6rem; padding: 1px 4px; border-radius: 6px; min-width: 16px; border: 2px solid #fff; line-height: 1; }
-        .dropdown-menu-fb { width: 300px; border-radius: 8px; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-top: 8px; overflow: hidden; }
+        
+        /* Badge */
+        .badge-fb { position: absolute; top: -2px; right: -2px; background-color: #e41e3f; color: white; font-size: 0.65rem; padding: 2px 5px; border-radius: 10px; min-width: 18px; border: 2px solid #fff; line-height: 1; }
+        
+        /* --- [แก้ไข] Dropdown Notification --- */
+        .dropdown-menu-fb { 
+            width: 320px; 
+            border-radius: 8px; 
+            border: none; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15); 
+            margin-top: 10px; 
+            overflow: hidden;
+            /* บังคับตำแหน่ง */
+            right: 0 !important; 
+            left: auto !important;
+        }
+        
         .dropdown-header-fb { padding: 10px 16px; font-size: 1rem; font-weight: 700; background-color: #fff; }
         .notify-item-fb { display: flex; align-items: center; padding: 8px 16px; text-decoration: none; color: inherit; transition: background-color 0.2s; }
         .notify-item-fb:hover { background-color: #f0f2f5; }
-        .notify-avatar { width: 36px; height: 36px; border-radius: 50%; background-color: #e7f3ff; color: #1877f2; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; margin-right: 12px; flex-shrink: 0; }
+        .notify-avatar { width: 40px; height: 40px; border-radius: 50%; background-color: #e7f3ff; color: #1877f2; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; margin-right: 12px; flex-shrink: 0; }
         .notify-content { flex: 1; min-width: 0; }
         .notify-content strong { font-size: 0.9rem; display: block; line-height: 1.2; margin-bottom: 2px; }
         .notify-content span { font-size: 0.8rem; color: #65676b; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .notify-time { font-size: 0.7rem; color: #1877f2; font-weight: 500; }
+        .notify-time { font-size: 0.75rem; color: #1877f2; font-weight: 500; }
         
-        /* ✅ ปรับฟอนต์ SweetAlert ให้เป็น Kanit เหมือนเว็บ */
-        div:where(.swal2-container) div:where(.swal2-popup) {
-            font-family: 'Kanit', sans-serif !important;
-        }
+        div:where(.swal2-container) div:where(.swal2-popup) { font-family: 'Kanit', sans-serif !important; }
     </style>
     {% block extra_head %}{% endblock %}
 </head>
@@ -89,11 +105,10 @@
                         {% endif %}
                     </ul>
 
-                    <ul class="navbar-nav ms-auto mb-2 mb-lg-0 flex-row align-items-center gap-2 mt-3 mt-lg-0 justify-content-end">
+                    <ul class="navbar-nav ms-auto mb-2 mb-lg-0 flex-row align-items-center gap-3 mt-3 mt-lg-0 justify-content-end">
                         {% if is_admin_user or user.is_superuser %}
-                            <li class="nav-item dropdown position-static position-lg-relative">
-                                <a class="btn-circle-fb" href="#" id="fbNotifyDropdown" role="button" data-bs-toggle="dropdown">
-                                    <i class="bi bi-bell-fill small"></i>
+                            <li class="nav-item dropdown position-relative"> <a class="btn-circle-fb" href="#" id="fbNotifyDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-bell-fill"></i>
                                     <span class="badge-fb" id="notifyBadge" style="display:none;">0</span>
                                 </a>
                                 <div class="dropdown-menu dropdown-menu-end dropdown-menu-fb p-0" aria-labelledby="fbNotifyDropdown">
@@ -121,9 +136,11 @@
                             </li>
                         {% endif %}
                         
-                        <li class="nav-item dropdown">
-                            <a class="btn-circle-fb" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown"><i class="bi bi-person-fill fs-5"></i></a>
-                            <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2 p-1" style="width: 200px;">
+                        <li class="nav-item dropdown position-relative">
+                            <a class="btn-circle-fb" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-person-fill fs-5"></i>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2 p-1" style="width: 220px; right: 0;">
                                 <li class="px-3 py-2 border-bottom mb-1"><span class="fw-bold d-block small text-dark">{{ user.username }}</span></li>
                                 <li><a class="dropdown-item py-1 small rounded" href="{% url 'change_password' %}">เปลี่ยนรหัสผ่าน</a></li>
                                 <li><form action="{% url 'logout' %}" method="post" class="px-0 m-0">{% csrf_token %}<button type="submit" class="dropdown-item py-1 text-danger small rounded">ออกจากระบบ</button></form></li>
@@ -135,25 +152,21 @@
         </nav>
     {% endif %}
 
-    <main class="container mt-3 main-content-wrapper" id="main-content">
+    <main class="container mt-4 main-content-wrapper" id="main-content">
         {% block content %}{% endblock %}
     </main>
 
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     <script>
-        // Auto-hide Navbar
         var lastScrollTop = 0;
         var navbar = document.getElementById("mainNavbar");
         if(navbar){
             window.addEventListener("scroll", function(){
                 var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-                // ซ่อน navbar เมื่อเลื่อนลงเกิน 60px
                 if (scrollTop > lastScrollTop && scrollTop > 60) { 
-                    // เนื่องจากเป็น class fixed-top ต้องปรับ style ให้ถูกต้อง
                     document.querySelector('.navbar').style.transform = 'translateY(-100%)';
                     document.querySelector('.navbar').style.transition = 'transform 0.3s ease-in-out';
                 } else { 
@@ -163,80 +176,50 @@
             });
         }
 
-        // ✅ 3. Script แสดง Popup อัตโนมัติเมื่อมี Message (Error/Success)
         document.addEventListener('DOMContentLoaded', function() {
             {% if messages %}
                 {% for message in messages %}
-                    var msgType = "{{ message.tags }}"; 
-                    var msgText = "{{ message|escapejs }}";
-                    var titleText = "แจ้งเตือน";
-                    var iconType = "info";
-                    var confirmColor = "#3085d6";
-
-                    if (msgType.includes('success')) {
-                        titleText = "สำเร็จ!";
-                        iconType = "success";
-                        confirmColor = "#198754";
-                    } else if (msgType.includes('error')) {
-                        titleText = "เกิดข้อผิดพลาด";
-                        iconType = "error";
-                        confirmColor = "#dc3545";
-                    } else if (msgType.includes('warning')) {
-                        titleText = "คำเตือน";
-                        iconType = "warning";
-                        confirmColor = "#ffc107";
-                    }
-
                     Swal.fire({
-                        title: titleText,
-                        text: msgText,
-                        icon: iconType,
+                        title: "{{ message.tags|title }}",
+                        text: "{{ message|escapejs }}",
+                        icon: "{{ message.tags|lower }}".includes('success') ? 'success' : 'error',
                         confirmButtonText: 'ตกลง',
-                        confirmButtonColor: confirmColor,
-                        // ถ้าสำเร็จปิดเองใน 2 วิ, ถ้า Error ให้กดปิดเอง
-                        timer: msgType.includes('success') ? 2000 : undefined
+                        confirmButtonColor: '#3085d6',
+                        timer: 2000
                     });
                 {% endfor %}
             {% endif %}
         });
 
-        // ✅ Script แจ้งเตือน Real-time (Toast)
+        // Notification Logic
         let lastBookingId = null;
-
         function checkNotifications() {
             fetch("{% url 'api_pending_count' %}")
                 .then(res => res.json())
                 .then(data => {
-                    // 1. อัปเดตจุดแดง
                     const badge = document.getElementById('notifyBadge');
                     if(badge) {
                         if (data.count > 0) {
-                            badge.style.display = 'flex'; // ใช้ flex เพื่อจัดกึ่งกลาง
+                            badge.style.display = 'flex'; 
                             badge.innerText = data.count;
                         } else {
                             badge.style.display = 'none';
                         }
                     }
-
-                    // 2. เด้ง Toast มุมขวาล่าง ถ้ามีของใหม่
                     if (data.latest_booking && data.latest_booking.id !== lastBookingId) {
                         lastBookingId = data.latest_booking.id; 
-                        
                         document.getElementById('toastUser').innerText = data.latest_booking.user;
                         document.getElementById('toastRoom').innerText = data.latest_booking.room;
                         document.getElementById('toastEquip').innerText = data.latest_booking.equipments;
                         document.getElementById('toastStatus').innerText = data.latest_booking.status;
-                        
-                        const toastEl = document.getElementById('liveToast');
-                        const toast = new bootstrap.Toast(toastEl);
-                        toast.show();
+                        new bootstrap.Toast(document.getElementById('liveToast')).show();
                     }
                 })
                 .catch(err => console.log('Notify Error:', err));
         }
 
         {% if is_admin_user or user.is_superuser %}
-            setInterval(checkNotifications, 5000); // เช็คทุก 5 วิ
+            setInterval(checkNotifications, 5000);
             checkNotifications();
         {% endif %}
     </script>
