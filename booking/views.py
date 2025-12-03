@@ -392,7 +392,6 @@ def room_calendar_view(request, room_id):
                         department=base_booking.department,
                         chairman=base_booking.chairman,
                         presentation_file=base_booking.presentation_file,
-                        recurrence_id=group_id
                     )
                     
                     has_req = bool(new_booking.additional_requests and new_booking.additional_requests.strip())
