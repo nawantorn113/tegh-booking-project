@@ -3,17 +3,17 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 
-# 💡 เราจะสร้าง View ง่ายๆ เพื่อ Redirect คนที่เผลอเข้า /admin/ ให้กลับไปหน้า Dashboard
+# เราจะสร้าง View ง่ายๆ เพื่อ Redirect คนที่เผลอเข้า /admin/ ให้กลับไปหน้า Dashboard
 from django.shortcuts import redirect
 
 def redirect_to_dashboard(request):
     return redirect('dashboard')
 
 urlpatterns = [
-    # ปิดบรรทัดนี้ เพื่อไม่ให้เข้าหน้า Admin ของ Django ได้
+    # หน้า Admin ของ Django 
     path('admin/', admin.site.urls), 
     
-    # 💡 (Optional) ถ้าใครพยายามเข้า /admin/ ให้ดีดกลับไปหน้า Dashboard แทน
+    # (Optional) ถ้าใครพยายามเข้า /admin/ ให้ดีดกลับไปหน้า Dashboard แทน
     path('admin/', redirect_to_dashboard),
 
     #  เชื่อมต่อกับ App Booking ของเรา

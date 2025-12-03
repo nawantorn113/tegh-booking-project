@@ -2,7 +2,7 @@
 
 from django.apps import AppConfig
 
-# ❌ เราลบ import reportlab, os, settings ทิ้งไปแล้ว
+#  เราลบ import reportlab, os, settings ทิ้งไปแล้ว
 #    เพราะ WeasyPrint (ใน views.py) ไม่จำเป็นต้องใช้
 
 

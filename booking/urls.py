@@ -13,7 +13,6 @@ urlpatterns = [
     
     # [แก้ตรงนี้] สลับ ID มาไว้ตรงกลาง เพื่อให้ตรงกับลิงก์ที่หน้าเว็บส่งมา
     path('booking/<int:booking_id>/detail/', views.booking_detail_view, name='booking_detail'),
-    
     path('booking/<int:booking_id>/edit/', views.edit_booking_view, name='edit_booking'),
     path('booking/<int:booking_id>/delete/', views.delete_booking_view, name='delete_booking'),
     
@@ -39,7 +38,6 @@ urlpatterns = [
     path('manage/rooms/add/', views.add_room_view, name='add_room'),
     path('manage/rooms/edit/<int:room_id>/', views.edit_room_view, name='edit_room'),
     path('manage/rooms/delete/<int:room_id>/', views.delete_room_view, name='delete_room'),
-    
     path('manage/users/', views.user_management_view, name='user_management'),
     path('manage/users/add/', views.add_user_view, name='add_user'),
     path('manage/users/edit-roles/<int:user_id>/', views.edit_user_roles_view, name='edit_user_roles'),
