@@ -11,8 +11,8 @@
     
     <style>
         body {
-            font-family: 'Kanit', sans-serif; /* แนะนำให้ใช้ font ที่อ่านง่าย เช่น Kanit, Prompt */
-            background: linear-gradient(135deg, #f0f2f5 0%, #e0e6ed 100%); /* พื้นหลังไล่เฉดสีอ่อนๆ */
+            font-family: 'Kanit', sans-serif;
+            background: linear-gradient(135deg, #f0f2f5 0%, #e0e6ed 100%);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -23,27 +23,27 @@
 
         .login-container {
             width: 100%;
-            max-width: 420px; /* กำหนดความกว้างสูงสุด */
+            max-width: 420px;
             text-align: center;
         }
 
         .login-card {
             background: #ffffff;
-            border-radius: 15px; /* มุมโค้งมนมากขึ้น */
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15), 0 4px 10px rgba(0, 0, 0, 0.08); /* เงา 2 ชั้น ดูมีมิติ */
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15), 0 4px 10px rgba(0, 0, 0, 0.08);
             padding: 35px;
-            transition: transform 0.3s ease-in-out; /* เพิ่ม transition ให้ดู smooth */
+            transition: transform 0.3s ease-in-out;
             border: none;
         }
         
         .login-card:hover {
-            transform: translateY(-5px); /* เลื่อนขึ้นเล็กน้อยเมื่อ Hover */
+            transform: translateY(-5px);
         }
 
         .login-header h1 {
             font-weight: 700;
             color: #343a40;
-            font-size: 2.2rem; /* ขนาดใหญ่ขึ้น */
+            font-size: 2.2rem;
             letter-spacing: -0.5px;
             margin-bottom: 10px;
         }
@@ -54,38 +54,69 @@
             margin-bottom: 30px;
         }
 
+        /* --- ปรับปรุง CSS Input Group ให้รองรับปุ่มกดดูรหัส --- */
         .input-group-login .form-control {
-            border-radius: 8px; /* ช่อง Input โค้งมน */
+            border-radius: 8px; /* ค่าเดิมของคุณ */
             border: 1px solid #ced4da;
             padding: 12px 15px;
             font-size: 1rem;
         }
+        
+        /* แก้ไขมุมของ Input เมื่อมีปุ่มต่อท้าย */
+        .input-group-login .form-control:not(:last-child) {
+            border-top-right-radius: 0;
+            border-bottom-right-radius: 0;
+            border-right: 0; /* ซ่อนเส้นขวาเพื่อให้เนียนกับปุ่ม */
+        }
+
         .input-group-login .input-group-text {
             border-radius: 8px 0 0 8px;
             background-color: #e9ecef;
             border: 1px solid #ced4da;
         }
 
+        /* ปุ่มกดดูรหัสผ่าน (เพิ่มใหม่) */
+        .btn-password-toggle {
+            border-top-right-radius: 8px !important;
+            border-bottom-right-radius: 8px !important;
+            border: 1px solid #ced4da;
+            border-left: 0;
+            background-color: white;
+            color: #6c757d;
+            z-index: 4; /* ให้ปุ่มอยู่ชั้นบน */
+        }
+        .btn-password-toggle:hover {
+            background-color: #f8f9fa;
+            color: #6f42c1;
+            border-color: #ced4da;
+        }
+        .btn-password-toggle:focus {
+            box-shadow: none; /* ลบเงาเวลาคลิก */
+            border-color: #ced4da;
+        }
+
+        /* ---------------------------------------------------- */
+
         .btn-main {
-            background-color: #6f42c1; /* สีม่วงหลัก */
+            background-color: #6f42c1;
             border-color: #6f42c1;
             color: white;
             padding: 12px 25px;
-            border-radius: 8px; /* ปุ่มโค้งมน */
+            border-radius: 8px;
             font-weight: 600;
             transition: all 0.2s ease-in-out;
-            box-shadow: 0 4px 10px rgba(111, 66, 193, 0.25); /* เงาปุ่ม */
+            box-shadow: 0 4px 10px rgba(111, 66, 193, 0.25);
         }
 
         .btn-main:hover {
-            background-color: #5a359b; /* สีเข้มขึ้นเมื่อ Hover */
+            background-color: #5a359b;
             border-color: #5a359b;
-            transform: translateY(-2px); /* ปุ่มลอยขึ้นเล็กน้อย */
+            transform: translateY(-2px);
             box-shadow: 0 6px 15px rgba(111, 66, 193, 0.35);
         }
 
         .btn-outline-public {
-            border-color: #28a745; /* สีเขียว */
+            border-color: #28a745;
             color: #28a745;
             padding: 12px 25px;
             border-radius: 8px;
@@ -100,18 +131,16 @@
         }
 
         .form-control:focus {
-            box-shadow: 0 0 0 0.25rem rgba(111, 66, 193, 0.25); /* Focus Ring สีม่วง */
+            box-shadow: 0 0 0 0.25rem rgba(111, 66, 193, 0.25);
             border-color: #6f42c1;
+            z-index: 3; /* ให้ Input ลอยเหนือปุ่มอื่นๆเวลา Focus */
         }
         
-        /* Font Kanit (ถ้าต้องการใช้) */
         @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap');
     </style>
 </head>
 <body>
     <div class="login-container">
-        <!-- {# 🚨 [แก้ไขตรงนี้] เปลี่ยน Path โลโก้ของคุณ #}
-        <img src="{% static 'img/your_logo.png' %}" alt="Your Company Logo" width="100" class="mb-4 d-inline-block"> -->
         
         <h1 class="mb-2 fw-bolder text-dark">TEGH Booking</h1>
         <p class="text-secondary mb-4">โปรดเข้าสู่ระบบเพื่อดำเนินการต่อ</p>
@@ -138,19 +167,24 @@
 
                     <div class="mb-4 input-group input-group-login">
                         <span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
-                        <input type="password" name="password" class="form-control" placeholder="รหัสผ่าน" required>
+                        <input type="password" name="password" class="form-control" placeholder="รหัสผ่าน" required id="id_password">
+                        
+                        <button class="btn btn-password-toggle" type="button" id="togglePassword">
+                            <i class="bi bi-eye" id="toggleIcon"></i>
+                        </button>
+                        
                         <div class="invalid-feedback">กรุณากรอกรหัสผ่าน</div>
                     </div>
 
                     <button type="submit" class="btn btn-main w-100 mb-3">
-                        <i class="bi bi-box-arrow-in-right me-2"></i> เข้าสู่ระบบ (Username/Pass)
+                        <i class="bi bi-box-arrow-in-right me-2"></i> เข้าสู่ระบบ
                     </button>
                 </form>
 
                 {% if enable_sso %}
-                <button type="button" onclick="location.href='{% url 'sso_login' %}'" class="btn btn-outline-secondary w-100 mb-3">
+                <a href="{% url 'outlook_login' %}" class="btn btn-outline-secondary w-100 mb-3">
                     <i class="bi bi-microsoft me-2"></i> เข้าสู่ระบบด้วย Microsoft 365
-                </button>
+                </a>
                 {% endif %}
 
                 <hr class="my-4 text-muted opacity-25">
@@ -169,7 +203,29 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Enable Bootstrap's form validation
+        // 1. Script สลับโหมด Password (เปิด/ปิดตา)
+        const toggleBtn = document.querySelector('#togglePassword');
+        const passwordInput = document.querySelector('#id_password');
+        const toggleIcon = document.querySelector('#toggleIcon');
+
+        if (toggleBtn && passwordInput) {
+            toggleBtn.addEventListener('click', function () {
+                // เช็คสถานะปัจจุบัน
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+                
+                // เปลี่ยนไอคอน
+                if (type === 'text') {
+                    toggleIcon.classList.remove('bi-eye');
+                    toggleIcon.classList.add('bi-eye-slash');
+                } else {
+                    toggleIcon.classList.remove('bi-eye-slash');
+                    toggleIcon.classList.add('bi-eye');
+                }
+            });
+        }
+
+        // 2. Bootstrap Form Validation (ตรวจสอบค่าว่าง)
         (function () {
             'use strict'
             var forms = document.querySelectorAll('.needs-validation')
