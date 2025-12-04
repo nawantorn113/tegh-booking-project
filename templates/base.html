@@ -31,7 +31,7 @@
         /* Badge */
         .badge-fb { position: absolute; top: -2px; right: -2px; background-color: #e41e3f; color: white; font-size: 0.65rem; padding: 2px 5px; border-radius: 10px; min-width: 18px; border: 2px solid #fff; line-height: 1; }
         
-        /* --- [แก้ไข] Dropdown Notification --- */
+        /* Dropdown Notification */
         .dropdown-menu-fb { 
             width: 320px; 
             border-radius: 8px; 
@@ -39,7 +39,6 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.15); 
             margin-top: 10px; 
             overflow: hidden;
-            /* บังคับตำแหน่ง */
             right: 0 !important; 
             left: auto !important;
         }
@@ -63,19 +62,12 @@
         <div id="liveToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="10000">
             <div class="toast-header bg-primary text-white">
                 <i class="bi bi-bell-fill me-2"></i>
-                <strong class="me-auto">มีการจองใหม่!</strong>
+                <strong class="me-auto">แจ้งเตือนใหม่!</strong>
                 <small>เมื่อสักครู่</small>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
             </div>
             <div class="toast-body bg-white shadow-sm">
-                <p class="mb-1"><strong>ผู้จอง:</strong> <span id="toastUser"></span></p>
-                <p class="mb-1"><strong>ห้อง:</strong> <span id="toastRoom" class="text-primary"></span></p>
-                <p class="mb-1"><strong>อุปกรณ์:</strong> <span id="toastEquip" class="text-danger"></span></p>
-                <p class="mb-2"><strong>สถานะ:</strong> <span id="toastStatus" class="badge bg-warning text-dark"></span></p>
-                <div class="mt-2 pt-2 border-top text-end">
-                    <a href="{% url 'approvals' %}" class="btn btn-sm btn-outline-primary rounded-pill px-3">ดูรายการ</a>
-                </div>
-            </div>
+                <p class="mb-1"><strong><span id="toastTitle"></span></strong></p> <p class="mb-1"><span id="toastMsg"></span></p> </div>
         </div>
     </div>
 
@@ -106,41 +98,52 @@
                     </ul>
 
                     <ul class="navbar-nav ms-auto mb-2 mb-lg-0 flex-row align-items-center gap-3 mt-3 mt-lg-0 justify-content-end">
-                        {% if is_admin_user or user.is_superuser %}
-                            <li class="nav-item dropdown position-relative"> <a class="btn-circle-fb" href="#" id="fbNotifyDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <i class="bi bi-bell-fill"></i>
-                                    <span class="badge-fb" id="notifyBadge" style="display:none;">0</span>
-                                </a>
-                                <div class="dropdown-menu dropdown-menu-end dropdown-menu-fb p-0" aria-labelledby="fbNotifyDropdown">
-                                    <div class="dropdown-header-fb border-bottom d-flex justify-content-between align-items-center">
-                                        <span>การแจ้งเตือน</span>
-                                        <a href="{% url 'approvals' %}" class="text-decoration-none small text-primary">จัดการ</a>
-                                    </div>
-                                    <div style="max-height: 300px; overflow-y: auto;">
-                                        {% if pending_notifications %}
-                                            {% for booking in pending_notifications %}
-                                                <a href="{% url 'approvals' %}" class="notify-item-fb border-bottom">
-                                                    <div class="notify-avatar bg-warning bg-opacity-10 text-warning"><i class="bi bi-hourglass-split"></i></div>
-                                                    <div class="notify-content ms-2">
-                                                        <strong class="text-dark d-block small">{{ booking.user.username }}</strong>
-                                                        <span class="d-block text-muted small">{{ booking.room.name }}</span>
-                                                        <div class="text-primary small" style="font-size: 0.7rem;">{{ booking.created_at|timesince }}</div>
-                                                    </div>
-                                                </a>
-                                            {% endfor %}
-                                        {% else %}
-                                            <div class="text-center py-5 text-muted small">ไม่มีรายการใหม่</div>
-                                        {% endif %}
-                                    </div>
+                        
+                        <li class="nav-item dropdown position-relative">
+                            <a class="btn-circle-fb" href="#" id="fbNotifyDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-bell-fill"></i>
+                                <span class="badge-fb" id="notifyBadge" style="display:none;">0</span>
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-end dropdown-menu-fb p-0" aria-labelledby="fbNotifyDropdown">
+                                <div class="dropdown-header-fb border-bottom d-flex justify-content-between align-items-center">
+                                    <span>การแจ้งเตือน</span>
                                 </div>
-                            </li>
-                        {% endif %}
+                                <div style="max-height: 300px; overflow-y: auto;">
+                                    {% if pending_notifications %}
+                                        {% for booking in pending_notifications %}
+                                            <a href="{% if is_admin_user %}{% url 'approvals' %}{% else %}{% url 'mark_booking_seen' booking.id %}{% endif %}" class="notify-item-fb border-bottom">
+                                                <div class="notify-avatar 
+                                                    {% if booking.status == 'PENDING' %}bg-warning text-dark
+                                                    {% elif booking.status == 'APPROVED' %}bg-success text-white
+                                                    {% else %}bg-danger text-white{% endif %} bg-opacity-10">
+                                                    
+                                                    {% if booking.status == 'PENDING' %}<i class="bi bi-hourglass-split"></i>
+                                                    {% elif booking.status == 'APPROVED' %}<i class="bi bi-check-lg"></i>
+                                                    {% else %}<i class="bi bi-x-lg"></i>{% endif %}
+                                                </div>
+                                                <div class="notify-content ms-2">
+                                                    <strong class="text-dark d-block small">
+                                                        {% if is_admin_user %}
+                                                            {{ booking.user.username }} ขอจองห้อง {% else %}
+                                                            ผลการจอง: {{ booking.get_status_display }} {% endif %}
+                                                    </strong>
+                                                    <span class="d-block text-muted small">{{ booking.room.name }} - {{ booking.title }}</span>
+                                                    <div class="text-primary small" style="font-size: 0.7rem;">{{ booking.updated_at|timesince }} ที่แล้ว</div>
+                                                </div>
+                                            </a>
+                                        {% endfor %}
+                                    {% else %}
+                                        <div class="text-center py-5 text-muted small">ไม่มีการแจ้งเตือนใหม่</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </li>
                         
                         <li class="nav-item dropdown position-relative">
                             <a class="btn-circle-fb" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                 <i class="bi bi-person-fill fs-5"></i>
                             </a>
-                            <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2 p-1" style="width: 220px; right: 0;">
+                            <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2 p-1" style="width: 200px; right: 0;">
                                 <li class="px-3 py-2 border-bottom mb-1"><span class="fw-bold d-block small text-dark">{{ user.username }}</span></li>
                                 <li><a class="dropdown-item py-1 small rounded" href="{% url 'change_password' %}">เปลี่ยนรหัสผ่าน</a></li>
                                 <li><form action="{% url 'logout' %}" method="post" class="px-0 m-0">{% csrf_token %}<button type="submit" class="dropdown-item py-1 text-danger small rounded">ออกจากระบบ</button></form></li>
@@ -191,7 +194,7 @@
             {% endif %}
         });
 
-        // Notification Logic
+        // Real-time Notification (ใช้ได้ทั้ง Admin และ User)
         let lastBookingId = null;
         function checkNotifications() {
             fetch("{% url 'api_pending_count' %}")
@@ -206,22 +209,24 @@
                             badge.style.display = 'none';
                         }
                     }
+                    
+                    // แจ้งเตือน Popup (Toast)
                     if (data.latest_booking && data.latest_booking.id !== lastBookingId) {
                         lastBookingId = data.latest_booking.id; 
-                        document.getElementById('toastUser').innerText = data.latest_booking.user;
-                        document.getElementById('toastRoom').innerText = data.latest_booking.room;
-                        document.getElementById('toastEquip').innerText = data.latest_booking.equipments;
-                        document.getElementById('toastStatus').innerText = data.latest_booking.status;
+                        
+                        // ปรับข้อความตามประเภท (Admin/User)
+                        document.getElementById('toastTitle').innerText = data.latest_booking.title || "แจ้งเตือนใหม่";
+                        document.getElementById('toastMsg').innerText = data.latest_booking.msg || "มีรายการอัปเดต";
+                        
                         new bootstrap.Toast(document.getElementById('liveToast')).show();
                     }
                 })
                 .catch(err => console.log('Notify Error:', err));
         }
 
-        {% if is_admin_user or user.is_superuser %}
-            setInterval(checkNotifications, 5000);
-            checkNotifications();
-        {% endif %}
+        // เปิดให้ทุกคนใช้งาน ไม่ใช่แค่ Admin
+        setInterval(checkNotifications, 5000);
+        checkNotifications();
     </script>
     {% block extra_scripts %}{% endblock %}
 </body>

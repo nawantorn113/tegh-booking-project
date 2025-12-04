@@ -61,7 +61,7 @@
         <div class="card-body p-2 p-md-4">
             <div class="alert alert-info border-0 d-flex align-items-center small mb-3">
                 <i class="bi bi-arrows-move me-2"></i>
-                <div><strong>Tip:</strong> คุณสามารถ <u>ลากรายการจองของคุณ</u> เพื่อเปลี่ยนเวลาได้ทันที (เฉพาะรายการในอนาคต)</div>
+                <div><strong>Tip:</strong> คุณสามารถ <u>คลิกลาก</u> บนปฏิทินเพื่อจอง หรือ <u>ลากรายการเดิม</u> เพื่อเปลี่ยนเวลาได้ทันที</div>
             </div>
             <div id="calendar"></div>
         </div>
@@ -101,10 +101,15 @@
 
     <script>
     const ROOM_CAPACITY = parseInt("{{ room.capacity|default:0 }}");
-    // ✅ [FIX] ดึง CSRF Token แบบชัวร์ๆ จาก Template โดยตรง
     const CSRF_TOKEN = '{{ csrf_token }}'; 
     const API_UPDATE_URL = "{% url 'update_booking_time_api' %}";
-    const CURRENT_USER = "{{ request.user.username }}"; // เอาไว้เช็คสิทธิ์เบื้องต้น
+    
+    // ฟังก์ชันช่วยแปลงเวลาเป็น Local Time (แก้ปัญหาเวลาถอยหลัง 7 ชม.)
+    function getLocalISOString(date) {
+        const offset = date.getTimezoneOffset() * 60000;
+        const localDate = new Date(date.getTime() - offset);
+        return localDate.toISOString().slice(0, 16);
+    }
 
     function openBookingModal(startStr = null, endStr = null) {
         const form = document.getElementById('hiddenBookingForm');
@@ -117,10 +122,10 @@
             document.getElementById('id_end_time').value = endStr.substring(0, 16);
         } else {
             let now = new Date();
-            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-            document.getElementById('id_start_time').value = now.toISOString().slice(0,16);
             let next = new Date(now.getTime() + 60*60000); 
-            document.getElementById('id_end_time').value = next.toISOString().slice(0,16);
+            // ใช้ Helper Function แทน toISOString ธรรมดา
+            document.getElementById('id_start_time').value = getLocalISOString(now);
+            document.getElementById('id_end_time').value = getLocalISOString(next);
         }
 
         if ($('#id_participants').hasClass("select2-hidden-accessible")) {
@@ -138,18 +143,14 @@
         });
     });
 
-    // ✅ [FIX] ฟังก์ชันอัปเดตเวลา (Drag & Drop)
     function updateBookingOnServer(eventInfo) {
         const event = eventInfo.event;
         
-        // แสดง Loading...
-        // (Optional) อาจจะใส่ spinner หรือทำอะไรให้รู้ว่ากำลังโหลด
-
         fetch(API_UPDATE_URL, {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json', 
-                'X-CSRFToken': CSRF_TOKEN // ใช้ Token ที่ดึงมาข้างบน
+                'X-CSRFToken': CSRF_TOKEN
             },
             body: JSON.stringify({
                 id: event.id,
@@ -160,12 +161,10 @@
         .then(res => res.json())
         .then(data => {
             if (data.status === 'success') {
-                // สำเร็จ! ไม่ต้องทำอะไร (ปฏิทินขยับแล้ว)
                 console.log("Update success");
             } else {
-                // ไม่สำเร็จ (เช่น ไม่มีสิทธิ์) -> เด้งกลับที่เดิม
                 eventInfo.revert();
-                alert('แก้ไขไม่ได้: ' + (data.message || 'คุณไม่ใช่เจ้าของรายการนี้'));
+                alert('แก้ไขไม่ได้: ' + (data.message || 'เกิดข้อผิดพลาด'));
             }
         })
         .catch(err => {
@@ -178,29 +177,43 @@
     document.addEventListener('DOMContentLoaded', function() {
         var calendarEl = document.getElementById('calendar');
         var calendar = new FullCalendar.Calendar(calendarEl, {
+            // ปรับ Default View และเพิ่มปุ่มมุมมองรายสัปดาห์
             initialView: window.innerWidth < 768 ? 'listMonth' : 'dayGridMonth', 
             locale: 'th',
-            headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,listMonth' },
-            buttonText: { today: 'วันนี้', month: 'เดือน', week: 'สัปดาห์', list: 'รายการ' },
+            headerToolbar: { 
+                left: 'prev,next today', 
+                center: 'title', 
+                right: 'dayGridMonth,timeGridWeek,timeGridDay,listMonth' // เพิ่ม timeGridWeek, timeGridDay
+            },
+            buttonText: { 
+                today: 'วันนี้', 
+                month: 'เดือน', 
+                week: 'สัปดาห์', 
+                day: 'วัน', 
+                list: 'รายการ' 
+            },
             
-            // ✅ เปิดการแก้ไข (Drag & Drop)
+            // --- จุดสำคัญที่ทำให้กดจองได้ ---
+            selectable: true, 
+            selectMirror: true,
+            // ---------------------------
+
             editable: true, 
             droppable: true,
-            eventDurationEditable: true, // ยืดหดเวลาได้
+            eventDurationEditable: true,
+            dayMaxEvents: true, // ถ้าวันไหนจองเยอะ ให้ซ่อนเป็น +more
             
             height: 'auto',
             events: "{% url 'bookings_api' %}?room_id={{ room.id }}",
             
-            // เมื่อลากเสร็จ (Drop)
             eventDrop: function(info) { 
                 if(confirm("ยืนยันการย้ายวัน/เวลา?")) {
                     updateBookingOnServer(info);
                 } else {
-                    info.revert(); // ถ้ากด Cancel ให้เด้งกลับ
+                    info.revert();
                 }
             },
             
-            // เมื่อยืดหดเวลา (Resize)
             eventResize: function(info) { 
                 if(confirm("ยืนยันการปรับเวลา?")) {
                     updateBookingOnServer(info);
@@ -211,36 +224,44 @@
             
             select: function(info) {
                 if (window.innerWidth < 768 && info.view.type === 'listMonth') return;
-                let start = info.allDay ? info.startStr + 'T08:00' : info.startStr.substring(0, 16);
-                let end = info.allDay ? info.startStr + 'T09:00' : info.endStr.substring(0, 16);
+                
+                // แปลงเวลาให้ถูกต้องตามมุมมอง
+                let start, end;
+                if (info.allDay) {
+                    // ถ้าเลือกจากมุมมองเดือน (All Day) ให้ตั้งเวลา default เป็น 08:00 - 09:00 ของวันนั้น
+                    start = info.startStr + 'T08:00';
+                    end = info.startStr + 'T09:00';
+                } else {
+                    // ถ้าเลือกจากมุมมองสัปดาห์/วัน (ระบุเวลามาแล้ว) ใช้เวลาจริงได้เลย
+                    // ตัดแค่ 16 ตัวแรก (yyyy-mm-ddThh:mm) เพื่อใส่ input ได้พอดี
+                    // หมายเหตุ: startStr ของ FullCalendar เป็น Local Time อยู่แล้วใน mode นี้
+                    start = info.startStr.substring(0, 16);
+                    end = info.endStr.substring(0, 16);
+                }
+
                 openBookingModal(start, end);
             },
             
             eventClick: function(info) {
                 if (info.jsEvent.detail > 1) return;
                 info.jsEvent.preventDefault();
+                // ถ้าจะให้คลิกแล้วไปหน้า Detail
                 window.location.href = `/booking/${info.event.id}/detail/`;
             },
 
-            // Logic สีและการล็อก (Client-Side Check)
             eventDidMount: function(info) {
                 var status = info.event.extendedProps.status;
                 var now = new Date();
                 var end = info.event.end || info.event.start;
                 
-                // 1. รายการอดีต -> ห้ามแก้
                 if (end < now) {
                     info.el.classList.add('status-past');
-                    info.event.setProp('editable', false); // 🔒 ล็อก! ห้ามลาก
+                    info.event.setProp('editable', false);
                 }
-                // 2. รายการยกเลิก -> ห้ามแก้
                 else if (status === 'CANCELLED' || status === 'REJECTED') {
                     info.el.classList.add('status-cancelled');
-                    info.event.setProp('editable', false); // 🔒 ล็อก! ห้ามลาก
+                    info.event.setProp('editable', false);
                 }
-                // 3. รายการคนอื่น -> ห้ามแก้ (เช็คเบื้องต้นที่หน้าเว็บ)
-                // (ถ้าไม่มี extendedProps.user หรือ user ไม่ตรงกับคนล็อกอิน)
-                // หมายเหตุ: เช็คนี้อาจไม่แม่น 100% ถ้าชื่อ user ไม่ตรงเป๊ะ แต่ Server จะกันให้อีกที
             }
         });
         calendar.render();
