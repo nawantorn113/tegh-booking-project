@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card border-0 shadow-lg rounded-4">
+            <div class="card-header bg-primary text-white py-3 rounded-top-4">
+                <h5 class="mb-0 fw-bold"><i class="bi bi-plus-circle me-2"></i>{{ title }}</h5>
+            </div>
+            <div class="card-body p-4">
+                <form method="post">
+                    {% csrf_token %}
+                    {{ form|crispy }}
+                    
+                    <div class="d-flex justify-content-end gap-2 mt-4">
+                        <a href="{% url 'equipments' %}" class="btn btn-light border rounded-pill px-4">ยกเลิก</a>
+                        <button type="submit" class="btn btn-primary rounded-pill px-4 shadow-sm">บันทึก</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

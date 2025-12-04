@@ -45,7 +45,7 @@ except ImportError:
 
 # Import Models & Forms
 from .models import Room, Booking, AuditLog, OutlookToken, UserProfile, Equipment
-from .forms import BookingForm, CustomPasswordChangeForm, RoomForm, CustomUserCreationForm
+from .forms import BookingForm, CustomPasswordChangeForm, RoomForm, CustomUserCreationForm, EquipmentForm
 from .outlook_client import OutlookClient
 
 # Setup LINE Bot
@@ -122,6 +122,7 @@ def get_base_context(request):
 
     admin_menu_structure = [
         {'label': 'จัดการห้องประชุม', 'url_name': 'rooms', 'icon': 'bi-door-open-fill', 'show': is_admin_user},
+        {'label': 'จัดการอุปกรณ์', 'url_name': 'equipments', 'icon': 'bi-tools', 'show': is_admin_user}, 
         {'label': 'จัดการผู้ใช้งาน', 'url_name': 'user_management', 'icon': 'bi-people-fill', 'show': is_admin_user},
         {'label': 'รายงานและสถิติ', 'url_name': 'reports', 'icon': 'bi-bar-chart-fill', 'show': is_admin_user},
         {'label': 'ประวัติการใช้งาน', 'url_name': 'audit_log', 'icon': 'bi-clipboard-data-fill', 'show': is_admin_user},
@@ -140,8 +141,6 @@ def get_base_context(request):
             admin_menu_items.append(item)
 
     pending_count = 0
-    pending_notifications = []
-
     if request.user.is_authenticated and is_approver_or_admin(request.user):
         rooms_we_approve = Q(room__approver=request.user)
         rooms_for_central_admin = Q(room__approver__isnull=True)
@@ -149,16 +148,13 @@ def get_base_context(request):
             pending_query = rooms_we_approve | rooms_for_central_admin
         else:
             pending_query = rooms_we_approve
-        pending_bookings = Booking.objects.filter(pending_query, status='PENDING').order_by('-created_at')
-        pending_count = pending_bookings.count()
-        pending_notifications = pending_bookings[:5]
+        pending_count = Booking.objects.filter(pending_query, status='PENDING').count()
 
     return {
         'menu_items': menu_items,
         'admin_menu_items': admin_menu_items,
         'is_admin_user': is_admin_user,
         'pending_count': pending_count,
-        'pending_notifications': pending_notifications,
     }
 
 def send_booking_notification(booking, template_name, subject_prefix):
@@ -196,6 +192,9 @@ def send_booking_notification(booking, template_name, subject_prefix):
                f"ห้อง: {booking.room.name}\n"
                f"เรื่อง: {booking.title}\n"
                f"เวลา: {start_str} - {end_str}\n"
+               f"อุปกรณ์: {equip_text}\n"
+               f"เพิ่มเติม: {note_text}\n"
+               f"-------------------------\n"
                f"สถานะ: {booking.get_status_display()}")
 
         for uid in line_targets:
@@ -211,7 +210,13 @@ class UserAutocomplete(Select2QuerySetView):
     def get_queryset(self):
         if not self.request.user.is_authenticated: return User.objects.none()
         qs = User.objects.filter(is_active=True).order_by('first_name', 'username')
-        if self.q: qs = qs.filter(Q(username__icontains=self.q) | Q(first_name__icontains=self.q))
+        if self.q:
+            q_filter = (
+                Q(username__icontains=self.q) | 
+                Q(first_name__icontains=self.q) | 
+                Q(last_name__icontains=self.q)
+            )
+            qs = qs.filter(q_filter)
         return qs[:15]
 
 def login_view(request):
@@ -297,8 +302,18 @@ def smart_search_view(request):
 def dashboard_view(request):
     now = timezone.now(); sort_by = request.GET.get('sort', 'floor')
     all_rooms = Room.objects.all()
+    
+    if sort_by == 'status':
+        all_rooms_sorted = sorted(all_rooms, key=lambda r: (r.is_currently_under_maintenance, not r.bookings.filter(start_time__lte=now, end_time__gt=now, status__in=['APPROVED', 'PENDING']).exists()))
+    elif sort_by == 'capacity':
+        all_rooms_sorted = all_rooms.order_by('-capacity')
+    elif sort_by == 'name':
+        all_rooms_sorted = all_rooms.order_by('name')
+    else:
+        all_rooms_sorted = all_rooms.order_by('building', 'floor', 'name')
+
     buildings = defaultdict(list)
-    for r in all_rooms:
+    for r in all_rooms_sorted:
         cur = r.bookings.filter(start_time__lte=now, end_time__gt=now, status__in=['APPROVED','PENDING']).first()
         r.is_maintenance = r.is_currently_under_maintenance
         if r.is_maintenance:
@@ -317,7 +332,7 @@ def dashboard_view(request):
         'total_users_count': User.objects.count()
     }
     ctx = get_base_context(request)
-    ctx.update({'buildings': dict(buildings), 'summary_cards': summary})
+    ctx.update({'buildings': dict(buildings), 'summary_cards': summary, 'current_sort': sort_by})
     return render(request, 'pages/dashboard.html', ctx)
 
 @login_required
@@ -513,7 +528,7 @@ def reject_booking_view(request, booking_id):
     return redirect('approvals')
 
 # ----------------------------------------------------------------------
-# E. ADMIN MANAGEMENT
+# E. ADMIN MANAGEMENT (Rooms & Users & Equipments)
 # ----------------------------------------------------------------------
 
 @login_required
@@ -584,6 +599,32 @@ def edit_user_roles_view(request, user_id):
         return redirect('user_management')
     return render(request, 'pages/edit_user_roles.html', {**get_base_context(request), 'user_to_edit': u, 'all_groups': Group.objects.all()})
 
+# ✅ EQUIPMENT MANAGEMENT
+@login_required
+@user_passes_test(is_admin)
+def equipment_management_view(request):
+    return render(request, 'pages/equipments.html', {**get_base_context(request), 'equipments': Equipment.objects.all().order_by('name')})
+
+@login_required
+@user_passes_test(is_admin)
+def add_equipment_view(request):
+    if request.method == 'POST':
+        form = EquipmentForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "เพิ่มอุปกรณ์เรียบร้อย")
+            return redirect('equipments')
+    else:
+        form = EquipmentForm()
+    return render(request, 'pages/equipment_form.html', {**get_base_context(request), 'form': form, 'title': 'เพิ่มอุปกรณ์'})
+
+@login_required
+@require_POST
+def delete_equipment_view(request, eq_id):
+    Equipment.objects.filter(pk=eq_id).delete()
+    messages.success(request, "ลบอุปกรณ์แล้ว")
+    return redirect('equipments')
+
 @login_required
 def audit_log_view(request):
     logs = AuditLog.objects.all()
@@ -607,30 +648,29 @@ def bookings_api(request):
         
         events = []
         now = timezone.now()
-        
         for b in qs:
             user_name = b.user.get_full_name() if b.user else "ไม่ระบุ"
             
-            # [COLOR LOGIC - Server Side]
+            # ✅ [FIX] คำนวณสีที่นี่ (Server-Side Color)
             if b.status == 'PENDING':
                 bg, txt = '#ffc107', '#000000' # Yellow
             elif b.status == 'APPROVED':
                 if b.end_time < now:
-                    bg, txt = '#6c757d', '#ffffff' # Gray (Past)
+                    bg, txt = '#6c757d', '#ffffff' # Grey (Past)
                 elif b.start_time <= now <= b.end_time:
                     bg, txt = '#0d6efd', '#ffffff' # Blue (Current)
                 else:
                     bg, txt = '#198754', '#ffffff' # Green (Future)
             else:
-                bg, txt = '#dc3545', '#ffffff' # Red
-                
+                bg, txt = '#dc3545', '#ffffff'
+
             events.append({
                 'id': b.id,
                 'title': b.title,
                 'start': b.start_time.isoformat(),
                 'end': b.end_time.isoformat(),
                 'resourceId': b.room.id,
-                'display': 'block', # [IMPORTANT] Show as block
+                'display': 'block', # ✅ [FIX] บังคับแถบสี
                 'backgroundColor': bg,
                 'borderColor': bg,
                 'textColor': txt,
@@ -683,7 +723,11 @@ def api_pending_count(request):
         count = pending_qs.count()
         new_b = pending_qs.filter(created_at__gte=timezone.now() - timedelta(seconds=10)).first()
         if new_b:
-            latest_booking = {'id': new_b.id, 'room': new_b.room.name, 'user': new_b.user.username if new_b.user else "ไม่ระบุ"}
+            latest_booking = {
+                'id': new_b.id,
+                'room': new_b.room.name,
+                'user': new_b.user.username if new_b.user else "ไม่ระบุ"
+            }
     return JsonResponse({'count': count, 'latest_booking': latest_booking})
 
 @login_required
@@ -703,14 +747,17 @@ def reports_view(request):
         start_date = today - timedelta(days=30)
         report_title = f"สถิติย้อนหลัง 30 วัน"
 
+    # ✅ [FIX] ใช้ bookings_qs อย่างเดียวให้สม่ำเสมอ
     bookings_qs = Booking.objects.filter(start_time__date__gte=start_date, status='APPROVED')
     if dept_filter:
         bookings_qs = bookings_qs.filter(department=dept_filter)
 
+    # Room Stats
     room_stats = bookings_qs.values('room__name').annotate(count=Count('id')).order_by('-count')[:10]
     room_labels = [item['room__name'] for item in room_stats]
     room_data = [item['count'] for item in room_stats]
 
+    # Dept Stats
     dept_labels = []
     dept_data = []
     all_departments = []
@@ -765,12 +812,15 @@ def export_reports_pdf(request):
         messages.error(request, "ระบบ PDF ไม่พร้อมใช้งาน")
         return redirect('reports')
     bookings = Booking.objects.filter(status__in=['APPROVED', 'PENDING']).order_by('-start_time')
-    html_string = render_to_string('pages/reports_pdf.html', {
+    
+    context = {
         'bookings': bookings, 
         'export_date': timezone.now(),
-        'user': request.user,
+        'user': request.user, # ✅ [FIX] ส่ง user เข้าไปด้วย
         'report_title': 'รายงานการจองห้องประชุม'
-    })
+    }
+    
+    html_string = render_to_string('pages/reports_pdf.html', context)
     try:
         pdf_file = HTML(string=html_string, base_url=request.build_absolute_uri()).write_pdf()
         response = HttpResponse(pdf_file, content_type='application/pdf')

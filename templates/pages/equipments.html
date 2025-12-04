@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block title %}จัดการอุปกรณ์ - TEGH Booking{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-end align-items-center mb-4">
+        <a href="{% url 'add_user' %}" class="btn btn-primary shadow-sm">
+            <i class="bi bi-person-plus-fill me-1"></i> เพิ่มอุปกรณ์ใหม่
+        </a>
+</div>
+
+<div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light">
+                    <tr>
+                        <th class="py-3 ps-4" style="width: 30%;">ชื่ออุปกรณ์</th>
+                        <th class="py-3">รายละเอียด</th>
+                        <th class="py-3 text-end pe-4" style="width: 100px;">การกระทำ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for eq in equipments %}
+                    <tr>
+                        <td class="ps-4 fw-bold text-dark">{{ eq.name }}</td>
+                        <td class="text-muted">{{ eq.description|default:"-" }}</td>
+                        <td class="text-end pe-4">
+                            <form action="{% url 'delete_equipment' eq.id %}" method="post" onsubmit="return confirm('Are you sure you want to delete this equipment?');">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-outline-danger rounded-circle" title="Delete">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="3" class="text-center py-5 text-muted">
+                            <i class="bi bi-box-seam display-6 d-block mb-3 opacity-50"></i>
+                            No equipment found.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
