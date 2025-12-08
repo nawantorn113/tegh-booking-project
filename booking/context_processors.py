@@ -17,7 +17,7 @@ def menu_context(request):
     pending_notifications = [] 
     
     if is_approver_user:
-        # 1. สร้างเงื่อนไข (Query) ตามสิทธิ์
+        # สร้างเงื่อนไข (Query) ตามสิทธิ์
         # ถ้าเป็น Admin: เห็นของตัวเอง + ห้องส่วนกลาง (ที่ไม่มีคนคุม)
         # ถ้าเป็น Approver: เห็นเฉพาะห้องที่ตัวเองเป็นคนคุม (approver=user)
         if is_admin_user:
@@ -25,13 +25,13 @@ def menu_context(request):
         else:
             query = Q(room__approver=user)
 
-        # 2. ดึงข้อมูลครั้งเดียว (QuerySet)
+        # ดึงข้อมูลครั้งเดียว (QuerySet)
         pending_qs = Booking.objects.filter(query, status='PENDING').select_related('room', 'user').order_by('-created_at')
         
-        # 3. นับจำนวนทั้งหมด
+        # นับจำนวนทั้งหมด
         pending_count = pending_qs.count()
         
-        # 4. ดึงมาแสดงผลแค่ 5 รายการล่าสุด (เพื่อไม่ให้ Navbar โหลดหนัก)
+        # ดึงมาแสดงผลแค่ 5 รายการล่าสุด (เพื่อไม่ให้ Navbar โหลดหนัก)
         pending_notifications = pending_qs[:5]
 
     # --- ส่วนเมนู (Menu Active Logic) ---

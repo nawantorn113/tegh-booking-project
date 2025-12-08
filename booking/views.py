@@ -62,15 +62,12 @@ if hasattr(settings, 'LINE_CHANNEL_ACCESS_TOKEN') and hasattr(settings, 'LINE_CH
 # ----------------------------------------------------------------------
 
 def is_admin(user):
-    # แก้ไข: เพิ่ม user.is_staff เพื่อให้เห็นเมนู Admin
     return user.is_authenticated and (user.is_superuser or user.is_staff or user.groups.filter(name='Admin').exists())
 
 def is_approver_or_admin(user):
-    # แก้ไข: เพิ่ม user.is_staff เช่นกัน
     return user.is_authenticated and (user.is_superuser or user.is_staff or user.groups.filter(name__in=['Approver', 'Admin']).exists())
 
 def get_admin_emails():
-    # แก้ไข: ส่งอีเมลหา staff ด้วย
     return list(User.objects.filter(Q(groups__name='Admin') | Q(is_superuser=True) | Q(is_staff=True), is_active=True).distinct().exclude(email__exact='').values_list('email', flat=True))
 
 def log_action(request, action_key, target_obj=None, detail_text=""):
@@ -112,12 +109,7 @@ def get_valid_token(user, request):
         return None
 
 def get_base_context(request):
-    """
-    ฟังก์ชันกลางสำหรับเตรียมข้อมูลพื้นฐานที่ต้องใช้ในทุกหน้า (Navbar, Sidebar)
-    """
     current_url_name = request.resolver_match.url_name if request.resolver_match else ''
-    
-    # เช็คสิทธิ์ (รวม Staff แล้ว)
     is_admin_user = is_admin(request.user)
 
     menu_structure = [
@@ -147,22 +139,30 @@ def get_base_context(request):
             item['active'] = (item['url_name'] == current_url_name)
             admin_menu_items.append(item)
 
-    # 🟢 ส่วน Notification
     pending_count = 0
     pending_notifications = []
-    
-    if request.user.is_authenticated and is_approver_or_admin(request.user):
-        rooms_we_approve = Q(room__approver=request.user)
-        rooms_for_central_admin = Q(room__approver__isnull=True)
-        
-        if is_admin(request.user):
-            pending_query = rooms_we_approve | rooms_for_central_admin
-        else:
-            pending_query = rooms_we_approve
+
+    if request.user.is_authenticated:
+        # Admin Logic
+        if is_approver_or_admin(request.user):
+            rooms_we_approve = Q(room__approver=request.user)
+            rooms_for_central_admin = Q(room__approver__isnull=True)
             
-        qs = Booking.objects.filter(pending_query, status='PENDING').select_related('room', 'user').order_by('-created_at')
-        pending_count = qs.count()
-        pending_notifications = qs[:5]
+            if is_admin(request.user):
+                pending_query = rooms_we_approve | rooms_for_central_admin
+            else:
+                pending_query = rooms_we_approve
+            
+            qs = Booking.objects.filter(pending_query, status='PENDING').select_related('room', 'user').order_by('-created_at')
+            pending_count = qs.count()
+            pending_notifications = qs[:5]
+        
+        # User Logic
+        else:
+            qs = Booking.objects.filter(user=request.user).exclude(status='PENDING').select_related('room').order_by('-updated_at')
+            recent_updates = qs.filter(updated_at__date=timezone.now().date()).count()
+            pending_count = recent_updates 
+            pending_notifications = qs[:5]
 
     return {
         'menu_items': menu_items,
@@ -367,7 +367,6 @@ def dashboard_view(request):
         rooms_processed.sort(key=lambda x: x.name)
     else:
         # Default sort
-        # FIX: แปลง floor เป็น String เพื่อป้องกัน Error int vs str
         rooms_processed.sort(key=lambda x: (x.building or '', str(x.floor or ''), x.name))
 
     # 5. Grouping (จัดกลุ่มตามตึก)
@@ -481,18 +480,15 @@ def master_calendar_view(request):
 
 @login_required
 def history_view(request):
-    # เริ่มต้น QuerySet (แยกตามสิทธิ์ Admin/User)
     if is_admin(request.user):
         qs = Booking.objects.select_related('room', 'user').all()
     else:
         qs = Booking.objects.select_related('room').filter(user=request.user)
 
-    # รับค่าจาก URL (ตัวกรอง)
     date_filter = request.GET.get('date')
     room_filter = request.GET.get('room')
     status_filter = request.GET.get('status')
 
-    # 3. เริ่มทำการกรอง (Filter Logic)
     if date_filter:
         qs = qs.filter(start_time__date=date_filter)
     
@@ -502,10 +498,8 @@ def history_view(request):
     if status_filter:
         qs = qs.filter(status=status_filter)
 
-    # ดึงข้อมูลห้องพักทั้งหมด (เพื่อเอาไปวนลูปใส่ Dropdown)
     room_list = Room.objects.all()
 
-    # 5. เตรียมข้อมูลส่งกลับ (ส่งค่าที่เลือกกลับไปด้วย)
     context = {
         **get_base_context(request),
         'bookings_list': qs.order_by('-start_time'),
@@ -796,7 +790,7 @@ def update_booking_time_api(request):
         else: 
             end_dt = start_dt + (booking.end_time - booking.start_time)
         
-        # Overlap Check (ป้องกันการจองซ้อนเมื่อลาก)
+        # ✅ Overlap Check (ป้องกันการจองซ้อนเมื่อลาก)
         is_overlap = Booking.objects.filter(
             room=booking.room,
             start_time__lt=end_dt,
@@ -835,7 +829,7 @@ def delete_booking_api(request, booking_id):
         if not booking.can_user_edit_or_cancel(request.user):
              return JsonResponse({'status': 'error', 'message': 'ไม่มีสิทธิ์ลบรายการนี้'}, status=403)
         
-        # Implement Cancellation Logic (เหมือน delete_booking_view)
+        # ✅ Implement Cancellation Logic (เหมือน delete_booking_view)
         if booking.outlook_event_id:
              token = get_valid_token(request.user, request)
              if token:
@@ -871,6 +865,24 @@ def api_pending_count(request):
                 'room': new_b.room.name,
                 'user': new_b.user.username if new_b.user else "ไม่ระบุ"
             }
+    else:
+        # User Logic
+        updated_qs = Booking.objects.filter(
+            user=request.user,
+            updated_at__gte=timezone.now() - timedelta(seconds=10)
+        ).exclude(status='PENDING')
+
+        count = Booking.objects.filter(user=request.user, updated_at__date=timezone.now().date()).exclude(status='PENDING').count()
+
+        if updated_qs.exists():
+            new_b = updated_qs.first()
+            status_msg = "อนุมัติแล้ว" if new_b.status == 'APPROVED' else "ถูกปฏิเสธ"
+            latest_booking = {
+                'id': new_b.id,
+                'title': f"ผลการจอง: {status_msg}",
+                'msg': f"ห้อง {new_b.room.name} ({new_b.title})"
+            }
+
     return JsonResponse({'count': count, 'latest_booking': latest_booking})
 
 @login_required
