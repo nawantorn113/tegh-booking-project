@@ -15,23 +15,18 @@
         body { background-color: #f0f2f5; font-family: 'Kanit', sans-serif; padding-top: 70px; }
         .main-content-wrapper { padding-bottom: 2rem; }
         
-        /* Navbar */
         .navbar { background-color: #ffffff; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08); min-height: 60px; padding: 0; }
         .navbar-brand { color: #1877f2 !important; font-weight: 700; font-size: 1.3rem; display: flex; align-items: center; }
         
-        /* Nav Links */
         .nav-pills .nav-link { border-radius: 50px; padding: 5px 14px; font-size: 0.9rem; color: #606770; font-weight: 500; transition: all 0.2s; }
         .nav-pills .nav-link:hover { background-color: #f2f2f2; color: #1c1e21; }
         .nav-pills .nav-link.active { background-color: #e7f3ff; color: #1877f2; font-weight: 600; }
         
-        /* Circle Buttons (Notification/Profile) */
         .btn-circle-fb { width: 40px; height: 40px; background-color: #e4e6eb; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #050505; text-decoration: none; transition: background-color 0.2s; cursor: pointer; border: none; position: relative; }
         .btn-circle-fb:hover { background-color: #d8dadf; color: #1877f2; }
         
-        /* Badge */
         .badge-fb { position: absolute; top: -2px; right: -2px; background-color: #e41e3f; color: white; font-size: 0.65rem; padding: 2px 5px; border-radius: 10px; min-width: 18px; border: 2px solid #fff; line-height: 1; }
         
-        /* Dropdown Notification */
         .dropdown-menu-fb { 
             width: 320px; 
             border-radius: 8px; 
@@ -109,31 +104,40 @@
                                 <div class="dropdown-header-fb border-bottom d-flex justify-content-between align-items-center">
                                     <span>การแจ้งเตือน</span>
                                 </div>
-                                <div style="max-height: 300px; overflow-y: auto;">
+                                <div style="max-height: 300px; overflow-y: auto;" id="notificationList">
                                     {% if pending_notifications %}
                                         {% for booking in pending_notifications %}
-                                            <a href="{% if is_admin_user %}{% url 'approvals' %}{% else %}{% url 'booking_detail' booking.id %}{% endif %}" class="notify-item-fb border-bottom">
-                                                <div class="notify-avatar 
-                                                    {% if booking.status == 'PENDING' %}bg-warning text-dark
-                                                    {% elif booking.status == 'APPROVED' %}bg-success text-white
-                                                    {% else %}bg-danger text-white{% endif %} bg-opacity-10">
-                                                    
-                                                    {% if booking.status == 'PENDING' %}<i class="bi bi-hourglass-split"></i>
-                                                    {% elif booking.status == 'APPROVED' %}<i class="bi bi-check-lg"></i>
-                                                    {% else %}<i class="bi bi-x-lg"></i>{% endif %}
-                                                </div>
-                                                <div class="notify-content ms-2">
-                                                    <strong class="text-dark d-block small">
-                                                        {% if is_admin_user %}
-                                                            {{ booking.user.username }} ขอจองห้อง 
-                                                        {% else %}
-                                                            ผลการจอง: {{ booking.get_status_display }} 
-                                                        {% endif %}
-                                                    </strong>
-                                                    <span class="d-block text-muted small">{{ booking.room.name }} - {{ booking.title }}</span>
-                                                    <div class="text-primary small" style="font-size: 0.7rem;">{{ booking.updated_at|timesince }} ที่แล้ว</div>
-                                                </div>
-                                            </a>
+                                            <div class="notify-item-fb border-bottom position-relative" id="notify-item-{{ booking.id }}">
+                                                <a href="{% if is_admin_user %}{% url 'approvals' %}{% else %}{% url 'booking_detail' booking.id %}{% endif %}" class="d-flex align-items-center text-decoration-none text-dark w-100 p-2">
+                                                    <div class="notify-avatar me-2 
+                                                        {% if booking.status == 'PENDING' %}bg-warning text-dark
+                                                        {% elif booking.status == 'APPROVED' %}bg-success text-white
+                                                        {% else %}bg-danger text-white{% endif %} bg-opacity-10" 
+                                                        style="width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center;">
+                                                        
+                                                        {% if booking.status == 'PENDING' %}<i class="bi bi-hourglass-split"></i>
+                                                        {% elif booking.status == 'APPROVED' %}<i class="bi bi-check-lg"></i>
+                                                        {% else %}<i class="bi bi-x-lg"></i>{% endif %}
+                                                    </div>
+                                                    <div class="notify-content flex-grow-1">
+                                                        <strong class="d-block small">
+                                                            {% if is_admin_user %}
+                                                                {{ booking.user.username }} ขอจองห้อง 
+                                                            {% else %}
+                                                                ผล: {{ booking.get_status_display }} 
+                                                            {% endif %}
+                                                        </strong>
+                                                        <span class="d-block text-muted small text-truncate" style="max-width: 180px;">{{ booking.room.name }}</span>
+                                                        <div class="text-primary small" style="font-size: 0.7rem;">{{ booking.updated_at|timesince }} ที่แล้ว</div>
+                                                    </div>
+                                                </a>
+                                                
+                                                {% if not is_admin_user %}
+                                                <button onclick="markAsRead(event, {{ booking.id }})" class="btn btn-link text-muted position-absolute top-0 end-0 mt-2 me-2 p-0" title="ทำเครื่องหมายว่าอ่านแล้ว">
+                                                    <i class="bi bi-check-circle-fill"></i>
+                                                </button>
+                                                {% endif %}
+                                            </div>
                                         {% endfor %}
                                     {% else %}
                                         <div class="text-center py-5 text-muted small">ไม่มีการแจ้งเตือนใหม่</div>
@@ -197,7 +201,6 @@
             {% endif %}
         });
 
-        // Real-time Notification
         let lastBookingId = null;
         function checkNotifications() {
             fetch("{% url 'api_pending_count' %}")
@@ -223,6 +226,39 @@
                     }
                 })
                 .catch(err => console.log('Notify Error:', err));
+        }
+
+        function markAsRead(event, bookingId) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            fetch(`/api/mark-read/${bookingId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json'
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    const item = document.getElementById(`notify-item-${bookingId}`);
+                    if (item) {
+                        item.remove();
+                        const badge = document.getElementById('notifyBadge');
+                        let count = parseInt(badge.innerText);
+                        if (count > 1) {
+                            badge.innerText = count - 1;
+                        } else {
+                            badge.style.display = 'none';
+                            const list = document.getElementById('notificationList');
+                            if (list.children.length === 0) {
+                                list.innerHTML = '<div class="text-center py-5 text-muted small">ไม่มีการแจ้งเตือนใหม่</div>';
+                            }
+                        }
+                    }
+                }
+            });
         }
 
         setInterval(checkNotifications, 5000);

@@ -64,4 +64,7 @@ urlpatterns = [
     path('api/pending-count/', views.api_pending_count, name='api_pending_count'),
     path('api/delete-booking/<int:booking_id>/', views.delete_booking_api, name='delete_booking_api'),
     path('teams/webhook/', views.teams_action_receiver, name='teams_webhook'),
+
+# แจ้งเตือนรับทราบการอนุมัติ
+    path('api/mark-read/<int:booking_id>/', views.mark_notification_read, name='mark_notification_read'),
 ]

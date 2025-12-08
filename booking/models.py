@@ -75,6 +75,8 @@ class Booking(models.Model):
     participant_count = models.PositiveIntegerField(default=1)
     
     participants = models.ManyToManyField(User, related_name='participating_in', blank=True)
+
+    is_user_seen = models.BooleanField(default=False, verbose_name="ผู้จองรับทราบแล้ว")
     
     # [สำคัญ] เชื่อมกับ Equipment
     equipments = models.ManyToManyField(Equipment, blank=True, related_name='bookings', verbose_name="อุปกรณ์ที่ขอเพิ่ม")
