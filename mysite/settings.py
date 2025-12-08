@@ -77,7 +77,7 @@ WSGI_APPLICATION = 'mysite.wsgi.application'
 
 
 # Database
-# ใช้ SQLite เหมือนเดิม
+# ใช้ SQLite จะเปลี่ยนเป็น sql server management studio
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
