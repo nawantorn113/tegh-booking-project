@@ -84,6 +84,7 @@
                                 <li class="nav-item"><a class="nav-link {% if item.active %}active{% endif %}" href="{% url item.url_name %}"><i class="{{ item.icon }} me-1 small"></i> {{ item.label }}</a></li>
                             {% endif %}
                         {% endfor %}
+
                         {% if is_admin_user %}
                             <li class="nav-item border-start mx-2 ps-2 d-none d-lg-block" style="height: 20px; border-color: #ddd;"></li>
                             <li class="nav-item dropdown">
@@ -102,7 +103,7 @@
                         <li class="nav-item dropdown position-relative">
                             <a class="btn-circle-fb" href="#" id="fbNotifyDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                 <i class="bi bi-bell-fill"></i>
-                                <span class="badge-fb" id="notifyBadge" style="display:none;">0</span>
+                                <span class="badge-fb" id="notifyBadge" style="display: {% if pending_count > 0 %}block{% else %}none{% endif %};">{{ pending_count }}</span>
                             </a>
                             <div class="dropdown-menu dropdown-menu-end dropdown-menu-fb p-0" aria-labelledby="fbNotifyDropdown">
                                 <div class="dropdown-header-fb border-bottom d-flex justify-content-between align-items-center">
@@ -111,7 +112,7 @@
                                 <div style="max-height: 300px; overflow-y: auto;">
                                     {% if pending_notifications %}
                                         {% for booking in pending_notifications %}
-                                            <a href="{% if is_admin_user %}{% url 'approvals' %}{% else %}{% url 'mark_booking_seen' booking.id %}{% endif %}" class="notify-item-fb border-bottom">
+                                            <a href="{% if is_admin_user %}{% url 'approvals' %}{% else %}{% url 'booking_detail' booking.id %}{% endif %}" class="notify-item-fb border-bottom">
                                                 <div class="notify-avatar 
                                                     {% if booking.status == 'PENDING' %}bg-warning text-dark
                                                     {% elif booking.status == 'APPROVED' %}bg-success text-white
@@ -124,8 +125,10 @@
                                                 <div class="notify-content ms-2">
                                                     <strong class="text-dark d-block small">
                                                         {% if is_admin_user %}
-                                                            {{ booking.user.username }} ขอจองห้อง {% else %}
-                                                            ผลการจอง: {{ booking.get_status_display }} {% endif %}
+                                                            {{ booking.user.username }} ขอจองห้อง 
+                                                        {% else %}
+                                                            ผลการจอง: {{ booking.get_status_display }} 
+                                                        {% endif %}
                                                     </strong>
                                                     <span class="d-block text-muted small">{{ booking.room.name }} - {{ booking.title }}</span>
                                                     <div class="text-primary small" style="font-size: 0.7rem;">{{ booking.updated_at|timesince }} ที่แล้ว</div>
@@ -194,7 +197,7 @@
             {% endif %}
         });
 
-        // Real-time Notification (ใช้ได้ทั้ง Admin และ User)
+        // Real-time Notification
         let lastBookingId = null;
         function checkNotifications() {
             fetch("{% url 'api_pending_count' %}")
@@ -210,11 +213,9 @@
                         }
                     }
                     
-                    // แจ้งเตือน Popup (Toast)
                     if (data.latest_booking && data.latest_booking.id !== lastBookingId) {
                         lastBookingId = data.latest_booking.id; 
                         
-                        // ปรับข้อความตามประเภท (Admin/User)
                         document.getElementById('toastTitle').innerText = data.latest_booking.title || "แจ้งเตือนใหม่";
                         document.getElementById('toastMsg').innerText = data.latest_booking.msg || "มีรายการอัปเดต";
                         
@@ -224,7 +225,6 @@
                 .catch(err => console.log('Notify Error:', err));
         }
 
-        // เปิดให้ทุกคนใช้งาน ไม่ใช่แค่ Admin
         setInterval(checkNotifications, 5000);
         checkNotifications();
     </script>
