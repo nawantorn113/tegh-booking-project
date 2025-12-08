@@ -63,88 +63,103 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for booking in bookings_list %}
-                        <tr>
-                            <td>
-                                <span class="fw-bold text-primary">{{ booking.room.name }}</span>
-                                <small class="d-block text-muted">{{ booking.room.building|default:"-" }}</small>
-                            </td>
-                            <td>{{ booking.title }}</td>
-                            <td>
-                                <div class="d-flex flex-column">
-                                    <span class="fw-bold">{{ booking.start_time|date:"d M Y" }}</span>
-                                    <small class="text-muted">
-                                        {{ booking.start_time|date:"H:i" }} - {{ booking.end_time|date:"H:i" }}
-                                    </small>
-                                </div>
-                            </td>
-                            <td class="text-center">
-                                {% if booking.status == 'APPROVED' %}
-                                    <span class="badge bg-success rounded-pill"><i class="bi bi-check-circle me-1"></i>อนุมัติแล้ว</span>
-                                {% elif booking.status == 'PENDING' %}
-                                    <span class="badge bg-warning text-dark rounded-pill"><i class="bi bi-hourglass-split me-1"></i>รออนุมัติ</span>
-                                {% elif booking.status == 'REJECTED' %}
-                                    <span class="badge bg-danger rounded-pill"><i class="bi bi-x-circle me-1"></i>ไม่อนุมัติ</span>
-                                {% else %}
-                                    <span class="badge bg-secondary rounded-pill">ยกเลิก</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                {% if booking.user %}
-                                    {{ booking.user.get_full_name|default:booking.user.username }}
-                                {% else %}
-                                    <span class="text-muted fst-italic">ไม่ระบุ (User Deleted)</span>
-                                {% endif %}
-                            </td>
-                            <td class="text-center">
-                                <div class="btn-group" role="group">
-                                    <a href="{% url 'booking_detail' booking.id %}" class="btn btn-sm btn-outline-info" title="ดูรายละเอียด">
-                                        <i class="bi bi-info-circle"></i>
-                                    </a>
-                                    
-                                    {% if user == booking.user or is_admin_user %}
-                                        {% if booking.status == 'PENDING' or booking.status == 'APPROVED' %}
-                                            <a href="{% url 'edit_booking' booking.id %}" class="btn btn-sm btn-outline-warning" title="แก้ไข">
-                                                <i class="bi bi-pencil"></i>
-                                            </a>
-                                            <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ booking.id }}" title="ยกเลิก">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
-                                        {% endif %}
-                                    {% endif %}
-                                </div>
+    {% for booking in bookings_list %}
+    <tr>
+        <td>
+            <span class="fw-bold text-primary">{{ booking.room.name }}</span>
+            <small class="d-block text-muted">{{ booking.room.building|default:"-" }}</small>
+        </td>
+        <td>{{ booking.title }}</td>
+        <td>
+            <div class="d-flex flex-column">
+                <span class="fw-bold">{{ booking.start_time|date:"d M Y" }}</span>
+                <small class="text-muted">
+                    {{ booking.start_time|date:"H:i" }} - {{ booking.end_time|date:"H:i" }}
+                </small>
+            </div>
+        </td>
+        <td class="text-center">
+            {% if booking.status == 'APPROVED' %}
+                {% if booking.end_time < current_time %}
+                    <span class="badge bg-secondary text-white rounded-pill">
+                        <i class="bi bi-check2-all me-1"></i>ใช้งานแล้ว
+                    </span>
+                {% else %}
+                    <span class="badge bg-success rounded-pill">
+                        <i class="bi bi-check-circle me-1"></i>อนุมัติแล้ว
+                    </span>
+                {% endif %}
+            {% elif booking.status == 'PENDING' %}
+                <span class="badge bg-warning text-dark rounded-pill"><i class="bi bi-hourglass-split me-1"></i>รออนุมัติ</span>
+            {% elif booking.status == 'REJECTED' %}
+                <span class="badge bg-danger rounded-pill"><i class="bi bi-x-circle me-1"></i>ไม่อนุมัติ</span>
+            {% else %}
+                <span class="badge bg-secondary rounded-pill">ยกเลิก</span>
+            {% endif %}
+        </td>
+        
+        <td>
+            {% if booking.user %}
+                {{ booking.user.get_full_name|default:booking.user.username }}
+            {% else %}
+                <span class="text-muted fst-italic">ไม่ระบุ</span>
+            {% endif %}
+        </td>
 
-                                <div class="modal fade" id="deleteModal{{ booking.id }}" tabindex="-1" aria-hidden="true">
-                                    <div class="modal-dialog">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h5 class="modal-title">ยืนยันการยกเลิก</h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                            </div>
-                                            <div class="modal-body text-start">
-                                                คุณต้องการยกเลิกการจอง <strong>{{ booking.title }}</strong> ใช่หรือไม่?
-                                            </div>
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
-                                                <form action="{% url 'delete_booking' booking.id %}" method="post" style="display:inline;">
-                                                    {% csrf_token %}
-                                                    <button type="submit" class="btn btn-danger">ยืนยันยกเลิก</button>
-                                                </form>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="6" class="text-center py-5 text-muted">
-                                <i class="bi bi-inbox fs-1 d-block mb-2"></i>
-                                ไม่พบข้อมูลการจองตามเงื่อนไขที่เลือก
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
+        <td class="text-center">
+            <div class="btn-group" role="group">
+                <a href="{% url 'booking_detail' booking.id %}" class="btn btn-sm btn-outline-info" title="ดูรายละเอียด">
+                    <i class="bi bi-info-circle"></i>
+                </a>
+                
+                {% if is_admin_user or user == booking.user %}
+                    
+                    {% if is_admin_user or booking.end_time > current_time %}
+                        
+                        {% if booking.status == 'PENDING' or booking.status == 'APPROVED' %}
+                            <a href="{% url 'edit_booking' booking.id %}" class="btn btn-sm btn-outline-warning" title="แก้ไข">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ booking.id }}" title="ยกเลิก">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        {% endif %}
+
+                    {% endif %}
+                {% endif %}
+            </div>
+
+            <div class="modal fade" id="deleteModal{{ booking.id }}" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">ยืนยันการยกเลิก</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body text-start">
+                            คุณต้องการยกเลิกการจอง <strong>{{ booking.title }}</strong> ใช่หรือไม่?
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
+                            <form action="{% url 'delete_booking' booking.id %}" method="post" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger">ยืนยันยกเลิก</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </td>
+    </tr>
+    {% empty %}
+    <tr>
+        <td colspan="6" class="text-center py-5 text-muted">
+            <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+            ไม่พบข้อมูลการจองตามเงื่อนไขที่เลือก
+        </td>
+    </tr>
+    {% endfor %}
+</tbody>
                 </table>
             </div>
 

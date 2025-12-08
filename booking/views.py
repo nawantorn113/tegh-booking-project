@@ -513,6 +513,7 @@ def history_view(request):
         'selected_date': date_filter,
         'selected_room': int(room_filter) if room_filter and room_filter.isdigit() else None,
         'selected_status': status_filter,
+        'current_time': timezone.now(),
     }
 
     return render(request, 'pages/history.html', context)
