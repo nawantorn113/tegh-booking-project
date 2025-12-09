@@ -1,5 +1,5 @@
 from django import forms
-from django.contrib.auth.forms import PasswordChangeForm, UserCreationForm
+from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User, Group
 #Import คลาสที่จำเป็นทั้งหมด
 from .models import Booking, Room, Equipment 
@@ -97,15 +97,6 @@ class BookingForm(forms.ModelForm):
         if room and participant_count and participant_count > room.capacity:
              raise ValidationError(f"จองไม่ได้: จำนวนผู้เข้าร่วม ({participant_count} คน) เกินความจุของห้อง ({room.capacity} คน)! ", code='capacity_exceeded')
         return cleaned_data
-
-
-# -----------------------------------------------
-# 2. CustomPasswordChangeForm
-# -----------------------------------------------
-class CustomPasswordChangeForm(PasswordChangeForm):
-    old_password = forms.CharField(label="รหัสผ่านเก่า", strip=False, widget=forms.PasswordInput(attrs={'autocomplete': 'current-password', 'autofocus': True, 'class':'form-control'}))
-    new_password1 = forms.CharField(label="รหัสผ่านใหม่", widget=forms.PasswordInput(attrs={'autocomplete': 'new-password', 'class':'form-control'}), strip=False)
-    new_password2 = forms.CharField(label="ยืนยันรหัสผ่านใหม่", strip=False, widget=forms.PasswordInput(attrs={'autocomplete': 'new-password', 'class':'form-control'}))
 
 
 # -----------------------------------------------

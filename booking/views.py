@@ -41,7 +41,7 @@ except ImportError:
     WebhookHandler = None
 
 from .models import Room, Booking, AuditLog, OutlookToken, UserProfile, Equipment
-from .forms import BookingForm, CustomPasswordChangeForm, RoomForm, CustomUserCreationForm, EquipmentForm
+from .forms import BookingForm,RoomForm, CustomUserCreationForm, EquipmentForm
 from .outlook_client import OutlookClient
 
 line_bot_api = None
@@ -267,19 +267,6 @@ def logout_view(request):
     log_action(request, 'LOGIN', None, "ออกจากระบบ")
     logout(request)
     return redirect('login')
-
-@login_required
-def change_password_view(request):
-    if request.method == 'POST':
-        form = CustomPasswordChangeForm(request.user, request.POST)
-        if form.is_valid():
-            form.save()
-            update_session_auth_hash(request, request.user)
-            messages.success(request, "เปลี่ยนรหัสผ่านสำเร็จ")
-            return redirect('change_password')
-    else:
-        form = CustomPasswordChangeForm(request.user)
-    return render(request, 'pages/change_password.html', {**get_base_context(request), 'password_form': form})
 
 @login_required
 def outlook_login_view(request):

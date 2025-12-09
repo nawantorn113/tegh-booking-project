@@ -152,7 +152,6 @@
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2 p-1" style="width: 200px; right: 0;">
                                 <li class="px-3 py-2 border-bottom mb-1"><span class="fw-bold d-block small text-dark">{{ user.username }}</span></li>
-                                <li><a class="dropdown-item py-1 small rounded" href="{% url 'change_password' %}">เปลี่ยนรหัสผ่าน</a></li>
                                 <li><form action="{% url 'logout' %}" method="post" class="px-0 m-0">{% csrf_token %}<button type="submit" class="dropdown-item py-1 text-danger small rounded">ออกจากระบบ</button></form></li>
                             </ul>
                         </li>

@@ -33,7 +33,6 @@ urlpatterns = [
     # --- Auth & Outlook ---
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
-    path('password_change/', views.change_password_view, name='change_password'),
     path('outlook/login/', views.outlook_login_view, name='outlook_login'),
     path('outlook/callback/', views.outlook_callback_view, name='outlook_callback'),
     
