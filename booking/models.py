@@ -15,35 +15,36 @@ class OutlookToken(models.Model):
         return f"Token for {self.user.username}"
 
 # ----------------------------------------------------
-# 2. [เพิ่ม] Model สำหรับอุปกรณ์ (Equipment)
+# 2. Model สำหรับอุปกรณ์ (Equipment)
 # ----------------------------------------------------
 class Equipment(models.Model):
     name = models.CharField(max_length=100, verbose_name="ชื่ออุปกรณ์")
-    description = models.TextField(blank=True, null=True)
+    description = models.TextField(blank=True, null=True, verbose_name="รายละเอียด")
     
     def __str__(self):
         return self.name
 
 # ----------------------------------------------------
-# 3. Model ห้องประชุม
+# 3. Model ห้องประชุม (แก้ไขภาษาไทยตรงนี้)
 # ----------------------------------------------------
 class Room(models.Model):
-    name = models.CharField(max_length=100)
-    building = models.CharField(max_length=100, blank=True, null=True)
-    floor = models.CharField(max_length=50, blank=True, null=True)
-    location = models.CharField(max_length=255, blank=True, null=True)
-    capacity = models.PositiveIntegerField(default=1)
-    equipment_in_room = models.TextField(blank=True, null=True, help_text="ระบุอุปกรณ์ถาวรในห้อง")
-    image = models.ImageField(upload_to='room_images/', blank=True, null=True)
+    name = models.CharField(max_length=100, verbose_name="ชื่อห้องประชุม")
+    building = models.CharField(max_length=100, blank=True, null=True, verbose_name="อาคาร/ตึก")
+    floor = models.CharField(max_length=50, blank=True, null=True, verbose_name="ชั้น")
+    location = models.CharField(max_length=255, blank=True, null=True, verbose_name="สถานที่ตั้ง")
+    capacity = models.PositiveIntegerField(default=1, verbose_name="ความจุ (คน)")
+    
+    equipment_in_room = models.TextField(blank=True, null=True, help_text="ระบุอุปกรณ์ถาวรในห้อง", verbose_name="อุปกรณ์ถาวรในห้อง")
+    image = models.ImageField(upload_to='room_images/', blank=True, null=True, verbose_name="รูปภาพห้อง")
 
-    approver = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='approvable_rooms')
+    approver = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='approvable_rooms', verbose_name="ผู้อนุมัติ")
     
-    is_maintenance = models.BooleanField(default=False, verbose_name="ปิดปรับปรุง (Manual)")
-    maintenance_start = models.DateTimeField(null=True, blank=True)
-    maintenance_end = models.DateTimeField(null=True, blank=True)
+    is_maintenance = models.BooleanField(default=False, verbose_name="สถานะปิดปรับปรุง")
+    maintenance_start = models.DateTimeField(null=True, blank=True, verbose_name="เริ่มปิดปรับปรุง")
+    maintenance_end = models.DateTimeField(null=True, blank=True, verbose_name="สิ้นสุดปิดปรับปรุง")
     
-    line_notify_token = models.CharField(max_length=50, blank=True, null=True)
-    teams_webhook_url = models.TextField(blank=True, null=True)
+    line_notify_token = models.CharField(max_length=50, blank=True, null=True, verbose_name="Line Notify Token")
+    teams_webhook_url = models.TextField(blank=True, null=True, verbose_name="Teams Webhook URL")
     
     @property
     def is_currently_under_maintenance(self):

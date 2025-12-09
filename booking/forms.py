@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User, Group
-#Import คลาสที่จำเป็นทั้งหมด
+# Import คลาสที่จำเป็นทั้งหมด
 from .models import Booking, Room, Equipment 
 from dal import autocomplete
 from django.utils import timezone
@@ -12,7 +12,7 @@ from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Row, Column, Field, HTML
 
 # -----------------------------------------------
-# 1. BookingForm (ตามโครงสร้างที่ต้องการ)
+# 1. BookingForm
 # -----------------------------------------------
 class BookingForm(forms.ModelForm):
     RECURRENCE_CHOICES = [
@@ -100,7 +100,7 @@ class BookingForm(forms.ModelForm):
 
 
 # -----------------------------------------------
-# 3. RoomForm
+# 3. RoomForm (แก้ไขภาษาไทยและ Layout)
 # -----------------------------------------------
 class RoomForm(forms.ModelForm):
     approver = forms.ModelChoiceField(
@@ -112,6 +112,22 @@ class RoomForm(forms.ModelForm):
     class Meta:
         model = Room
         fields = '__all__'
+        
+        # เพิ่ม labels ภาษาไทย
+        labels = {
+            'name': 'ชื่อห้องประชุม',
+            'building': 'อาคาร / ตึก',
+            'floor': 'ชั้น',
+            'location': 'สถานที่ตั้ง',
+            'capacity': 'ความจุ (คน)',
+            'equipment_in_room': 'อุปกรณ์ถาวรในห้อง',
+            'image': 'รูปภาพห้อง',
+            'is_maintenance': 'เปิดใช้งานโหมดปิดปรับปรุง',
+            'maintenance_start': 'วัน/เวลา เริ่มปิดปรับปรุง',
+            'maintenance_end': 'วัน/เวลา สิ้นสุดปิดปรับปรุง',
+            'line_notify_token': 'Line Notify Token (สำหรับแจ้งเตือน)',
+            'teams_webhook_url': 'Microsoft Teams Webhook URL',
+        }
         
         widgets = {
             'maintenance_start': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'form-control'}),
@@ -131,14 +147,22 @@ class RoomForm(forms.ModelForm):
         self.fields['maintenance_end'].required = False
         self.helper = FormHelper(); self.helper.form_tag = False 
 
+        # จัด Layout ใหม่ให้สวยงาม
         self.helper.layout = Layout(
             'non_field_errors', 
             Row(Column('name', css_class='col-md-6 mb-3'), Column('capacity', css_class='col-md-6 mb-3')),
-            'location', 'equipment_in_room', 'image',
-            HTML('<hr class="my-4">'), 'approver', 'line_notify_token', 'teams_webhook_url',
-            HTML('<hr class="my-4">'), HTML('<p class="text-muted">ตั้งค่าการปิดปรับปรุง</p>'),
+            Row(Column('building', css_class='col-md-6 mb-3'), Column('floor', css_class='col-md-6 mb-3')),
+            'location', 
+            'equipment_in_room', 
+            'image',
+            HTML('<hr class="my-4">'), 
+            'approver', 
+            'line_notify_token', 
+            'teams_webhook_url',
+            HTML('<hr class="my-4">'), 
+            HTML('<h5 class="text-muted mb-3"><i class="fas fa-tools"></i> ตั้งค่าการปิดปรับปรุง</h5>'),
             Row(Column('maintenance_start', css_class='col-md-6 mb-3'), Column('maintenance_end', css_class='col-md-6 mb-3')),
-            Field('is_maintenance', css_class="form-check form-switch fs-6 mb-3"),
+            Field('is_maintenance', wrapper_class="form-check form-switch fs-6 mb-3"),
         )
 
 # -----------------------------------------------
@@ -157,7 +181,7 @@ class CustomUserCreationForm(UserCreationForm):
         return user
 
 # -----------------------------------------------
-# 5. [FIX] EquipmentForm (คลาสที่ทำให้ views.py crash)
+# 5. EquipmentForm
 # -----------------------------------------------
 class EquipmentForm(forms.ModelForm):
     class Meta:
