@@ -14,10 +14,10 @@ SECRET_KEY = 'django-insecure-change-me-please'
 # บน Server จริง ควรเปลี่ยนเป็น False แต่ตอนนี้เปิด True ไว้ก่อนเผื่อแก้บั๊ก
 DEBUG = True
 
-# 1. อนุญาตให้ PythonAnywhere เข้าถึงได้
+# อนุญาตให้ PythonAnywhere เข้าถึงได้
 ALLOWED_HOSTS = ['user01.pythonanywhere.com', '127.0.0.1', 'localhost']
 
-# 2. อนุญาตให้ LINE Webhook ส่งข้อมูลเข้ามาได้
+# อนุญาตให้ LINE Webhook ส่งข้อมูลเข้ามาได้
 CSRF_TRUSTED_ORIGINS = [
     'https://user01.pythonanywhere.com',
 ]
