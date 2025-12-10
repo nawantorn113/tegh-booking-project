@@ -1,0 +1,154 @@
+[
+{
+    "model": "booking.room",
+    "pk": 1,
+    "fields": {
+        "name": "à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡ O1-1",
+        "building": "à¸ªà¸³à¸™à¸±à¸à¸‡à¸²à¸™ 1",
+        "floor": "-",
+        "location": null,
+        "capacity": 10,
+        "equipment_in_room": "à¸—à¸µà¸§à¸µà¸‚à¸™à¸²à¸” 55 à¸™à¸´à¹‰à¸§ à¸ˆà¸³à¸™à¸§à¸™ 1 à¹€à¸„à¸£à¸·à¹ˆà¸­à¸‡",
+        "image": "room_images/59b07a1dfd5a80a7b422e7b8854b8392_t_AD7kLZK.jpeg",
+        "approver": 1,
+        "is_maintenance": false,
+        "maintenance_start": null,
+        "maintenance_end": null,
+        "line_notify_token": null,
+        "teams_webhook_url": null
+    }
+},
+{
+    "model": "booking.room",
+    "pk": 2,
+    "fields": {
+        "name": "à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡ O1-2",
+        "building": "à¸ªà¸³à¸™à¸±à¸à¸‡à¸²à¸™ 1",
+        "floor": null,
+        "location": null,
+        "capacity": 6,
+        "equipment_in_room": "à¸—à¸µà¸§à¸µà¸‚à¸™à¸²à¸” 65 à¸™à¸´à¹‰à¸§ à¸ˆà¸³à¸™à¸§à¸™ 1 à¹€à¸„à¸£à¸·à¹ˆà¸­à¸‡",
+        "image": "room_images/Preview-WS-WH-26CKH031_3eYrzuB.webp",
+        "approver": null,
+        "is_maintenance": false,
+        "maintenance_start": null,
+        "maintenance_end": null,
+        "line_notify_token": null,
+        "teams_webhook_url": null
+    }
+},
+{
+    "model": "booking.room",
+    "pk": 3,
+    "fields": {
+        "name": "à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡à¹ƒà¸«à¸à¹ˆ",
+        "building": "à¸ªà¸³à¸™à¸±à¸à¸‡à¸²à¸™ 1",
+        "floor": null,
+        "location": null,
+        "capacity": 30,
+        "equipment_in_room": "à¹‚à¸›à¸£à¹€à¸ˆà¸à¹€à¸•à¸­à¸£à¹Œà¸‰à¸²à¸¢à¸à¸³à¹à¸žà¸‡ à¸‚à¸™à¸²à¸” 120 à¸™à¸´à¹‰à¸§ \r\nà¸£à¸°à¸šà¸šà¹€à¸„à¸£à¸·à¹ˆà¸­à¸‡à¸‚à¸¢à¸²à¸¢à¹€à¸ªà¸µà¸¢à¸‡à¸žà¸£à¹‰à¸­à¸¡à¹„à¸¡à¹‚à¸„à¸£à¹‚à¸Ÿà¸™à¹„à¸£à¹‰à¸ªà¸²à¸¢",
+        "image": "room_images/meeting-room-828547_1280_vGmw29E.webp",
+        "approver": null,
+        "is_maintenance": false,
+        "maintenance_start": null,
+        "maintenance_end": null,
+        "line_notify_token": "Uceb077c003771ded0106d27505b22adc",
+        "teams_webhook_url": ""
+    }
+},
+{
+    "model": "booking.room",
+    "pk": 4,
+    "fields": {
+        "name": "à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡ RD 1",
+        "building": "à¸­à¸²à¸„à¸²à¸£ R & D",
+        "floor": "1",
+        "location": null,
+        "capacity": 8,
+        "equipment_in_room": "à¸—à¸µà¸§à¸µà¸‚à¸™à¸²à¸” 55 à¸™à¸´à¹‰à¸§ à¸ˆà¸³à¸™à¸§à¸™ 1 à¹€à¸„à¸£à¸·à¹ˆà¸­à¸‡",
+        "image": "room_images/241303537_447362073195021_5854026148259524306_n-1.jpg",
+        "approver": null,
+        "is_maintenance": false,
+        "maintenance_start": null,
+        "maintenance_end": null,
+        "line_notify_token": null,
+        "teams_webhook_url": null
+    }
+},
+{
+    "model": "booking.room",
+    "pk": 5,
+    "fields": {
+        "name": "à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡ RD 2",
+        "building": "à¸­à¸²à¸„à¸²à¸£ R & D",
+        "floor": "2",
+        "location": null,
+        "capacity": 12,
+        "equipment_in_room": "à¸—à¸µà¸§à¸µà¸‚à¸™à¸²à¸” 65 à¸™à¸´à¹‰à¸§ à¸ˆà¸³à¸™à¸§à¸™ 3 à¹€à¸„à¸£à¸·à¹ˆà¸­à¸‡ \r\nà¸£à¸°à¸šà¸šà¹€à¸„à¸£à¸·à¹ˆà¸­à¸‡à¸‚à¸¢à¸²à¸¢à¹€à¸ªà¸µà¸¢à¸‡à¸žà¸£à¹‰à¸­à¸¡à¹„à¸¡à¹‚à¸„à¸£à¹‚à¸Ÿà¸™à¹„à¸£à¹‰à¸ªà¸²à¸¢",
+        "image": "room_images/Equipment-à¸«à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¡à¹ƒà¸«à¸_oUV5z2s.jpg",
+        "approver": null,
+        "is_maintenance": false,
+        "maintenance_start": null,
+        "maintenance_end": null,
+        "line_notify_token": null,
+        "teams_webhook_url": null
+    }
+},
+{
+    "model": "booking.room",
+    "pk": 6,
+    "fields": {
+        "name": "à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡ RD 3",
+        "building": "à¸­à¸²à¸„à¸²à¸£ R & D",
+        "floor": "2",
+        "location": null,
+        "capacity": 10,
+        "equipment_in_room": "à¹„à¸¡à¹ˆà¸¡à¸µà¸­à¸¸à¸›à¸à¸£à¸“à¹Œà¸žà¸´à¹€à¸¨à¸©",
+        "image": "room_images/pexels-photo-2976970_7BA2Nd5.webp",
+        "approver": null,
+        "is_maintenance": false,
+        "maintenance_start": null,
+        "maintenance_end": null,
+        "line_notify_token": null,
+        "teams_webhook_url": ""
+    }
+},
+{
+    "model": "booking.room",
+    "pk": 7,
+    "fields": {
+        "name": "à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡ RD 4",
+        "building": "à¸­à¸²à¸„à¸²à¸£ R & D",
+        "floor": "2",
+        "location": null,
+        "capacity": 20,
+        "equipment_in_room": "à¹‚à¸›à¸£à¹€à¸ˆà¸à¹€à¸•à¸­à¸£à¹Œà¸‰à¸²à¸¢à¸à¸³à¹à¸žà¸‡ à¸‚à¸™à¸²à¸” 120 à¸™à¸´à¹‰à¸§\r\nà¸—à¸µà¸§à¸µà¸‚à¸™à¸²à¸” 32 à¸™à¸´à¹‰à¸§ à¸ˆà¸³à¸™à¸§à¸™ 3 à¹€à¸„à¸£à¸·à¹ˆà¸­à¸‡ \r\nà¸£à¸°à¸šà¸šà¹€à¸„à¸£à¸·à¹ˆà¸­à¸‡à¸‚à¸¢à¸²à¸¢à¹€à¸ªà¸µà¸¢à¸‡à¸žà¸£à¹‰à¸­à¸¡à¹„à¸¡à¹‚à¸„à¸£à¹‚à¸Ÿà¸™à¸›à¸£à¸°à¸ˆà¸³à¸«à¹‰à¸­à¸‡",
+        "image": "room_images/depositphotos_114546670-stock-photo-conference-table-closeup-toning_oShla9K.jpg",
+        "approver": null,
+        "is_maintenance": false,
+        "maintenance_start": null,
+        "maintenance_end": null,
+        "line_notify_token": "Uceb077c003771ded0106d27505b22adc",
+        "teams_webhook_url": ""
+    }
+},
+{
+    "model": "booking.room",
+    "pk": 8,
+    "fields": {
+        "name": "à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡ TEIL",
+        "building": "à¸ªà¸³à¸™à¸±à¸à¸‡à¸²à¸™ TEIL",
+        "floor": "4",
+        "location": null,
+        "capacity": 20,
+        "equipment_in_room": "à¹‚à¸›à¸£à¹€à¸ˆà¸à¹€à¸•à¸­à¸£à¹Œà¸‰à¸²à¸¢à¸à¸³à¹à¸žà¸‡ à¸‚à¸™à¸²à¸” 120 à¸™à¸´à¹‰à¸§",
+        "image": "room_images/istockphoto-157640822-1024x1024_twBSx2X.jpg",
+        "approver": null,
+        "is_maintenance": false,
+        "maintenance_start": null,
+        "maintenance_end": null,
+        "line_notify_token": "Uceb077c003771ded0106d27505b22adc",
+        "teams_webhook_url": ""
+    }
+}
+]

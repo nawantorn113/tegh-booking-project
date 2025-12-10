@@ -1,0 +1,1081 @@
+[
+{
+    "model": "admin.logentry",
+    "pk": 83,
+    "fields": {
+        "action_time": "2025-12-03T08:31:27.934Z",
+        "user": 1,
+        "content_type": 4,
+        "object_id": "3",
+        "object_repr": "useradmin",
+        "action_flag": 3,
+        "change_message": ""
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 82,
+    "fields": {
+        "action_time": "2025-12-03T08:31:27.934Z",
+        "user": 1,
+        "content_type": 4,
+        "object_id": "4",
+        "object_repr": "manager",
+        "action_flag": 3,
+        "change_message": ""
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 81,
+    "fields": {
+        "action_time": "2025-12-03T08:31:27.934Z",
+        "user": 1,
+        "content_type": 4,
+        "object_id": "6",
+        "object_repr": "User1",
+        "action_flag": 3,
+        "change_message": ""
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 80,
+    "fields": {
+        "action_time": "2025-12-02T08:42:01.848Z",
+        "user": 1,
+        "content_type": 4,
+        "object_id": "5",
+        "object_repr": "User2",
+        "action_flag": 2,
+        "change_message": "[]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 79,
+    "fields": {
+        "action_time": "2025-11-25T03:50:41.859Z",
+        "user": 1,
+        "content_type": 7,
+        "object_id": "3",
+        "object_repr": "à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡à¹ƒà¸«à¸à¹ˆ",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"LINE Notify Token\"]}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 78,
+    "fields": {
+        "action_time": "2025-11-25T01:20:34.212Z",
+        "user": 1,
+        "content_type": 7,
+        "object_id": "7",
+        "object_repr": "à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡ RD 4",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"LINE Notify Token\"]}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 77,
+    "fields": {
+        "action_time": "2025-11-24T04:38:39.332Z",
+        "user": 1,
+        "content_type": 7,
+        "object_id": "8",
+        "object_repr": "à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡ TEIL",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"LINE Notify Token\"]}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 76,
+    "fields": {
+        "action_time": "2025-11-03T06:53:18.079Z",
+        "user": 1,
+        "content_type": 7,
+        "object_id": "1",
+        "object_repr": "à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡ O1-1",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"\\u0e23\\u0e39\\u0e1b\\u0e20\\u0e32\\u0e1e\\u0e2b\\u0e49\\u0e2d\\u0e07\"]}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 75,
+    "fields": {
+        "action_time": "2025-11-03T06:53:04.757Z",
+        "user": 1,
+        "content_type": 7,
+        "object_id": "2",
+        "object_repr": "à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡ O1-2",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"\\u0e23\\u0e39\\u0e1b\\u0e20\\u0e32\\u0e1e\\u0e2b\\u0e49\\u0e2d\\u0e07\"]}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 74,
+    "fields": {
+        "action_time": "2025-11-03T06:52:51.133Z",
+        "user": 1,
+        "content_type": 7,
+        "object_id": "3",
+        "object_repr": "à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡ à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡à¹ƒà¸«à¸à¹ˆ",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"\\u0e23\\u0e39\\u0e1b\\u0e20\\u0e32\\u0e1e\\u0e2b\\u0e49\\u0e2d\\u0e07\"]}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 73,
+    "fields": {
+        "action_time": "2025-11-03T06:52:33.976Z",
+        "user": 1,
+        "content_type": 7,
+        "object_id": "4",
+        "object_repr": "à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡ RD 1",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"\\u0e23\\u0e39\\u0e1b\\u0e20\\u0e32\\u0e1e\\u0e2b\\u0e49\\u0e2d\\u0e07\"]}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 72,
+    "fields": {
+        "action_time": "2025-11-03T06:52:21.611Z",
+        "user": 1,
+        "content_type": 7,
+        "object_id": "5",
+        "object_repr": "à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡ RD 2",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"\\u0e23\\u0e39\\u0e1b\\u0e20\\u0e32\\u0e1e\\u0e2b\\u0e49\\u0e2d\\u0e07\"]}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 71,
+    "fields": {
+        "action_time": "2025-11-03T06:52:12.909Z",
+        "user": 1,
+        "content_type": 7,
+        "object_id": "6",
+        "object_repr": "à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡ RD 3",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"\\u0e23\\u0e39\\u0e1b\\u0e20\\u0e32\\u0e1e\\u0e2b\\u0e49\\u0e2d\\u0e07\"]}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 70,
+    "fields": {
+        "action_time": "2025-11-03T06:51:59.582Z",
+        "user": 1,
+        "content_type": 7,
+        "object_id": "7",
+        "object_repr": "à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡ RD 4",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"\\u0e23\\u0e39\\u0e1b\\u0e20\\u0e32\\u0e1e\\u0e2b\\u0e49\\u0e2d\\u0e07\"]}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 69,
+    "fields": {
+        "action_time": "2025-11-03T06:51:40.072Z",
+        "user": 1,
+        "content_type": 7,
+        "object_id": "8",
+        "object_repr": "à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡ TEIL",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"\\u0e23\\u0e39\\u0e1b\\u0e20\\u0e32\\u0e1e\\u0e2b\\u0e49\\u0e2d\\u0e07\"]}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 68,
+    "fields": {
+        "action_time": "2025-10-31T06:09:40.547Z",
+        "user": 1,
+        "content_type": 7,
+        "object_id": "1",
+        "object_repr": "à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡ O1-1 (à¸ªà¸³à¸™à¸±à¸à¸‡à¸²à¸™ 1)",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"\\u0e23\\u0e39\\u0e1b\\u0e20\\u0e32\\u0e1e 1\"]}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 67,
+    "fields": {
+        "action_time": "2025-10-27T09:18:24.496Z",
+        "user": 1,
+        "content_type": 10,
+        "object_id": "6",
+        "object_repr": "Profile à¸‚à¸­à¸‡ User1",
+        "action_flag": 1,
+        "change_message": "[{\"added\": {}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 66,
+    "fields": {
+        "action_time": "2025-10-27T08:39:14.581Z",
+        "user": 1,
+        "content_type": 4,
+        "object_id": "6",
+        "object_repr": "User1",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"Staff status\"]}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 65,
+    "fields": {
+        "action_time": "2025-10-27T08:25:38.664Z",
+        "user": 1,
+        "content_type": 4,
+        "object_id": "6",
+        "object_repr": "User1",
+        "action_flag": 1,
+        "change_message": "[{\"added\": {}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 64,
+    "fields": {
+        "action_time": "2025-10-27T06:50:29.316Z",
+        "user": 1,
+        "content_type": 7,
+        "object_id": "2",
+        "object_repr": "à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡ O1-2",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"\\u0e23\\u0e39\\u0e1b\\u0e20\\u0e32\\u0e1e\\u0e2b\\u0e49\\u0e2d\\u0e07\\u0e1b\\u0e23\\u0e30\\u0e0a\\u0e38\\u0e21\"]}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 63,
+    "fields": {
+        "action_time": "2025-10-27T06:50:10.275Z",
+        "user": 1,
+        "content_type": 7,
+        "object_id": "2",
+        "object_repr": "à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡ O1-2",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"\\u0e23\\u0e39\\u0e1b\\u0e20\\u0e32\\u0e1e\\u0e2b\\u0e49\\u0e2d\\u0e07\\u0e1b\\u0e23\\u0e30\\u0e0a\\u0e38\\u0e21\"]}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 62,
+    "fields": {
+        "action_time": "2025-10-27T04:56:55.489Z",
+        "user": 1,
+        "content_type": 7,
+        "object_id": "1",
+        "object_repr": "à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡ O1-1",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"\\u0e23\\u0e39\\u0e1b\\u0e20\\u0e32\\u0e1e\\u0e2b\\u0e49\\u0e2d\\u0e07\\u0e1b\\u0e23\\u0e30\\u0e0a\\u0e38\\u0e21\"]}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 61,
+    "fields": {
+        "action_time": "2025-10-27T04:56:27.080Z",
+        "user": 1,
+        "content_type": 7,
+        "object_id": "1",
+        "object_repr": "à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡ O1-1",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"\\u0e23\\u0e39\\u0e1b\\u0e20\\u0e32\\u0e1e\\u0e2b\\u0e49\\u0e2d\\u0e07\\u0e1b\\u0e23\\u0e30\\u0e0a\\u0e38\\u0e21\"]}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 60,
+    "fields": {
+        "action_time": "2025-10-21T07:07:44.905Z",
+        "user": 1,
+        "content_type": 4,
+        "object_id": "5",
+        "object_repr": "User2",
+        "action_flag": 1,
+        "change_message": "[{\"added\": {}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 59,
+    "fields": {
+        "action_time": "2025-10-21T03:33:29.312Z",
+        "user": 1,
+        "content_type": 4,
+        "object_id": "4",
+        "object_repr": "manager",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"password\"]}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 58,
+    "fields": {
+        "action_time": "2025-10-20T04:21:18.422Z",
+        "user": 1,
+        "content_type": 7,
+        "object_id": "8",
+        "object_repr": "à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡ TEIL (à¸ªà¸³à¸™à¸±à¸à¸‡à¸²à¸™ TEIL)",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"\\u0e23\\u0e39\\u0e1b\\u0e20\\u0e32\\u0e1e 1\", \"\\u0e23\\u0e39\\u0e1b\\u0e20\\u0e32\\u0e1e 2\"]}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 57,
+    "fields": {
+        "action_time": "2025-10-20T04:16:09.505Z",
+        "user": 1,
+        "content_type": 7,
+        "object_id": "8",
+        "object_repr": "à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡ TEIL (à¸ªà¸³à¸™à¸±à¸à¸‡à¸²à¸™ TEIL)",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"\\u0e23\\u0e39\\u0e1b\\u0e20\\u0e32\\u0e1e 1\", \"\\u0e23\\u0e39\\u0e1b\\u0e20\\u0e32\\u0e1e 2\"]}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 56,
+    "fields": {
+        "action_time": "2025-10-20T03:45:12.030Z",
+        "user": 1,
+        "content_type": 4,
+        "object_id": "1",
+        "object_repr": "admin",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"password\"]}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 55,
+    "fields": {
+        "action_time": "2025-10-20T01:31:52.955Z",
+        "user": 1,
+        "content_type": 8,
+        "object_id": "15",
+        "object_repr": "'à¹„à¸¡à¹ˆà¸¡à¸µ' à¹ƒà¸™à¸«à¹‰à¸­à¸‡ à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡ RD 4",
+        "action_flag": 2,
+        "change_message": "[]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 54,
+    "fields": {
+        "action_time": "2025-10-20T01:31:31.952Z",
+        "user": 1,
+        "content_type": 8,
+        "object_id": "15",
+        "object_repr": "'à¹„à¸¡à¹ˆà¸¡à¸µ' à¹ƒà¸™à¸«à¹‰à¸­à¸‡ à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡ RD 4",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"\\u0e2a\\u0e16\\u0e32\\u0e19\\u0e30\"]}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 53,
+    "fields": {
+        "action_time": "2025-10-17T08:59:08.914Z",
+        "user": 1,
+        "content_type": 7,
+        "object_id": "1",
+        "object_repr": "à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡ O1-1 (à¸ªà¸³à¸™à¸±à¸à¸‡à¸²à¸™ 1)",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"Room image\"]}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 52,
+    "fields": {
+        "action_time": "2025-10-17T08:58:48.307Z",
+        "user": 1,
+        "content_type": 7,
+        "object_id": "1",
+        "object_repr": "à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡ O1-1 (à¸ªà¸³à¸™à¸±à¸à¸‡à¸²à¸™ 1)",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"Room image\"]}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 51,
+    "fields": {
+        "action_time": "2025-10-17T08:58:26.447Z",
+        "user": 1,
+        "content_type": 7,
+        "object_id": "1",
+        "object_repr": "à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡ O1-1 (à¸ªà¸³à¸™à¸±à¸à¸‡à¸²à¸™ 1)",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"Floor\"]}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 50,
+    "fields": {
+        "action_time": "2025-10-17T03:45:58.398Z",
+        "user": 1,
+        "content_type": 4,
+        "object_id": "1",
+        "object_repr": "admin",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"password\"]}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 49,
+    "fields": {
+        "action_time": "2025-10-16T09:24:38.898Z",
+        "user": 1,
+        "content_type": 8,
+        "object_id": "9",
+        "object_repr": "'à¸£à¸§à¸¡à¸”à¸²à¸§' à¹ƒà¸™à¸«à¹‰à¸­à¸‡ à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡ TEIL",
+        "action_flag": 2,
+        "change_message": "[]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 48,
+    "fields": {
+        "action_time": "2025-10-16T06:53:25.821Z",
+        "user": 1,
+        "content_type": 7,
+        "object_id": "3",
+        "object_repr": "à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡ à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡à¹ƒà¸«à¸à¹ˆ (à¸ªà¸³à¸™à¸±à¸à¸‡à¸²à¸™ 1)",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"\\u0e2d\\u0e32\\u0e04\\u0e32\\u0e23\"]}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 47,
+    "fields": {
+        "action_time": "2025-10-16T06:53:05.611Z",
+        "user": 1,
+        "content_type": 7,
+        "object_id": "2",
+        "object_repr": "à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡ O1-2 (à¸ªà¸³à¸™à¸±à¸à¸‡à¸²à¸™ 1)",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"\\u0e2d\\u0e32\\u0e04\\u0e32\\u0e23\"]}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 46,
+    "fields": {
+        "action_time": "2025-10-16T06:52:46.801Z",
+        "user": 1,
+        "content_type": 7,
+        "object_id": "1",
+        "object_repr": "à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡ O1-1 (à¸ªà¸³à¸™à¸±à¸à¸‡à¸²à¸™ 1)",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"\\u0e2d\\u0e32\\u0e04\\u0e32\\u0e23\"]}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 45,
+    "fields": {
+        "action_time": "2025-10-16T06:52:11.533Z",
+        "user": 1,
+        "content_type": 7,
+        "object_id": "4",
+        "object_repr": "à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡ RD 1 (à¸­à¸²à¸„à¸²à¸£ R & D)",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"\\u0e0a\\u0e37\\u0e48\\u0e2d\\u0e2b\\u0e49\\u0e2d\\u0e07\\u0e1b\\u0e23\\u0e30\\u0e0a\\u0e38\\u0e21\", \"\\u0e2d\\u0e32\\u0e04\\u0e32\\u0e23\", \"\\u0e0a\\u0e31\\u0e49\\u0e19\"]}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 44,
+    "fields": {
+        "action_time": "2025-10-16T06:51:50.065Z",
+        "user": 1,
+        "content_type": 7,
+        "object_id": "5",
+        "object_repr": "à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡ RD 2 (à¸­à¸²à¸„à¸²à¸£ R & D)",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"\\u0e0a\\u0e37\\u0e48\\u0e2d\\u0e2b\\u0e49\\u0e2d\\u0e07\\u0e1b\\u0e23\\u0e30\\u0e0a\\u0e38\\u0e21\", \"\\u0e2d\\u0e32\\u0e04\\u0e32\\u0e23\", \"\\u0e0a\\u0e31\\u0e49\\u0e19\"]}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 43,
+    "fields": {
+        "action_time": "2025-10-16T06:51:40.790Z",
+        "user": 1,
+        "content_type": 7,
+        "object_id": "6",
+        "object_repr": "à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡ RD 3 (à¸­à¸²à¸„à¸²à¸£ R & D)",
+        "action_flag": 2,
+        "change_message": "[]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 42,
+    "fields": {
+        "action_time": "2025-10-16T06:51:37.786Z",
+        "user": 1,
+        "content_type": 7,
+        "object_id": "7",
+        "object_repr": "à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡ RD 4 (à¸­à¸²à¸„à¸²à¸£ R & D)",
+        "action_flag": 2,
+        "change_message": "[]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 41,
+    "fields": {
+        "action_time": "2025-10-16T06:51:28.382Z",
+        "user": 1,
+        "content_type": 7,
+        "object_id": "6",
+        "object_repr": "à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡ RD 3 (à¸­à¸²à¸„à¸²à¸£ R & D)",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"\\u0e0a\\u0e37\\u0e48\\u0e2d\\u0e2b\\u0e49\\u0e2d\\u0e07\\u0e1b\\u0e23\\u0e30\\u0e0a\\u0e38\\u0e21\", \"\\u0e2d\\u0e32\\u0e04\\u0e32\\u0e23\", \"\\u0e0a\\u0e31\\u0e49\\u0e19\"]}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 40,
+    "fields": {
+        "action_time": "2025-10-16T06:51:07.129Z",
+        "user": 1,
+        "content_type": 7,
+        "object_id": "7",
+        "object_repr": "à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡ RD 4 (à¸­à¸²à¸„à¸²à¸£ R & D)",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"\\u0e0a\\u0e37\\u0e48\\u0e2d\\u0e2b\\u0e49\\u0e2d\\u0e07\\u0e1b\\u0e23\\u0e30\\u0e0a\\u0e38\\u0e21\", \"\\u0e2d\\u0e32\\u0e04\\u0e32\\u0e23\", \"\\u0e0a\\u0e31\\u0e49\\u0e19\"]}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 39,
+    "fields": {
+        "action_time": "2025-10-16T06:50:31.632Z",
+        "user": 1,
+        "content_type": 7,
+        "object_id": "8",
+        "object_repr": "à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡ TEIL (à¸ªà¸³à¸™à¸±à¸à¸‡à¸²à¸™ TEIL)",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"\\u0e0a\\u0e37\\u0e48\\u0e2d\\u0e2b\\u0e49\\u0e2d\\u0e07\\u0e1b\\u0e23\\u0e30\\u0e0a\\u0e38\\u0e21\", \"\\u0e2d\\u0e32\\u0e04\\u0e32\\u0e23\", \"\\u0e0a\\u0e31\\u0e49\\u0e19\"]}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 38,
+    "fields": {
+        "action_time": "2025-10-16T05:40:52.072Z",
+        "user": 1,
+        "content_type": 7,
+        "object_id": "8",
+        "object_repr": "à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡ TEIL (à¸Šà¸±à¹‰à¸™ 4) ()",
+        "action_flag": 2,
+        "change_message": "[]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 37,
+    "fields": {
+        "action_time": "2025-10-16T02:55:57.674Z",
+        "user": 1,
+        "content_type": 4,
+        "object_id": "3",
+        "object_repr": "useradmin",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"password\"]}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 36,
+    "fields": {
+        "action_time": "2025-10-16T02:48:38.962Z",
+        "user": 1,
+        "content_type": 8,
+        "object_id": "15",
+        "object_repr": "'à¹„à¸¡à¹ˆà¸¡à¸µ' à¹ƒà¸™à¸«à¹‰à¸­à¸‡ à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡ RD 4 (à¸Šà¸±à¹‰à¸™ 2",
+        "action_flag": 1,
+        "change_message": "[{\"added\": {}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 35,
+    "fields": {
+        "action_time": "2025-10-15T09:53:21.693Z",
+        "user": 1,
+        "content_type": 8,
+        "object_id": "13",
+        "object_repr": "'à¸›à¸£à¸°à¸Šà¸¸à¸¡à¸”à¸²à¸§à¸•à¸´à¹Šà¸à¸•à¹Šà¸­à¸' à¹ƒà¸™à¸«à¹‰à¸­à¸‡ à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡ O1-1",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"\\u0e2a\\u0e16\\u0e32\\u0e19\\u0e30\"]}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 34,
+    "fields": {
+        "action_time": "2025-10-15T09:44:40.808Z",
+        "user": 1,
+        "content_type": 4,
+        "object_id": "3",
+        "object_repr": "useradmin",
+        "action_flag": 2,
+        "change_message": "[]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 33,
+    "fields": {
+        "action_time": "2025-10-15T09:44:35.957Z",
+        "user": 1,
+        "content_type": 4,
+        "object_id": "3",
+        "object_repr": "useradmin",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"password\"]}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 32,
+    "fields": {
+        "action_time": "2025-10-15T09:44:00.895Z",
+        "user": 1,
+        "content_type": 4,
+        "object_id": "4",
+        "object_repr": "manager",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"First name\", \"Last name\", \"Email address\", \"Staff status\"]}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 31,
+    "fields": {
+        "action_time": "2025-10-15T09:42:34.203Z",
+        "user": 1,
+        "content_type": 4,
+        "object_id": "4",
+        "object_repr": "manager",
+        "action_flag": 1,
+        "change_message": "[{\"added\": {}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 30,
+    "fields": {
+        "action_time": "2025-10-15T09:11:34.559Z",
+        "user": 1,
+        "content_type": 4,
+        "object_id": "2",
+        "object_repr": "user@4",
+        "action_flag": 3,
+        "change_message": ""
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 29,
+    "fields": {
+        "action_time": "2025-10-15T04:29:16.933Z",
+        "user": 1,
+        "content_type": 8,
+        "object_id": "9",
+        "object_repr": "'à¸£à¸§à¸¡à¸”à¸²à¸§' à¹ƒà¸™à¸«à¹‰à¸­à¸‡ à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡ TEIL (à¸Šà¸±à¹‰à¸™ 4)",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"\\u0e2a\\u0e16\\u0e32\\u0e19\\u0e30\"]}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 28,
+    "fields": {
+        "action_time": "2025-10-15T04:18:12.344Z",
+        "user": 1,
+        "content_type": 8,
+        "object_id": "8",
+        "object_repr": "'à¸ªà¹ˆà¸‡à¸­à¸­à¸à¹„à¸›à¹à¸¥à¹‰à¸§' à¹ƒà¸™à¸«à¹‰à¸­à¸‡ à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡ TEIL (à¸Šà¸±à¹‰à¸™ 4)",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"\\u0e2a\\u0e16\\u0e32\\u0e19\\u0e30\"]}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 27,
+    "fields": {
+        "action_time": "2025-10-15T04:17:20.601Z",
+        "user": 1,
+        "content_type": 8,
+        "object_id": "8",
+        "object_repr": "'à¸ªà¹ˆà¸‡à¸­à¸­à¸à¹„à¸›à¹à¸¥à¹‰à¸§' à¹ƒà¸™à¸«à¹‰à¸­à¸‡ à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡ TEIL (à¸Šà¸±à¹‰à¸™ 4)",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"\\u0e2a\\u0e16\\u0e32\\u0e19\\u0e30\"]}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 26,
+    "fields": {
+        "action_time": "2025-10-15T04:14:36.114Z",
+        "user": 1,
+        "content_type": 8,
+        "object_id": "5",
+        "object_repr": "'à¸ªà¹ˆà¸‡à¸­à¸­à¸' à¹ƒà¸™à¸«à¹‰à¸­à¸‡ à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡ à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡à¹ƒà¸«à¸à¹ˆ",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"\\u0e2a\\u0e16\\u0e32\\u0e19\\u0e30\"]}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 25,
+    "fields": {
+        "action_time": "2025-10-15T04:14:36.113Z",
+        "user": 1,
+        "content_type": 8,
+        "object_id": "4",
+        "object_repr": "'à¹‚à¸¥à¸ˆà¸´à¸ªà¸•à¸´à¸à¹€à¸à¸­à¸£à¹Œ' à¹ƒà¸™à¸«à¹‰à¸­à¸‡ à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡ RD 4 (à¸Šà¸±à¹‰à¸™ 2",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"\\u0e2a\\u0e16\\u0e32\\u0e19\\u0e30\"]}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 24,
+    "fields": {
+        "action_time": "2025-10-15T02:38:31.682Z",
+        "user": 1,
+        "content_type": 8,
+        "object_id": "6",
+        "object_repr": "'à¸Ÿà¸à¸Ÿà¸' à¹ƒà¸™à¸«à¹‰à¸­à¸‡ à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡ O1-2",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"\\u0e2a\\u0e16\\u0e32\\u0e19\\u0e30\"]}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 23,
+    "fields": {
+        "action_time": "2025-10-15T02:05:29.085Z",
+        "user": 1,
+        "content_type": 8,
+        "object_id": "4",
+        "object_repr": "'à¹‚à¸¥à¸ˆà¸´à¸ªà¸•à¸´à¸à¹€à¸à¸­à¸£à¹Œ' à¹ƒà¸™à¸«à¹‰à¸­à¸‡ à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡ RD 4 (à¸Šà¸±à¹‰à¸™ 2",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"\\u0e2a\\u0e16\\u0e32\\u0e19\\u0e30\"]}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 22,
+    "fields": {
+        "action_time": "2025-10-15T01:41:43.524Z",
+        "user": 1,
+        "content_type": 8,
+        "object_id": "4",
+        "object_repr": "'à¹‚à¸¥à¸ˆà¸´à¸ªà¸•à¸´à¸à¹€à¸à¸­à¸£à¹Œ' à¹ƒà¸™à¸«à¹‰à¸­à¸‡ à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡ RD 4 (à¸Šà¸±à¹‰à¸™ 2",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"\\u0e2a\\u0e16\\u0e32\\u0e19\\u0e30\"]}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 21,
+    "fields": {
+        "action_time": "2025-10-14T09:16:00.718Z",
+        "user": 1,
+        "content_type": 8,
+        "object_id": "3",
+        "object_repr": "'à¸ªà¹ˆà¸‡à¸­à¸­à¸à¸œà¸¥à¸´à¸•à¸ à¸±à¸“à¸‘à¹Œ' à¹ƒà¸™à¸«à¹‰à¸­à¸‡ à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡ O1-1",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"\\u0e2a\\u0e16\\u0e32\\u0e19\\u0e30\"]}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 20,
+    "fields": {
+        "action_time": "2025-10-14T07:52:05.298Z",
+        "user": 1,
+        "content_type": 7,
+        "object_id": "8",
+        "object_repr": "à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡ TEIL (à¸Šà¸±à¹‰à¸™ 4) (à¸ªà¸³à¸™à¸±à¸à¸‡à¸²à¸™ TEIL)",
+        "action_flag": 1,
+        "change_message": "[{\"added\": {}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 19,
+    "fields": {
+        "action_time": "2025-10-14T07:51:29.557Z",
+        "user": 1,
+        "content_type": 7,
+        "object_id": "7",
+        "object_repr": "à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡ RD 4 (à¸Šà¸±à¹‰à¸™ 2 (à¸­à¸²à¸„à¸²à¸£ R & D)",
+        "action_flag": 1,
+        "change_message": "[{\"added\": {}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 18,
+    "fields": {
+        "action_time": "2025-10-14T07:50:34.282Z",
+        "user": 1,
+        "content_type": 7,
+        "object_id": "6",
+        "object_repr": "à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡ RD 3 (à¸Šà¸±à¹‰à¸™ 2) (à¸­à¸²à¸„à¸²à¸£ R & D)",
+        "action_flag": 1,
+        "change_message": "[{\"added\": {}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 17,
+    "fields": {
+        "action_time": "2025-10-14T07:49:49.949Z",
+        "user": 1,
+        "content_type": 7,
+        "object_id": "5",
+        "object_repr": "à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡ RD 2 (à¸Šà¸±à¹‰à¸™ 2) (à¸­à¸²à¸„à¸²à¸£ R & D)",
+        "action_flag": 1,
+        "change_message": "[{\"added\": {}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 16,
+    "fields": {
+        "action_time": "2025-10-14T07:10:10.130Z",
+        "user": 1,
+        "content_type": 7,
+        "object_id": "3",
+        "object_repr": "à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡ à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡à¹ƒà¸«à¸à¹ˆ (à¸ªà¸³à¸™à¸±à¸à¸‡à¸²à¸™ 1)",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"\\u0e2d\\u0e38\\u0e1b\\u0e01\\u0e23\\u0e13\\u0e4c\\u0e17\\u0e35\\u0e48\\u0e1e\\u0e23\\u0e49\\u0e2d\\u0e21\\u0e43\\u0e0a\\u0e49\\u0e07\\u0e32\\u0e19\"]}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 15,
+    "fields": {
+        "action_time": "2025-10-14T07:09:56.003Z",
+        "user": 1,
+        "content_type": 7,
+        "object_id": "2",
+        "object_repr": "à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡ O1-2 (à¸ªà¸³à¸™à¸±à¸à¸‡à¸²à¸™ 1)",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"\\u0e2d\\u0e38\\u0e1b\\u0e01\\u0e23\\u0e13\\u0e4c\\u0e17\\u0e35\\u0e48\\u0e1e\\u0e23\\u0e49\\u0e2d\\u0e21\\u0e43\\u0e0a\\u0e49\\u0e07\\u0e32\\u0e19\"]}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 14,
+    "fields": {
+        "action_time": "2025-10-14T07:09:46.610Z",
+        "user": 1,
+        "content_type": 7,
+        "object_id": "1",
+        "object_repr": "à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡ O1-1 (à¸ªà¸³à¸™à¸±à¸à¸‡à¸²à¸™ 1)",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"\\u0e2d\\u0e38\\u0e1b\\u0e01\\u0e23\\u0e13\\u0e4c\\u0e17\\u0e35\\u0e48\\u0e1e\\u0e23\\u0e49\\u0e2d\\u0e21\\u0e43\\u0e0a\\u0e49\\u0e07\\u0e32\\u0e19\"]}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 13,
+    "fields": {
+        "action_time": "2025-10-14T06:54:53.274Z",
+        "user": 1,
+        "content_type": 7,
+        "object_id": "4",
+        "object_repr": "à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡ RD 1 (à¸Šà¸±à¹‰à¸™ 1) (à¸­à¸²à¸„à¸²à¸£ R & D)",
+        "action_flag": 1,
+        "change_message": "[{\"added\": {}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 12,
+    "fields": {
+        "action_time": "2025-10-14T06:46:19.794Z",
+        "user": 1,
+        "content_type": 9,
+        "object_id": "1",
+        "object_repr": "à¹‚à¸›à¸£à¹€à¸ˆà¸„à¹€à¸•à¸­à¸£à¹Œ",
+        "action_flag": 1,
+        "change_message": "[{\"added\": {}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 11,
+    "fields": {
+        "action_time": "2025-10-14T06:22:22.505Z",
+        "user": 1,
+        "content_type": 10,
+        "object_id": "1",
+        "object_repr": "admin Profile",
+        "action_flag": 3,
+        "change_message": ""
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 10,
+    "fields": {
+        "action_time": "2025-10-14T04:08:44.146Z",
+        "user": 1,
+        "content_type": 7,
+        "object_id": "3",
+        "object_repr": "à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡ à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡à¹ƒà¸«à¸à¹ˆ",
+        "action_flag": 1,
+        "change_message": "[{\"added\": {}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 9,
+    "fields": {
+        "action_time": "2025-10-14T03:23:09.277Z",
+        "user": 1,
+        "content_type": 7,
+        "object_id": "2",
+        "object_repr": "à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡ O1-2",
+        "action_flag": 2,
+        "change_message": "[]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 8,
+    "fields": {
+        "action_time": "2025-10-14T03:21:52.471Z",
+        "user": 1,
+        "content_type": 7,
+        "object_id": "2",
+        "object_repr": "à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡ O1-2",
+        "action_flag": 1,
+        "change_message": "[{\"added\": {}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 7,
+    "fields": {
+        "action_time": "2025-10-14T03:07:26.776Z",
+        "user": 1,
+        "content_type": 8,
+        "object_id": "1",
+        "object_repr": "'à¸ªà¹ˆà¸‡à¸­à¸­à¸à¸£à¸¹à¸›à¸žà¸£à¸£à¸“' à¹ƒà¸™à¸«à¹‰à¸­à¸‡ à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡ O1-1 à¹‚à¸”à¸¢ user@4",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"\\u0e2a\\u0e16\\u0e32\\u0e19\\u0e30\"]}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 6,
+    "fields": {
+        "action_time": "2025-10-14T03:04:54.594Z",
+        "user": 1,
+        "content_type": 8,
+        "object_id": "1",
+        "object_repr": "'à¸ªà¹ˆà¸‡à¸­à¸­à¸à¸£à¸¹à¸›à¸žà¸£à¸£à¸“' à¹ƒà¸™à¸«à¹‰à¸­à¸‡ à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡ O1-1 à¹‚à¸”à¸¢ user@4",
+        "action_flag": 1,
+        "change_message": "[{\"added\": {}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 5,
+    "fields": {
+        "action_time": "2025-10-14T03:01:49.670Z",
+        "user": 1,
+        "content_type": 4,
+        "object_id": "2",
+        "object_repr": "user@4",
+        "action_flag": 1,
+        "change_message": "[{\"added\": {}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 4,
+    "fields": {
+        "action_time": "2025-10-14T02:48:41.682Z",
+        "user": 1,
+        "content_type": 7,
+        "object_id": "1",
+        "object_repr": "à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡ O1-1",
+        "action_flag": 2,
+        "change_message": "[]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 3,
+    "fields": {
+        "action_time": "2025-10-14T02:48:32.135Z",
+        "user": 1,
+        "content_type": 7,
+        "object_id": "1",
+        "object_repr": "à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡ O1-1",
+        "action_flag": 2,
+        "change_message": "[]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 2,
+    "fields": {
+        "action_time": "2025-10-14T02:48:25.760Z",
+        "user": 1,
+        "content_type": 7,
+        "object_id": "1",
+        "object_repr": "à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡ O1-1",
+        "action_flag": 2,
+        "change_message": "[]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 1,
+    "fields": {
+        "action_time": "2025-10-14T02:48:05.588Z",
+        "user": 1,
+        "content_type": 7,
+        "object_id": "1",
+        "object_repr": "à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡ O1-1",
+        "action_flag": 1,
+        "change_message": "[{\"added\": {}}]"
+    }
+}
+]

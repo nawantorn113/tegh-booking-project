@@ -1,0 +1,970 @@
+[
+{
+    "model": "booking.auditlog",
+    "pk": 88,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "timestamp": "2025-12-10T01:17:26.853Z",
+        "details": "à¹€à¸‚à¹‰à¸²à¸ªà¸¹à¹ˆà¸£à¸°à¸šà¸šà¸ªà¸³à¹€à¸£à¹‡à¸ˆ",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 87,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "timestamp": "2025-12-10T01:17:19.210Z",
+        "details": "à¸­à¸­à¸à¸ˆà¸²à¸à¸£à¸°à¸šà¸š",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 86,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "timestamp": "2025-12-09T09:42:19.909Z",
+        "details": "à¹€à¸‚à¹‰à¸²à¸ªà¸¹à¹ˆà¸£à¸°à¸šà¸šà¸ªà¸³à¹€à¸£à¹‡à¸ˆ",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 85,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "timestamp": "2025-12-09T06:03:38.847Z",
+        "details": "à¹€à¸‚à¹‰à¸²à¸ªà¸¹à¹ˆà¸£à¸°à¸šà¸šà¸ªà¸³à¹€à¸£à¹‡à¸ˆ",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 84,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "timestamp": "2025-12-09T06:03:19.857Z",
+        "details": "à¸­à¸­à¸à¸ˆà¸²à¸à¸£à¸°à¸šà¸š",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 83,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "timestamp": "2025-12-09T04:04:20.027Z",
+        "details": "à¹€à¸‚à¹‰à¸²à¸ªà¸¹à¹ˆà¸£à¸°à¸šà¸šà¸ªà¸³à¹€à¸£à¹‡à¸ˆ",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 82,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "timestamp": "2025-12-09T04:04:10.909Z",
+        "details": "à¸­à¸­à¸à¸ˆà¸²à¸à¸£à¸°à¸šà¸š",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 81,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "timestamp": "2025-12-08T08:25:26.027Z",
+        "details": "à¹€à¸‚à¹‰à¸²à¸ªà¸¹à¹ˆà¸£à¸°à¸šà¸šà¸ªà¸³à¹€à¸£à¹‡à¸ˆ",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 80,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "timestamp": "2025-12-08T08:25:18.620Z",
+        "details": "à¸­à¸­à¸à¸ˆà¸²à¸à¸£à¸°à¸šà¸š",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 79,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "timestamp": "2025-12-08T08:10:42.805Z",
+        "details": "à¹€à¸‚à¹‰à¸²à¸ªà¸¹à¹ˆà¸£à¸°à¸šà¸šà¸ªà¸³à¹€à¸£à¹‡à¸ˆ",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 78,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "timestamp": "2025-12-08T08:10:31.743Z",
+        "details": "à¸­à¸­à¸à¸ˆà¸²à¸à¸£à¸°à¸šà¸š",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 77,
+    "fields": {
+        "user": 1,
+        "action": "BOOKING_APPROVED",
+        "timestamp": "2025-12-08T08:10:28.390Z",
+        "details": "à¸­à¸™à¸¸à¸¡à¸±à¸•à¸´à¹‚à¸”à¸¢ Admin [Target: à¸—à¸”à¸ªà¸­à¸šà¸£à¸°à¸šà¸š - à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡à¹ƒà¸«à¸à¹ˆ]",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 76,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "timestamp": "2025-12-08T08:10:24.450Z",
+        "details": "à¹€à¸‚à¹‰à¸²à¸ªà¸¹à¹ˆà¸£à¸°à¸šà¸šà¸ªà¸³à¹€à¸£à¹‡à¸ˆ",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 75,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "timestamp": "2025-12-08T08:10:15.733Z",
+        "details": "à¸­à¸­à¸à¸ˆà¸²à¸à¸£à¸°à¸šà¸š",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 74,
+    "fields": {
+        "user": 5,
+        "action": "BOOKING_CREATED",
+        "timestamp": "2025-12-08T08:10:08.146Z",
+        "details": "à¸ˆà¸­à¸‡à¸«à¹‰à¸­à¸‡ à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡à¹ƒà¸«à¸à¹ˆ [Target: à¸—à¸”à¸ªà¸­à¸šà¸£à¸°à¸šà¸š - à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡à¹ƒà¸«à¸à¹ˆ]",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 73,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "timestamp": "2025-12-08T07:20:32.181Z",
+        "details": "à¹€à¸‚à¹‰à¸²à¸ªà¸¹à¹ˆà¸£à¸°à¸šà¸šà¸ªà¸³à¹€à¸£à¹‡à¸ˆ",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 72,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "timestamp": "2025-12-08T07:20:22.471Z",
+        "details": "à¸­à¸­à¸à¸ˆà¸²à¸à¸£à¸°à¸šà¸š",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 71,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "timestamp": "2025-12-08T06:43:52.029Z",
+        "details": "à¹€à¸‚à¹‰à¸²à¸ªà¸¹à¹ˆà¸£à¸°à¸šà¸šà¸ªà¸³à¹€à¸£à¹‡à¸ˆ",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 70,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "timestamp": "2025-12-08T06:43:42.784Z",
+        "details": "à¸­à¸­à¸à¸ˆà¸²à¸à¸£à¸°à¸šà¸š",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 69,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "timestamp": "2025-12-08T06:33:51.391Z",
+        "details": "à¹€à¸‚à¹‰à¸²à¸ªà¸¹à¹ˆà¸£à¸°à¸šà¸šà¸ªà¸³à¹€à¸£à¹‡à¸ˆ",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 68,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "timestamp": "2025-12-08T06:28:31.723Z",
+        "details": "à¸­à¸­à¸à¸ˆà¸²à¸à¸£à¸°à¸šà¸š",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 67,
+    "fields": {
+        "user": 1,
+        "action": "BOOKING_APPROVED",
+        "timestamp": "2025-12-08T06:10:27.958Z",
+        "details": "à¸­à¸™à¸¸à¸¡à¸±à¸•à¸´à¹‚à¸”à¸¢ Admin [Target: à¸—à¸”à¸ªà¸­à¸šà¸£à¸°à¸šà¸š - à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡ TEIL]",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 66,
+    "fields": {
+        "user": 1,
+        "action": "BOOKING_APPROVED",
+        "timestamp": "2025-12-08T06:10:25.128Z",
+        "details": "à¸­à¸™à¸¸à¸¡à¸±à¸•à¸´à¹‚à¸”à¸¢ Admin [Target: à¸—à¸”à¸ªà¸­à¸šà¸£à¸°à¸šà¸š - à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡ TEIL]",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 65,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "timestamp": "2025-12-08T04:18:06.851Z",
+        "details": "à¹€à¸‚à¹‰à¸²à¸ªà¸¹à¹ˆà¸£à¸°à¸šà¸šà¸ªà¸³à¹€à¸£à¹‡à¸ˆ",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 64,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "timestamp": "2025-12-08T04:17:59.023Z",
+        "details": "à¸­à¸­à¸à¸ˆà¸²à¸à¸£à¸°à¸šà¸š",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 63,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "timestamp": "2025-12-08T04:09:47.425Z",
+        "details": "à¹€à¸‚à¹‰à¸²à¸ªà¸¹à¹ˆà¸£à¸°à¸šà¸šà¸ªà¸³à¹€à¸£à¹‡à¸ˆ",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 62,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "timestamp": "2025-12-08T04:09:39.461Z",
+        "details": "à¸­à¸­à¸à¸ˆà¸²à¸à¸£à¸°à¸šà¸š",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 61,
+    "fields": {
+        "user": 1,
+        "action": "BOOKING_APPROVED",
+        "timestamp": "2025-12-08T04:08:53.840Z",
+        "details": "à¸­à¸™à¸¸à¸¡à¸±à¸•à¸´à¹‚à¸”à¸¢ Admin [Target: à¸—à¸”à¸ªà¸­à¸šà¸£à¸°à¸šà¸š - à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡ TEIL]",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 60,
+    "fields": {
+        "user": 1,
+        "action": "BOOKING_CREATED",
+        "timestamp": "2025-12-08T03:42:28.459Z",
+        "details": "à¸ˆà¸­à¸‡à¸«à¹‰à¸­à¸‡ à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡ TEIL [Target: à¸—à¸”à¸ªà¸­à¸šà¸£à¸°à¸šà¸š - à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡ TEIL]",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 59,
+    "fields": {
+        "user": 1,
+        "action": "BOOKING_CREATED",
+        "timestamp": "2025-12-08T03:42:28.433Z",
+        "details": "à¸ˆà¸­à¸‡à¸«à¹‰à¸­à¸‡ à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡ TEIL [Target: à¸—à¸”à¸ªà¸­à¸šà¸£à¸°à¸šà¸š - à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡ TEIL]",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 58,
+    "fields": {
+        "user": 1,
+        "action": "BOOKING_CREATED",
+        "timestamp": "2025-12-08T03:42:21.832Z",
+        "details": "à¸ˆà¸­à¸‡à¸«à¹‰à¸­à¸‡ à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡ TEIL [Target: à¸—à¸”à¸ªà¸­à¸šà¸£à¸°à¸šà¸š - à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡ TEIL]",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 57,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "timestamp": "2025-12-08T03:30:23.299Z",
+        "details": "à¹€à¸‚à¹‰à¸²à¸ªà¸¹à¹ˆà¸£à¸°à¸šà¸šà¸ªà¸³à¹€à¸£à¹‡à¸ˆ",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 56,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "timestamp": "2025-12-06T02:46:24.962Z",
+        "details": "à¹€à¸‚à¹‰à¸²à¸ªà¸¹à¹ˆà¸£à¸°à¸šà¸šà¸ªà¸³à¹€à¸£à¹‡à¸ˆ",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 55,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "timestamp": "2025-12-06T02:46:17.618Z",
+        "details": "à¸­à¸­à¸à¸ˆà¸²à¸à¸£à¸°à¸šà¸š",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 54,
+    "fields": {
+        "user": 1,
+        "action": "BOOKING_CREATED",
+        "timestamp": "2025-12-04T10:01:59.143Z",
+        "details": "à¸ˆà¸­à¸‡à¸«à¹‰à¸­à¸‡ à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡ O1-2 [Target: à¸—à¸”à¸ªà¸­à¸šà¸£à¸°à¸šà¸š - à¸«à¹‰à¸­à¸‡à¸›à¸£à¸°à¸Šà¸¸à¸¡ O1-2]",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 53,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "timestamp": "2025-12-04T09:36:14.716Z",
+        "details": "à¹€à¸‚à¹‰à¸²à¸ªà¸¹à¹ˆà¸£à¸°à¸šà¸šà¸ªà¸³à¹€à¸£à¹‡à¸ˆ",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 52,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "timestamp": "2025-12-04T09:36:06.556Z",
+        "details": "à¸­à¸­à¸à¸ˆà¸²à¸à¸£à¸°à¸šà¸š",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 51,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "timestamp": "2025-12-04T08:52:20.194Z",
+        "details": "à¹€à¸‚à¹‰à¸²à¸ªà¸¹à¹ˆà¸£à¸°à¸šà¸šà¸ªà¸³à¹€à¸£à¹‡à¸ˆ",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 50,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "timestamp": "2025-12-04T08:52:14.543Z",
+        "details": "à¸­à¸­à¸à¸ˆà¸²à¸à¸£à¸°à¸šà¸š",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 49,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "timestamp": "2025-12-04T08:47:58.021Z",
+        "details": "à¹€à¸‚à¹‰à¸²à¸ªà¸¹à¹ˆà¸£à¸°à¸šà¸šà¸ªà¸³à¹€à¸£à¹‡à¸ˆ",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 48,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "timestamp": "2025-12-04T08:47:48.851Z",
+        "details": "à¸­à¸­à¸à¸ˆà¸²à¸à¸£à¸°à¸šà¸š",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 47,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "timestamp": "2025-12-04T08:44:52.305Z",
+        "details": "à¹€à¸‚à¹‰à¸²à¸ªà¸¹à¹ˆà¸£à¸°à¸šà¸šà¸ªà¸³à¹€à¸£à¹‡à¸ˆ",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 46,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "timestamp": "2025-12-04T07:31:57.463Z",
+        "details": "à¸­à¸­à¸à¸ˆà¸²à¸à¸£à¸°à¸šà¸š",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 45,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "timestamp": "2025-12-04T07:31:41.084Z",
+        "details": "à¹€à¸‚à¹‰à¸²à¸ªà¸¹à¹ˆà¸£à¸°à¸šà¸šà¸ªà¸³à¹€à¸£à¹‡à¸ˆ",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 44,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "timestamp": "2025-12-04T07:31:34.947Z",
+        "details": "à¸­à¸­à¸à¸ˆà¸²à¸à¸£à¸°à¸šà¸š",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 43,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "timestamp": "2025-12-04T06:31:32.513Z",
+        "details": "à¹€à¸‚à¹‰à¸²à¸ªà¸¹à¹ˆà¸£à¸°à¸šà¸šà¸ªà¸³à¹€à¸£à¹‡à¸ˆ",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 42,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "timestamp": "2025-12-04T06:31:19.648Z",
+        "details": "à¸­à¸­à¸à¸ˆà¸²à¸à¸£à¸°à¸šà¸š",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 41,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "timestamp": "2025-12-04T06:30:55.305Z",
+        "details": "à¹€à¸‚à¹‰à¸²à¸ªà¸¹à¹ˆà¸£à¸°à¸šà¸šà¸ªà¸³à¹€à¸£à¹‡à¸ˆ",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 40,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "timestamp": "2025-12-04T06:30:48.676Z",
+        "details": "à¸­à¸­à¸à¸ˆà¸²à¸à¸£à¸°à¸šà¸š",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 39,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "timestamp": "2025-12-03T08:40:12.626Z",
+        "details": "à¹€à¸‚à¹‰à¸²à¸ªà¸¹à¹ˆà¸£à¸°à¸šà¸šà¸ªà¸³à¹€à¸£à¹‡à¸ˆ",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 38,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "timestamp": "2025-12-03T08:40:00.140Z",
+        "details": "à¸­à¸­à¸à¸ˆà¸²à¸à¸£à¸°à¸šà¸š",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 37,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "timestamp": "2025-12-03T08:39:19.130Z",
+        "details": "à¹€à¸‚à¹‰à¸²à¸ªà¸¹à¹ˆà¸£à¸°à¸šà¸šà¸ªà¸³à¹€à¸£à¹‡à¸ˆ",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 36,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "timestamp": "2025-12-03T08:39:11.893Z",
+        "details": "à¸­à¸­à¸à¸ˆà¸²à¸à¸£à¸°à¸šà¸š",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 35,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "timestamp": "2025-12-01T05:57:39.644Z",
+        "details": "admin logged in",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 34,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "timestamp": "2025-11-28T01:42:55.427Z",
+        "details": "admin logged in",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 33,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "timestamp": "2025-11-27T06:30:17.317Z",
+        "details": "User2 logged in",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 32,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "timestamp": "2025-11-27T06:21:41.059Z",
+        "details": "admin logged in",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 31,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "timestamp": "2025-11-27T03:15:46.087Z",
+        "details": "admin logged in",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 30,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "timestamp": "2025-11-26T01:49:54.674Z",
+        "details": "admin logged in",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 29,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "timestamp": "2025-11-26T01:36:21.234Z",
+        "details": "User2 logged in",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 28,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "timestamp": "2025-11-25T04:13:37.787Z",
+        "details": "User2 logged in",
+        "ip_address": "147.50.115.194"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 27,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "timestamp": "2025-11-25T03:22:51.187Z",
+        "details": "User2 logged in",
+        "ip_address": "147.50.115.194"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 26,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "timestamp": "2025-11-24T04:37:20.454Z",
+        "details": "User admin logged in.",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 25,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "timestamp": "2025-11-24T04:16:24.263Z",
+        "details": "User User2 logged in.",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 24,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "timestamp": "2025-11-10T00:59:19.403Z",
+        "details": "User admin logged in.",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 23,
+    "fields": {
+        "user": 1,
+        "action": "BOOKING_CREATED",
+        "timestamp": "2025-11-06T09:26:31.167Z",
+        "details": "Created Booking ID 45 ('à¸›à¸£à¸°à¸Šà¸¸à¸¡à¹€à¸£à¸·à¹ˆà¸­à¸‡à¸à¸²à¸£à¸•à¸¥à¸²à¸”')",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 22,
+    "fields": {
+        "user": 1,
+        "action": "BOOKING_EDITED",
+        "timestamp": "2025-11-06T08:10:16.036Z",
+        "details": "Edited Booking ID 43 ('-')",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 21,
+    "fields": {
+        "user": 1,
+        "action": "BOOKING_EDITED",
+        "timestamp": "2025-11-06T07:50:14.738Z",
+        "details": "Edited Booking ID 36 ('-')",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 20,
+    "fields": {
+        "user": 1,
+        "action": "BOOKING_CREATED",
+        "timestamp": "2025-11-06T06:44:39.134Z",
+        "details": "Created Booking ID 44 ('-')",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 19,
+    "fields": {
+        "user": 1,
+        "action": "BOOKING_APPROVED",
+        "timestamp": "2025-11-06T06:43:28.824Z",
+        "details": "Approved Booking ID 35 ('-')",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 18,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "timestamp": "2025-11-06T06:43:12.469Z",
+        "details": "User admin logged in.",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 17,
+    "fields": {
+        "user": 5,
+        "action": "BOOKING_CREATED",
+        "timestamp": "2025-11-06T06:42:37.444Z",
+        "details": "Created Booking ID 35 ('-')",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 16,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "timestamp": "2025-11-06T06:40:52.767Z",
+        "details": "User User2 logged in.",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 15,
+    "fields": {
+        "user": 1,
+        "action": "BOOKING_APPROVED",
+        "timestamp": "2025-11-06T06:37:49.028Z",
+        "details": "Approved Booking ID 34 ('à¸›à¸£à¸°à¸Šà¸¸à¸¡à¸›à¸£à¸°à¸ˆà¸³à¸ªà¸±à¸›à¸”à¸²à¸«à¹Œ')",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 14,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "timestamp": "2025-11-06T06:37:41.865Z",
+        "details": "User admin logged in.",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 13,
+    "fields": {
+        "user": null,
+        "action": "BOOKING_EDITED",
+        "timestamp": "2025-11-06T06:37:28.088Z",
+        "details": "Edited Booking ID 34 ('à¸›à¸£à¸°à¸Šà¸¸à¸¡à¸›à¸£à¸°à¸ˆà¸³à¸ªà¸±à¸›à¸”à¸²à¸«à¹Œ')",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 12,
+    "fields": {
+        "user": null,
+        "action": "BOOKING_CREATED",
+        "timestamp": "2025-11-06T06:36:56.427Z",
+        "details": "Created Booking ID 34 ('à¸›à¸£à¸°à¸Šà¸¸à¸¡à¸›à¸£à¸°à¸ˆà¸³à¸ªà¸±à¸›à¸”à¸²à¸«à¹Œ')",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 11,
+    "fields": {
+        "user": null,
+        "action": "LOGIN",
+        "timestamp": "2025-11-06T06:34:03.753Z",
+        "details": "User User1 logged in.",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 10,
+    "fields": {
+        "user": 1,
+        "action": "BOOKING_CREATED",
+        "timestamp": "2025-11-06T06:32:04.527Z",
+        "details": "Created Booking ID 33 ('Ai')",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 9,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "timestamp": "2025-11-05T03:32:50.419Z",
+        "details": "User admin logged in.",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 8,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "timestamp": "2025-11-05T03:32:37.912Z",
+        "details": "User User2 logged in.",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 7,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "timestamp": "2025-11-05T03:04:38.267Z",
+        "details": "User admin logged in.",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 6,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "timestamp": "2025-11-05T02:47:20.430Z",
+        "details": "User User2 logged in.",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 5,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "timestamp": "2025-11-05T02:47:20.312Z",
+        "details": "User User2 logged in.",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 4,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "timestamp": "2025-11-05T02:41:17.805Z",
+        "details": "User admin logged in.",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 3,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "timestamp": "2025-11-05T02:37:55.067Z",
+        "details": "User User2 logged in.",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 2,
+    "fields": {
+        "user": 1,
+        "action": "BOOKING_EDITED",
+        "timestamp": "2025-11-04T08:41:05.932Z",
+        "details": "Edited Booking ID 32 ('sad')",
+        "ip_address": "127.0.0.1"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 1,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "timestamp": "2025-11-04T07:54:44.061Z",
+        "details": "User admin logged in.",
+        "ip_address": "127.0.0.1"
+    }
+}
+]

@@ -1,0 +1,10 @@
+[
+{
+  "model": "booking.equipment",
+  "pk": 1,
+  "fields": {
+    "name": "ทีวี",
+    "description": "ทีวีขนาด 55 นิ้ว"
+  }
+}
+]

@@ -12,10 +12,10 @@ SECRET_KEY = 'django-insecure-change-me-please'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 # บน Server จริง ควรเปลี่ยนเป็น False แต่ตอนนี้เปิด True ไว้ก่อนเผื่อแก้บั๊ก
-DEBUG = True
+DEBUG = False
 
 # อนุญาตให้ PythonAnywhere เข้าถึงได้
-ALLOWED_HOSTS = ['user01.pythonanywhere.com', '127.0.0.1', 'localhost']
+ALLOWED_HOSTS = ['*']
 
 # อนุญาตให้ LINE Webhook ส่งข้อมูลเข้ามาได้
 CSRF_TRUSTED_ORIGINS = [
@@ -46,6 +46,7 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -80,10 +81,19 @@ WSGI_APPLICATION = 'mysite.wsgi.application'
 # ใช้ SQLite จะเปลี่ยนเป็น sql server management studio
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'mssql',
+        'NAME': 'meeting_room',
+        'USER': 'sa',
+        'PASSWORD': 'liaMilleMig#2020',
+        'HOST': '192.168.2.254',
+        'PORT': '1433',
+        'OPTIONS': {
+            'driver': 'ODBC Driver 17 for SQL Server',
+        },
     }
 }
+
+
 
 
 # Password validation
@@ -113,11 +123,11 @@ STATICFILES_DIRS = [
 
 # [สำคัญสำหรับ PythonAnywhere] โฟลเดอร์ปลายทางที่รวบรวมไฟล์ Static จริง
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 # Media files (Uploaded files)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
-
+    
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 

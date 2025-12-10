@@ -1,0 +1,18 @@
+[
+  {
+    "model": "booking.userprofile",
+    "pk": 1,
+    "fields": {
+      "user": 1,
+      "line_user_id": "Uceb077c003771ded0106d27505b22adc"
+    }
+  },
+  {
+    "model": "booking.userprofile",
+    "pk": 2,
+    "fields": {
+      "user": 5,
+      "line_user_id": "U1f696f39b126462268562b99409e4dd7"
+    }
+  }
+]

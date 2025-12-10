@@ -1,0 +1,154 @@
+[
+{
+  "model": "booking.room",
+  "pk": 1,
+  "fields": {
+    "name": "ห้องประชุม O1-1",
+    "building": "สำนักงาน 1",
+    "floor": "-",
+    "location": null,
+    "capacity": 10,
+    "equipment_in_room": "ทีวีขนาด 55 นิ้ว จำนวน 1 เครื่อง",
+    "image": "room_images/59b07a1dfd5a80a7b422e7b8854b8392_t_AD7kLZK.jpeg",
+    "approver": 1,
+    "is_maintenance": false,
+    "maintenance_start": null,
+    "maintenance_end": null,
+    "line_notify_token": null,
+    "teams_webhook_url": null
+  }
+},
+{
+  "model": "booking.room",
+  "pk": 2,
+  "fields": {
+    "name": "ห้องประชุม O1-2",
+    "building": "สำนักงาน 1",
+    "floor": null,
+    "location": null,
+    "capacity": 6,
+    "equipment_in_room": "ทีวีขนาด 65 นิ้ว จำนวน 1 เครื่อง",
+    "image": "room_images/Preview-WS-WH-26CKH031_3eYrzuB.webp",
+    "approver": null,
+    "is_maintenance": false,
+    "maintenance_start": null,
+    "maintenance_end": null,
+    "line_notify_token": null,
+    "teams_webhook_url": null
+  }
+},
+{
+  "model": "booking.room",
+  "pk": 3,
+  "fields": {
+    "name": "ห้องประชุมใหญ่",
+    "building": "สำนักงาน 1",
+    "floor": null,
+    "location": null,
+    "capacity": 30,
+    "equipment_in_room": "โปรเจกเตอร์ฉายกำแพง ขนาด 120 นิ้ว \nระบบเครื่องขยายเสียงพร้อมไมโครโฟนไร้สาย",
+    "image": "room_images/meeting-room-828547_1280_vGmw29E.webp",
+    "approver": null,
+    "is_maintenance": false,
+    "maintenance_start": null,
+    "maintenance_end": null,
+    "line_notify_token": "Uceb077c003771ded0106d27505b22adc",
+    "teams_webhook_url": ""
+  }
+},
+{
+  "model": "booking.room",
+  "pk": 4,
+  "fields": {
+    "name": "ห้องประชุม RD 1",
+    "building": "อาคาร R & D",
+    "floor": "1",
+    "location": null,
+    "capacity": 8,
+    "equipment_in_room": "ทีวีขนาด 55 นิ้ว จำนวน 1 เครื่อง",
+    "image": "room_images/241303537_447362073195021_5854026148259524306_n-1.jpg",
+    "approver": null,
+    "is_maintenance": false,
+    "maintenance_start": null,
+    "maintenance_end": null,
+    "line_notify_token": null,
+    "teams_webhook_url": null
+  }
+},
+{
+  "model": "booking.room",
+  "pk": 5,
+  "fields": {
+    "name": "ห้องประชุม RD 2",
+    "building": "อาคาร R & D",
+    "floor": "2",
+    "location": null,
+    "capacity": 12,
+    "equipment_in_room": "ทีวีขนาด 65 นิ้ว จำนวน 3 เครื่อง \nระบบเครื่องขยายเสียงพร้อมไมโครโฟนไร้สาย",
+    "image": "room_images/Equipment-หองประชมใหญ_oUV5z2s.jpg",
+    "approver": null,
+    "is_maintenance": false,
+    "maintenance_start": null,
+    "maintenance_end": null,
+    "line_notify_token": null,
+    "teams_webhook_url": null
+  }
+},
+{
+  "model": "booking.room",
+  "pk": 6,
+  "fields": {
+    "name": "ห้องประชุม RD 3",
+    "building": "อาคาร R & D",
+    "floor": "2",
+    "location": null,
+    "capacity": 10,
+    "equipment_in_room": "ไม่มีอุปกรณ์พิเศษ",
+    "image": "room_images/pexels-photo-2976970_7BA2Nd5.webp",
+    "approver": null,
+    "is_maintenance": false,
+    "maintenance_start": null,
+    "maintenance_end": null,
+    "line_notify_token": null,
+    "teams_webhook_url": ""
+  }
+},
+{
+  "model": "booking.room",
+  "pk": 7,
+  "fields": {
+    "name": "ห้องประชุม RD 4",
+    "building": "อาคาร R & D",
+    "floor": "2",
+    "location": null,
+    "capacity": 20,
+    "equipment_in_room": "โปรเจกเตอร์ฉายกำแพง ขนาด 120 นิ้ว\nทีวีขนาด 32 นิ้ว จำนวน 3 เครื่อง \nระบบเครื่องขยายเสียงพร้อมไมโครโฟนประจำห้อง",
+    "image": "room_images/depositphotos_114546670-stock-photo-conference-table-closeup-toning_oShla9K.jpg",
+    "approver": null,
+    "is_maintenance": false,
+    "maintenance_start": null,
+    "maintenance_end": null,
+    "line_notify_token": "Uceb077c003771ded0106d27505b22adc",
+    "teams_webhook_url": ""
+  }
+},
+{
+  "model": "booking.room",
+  "pk": 8,
+  "fields": {
+    "name": "ห้องประชุม TEIL",
+    "building": "สำนักงาน TEIL",
+    "floor": "4",
+    "location": null,
+    "capacity": 20,
+    "equipment_in_room": "โปรเจกเตอร์ฉายกำแพง ขนาด 120 นิ้ว",
+    "image": "room_images/istockphoto-157640822-1024x1024_twBSx2X.jpg",
+    "approver": null,
+    "is_maintenance": false,
+    "maintenance_start": null,
+    "maintenance_end": null,
+    "line_notify_token": "Uceb077c003771ded0106d27505b22adc",
+    "teams_webhook_url": ""
+  }
+}
+]
