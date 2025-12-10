@@ -46,11 +46,11 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # WhiteNoise ต้องอยู่นี่
 ]
 
 ROOT_URLCONF = 'mysite.urls'
@@ -78,14 +78,13 @@ WSGI_APPLICATION = 'mysite.wsgi.application'
 
 
 # Database
-# ใช้ SQLite จะเปลี่ยนเป็น sql server management studio
+# ใช้ SQLite สำหรับ PythonAnywhere
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
-
 
 
 # Password validation
@@ -116,6 +115,7 @@ STATICFILES_DIRS = [
 # [สำคัญสำหรับ PythonAnywhere] โฟลเดอร์ปลายทางที่รวบรวมไฟล์ Static จริง
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
 # Media files (Uploaded files)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
@@ -143,12 +143,10 @@ DEFAULT_FROM_EMAIL = 'ระบบจองห้องประชุม <no-re
 # 4. LINE Messaging API Settings
 # --------------------------------------------------
 LINE_CHANNEL_SECRET = '297c1a8c67e6a6f7fb6849e2674e46f7'
-
-# Token ยาว
 LINE_CHANNEL_ACCESS_TOKEN = 'GnoNpDFeLx48BmqV+nv8I10XsdfSx0wqS3V6W9ZXnvBY3vEAav1fWM/Vy0aPYeUXQtcrLYzuJNTnNtnuQbgmXcGimHBBLz1pt/cyVbWi6yqzdIC9mzfR2CrHksKQOL/nDui7SieM0zRHt+6Pe8DGKQdB04t89/1O/w1cDnyilFU='
 # --------------------------------------------------
 
-# 5. Azure / Outlook (ถ้ายังไม่ได้ใช้ ปล่อยไว้ก่อนได้ครับ)
+# 5. Azure / Outlook
 AZURE_CLIENT_ID = 'YOUR_AZURE_CLIENT_ID'
 AZURE_CLIENT_SECRET = 'YOUR_AZURE_CLIENT_SECRET'
 AZURE_REDIRECT_URI = 'http://127.0.0.1:8000/outlook/callback/'
