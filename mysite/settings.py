@@ -15,7 +15,7 @@ SECRET_KEY = 'django-insecure-change-me-please'
 DEBUG = False
 
 # อนุญาตให้ PythonAnywhere เข้าถึงได้
-ALLOWED_HOSTS = ['user01.pythonanywhere.com', 'localhost']
+ALLOWED_HOSTS = ['user01.pythonanywhere.com', 'localhost', '127.0.0.1']
 
 # อนุญาตให้ LINE Webhook ส่งข้อมูลเข้ามาได้
 CSRF_TRUSTED_ORIGINS = [
