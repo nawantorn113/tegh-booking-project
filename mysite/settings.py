@@ -81,18 +81,10 @@ WSGI_APPLICATION = 'mysite.wsgi.application'
 # ใช้ SQLite จะเปลี่ยนเป็น sql server management studio
 DATABASES = {
     'default': {
-        'ENGINE': 'mssql',
-        'NAME': 'meeting_room',
-        'USER': 'sa',
-        'PASSWORD': 'liaMilleMig#2020',
-        'HOST': '192.168.2.254',
-        'PORT': '1433',
-        'OPTIONS': {
-            'driver': 'ODBC Driver 17 for SQL Server',
-        },
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
-
 
 
 
