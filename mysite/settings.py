@@ -15,7 +15,7 @@ SECRET_KEY = 'django-insecure-change-me-please'
 DEBUG = False
 
 # อนุญาตให้ PythonAnywhere เข้าถึงได้
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['user01.pythonanywhere.com', 'localhost']
 
 # อนุญาตให้ LINE Webhook ส่งข้อมูลเข้ามาได้
 CSRF_TRUSTED_ORIGINS = [
@@ -127,7 +127,7 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 # Media files (Uploaded files)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
-    
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
