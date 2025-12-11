@@ -45,7 +45,7 @@ class BookingForm(forms.ModelForm):
             'department': 'แผนกผู้จอง', 'start_time': 'วัน/เวลา เริ่มต้น', 'end_time': 'วัน/เวลา สิ้นสุด',
             'participant_count': 'จำนวนผู้เข้าร่วม (โดยประมาณ)', 'participants': 'รายชื่อผู้เข้าร่วม (ในระบบ)',
             'presentation_file': 'ไฟล์นำเสนอ (ถ้ามี)', 'description': 'รายละเอียด/วาระการประชุม',
-            'additional_requests': 'คำขอเพิ่มเติม (เช่น กาแฟ, อุปกรณ์พิเศษ)', 'additional_notes': 'หมายเหตุเพิ่มเติม',
+            'additional_requests': 'คำขอเพิ่มเติม (เช่นอุปกรณ์เสริมเพิ่มเติม)', 'additional_notes': 'หมายเหตุเพิ่มเติม',
         }
         help_texts = {
             'participants': 'พิมพ์ชื่อ, นามสกุล, หรือ username เพื่อค้นหา (ผู้ใช้ในระบบ)',
@@ -67,7 +67,7 @@ class BookingForm(forms.ModelForm):
             'additional_notes': forms.Textarea(attrs={'rows': 2, 'class':'form-control'}),
             'title': forms.TextInput(attrs={'class':'form-control'}),
             'chairman': forms.TextInput(attrs={'class':'form-control'}),
-            'department': forms.TextInput(attrs={'class':'form-control', 'placeholder': 'เช่น IT, HR, บัญชี'}),
+            'department': forms.TextInput(attrs={'class':'form-control', 'placeholder': ''}),
             'participant_count': forms.NumberInput(attrs={'min': '1', 'class':'form-control'}),
         }
 
