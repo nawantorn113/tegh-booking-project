@@ -140,19 +140,19 @@ def get_base_context(request):
 
     if request.user.is_authenticated:
         if is_approver_or_admin(request.user):
-            rooms_we_approve = Q(room__approver=request.user)
-            rooms_for_central_admin = Q(room__approver__isnull=True)
-            
+            # --- UPDATE: Logic การดึงรายการรออนุมัติ ---
             if is_admin(request.user):
-                pending_query = rooms_we_approve | rooms_for_central_admin
+                # Admin เห็นรายการ PENDING ทั้งหมด (ไม่ว่าจะห้องไหน หรือขออุปกรณ์เฉยๆ)
+                qs = Booking.objects.filter(status='PENDING').select_related('room', 'user').order_by('-created_at')
             else:
-                pending_query = rooms_we_approve
+                # Approver เห็นเฉพาะห้องที่ตัวเองดูแล
+                qs = Booking.objects.filter(room__approver=request.user, status='PENDING').select_related('room', 'user').order_by('-created_at')
             
-            qs = Booking.objects.filter(pending_query, status='PENDING').select_related('room', 'user').order_by('-created_at')
             pending_count = qs.count()
             pending_notifications = qs[:10]
         
         else:
+            # User เห็นรายการของตัวเองที่สถานะเปลี่ยนและยังไม่ได้กดอ่าน
             qs = Booking.objects.filter(
                 user=request.user,
                 is_user_seen=False
@@ -183,6 +183,7 @@ def mark_notification_read(request, booking_id):
         return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 
 def send_booking_notification(booking, template_name, subject_prefix):
+    # --- UPDATE: เพิ่มการดึงรายชื่ออุปกรณ์ลงในข้อความ ---
     equip_text = "-"
     if hasattr(booking, 'equipments') and booking.equipments.exists():
         equip_names = [eq.name for eq in booking.equipments.all()]
@@ -191,7 +192,20 @@ def send_booking_notification(booking, template_name, subject_prefix):
     note_text = booking.additional_requests if booking.additional_requests else "-"
     start_str = booking.start_time.strftime('%d/%m/%Y %H:%M')
     end_str = booking.end_time.strftime('%H:%M')
+    user_name = booking.user.get_full_name() or booking.user.username
 
+    msg = (f"{subject_prefix}\n"
+           f"-------------------------\n"
+           f"ผู้จอง: {user_name}\n"
+           f"ห้อง: {booking.room.name}\n"
+           f"เรื่อง: {booking.title}\n"
+           f"เวลา: {start_str} - {end_str}\n"
+           f"อุปกรณ์ที่ขอ: {equip_text}\n"  # แสดงอุปกรณ์ชัดเจน
+           f"เพิ่มเติม: {note_text}\n"
+           f"-------------------------\n"
+           f"สถานะ: {booking.get_status_display()}")
+
+    # 1. ส่ง LINE
     if line_bot_api:
         line_targets = set()
         try:
@@ -212,20 +226,23 @@ def send_booking_notification(booking, template_name, subject_prefix):
                     line_targets.add(admin.profile.line_user_id)
             except: pass
 
-        msg = (f"{subject_prefix}\n-------------------------\n"
-               f"ผู้จอง: {booking.user.get_full_name() or booking.user.username}\n"
-               f"ห้อง: {booking.room.name}\n"
-               f"เรื่อง: {booking.title}\n"
-               f"เวลา: {start_str} - {end_str}\n"
-               f"อุปกรณ์: {equip_text}\n"
-               f"เพิ่มเติม: {note_text}\n"
-               f"-------------------------\n"
-               f"สถานะ: {booking.get_status_display()}")
-
         for uid in line_targets:
             if uid:
                 try: line_bot_api.push_message(uid, TextSendMessage(text=msg))
                 except: pass
+
+    # 2. ส่ง Email หา Admin (เพื่อให้ Admin เห็นอุปกรณ์แน่นอน)
+    admin_emails = get_admin_emails()
+    if admin_emails:
+        try:
+            send_mail(
+                subject=f"[{subject_prefix}] จองห้อง: {booking.title}",
+                message=msg,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=admin_emails,
+                fail_silently=True,
+            )
+        except: pass
 
 # ----------------------------------------------------------------------
 # B. AUTH VIEWS
@@ -382,7 +399,7 @@ def room_calendar_view(request, room_id):
             recurrence = form.cleaned_data.get('recurrence')
             recurrence_end_date = form.cleaned_data.get('recurrence_end_date')
             
-            # เช็คว่ามีการขออุปกรณ์เพิ่มเติมหรือไม่ (ถ้ามี -> ต้องรออนุมัติ)
+            # เช็คอุปกรณ์เพิ่ม
             has_equipments = bool(form.cleaned_data.get('equipments'))
 
             base_booking = form.save(commit=False)
@@ -429,14 +446,14 @@ def room_calendar_view(request, room_id):
                         presentation_file=base_booking.presentation_file
                     )
                     
-                    # --- [อัปเดต] Logic การอนุมัติ ---
-                    # 1. ห้องที่ติ๊ก requires_approval (Teil, Rd4, Rd2, ห้องใหญ่) -> ต้องรออนุมัติ
-                    # 2. หรือ มีการขออุปกรณ์เพิ่ม (has_equipments) -> ต้องรออนุมัติ
+                    # --- UPDATE: Logic การอนุมัติ (Pending) ---
+                    # 1. ห้องที่ต้องรออนุมัติ (Teil, Rd4, etc.)
+                    # 2. OR มีการขออุปกรณ์เพิ่ม (has_equipments)
                     if room.requires_approval or has_equipments:
                          new_b.status = 'PENDING'
                     else:
                          new_b.status = 'APPROVED'
-                    # ------------------------------
+                    # ----------------------------------------
                     
                     new_b.save()
                     
@@ -455,7 +472,7 @@ def room_calendar_view(request, room_id):
                                 new_b.save(update_fields=['outlook_event_id'])
                             except: pass
                     
-                    # ส่งแจ้งเตือนหาแอดมินทุกครั้ง (ไม่ว่าจะสถานะไหน)
+                    # แจ้งเตือนหา Admin (ส่งครั้งเดียวต่อ 1 การกดจอง)
                     if count == 0: 
                         subject = 'โปรดอนุมัติรายการใหม่' if new_b.status == 'PENDING' else 'มีการจองห้องประชุมใหม่'
                         send_booking_notification(new_b, '', subject)
@@ -570,9 +587,15 @@ def delete_booking_view(request, booking_id):
 @login_required
 def approvals_view(request):
     if not is_approver_or_admin(request.user): return redirect('dashboard')
-    query = Q(room__approver=request.user)
-    if is_admin(request.user): query |= Q(room__approver__isnull=True)
-    bookings = Booking.objects.filter(query, status='PENDING').select_related('room', 'user').order_by('start_time')
+    
+    # --- UPDATE: Logic การดึงรายการในหน้าอนุมัติ ---
+    if is_admin(request.user):
+        # Admin เห็นทุกรายการที่รออนุมัติ (ครอบคลุมกรณีขออุปกรณ์ในห้องธรรมดา)
+        bookings = Booking.objects.filter(status='PENDING').select_related('room', 'user').order_by('start_time')
+    else:
+        # Approver เห็นแค่ห้องตัวเอง
+        bookings = Booking.objects.filter(room__approver=request.user, status='PENDING').select_related('room', 'user').order_by('start_time')
+    
     return render(request, 'pages/approvals.html', {**get_base_context(request), 'pending_bookings': bookings})
 
 @login_required
@@ -838,11 +861,12 @@ def api_pending_count(request):
     count = 0
     latest_booking = None
     if is_approver_or_admin(request.user):
-        rooms_we_approve = Q(room__approver=request.user)
-        rooms_for_central_admin = Q(room__approver__isnull=True)
-        if is_admin(request.user): base_query = rooms_we_approve | rooms_for_central_admin
-        else: base_query = rooms_we_approve
-        pending_qs = Booking.objects.filter(base_query, status='PENDING').order_by('-created_at')
+        # --- UPDATE: Logic ดึงจำนวนรออนุมัติให้ตรงกับ get_base_context ---
+        if is_admin(request.user):
+            pending_qs = Booking.objects.filter(status='PENDING').order_by('-created_at')
+        else:
+            pending_qs = Booking.objects.filter(room__approver=request.user, status='PENDING').order_by('-created_at')
+            
         count = pending_qs.count()
         new_b = pending_qs.filter(created_at__gte=timezone.now() - timedelta(seconds=10)).first()
         if new_b:
