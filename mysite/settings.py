@@ -12,7 +12,7 @@ SECRET_KEY = 'django-insecure-change-me-please'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 # บน Server จริง ควรเปลี่ยนเป็น False แต่ตอนนี้เปิด True ไว้ก่อนเผื่อแก้บั๊ก
-DEBUG = False
+DEBUG = True
 
 # อนุญาตให้ PythonAnywhere เข้าถึงได้
 ALLOWED_HOSTS = ['user01.pythonanywhere.com', 'localhost', '127.0.0.1']
