@@ -26,7 +26,6 @@ from django.utils import timezone
 from django.contrib.auth.forms import AuthenticationForm
 from django.views.decorators.csrf import csrf_exempt
 
-# --- Library Optional (ถ้าไม่มีจะไม่ Error แต่ฟีเจอร์นั้นจะใช้ไม่ได้) ---
 try:
     from weasyprint import HTML, CSS
 except ImportError:
@@ -41,12 +40,10 @@ except ImportError:
     LineBotApi = None
     WebhookHandler = None
 
-# --- Import Models & Forms ภายในโปรเจกต์ ---
 from .models import Room, Booking, AuditLog, OutlookToken, UserProfile, Equipment
 from .forms import BookingForm, RoomForm, CustomUserCreationForm, EquipmentForm
 from .outlook_client import OutlookClient
 
-# --- Global Configurations ---
 line_bot_api = None
 handler = None
 if hasattr(settings, 'LINE_CHANNEL_ACCESS_TOKEN') and hasattr(settings, 'LINE_CHANNEL_SECRET'):
@@ -57,7 +54,7 @@ if hasattr(settings, 'LINE_CHANNEL_ACCESS_TOKEN') and hasattr(settings, 'LINE_CH
         pass
 
 # ----------------------------------------------------------------------
-# A. HELPER FUNCTIONS (ฟังก์ชันช่วยทำงานทั่วไป)
+# A. HELPER FUNCTIONS
 # ----------------------------------------------------------------------
 
 def is_admin(user):
@@ -108,7 +105,6 @@ def get_valid_token(user, request):
         return None
 
 def get_base_context(request):
-    """ สร้าง Context พื้นฐานสำหรับ Sidebar และ Menu """
     current_url_name = request.resolver_match.url_name if request.resolver_match else ''
     is_admin_user = is_admin(request.user)
 
@@ -157,7 +153,6 @@ def get_base_context(request):
             pending_notifications = qs[:10]
         
         else:
-            # User เห็นรายการที่รู้ผลแล้ว และยังไม่ได้กดอ่าน
             qs = Booking.objects.filter(
                 user=request.user,
                 is_user_seen=False
@@ -174,9 +169,6 @@ def get_base_context(request):
         'pending_notifications': pending_notifications,
     }
 
-# ----------------------------------------------------------------------
-# API FUNCTION FOR MARK AS READ
-# ----------------------------------------------------------------------
 @login_required
 @require_POST
 def mark_notification_read(request, booking_id):
@@ -390,6 +382,9 @@ def room_calendar_view(request, room_id):
             recurrence = form.cleaned_data.get('recurrence')
             recurrence_end_date = form.cleaned_data.get('recurrence_end_date')
             
+            # เช็คว่ามีการขออุปกรณ์เพิ่มเติมหรือไม่ (ถ้ามี -> ต้องรออนุมัติ)
+            has_equipments = bool(form.cleaned_data.get('equipments'))
+
             base_booking = form.save(commit=False)
             base_booking.room = room
             base_booking.user = request.user
@@ -434,11 +429,15 @@ def room_calendar_view(request, room_id):
                         presentation_file=base_booking.presentation_file
                     )
                     
-                    needs_approve = (new_b.participant_count and new_b.participant_count >= 15) or \
-                                    bool(new_b.additional_requests) or \
-                                    (room.approver is not None)
+                    # --- [อัปเดต] Logic การอนุมัติ ---
+                    # 1. ห้องที่ติ๊ก requires_approval (Teil, Rd4, Rd2, ห้องใหญ่) -> ต้องรออนุมัติ
+                    # 2. หรือ มีการขออุปกรณ์เพิ่ม (has_equipments) -> ต้องรออนุมัติ
+                    if room.requires_approval or has_equipments:
+                         new_b.status = 'PENDING'
+                    else:
+                         new_b.status = 'APPROVED'
+                    # ------------------------------
                     
-                    new_b.status = 'PENDING' if needs_approve else 'APPROVED'
                     new_b.save()
                     
                     if 'participants' in form.cleaned_data: new_b.participants.set(form.cleaned_data['participants'])
@@ -456,7 +455,11 @@ def room_calendar_view(request, room_id):
                                 new_b.save(update_fields=['outlook_event_id'])
                             except: pass
                     
-                    if count == 0: send_booking_notification(new_b, '', ('โปรดอนุมัติ' if new_b.status == 'PENDING' else 'จองสำเร็จ'))
+                    # ส่งแจ้งเตือนหาแอดมินทุกครั้ง (ไม่ว่าจะสถานะไหน)
+                    if count == 0: 
+                        subject = 'โปรดอนุมัติรายการใหม่' if new_b.status == 'PENDING' else 'มีการจองห้องประชุมใหม่'
+                        send_booking_notification(new_b, '', subject)
+
                     count += 1
 
                 messages.success(request, f"จองสำเร็จ {count} รายการ")
@@ -465,8 +468,6 @@ def room_calendar_view(request, room_id):
         form = BookingForm(initial={'room': room})
     
     return render(request, 'pages/room_calendar.html', {**get_base_context(request), 'room': room, 'form': form})
-
-
 
 @login_required
 def master_calendar_view(request):
