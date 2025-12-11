@@ -26,6 +26,7 @@ from django.utils import timezone
 from django.contrib.auth.forms import AuthenticationForm
 from django.views.decorators.csrf import csrf_exempt
 
+# --- Library Optional (ถ้าไม่มีจะไม่ Error แต่ฟีเจอร์นั้นจะใช้ไม่ได้) ---
 try:
     from weasyprint import HTML, CSS
 except ImportError:
@@ -40,10 +41,12 @@ except ImportError:
     LineBotApi = None
     WebhookHandler = None
 
+# --- Import Models & Forms ภายในโปรเจกต์ ---
 from .models import Room, Booking, AuditLog, OutlookToken, UserProfile, Equipment
-from .forms import BookingForm,RoomForm, CustomUserCreationForm, EquipmentForm
+from .forms import BookingForm, RoomForm, CustomUserCreationForm, EquipmentForm
 from .outlook_client import OutlookClient
 
+# --- Global Configurations ---
 line_bot_api = None
 handler = None
 if hasattr(settings, 'LINE_CHANNEL_ACCESS_TOKEN') and hasattr(settings, 'LINE_CHANNEL_SECRET'):
@@ -54,7 +57,7 @@ if hasattr(settings, 'LINE_CHANNEL_ACCESS_TOKEN') and hasattr(settings, 'LINE_CH
         pass
 
 # ----------------------------------------------------------------------
-# A. HELPER FUNCTIONS
+# A. HELPER FUNCTIONS (ฟังก์ชันช่วยทำงานทั่วไป)
 # ----------------------------------------------------------------------
 
 def is_admin(user):
@@ -105,6 +108,7 @@ def get_valid_token(user, request):
         return None
 
 def get_base_context(request):
+    """ สร้าง Context พื้นฐานสำหรับ Sidebar และ Menu """
     current_url_name = request.resolver_match.url_name if request.resolver_match else ''
     is_admin_user = is_admin(request.user)
 
@@ -461,6 +465,8 @@ def room_calendar_view(request, room_id):
         form = BookingForm(initial={'room': room})
     
     return render(request, 'pages/room_calendar.html', {**get_base_context(request), 'room': room, 'form': form})
+
+
 
 @login_required
 def master_calendar_view(request):

@@ -42,6 +42,7 @@ class Room(models.Model):
     is_maintenance = models.BooleanField(default=False, verbose_name="สถานะปิดปรับปรุง")
     maintenance_start = models.DateTimeField(null=True, blank=True, verbose_name="เริ่มปิดปรับปรุง")
     maintenance_end = models.DateTimeField(null=True, blank=True, verbose_name="สิ้นสุดปิดปรับปรุง")
+    requires_approval = models.BooleanField(default=False, verbose_name="ต้องรออนุมัติ")
     
     line_notify_token = models.CharField(max_length=50, blank=True, null=True, verbose_name="Line Notify Token")
     teams_webhook_url = models.TextField(blank=True, null=True, verbose_name="Teams Webhook URL")
