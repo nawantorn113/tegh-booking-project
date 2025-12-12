@@ -8,6 +8,7 @@
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <style>
         body {
@@ -40,23 +41,9 @@
             transform: translateY(-5px);
         }
 
-        .login-header h1 {
-            font-weight: 700;
-            color: #343a40;
-            font-size: 2.2rem;
-            letter-spacing: -0.5px;
-            margin-bottom: 10px;
-        }
-
-        .login-header p {
-            color: #6c757d;
-            font-size: 0.95rem;
-            margin-bottom: 30px;
-        }
-
-        /* --- ปรับปรุง CSS Input Group ให้รองรับปุ่มกดดูรหัส --- */
+        /* --- ปรับปรุง CSS Input Group --- */
         .input-group-login .form-control {
-            border-radius: 8px; /* ค่าเดิมของคุณ */
+            border-radius: 8px;
             border: 1px solid #ced4da;
             padding: 12px 15px;
             font-size: 1rem;
@@ -66,7 +53,7 @@
         .input-group-login .form-control:not(:last-child) {
             border-top-right-radius: 0;
             border-bottom-right-radius: 0;
-            border-right: 0; /* ซ่อนเส้นขวาเพื่อให้เนียนกับปุ่ม */
+            border-right: 0;
         }
 
         .input-group-login .input-group-text {
@@ -75,7 +62,7 @@
             border: 1px solid #ced4da;
         }
 
-        /* ปุ่มกดดูรหัสผ่าน (เพิ่มใหม่) */
+        /* ปุ่มกดดูรหัสผ่าน */
         .btn-password-toggle {
             border-top-right-radius: 8px !important;
             border-bottom-right-radius: 8px !important;
@@ -83,20 +70,14 @@
             border-left: 0;
             background-color: white;
             color: #6c757d;
-            z-index: 4; /* ให้ปุ่มอยู่ชั้นบน */
+            z-index: 4;
         }
         .btn-password-toggle:hover {
             background-color: #f8f9fa;
             color: #6f42c1;
-            border-color: #ced4da;
-        }
-        .btn-password-toggle:focus {
-            box-shadow: none; /* ลบเงาเวลาคลิก */
-            border-color: #ced4da;
         }
 
-        /* ---------------------------------------------------- */
-
+        /* --- ปุ่มหลัก (Login) --- */
         .btn-main {
             background-color: #6f42c1;
             border-color: #6f42c1;
@@ -133,10 +114,8 @@
         .form-control:focus {
             box-shadow: 0 0 0 0.25rem rgba(111, 66, 193, 0.25);
             border-color: #6f42c1;
-            z-index: 3; /* ให้ Input ลอยเหนือปุ่มอื่นๆเวลา Focus */
+            z-index: 3;
         }
-        
-        @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap');
     </style>
 </head>
 <body>
@@ -147,7 +126,7 @@
 
         {% if messages %}
             {% for message in messages %}
-                <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm small" role="alert">
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm small text-start" role="alert">
                     <i class="bi bi-info-circle-fill me-2"></i>{{ message }}
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
@@ -156,29 +135,28 @@
 
         <div class="card login-card mt-4">
             <div class="card-body">
+                
                 <form method="post" action="{% url 'login' %}" class="needs-validation" novalidate>
                     {% csrf_token %}
 
                     <div class="mb-3 input-group input-group-login">
                         <span class="input-group-text"><i class="bi bi-person-fill"></i></span>
                         <input type="text" name="username" class="form-control" placeholder="ชื่อผู้ใช้" required autofocus>
-                        <div class="invalid-feedback">กรุณากรอกชื่อผู้ใช้</div>
+                        <div class="invalid-feedback text-start">กรุณากรอกชื่อผู้ใช้</div>
                     </div>
 
                     <div class="mb-4 input-group input-group-login">
                         <span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
                         <input type="password" name="password" class="form-control" placeholder="รหัสผ่าน" required id="id_password">
                         
-                        <button class="btn btn-password-toggle" type="button" id="togglePassword">
+                        <button class="btn btn-password-toggle" type="button" id="togglePassword" tabindex="-1">
                             <i class="bi bi-eye" id="toggleIcon"></i>
                         </button>
                         
-                        <div class="invalid-feedback">กรุณากรอกรหัสผ่าน</div>
+                        <div class="invalid-feedback text-start">กรุณากรอกรหัสผ่าน</div>
                     </div>
 
-                    <button type="submit" class="btn btn-main w-100 mb-3">
-                        <i class="bi bi-box-arrow-in-right me-2"></i> เข้าสู่ระบบ
-                    </button>
+                    <button type="submit" class="btn btn-main w-100 mb-3">เข้าสู่ระบบ</button>
                 </form>
 
                 {% if enable_sso %}
@@ -210,11 +188,9 @@
 
         if (toggleBtn && passwordInput) {
             toggleBtn.addEventListener('click', function () {
-                // เช็คสถานะปัจจุบัน
                 const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
                 passwordInput.setAttribute('type', type);
                 
-                // เปลี่ยนไอคอน
                 if (type === 'text') {
                     toggleIcon.classList.remove('bi-eye');
                     toggleIcon.classList.add('bi-eye-slash');
@@ -225,7 +201,7 @@
             });
         }
 
-        // 2. Bootstrap Form Validation (ตรวจสอบค่าว่าง)
+        // 2. Bootstrap Form Validation
         (function () {
             'use strict'
             var forms = document.querySelectorAll('.needs-validation')

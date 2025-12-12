@@ -313,7 +313,7 @@ def public_calendar_view(request):
     ctx.update({'all_rooms': Room.objects.all(), 'is_public_view': True})
     return render(request, 'pages/master_calendar.html', ctx)
 
-@login_required
+@login_required 
 def smart_search_view(request):
     query = request.GET.get('q', '').strip()
     rooms = Room.objects.all()
