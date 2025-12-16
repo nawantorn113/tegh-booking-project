@@ -4,66 +4,51 @@
 
 {% block extra_head %}
 <style>
+    /* --- Card Styles --- */
     .kpi-card:hover, .room-card-hover:hover {
         transform: translateY(-3px);
         box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1) !important;
         transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
     }
-    .kpi-card .card-body {
-         padding: 1rem; /* ลด padding เล็กน้อยเพื่อให้กระชับในมือถือ */
-    }
-    .room-card .card-body {
-         padding: 1.25rem; 
-    }
-    .kpi-icon {
-        font-size: 2rem; /* ลดขนาดไอคอนเล็กน้อย */
-        opacity: 0.2;
-    }
+    .kpi-card .card-body { padding: 1rem; }
+    .room-card .card-body { padding: 1.25rem; }
+    .kpi-icon { font-size: 2rem; opacity: 0.2; }
     .section-divider {
-        margin-top: 1.5rem;    
-        margin-bottom: 1.5rem; 
-        border-color: #adb5bd; 
-        border-top-width: 1px; 
-        opacity: 0.5; 
+        margin-top: 1.5rem; margin-bottom: 1.5rem; 
+        border-color: #adb5bd; border-top-width: 1px; opacity: 0.5; 
     }
-    .room-maintenance {
-        background-color: #f8f8f8;
-        opacity: 0.9;
-    }
-    .btn-maintenance-alert {
-        background-color: #e9ecef;
-        color: #6c757d;
-        border-color: #ced4da;
-    }
-    .btn-maintenance-alert:hover {
-        background-color: #d1d5db;
-        color: #495057;
-    }
+    .room-maintenance { background-color: #f8f8f8; opacity: 0.9; }
+    .btn-maintenance-alert { background-color: #e9ecef; color: #6c757d; border-color: #ced4da; }
+    .btn-maintenance-alert:hover { background-color: #d1d5db; color: #495057; }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid px-0"> {# --- Smart Search Box (กล่องค้นหา) --- #}
-    <div class="row mb-3">
+<div class="container-fluid px-0">
+
+    {# --- ส่วนหัว: ช่องค้นหา (ลบกระดิ่งออกแล้ว) --- #}
+    <div class="row mb-4">
         <div class="col-12">
             <form action="{% url 'smart_search' %}" method="get">
-                <label for="smartSearchInput" class="form-label h5 fw-bold text-primary"><h5>ค้นหาห้องว่าง</h5></label>
-                <div class="input-group ">
-                    <input type="text" class="form-control rounded-start-pill border-end-0" 
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0 rounded-start-pill ps-3">
+                        <i class="bi bi-search text-muted"></i>
+                    </span>
+                    <input type="text" class="form-control border-start-0 rounded-end-pill py-2 bg-white shadow-sm" 
                            name="q" id="smartSearchInput" 
-                           placeholder=""
+                           placeholder="ค้นหาห้องว่าง..." 
                            value="{{ query_text|default:'' }}">
-                    <button class="btn btn-primary rounded-end-pill px-4" type="submit">
-                        <i class="bi bi-search me-1"></i> <span class="d-none d-sm-inline">ค้นหา</span>
+                    <button class="btn btn-primary rounded-pill px-4 ms-2 shadow-sm" type="submit">
+                        ค้นหา
                     </button>
                 </div>
             </form>
         </div>
     </div>
     
-    <hr class="section-divider">
+    <hr class="section-divider mt-0">
     
-    {# --- KPI Cards Section (ปรับ Grid ให้ Responsive ดีขึ้น) --- #}
+    {# --- KPI Cards Section --- #}
     <div class="row g-3 mb-4">
         <div class="col-12 col-sm-6 col-xl-3">
             <div class="card kpi-card border-start border-primary border-3 shadow-sm h-100">
@@ -113,6 +98,7 @@
 
     <hr class="section-divider">
     
+    {# --- Room List Section --- #}
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
         <h2 class="mb-0 fw-bold text-primary fs-3">สถานะห้องประชุม</h2>
         

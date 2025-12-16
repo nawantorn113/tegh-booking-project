@@ -15,6 +15,7 @@
         body { background-color: #f0f2f5; font-family: 'Kanit', sans-serif; padding-top: 70px; }
         .main-content-wrapper { padding-bottom: 2rem; }
         
+        /* Navbar Styles */
         .navbar { background-color: #ffffff; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08); min-height: 60px; padding: 0; }
         .navbar-brand { color: #1877f2 !important; font-weight: 700; font-size: 1.3rem; display: flex; align-items: center; }
         
@@ -22,31 +23,49 @@
         .nav-pills .nav-link:hover { background-color: #f2f2f2; color: #1c1e21; }
         .nav-pills .nav-link.active { background-color: #e7f3ff; color: #1877f2; font-weight: 600; }
         
-        .btn-circle-fb { width: 40px; height: 40px; background-color: #e4e6eb; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #050505; text-decoration: none; transition: background-color 0.2s; cursor: pointer; border: none; position: relative; }
-        .btn-circle-fb:hover { background-color: #d8dadf; color: #1877f2; }
-        
-        .badge-fb { position: absolute; top: -2px; right: -2px; background-color: #e41e3f; color: white; font-size: 0.65rem; padding: 2px 5px; border-radius: 10px; min-width: 18px; border: 2px solid #fff; line-height: 1; }
-        
-        .dropdown-menu-fb { 
-            width: 320px; 
-            border-radius: 8px; 
-            border: none; 
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15); 
-            margin-top: 10px; 
-            overflow: hidden;
-            right: 0 !important; 
-            left: auto !important;
+        /* Notification Bell (Facebook Style) */
+        .btn-circle-fb { 
+            width: 40px; height: 40px; 
+            background-color: #e4e6eb; 
+            border-radius: 50%; 
+            display: flex; align-items: center; justify-content: center; 
+            color: #050505; text-decoration: none; 
+            transition: background-color 0.2s; 
+            cursor: pointer; border: none; position: relative; 
+        }
+        .btn-circle-fb:hover, .btn-circle-fb[aria-expanded="true"] { 
+            background-color: #e7f3ff; color: #1877f2; 
         }
         
-        .dropdown-header-fb { padding: 10px 16px; font-size: 1rem; font-weight: 700; background-color: #fff; }
-        .notify-item-fb { display: flex; align-items: center; padding: 8px 16px; text-decoration: none; color: inherit; transition: background-color 0.2s; }
-        .notify-item-fb:hover { background-color: #f0f2f5; }
-        .notify-avatar { width: 40px; height: 40px; border-radius: 50%; background-color: #e7f3ff; color: #1877f2; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; margin-right: 12px; flex-shrink: 0; }
-        .notify-content { flex: 1; min-width: 0; }
-        .notify-content strong { font-size: 0.9rem; display: block; line-height: 1.2; margin-bottom: 2px; }
-        .notify-content span { font-size: 0.8rem; color: #65676b; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .notify-time { font-size: 0.75rem; color: #1877f2; font-weight: 500; }
+        /* Badge แจ้งเตือน */
+        .badge-fb { 
+            position: absolute; top: -2px; right: -2px; 
+            background-color: #e41e3f; color: white; 
+            font-size: 0.75rem; font-weight: bold; padding: 2px 5px; 
+            border-radius: 10px; min-width: 18px; 
+            border: 2px solid #fff; line-height: 1; text-align: center;
+        }
         
+        /* Dropdown Menu */
+        .dropdown-menu-fb { 
+            width: 360px; 
+            border-radius: 8px; border: none; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15); 
+            margin-top: 10px; overflow: hidden;
+            right: 0 !important; left: auto !important;
+        }
+        
+        .dropdown-header-fb { padding: 10px 16px; font-size: 1.1rem; font-weight: 700; background-color: #fff; }
+        
+        /* Dropdown Item */
+        .dropdown-item { 
+            white-space: normal; padding: 10px 16px; 
+            border-bottom: 1px solid #f0f2f5; 
+            transition: background-color 0.2s; 
+        }
+        .dropdown-item:active { background-color: #f0f2f5; color: inherit; }
+        
+        /* SweetAlert Font Override */
         div:where(.swal2-container) div:where(.swal2-popup) { font-family: 'Kanit', sans-serif !important; }
     </style>
     {% block extra_head %}{% endblock %}
@@ -62,21 +81,31 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
             </div>
             <div class="toast-body bg-white shadow-sm">
-                <p class="mb-1"><strong><span id="toastTitle"></span></strong></p> <p class="mb-1"><span id="toastMsg"></span></p> </div>
+                <p class="mb-1"><strong><span id="toastTitle"></span></strong></p> 
+                <p class="mb-1"><span id="toastMsg"></span></p> 
+            </div>
         </div>
     </div>
 
     {% if user.is_authenticated %}
-        <nav class="navbar navbar-expand-lg fixed-top">
+        <nav class="navbar navbar-expand-lg fixed-top" id="mainNavbar">
             <div class="container"> 
-                <a class="navbar-brand me-3" href="{% url 'dashboard' %}"><i class="bi bi-calendar-week-fill me-2"></i> TEGH Booking</a>
-                <button class="navbar-toggler btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar"><span class="navbar-toggler-icon"></span></button>
+                <a class="navbar-brand me-3" href="{% url 'dashboard' %}">
+                    <i class="bi bi-calendar-week-fill me-2"></i> TEGH Booking
+                </a>
+                <button class="navbar-toggler btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
                 
-                <div class="collapse navbar-collapse" id="mainNavbar">
+                <div class="collapse navbar-collapse" id="navbarContent">
                     <ul class="navbar-nav nav-pills me-auto mb-2 mb-lg-0 gap-1 align-items-center mt-2 mt-lg-0">
                         {% for item in menu_items %}
                             {% if item.show %}
-                                <li class="nav-item"><a class="nav-link {% if item.active %}active{% endif %}" href="{% url item.url_name %}"><i class="{{ item.icon }} me-1 small"></i> {{ item.label }}</a></li>
+                                <li class="nav-item">
+                                    <a class="nav-link {% if item.active %}active{% endif %}" href="{% url item.url_name %}">
+                                        <i class="{{ item.icon }} me-1 small"></i> {{ item.label }}
+                                    </a>
+                                </li>
                             {% endif %}
                         {% endfor %}
 
@@ -97,51 +126,88 @@
                         
                         <li class="nav-item dropdown position-relative">
                             <a class="btn-circle-fb" href="#" id="fbNotifyDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="bi bi-bell-fill"></i>
-                                <span class="badge-fb" id="notifyBadge" style="display: {% if pending_count > 0 %}block{% else %}none{% endif %};">{{ pending_count }}</span>
+                                <i class="bi bi-bell-fill fs-5"></i>
+                                {% with total_count=pending_count|add:recent_cancellations|length %}
+                                    <span class="badge-fb" id="notifyBadge" style="display: {% if total_count > 0 %}block{% else %}none{% endif %};">
+                                        {{ total_count }}
+                                    </span>
+                                {% endwith %}
                             </a>
+                            
                             <div class="dropdown-menu dropdown-menu-end dropdown-menu-fb p-0" aria-labelledby="fbNotifyDropdown">
                                 <div class="dropdown-header-fb border-bottom d-flex justify-content-between align-items-center">
                                     <span>การแจ้งเตือน</span>
+                                    <a href="{% url 'history' %}" class="text-decoration-none small text-primary fw-normal">ดูทั้งหมด</a>
                                 </div>
-                                <div style="max-height: 300px; overflow-y: auto;" id="notificationList">
-                                    {% if pending_notifications %}
-                                        {% for booking in pending_notifications %}
-                                            <div class="notify-item-fb border-bottom position-relative" id="notify-item-{{ booking.id }}">
-                                                <a href="{% if is_admin_user %}{% url 'approvals' %}{% else %}{% url 'booking_detail' booking.id %}{% endif %}" class="d-flex align-items-center text-decoration-none text-dark w-100 p-2">
-                                                    <div class="notify-avatar me-2 
-                                                        {% if booking.status == 'PENDING' %}bg-warning text-dark
-                                                        {% elif booking.status == 'APPROVED' %}bg-success text-white
-                                                        {% else %}bg-danger text-white{% endif %} bg-opacity-10" 
-                                                        style="width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center;">
-                                                        
-                                                        {% if booking.status == 'PENDING' %}<i class="bi bi-hourglass-split"></i>
-                                                        {% elif booking.status == 'APPROVED' %}<i class="bi bi-check-lg"></i>
-                                                        {% else %}<i class="bi bi-x-lg"></i>{% endif %}
-                                                    </div>
-                                                    <div class="notify-content flex-grow-1">
-                                                        <strong class="d-block small">
-                                                            {% if is_admin_user %}
-                                                                {{ booking.user.username }} ขอจองห้อง 
-                                                            {% else %}
-                                                                ผล: {{ booking.get_status_display }} 
-                                                            {% endif %}
-                                                        </strong>
-                                                        <span class="d-block text-muted small text-truncate" style="max-width: 180px;">{{ booking.room.name }}</span>
-                                                        <div class="text-primary small" style="font-size: 0.7rem;">{{ booking.updated_at|timesince }} ที่แล้ว</div>
-                                                    </div>
-                                                </a>
-                                                
-                                                {% if not is_admin_user %}
-                                                <button onclick="markAsRead(event, {{ booking.id }})" class="btn btn-link text-muted position-absolute top-0 end-0 mt-2 me-2 p-0" title="ทำเครื่องหมายว่าอ่านแล้ว">
-                                                    <i class="bi bi-check-circle-fill"></i>
-                                                </button>
-                                                {% endif %}
+                                
+                                <div style="max-height: 400px; overflow-y: auto;" id="notificationList">
+                                    
+                                    {% for booking in pending_notifications %}
+                                        {% if is_admin_user or user.groups.all.0.name == 'Approver' %}
+                                        <a href="{% url 'approvals' %}" class="dropdown-item d-flex align-items-start gap-3 bg-warning bg-opacity-10">
+                                            <div class="position-relative flex-shrink-0">
+                                                <div class="bg-white text-warning rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 40px; height: 40px;">
+                                                    <i class="bi bi-calendar-event-fill fs-5"></i>
+                                                </div>
                                             </div>
-                                        {% endfor %}
-                                    {% else %}
-                                        <div class="text-center py-5 text-muted small">ไม่มีการแจ้งเตือนใหม่</div>
-                                    {% endif %}
+                                            <div class="flex-grow-1">
+                                                <div class="small text-dark lh-sm mb-1">
+                                                    <strong>{{ booking.user.get_full_name|default:booking.user.username }}</strong> 
+                                                    ขอจอง <span class="fw-bold">{{ booking.room.name }}</span>
+                                                </div>
+                                                <div class="text-muted" style="font-size: 0.7rem;">{{ booking.created_at|timesince }} ที่แล้ว</div>
+                                            </div>
+                                            <span class="badge bg-warning text-dark rounded-pill align-self-center">รออนุมัติ</span>
+                                        </a>
+                                        {% else %}
+                                        <div class="dropdown-item d-flex align-items-start gap-3 position-relative" id="notify-item-{{ booking.id }}">
+                                            <div class="position-relative flex-shrink-0">
+                                                <div class="{% if booking.status == 'APPROVED' %}bg-success{% else %}bg-danger{% endif %} text-white rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 40px; height: 40px;">
+                                                    {% if booking.status == 'APPROVED' %}<i class="bi bi-check-lg fs-5"></i>{% else %}<i class="bi bi-x-lg fs-5"></i>{% endif %}
+                                                </div>
+                                            </div>
+                                            <div class="flex-grow-1 pe-2">
+                                                <div class="small text-dark lh-sm mb-1">
+                                                    <span class="fw-bold">{{ booking.room.name }}</span>: 
+                                                    <span class="{% if booking.status == 'APPROVED' %}text-success{% else %}text-danger{% endif %} fw-bold">
+                                                        {{ booking.get_status_display }}
+                                                    </span>
+                                                </div>
+                                                <div class="text-muted mb-2" style="font-size: 0.7rem;">{{ booking.updated_at|timesince }} ที่แล้ว</div>
+                                                
+                                                <button onclick="markAsRead(event, {{ booking.id }}, 'notify-item-{{ booking.id }}')" class="btn btn-sm btn-outline-secondary rounded-pill py-0 px-3" style="font-size: 0.75rem;">
+                                                    <i class="bi bi-check2"></i> รับทราบ
+                                                </button>
+                                            </div>
+                                        </div>
+                                        {% endif %}
+                                    {% endfor %}
+
+                                    {% for booking in recent_cancellations %}
+                                    <div class="dropdown-item d-flex align-items-start gap-3 position-relative" id="notify-item-cancel-{{ booking.id }}">
+                                        <div class="position-relative flex-shrink-0">
+                                            <div class="bg-danger bg-opacity-10 text-danger rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                <i class="bi bi-calendar-x-fill fs-5"></i>
+                                            </div>
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <div class="small text-dark lh-sm mb-1">
+                                                <strong>{{ booking.user.get_full_name|default:booking.user.username }}</strong> 
+                                                <span class="text-danger fw-bold">ยกเลิกจอง</span> {{ booking.room.name }}
+                                            </div>
+                                            <div class="text-muted mb-2" style="font-size: 0.7rem;">{{ booking.updated_at|timesince }} ที่แล้ว</div>
+                                            
+                                            <button onclick="markAsRead(event, {{ booking.id }}, 'notify-item-cancel-{{ booking.id }}')" class="btn btn-sm btn-outline-secondary rounded-pill py-0 px-3" style="font-size: 0.75rem;">
+                                                <i class="bi bi-check2"></i> รับทราบ
+                                            </button>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+
+                                    <div id="emptyNotification" class="text-center py-5 text-muted small" style="display: {% if pending_notifications or recent_cancellations %}none{% else %}block{% endif %};">
+                                        <i class="bi bi-bell-slash fs-1 opacity-25 mb-2 d-block"></i>
+                                        ไม่มีการแจ้งเตือนใหม่
+                                    </div>
                                 </div>
                             </div>
                         </li>
@@ -150,7 +216,7 @@
                             <a class="btn-circle-fb" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                 <i class="bi bi-person-fill fs-5"></i>
                             </a>
-                            <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2 p-1" style="width: 200px; right: 0;">
+                            <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2 p-1" style="width: 200px;">
                                 <li class="px-3 py-2 border-bottom mb-1"><span class="fw-bold d-block small text-dark">{{ user.username }}</span></li>
                                 <li><form action="{% url 'logout' %}" method="post" class="px-0 m-0">{% csrf_token %}<button type="submit" class="dropdown-item py-1 text-danger small rounded">ออกจากระบบ</button></form></li>
                             </ul>
@@ -170,21 +236,23 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     <script>
+        // Navbar Hide on Scroll Logic
         var lastScrollTop = 0;
         var navbar = document.getElementById("mainNavbar");
         if(navbar){
             window.addEventListener("scroll", function(){
                 var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
                 if (scrollTop > lastScrollTop && scrollTop > 60) { 
-                    document.querySelector('.navbar').style.transform = 'translateY(-100%)';
-                    document.querySelector('.navbar').style.transition = 'transform 0.3s ease-in-out';
+                    navbar.style.transform = 'translateY(-100%)';
+                    navbar.style.transition = 'transform 0.3s ease-in-out';
                 } else { 
-                    document.querySelector('.navbar').style.transform = 'translateY(0)';
+                    navbar.style.transform = 'translateY(0)';
                 }
                 lastScrollTop = scrollTop;
             });
         }
 
+        // Show Messages with SweetAlert (Popup แบบค้างไว้)
         document.addEventListener('DOMContentLoaded', function() {
             {% if messages %}
                 {% for message in messages %}
@@ -192,44 +260,54 @@
                         title: "{{ message.tags|title }}",
                         text: "{{ message|escapejs }}",
                         icon: "{{ message.tags|lower }}".includes('success') ? 'success' : 'error',
-                        confirmButtonText: 'ตกลง',
+                        confirmButtonText: 'ตกลง', // ปุ่มสำหรับกดปิด
                         confirmButtonColor: '#3085d6',
-                        timer: 2000
+                        // timer: 2000  <--- เอา timer ออกแล้ว เพื่อให้ค้างไว้
                     });
                 {% endfor %}
             {% endif %}
+            
+            // เรียกเช็ค Notification ทันที
+            checkNotifications();
         });
 
+        // ----------------------------------------------------------------
+        // Notification Logic
+        // ----------------------------------------------------------------
         let lastBookingId = null;
+
         function checkNotifications() {
             fetch("{% url 'api_pending_count' %}")
                 .then(res => res.json())
                 .then(data => {
                     const badge = document.getElementById('notifyBadge');
+                    const emptyState = document.getElementById('emptyNotification');
+                    
                     if(badge) {
                         if (data.count > 0) {
-                            badge.style.display = 'flex'; 
-                            badge.innerText = data.count;
+                            badge.style.display = 'block'; 
+                            badge.innerText = data.count; // อัปเดตตัวเลข
+                            if(emptyState) emptyState.style.display = 'none';
                         } else {
                             badge.style.display = 'none';
                         }
                     }
                     
+                    // Show Toast Notification
                     if (data.latest_booking && data.latest_booking.id !== lastBookingId) {
                         lastBookingId = data.latest_booking.id; 
-                        
                         document.getElementById('toastTitle').innerText = data.latest_booking.title || "แจ้งเตือนใหม่";
                         document.getElementById('toastMsg').innerText = data.latest_booking.msg || "มีรายการอัปเดต";
-                        
                         new bootstrap.Toast(document.getElementById('liveToast')).show();
                     }
                 })
                 .catch(err => console.log('Notify Error:', err));
         }
 
-        function markAsRead(event, bookingId) {
-            event.preventDefault();
-            event.stopPropagation();
+        // ฟังก์ชันลบรายการและบอก Server
+        function markAsRead(event, bookingId, elementId) {
+            event.preventDefault(); 
+            event.stopPropagation(); // กัน Dropdown ปิด
 
             fetch(`/api/mark-read/${bookingId}/`, {
                 method: 'POST',
@@ -241,28 +319,38 @@
             .then(response => response.json())
             .then(data => {
                 if (data.status === 'success') {
-                    const item = document.getElementById(`notify-item-${bookingId}`);
+                    // Animation ลบรายการ
+                    const item = document.getElementById(elementId);
                     if (item) {
-                        item.remove();
-                        const badge = document.getElementById('notifyBadge');
-                        let count = parseInt(badge.innerText);
-                        if (count > 1) {
-                            badge.innerText = count - 1;
-                        } else {
-                            badge.style.display = 'none';
-                            const list = document.getElementById('notificationList');
-                            if (list.children.length === 0) {
-                                list.innerHTML = '<div class="text-center py-5 text-muted small">ไม่มีการแจ้งเตือนใหม่</div>';
+                        item.style.transition = 'all 0.3s';
+                        item.style.opacity = '0';
+                        item.style.transform = 'translateX(20px)';
+                        
+                        setTimeout(() => {
+                            item.remove();
+                            // ลดตัวเลขที่ Badge ทันที
+                            const badge = document.getElementById('notifyBadge');
+                            let count = parseInt(badge.innerText || 0);
+                            if (count > 1) {
+                                badge.innerText = count - 1;
+                            } else {
+                                badge.style.display = 'none';
+                                // ถ้าลบหมดแล้ว แสดง Empty State
+                                const list = document.getElementById('notificationList');
+                                if (list.querySelectorAll('.dropdown-item').length === 0) {
+                                    document.getElementById('emptyNotification').style.display = 'block';
+                                }
                             }
-                        }
+                        }, 300);
                     }
                 }
             });
         }
 
+        // เช็คแจ้งเตือนทุก 5 วินาที
         setInterval(checkNotifications, 5000);
-        checkNotifications();
     </script>
+    
     {% block extra_scripts %}{% endblock %}
 </body>
 </html>

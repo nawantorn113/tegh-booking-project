@@ -15,99 +15,94 @@
         <div class="table-responsive">
             <div class="content-card shadow-sm border p-3 p-md-4 bg-white rounded">
                 <table class="table table-striped table-hover mb-0 align-middle">
-                    <thead class="table-light">
+                    <thead class="table-light text-uppercase small text-muted">
                         <tr>
-                            <th scope="col" class="ps-3">เวลา</th>
-                            <th scope="col">ห้อง</th>
-                            <th scope="col" style="width: 35%;">รายละเอียด / อุปกรณ์</th> <th scope="col">ผู้จอง (แผนก)</th>
-                            <th scope="col" class="text-center">จำนวนคน</th>
-                            <th scope="col" class="text-center">การกระทำ</th>
-                        </tr>
+                            <th scope="col" class="ps-3 py-3">เวลา</th>
+                            <th scope="col" class="py-3">ห้อง</th>
+                            <th scope="col" class="py-3" style="width: 30%;">รายละเอียด</th> 
+                            <th scope="col" class="py-3">ผู้จอง</th>
+                            <th scope="col" class="text-center py-3">จำนวนคน</th>
+                            <th scope="col" class="text-center py-3" style="min-width: 140px;">จัดการ</th> </tr>
                     </thead>
                     <tbody>
                         {% for booking in pending_bookings %}
                         <tr>
                             <td class="ps-3">
-                                <div class="fw-bold">{{ booking.start_time|date:"d M Y" }}</div>
+                                <div class="fw-bold text-dark">{{ booking.start_time|date:"d M Y" }}</div>
                                 <span class="text-muted small">
                                     <i class="bi bi-clock"></i> {{ booking.start_time|date:"H:i" }} - {{ booking.end_time|date:"H:i" }}
                                 </span>
                             </td>
 
                             <td>
-                                <span class="badge bg-info text-dark">{{ booking.room.name }}</span>
+                                <span class="badge bg-info bg-opacity-10 text-info border border-info rounded-pill px-3">
+                                    {{ booking.room.name }}
+                                </span>
                             </td>
 
                             <td>
-                                <div class="fw-bold text-primary">{{ booking.title }}</div>
+                                <div class="fw-bold text-dark mb-1">{{ booking.title }}</div>
                                 {% if booking.description %}
-                                    <small class="text-muted">{{ booking.description|truncatewords:10 }}</small>
+                                    <small class="text-muted d-block text-truncate" style="max-width: 250px;">{{ booking.description }}</small>
                                 {% endif %}
 
                                 {% if booking.equipments.exists %}
-                                    <div class="mt-2 p-2 bg-warning bg-opacity-10 border border-warning rounded text-dark" style="font-size: 0.9em;">
-                                        <i class="bi bi-tools text-danger"></i> <strong>มีการขออุปกรณ์เพิ่ม:</strong><br>
-                                        <ul class="mb-0 ps-3">
-                                            {% for eq in booking.equipments.all %}
-                                                <li>{{ eq.name }}</li>
-                                            {% endfor %}
-                                        </ul>
-                                    </div>
-                                {% endif %}
-
-                                {% if booking.additional_requests %}
-                                    <div class="mt-2 text-muted small fst-italic border-start border-3 ps-2">
-                                        <i class="bi bi-chat-quote-fill"></i> Note: {{ booking.additional_requests }}
+                                    <div class="mt-2 p-1 px-2 bg-light border rounded d-inline-block">
+                                        <small class="text-secondary">
+                                            <i class="bi bi-tools me-1"></i> 
+                                            {% for eq in booking.equipments.all %}{{ eq.name }}{% if not forloop.last %}, {% endif %}{% endfor %}
+                                        </small>
                                     </div>
                                 {% endif %}
                             </td>
 
                             <td>
                                 <div class="d-flex align-items-center">
-                                    <div class="avatar-circle bg-secondary text-white rounded-circle me-2 d-flex align-items-center justify-content-center" style="width: 30px; height: 30px; font-size: 12px;">
+                                    <div class="avatar-circle bg-secondary bg-opacity-25 text-secondary rounded-circle me-2 d-flex align-items-center justify-content-center fw-bold" style="width: 32px; height: 32px; font-size: 12px;">
                                         {{ booking.user.username|slice:":1"|upper }}
                                     </div>
-                                    <div>
-                                        {{ booking.user.get_full_name|default:booking.user.username }}
-                                        <br>
-                                        <span class="text-muted small badge bg-light text-dark border">{{ booking.department|default:"ไม่ระบุแผนก" }}</span>
+                                    <div class="lh-sm">
+                                        <div class="small fw-bold">{{ booking.user.get_full_name|default:booking.user.username }}</div>
+                                        <span class="text-muted" style="font-size: 0.75rem;">{{ booking.department|default:"-" }}</span>
                                     </div>
                                 </div>
                             </td>
 
                             <td class="text-center">
-                                <span class="badge rounded-pill bg-secondary">{{ booking.participant_count }} คน</span>
+                                <span class="badge bg-secondary rounded-pill px-2">{{ booking.participant_count }}</span>
                             </td>
 
                             <td class="text-center">
-                                <div class="btn-group" role="group">
-                                    <a href="{% url 'booking_detail' booking.id %}" class="btn btn-sm btn-outline-secondary" title="ดูรายละเอียด">
+                                <div class="d-flex justify-content-center gap-2">
+                                    
+                                    <a href="{% url 'booking_detail' booking.id %}" class="btn btn-outline-primary btn-sm px-2" data-bs-toggle="tooltip" title="ดูรายละเอียด">
                                         <i class="bi bi-eye"></i>
                                     </a>
 
-                                    <form action="{% url 'approve_booking' booking.id %}" method="post" class="d-inline" onsubmit="return confirm('ยืนยันการอนุมัติ &quot;{{ booking.title|escapejs }}&quot; ?');">
+                                    <form action="{% url 'approve_booking' booking.id %}" method="post" onsubmit="return confirm('ยืนยันการอนุมัติ &quot;{{ booking.title|escapejs }}&quot; ?');">
                                         {% csrf_token %}
-                                        <button type="submit" class="btn btn-sm btn-success" title="อนุมัติ">
-                                            <i class="bi bi-check-lg"></i> อนุมัติ
+                                        <button type="submit" class="btn btn-outline-success btn-sm px-2" data-bs-toggle="tooltip" title="อนุมัติ">
+                                            <i class="bi bi-check-lg"></i>
                                         </button>
                                     </form>
 
-                                    <form action="{% url 'reject_booking' booking.id %}" method="post" class="d-inline" onsubmit="return confirm('ยืนยันการปฏิเสธ &quot;{{ booking.title|escapejs }}&quot; ?');">
+                                    <form action="{% url 'reject_booking' booking.id %}" method="post" onsubmit="return confirm('ยืนยันการปฏิเสธ &quot;{{ booking.title|escapejs }}&quot; ?');">
                                         {% csrf_token %}
-                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="ปฏิเสธ">
+                                        <button type="submit" class="btn btn-outline-danger btn-sm px-2" data-bs-toggle="tooltip" title="ปฏิเสธ">
                                             <i class="bi bi-x-lg"></i>
                                         </button>
                                     </form>
+                                    
                                 </div>
                             </td>
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="6" class="text-center py-5 text-muted">
-                                <div class="d-flex flex-column align-items-center">
-                                    <i class="bi bi-clipboard-check display-4 mb-3 text-secondary opacity-50"></i>
-                                    <h5>ไม่มีรายการรออนุมัติ</h5>
-                                    <p class="small">รายการจองใหม่ที่ต้องรอการตรวจสอบจะปรากฏที่นี่</p>
+                            <td colspan="6" class="text-center py-5">
+                                <div class="d-flex flex-column align-items-center opacity-50">
+                                    <i class="bi bi-clipboard-check display-1 text-secondary mb-3"></i>
+                                    <h5 class="text-muted">ไม่มีรายการรออนุมัติ</h5>
+                                    <p class="small text-muted mb-0">รายการจองใหม่ที่ต้องรอการตรวจสอบจะปรากฏที่นี่</p>
                                 </div>
                             </td>
                         </tr>
@@ -118,4 +113,12 @@
         </div>
     </section>
 </div>
+
+<script>
+    // เปิดใช้งาน Tooltip ของ Bootstrap (ถ้ามี library popper.js)
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+      return new bootstrap.Tooltip(tooltipTriggerEl)
+    })
+</script>
 {% endblock %}
