@@ -27,6 +27,34 @@
             .fc .fc-toolbar { flex-direction: column; gap: 10px; }
             .fc-view-harness { min-height: 400px; }
         }
+
+        /* --- CSS สำหรับการ์ดเลือกรูปแบบห้อง --- */
+        .layout-card-label input[type="radio"] { display: none; } /* ซ่อนปุ่มกลมๆ */
+        
+        .layout-card { 
+            border: 2px solid #eee; 
+            transition: all 0.2s; 
+            background: #fff;
+            cursor: pointer;
+        }
+        
+        .layout-card:hover { 
+            border-color: #ccc; 
+            background: #f8f9fa; 
+            transform: translateY(-3px);
+        }
+        
+        /* สไตล์เมื่อถูกเลือก (Checked) */
+        .layout-card-label input[type="radio"]:checked + .layout-card {
+            border-color: #0d6efd !important; /* สีขอบตอนเลือก */
+            background-color: #f0f8ff !important; /* สีพื้นหลังตอนเลือก */
+            box-shadow: 0 4px 6px rgba(13, 110, 253, 0.15);
+        }
+        
+        /* โชว์ไอคอนติ๊กถูกเมื่อเลือก */
+        .layout-card-label input[type="radio"]:checked + .layout-card .check-icon { 
+            display: block !important; 
+        }
     </style>
 {% endblock %}
 
@@ -36,22 +64,34 @@
     <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden">
         <div class="row g-0">
             <div class="col-md-4 position-relative" style="min-height: 200px;">
-                {% if room.image %}<img src="{{ room.image.url }}" class="w-100 h-100 object-fit-cover position-absolute top-0 start-0">{% else %}<div class="bg-light w-100 h-100 d-flex align-items-center justify-content-center text-muted position-absolute top-0 start-0"><i class="bi bi-image fs-1 opacity-25"></i></div>{% endif %}
+                {% if room.image %}
+                    <img src="{{ room.image.url }}" class="w-100 h-100 object-fit-cover position-absolute top-0 start-0">
+                {% else %}
+                    <div class="bg-light w-100 h-100 d-flex align-items-center justify-content-center text-muted position-absolute top-0 start-0">
+                        <i class="bi bi-image fs-1 opacity-25"></i>
+                    </div>
+                {% endif %}
             </div>
             <div class="col-md-8">
                 <div class="card-body p-3 p-md-4">
                     <h4 class="fw-bold text-primary mb-1">{{ room.name }}</h4>
-                    <p class="text-muted small mb-2"><i class="bi bi-geo-alt-fill"></i> {{ room.building|default:"-" }} | จุ {{ room.capacity }} คน</p>
+                    <p class="text-muted small mb-2">
+                        <i class="bi bi-geo-alt-fill"></i> {{ room.building|default:"-" }} | จุ {{ room.capacity }} คน
+                    </p>
                     
                     <div class="d-flex flex-wrap gap-2 small mb-3">
-                        <span class="badge bg-secondary fw-normal opacity-50">ใช้งานแล้ว (แก้ไขไม่ได้)</span>
+                        <span class="badge bg-secondary fw-normal opacity-50">ใช้งานแล้ว</span>
                         <span class="badge bg-primary fw-normal">กำลังใช้</span>
                         <span class="badge bg-success fw-normal">จองแล้ว</span>
                         <span class="badge text-dark fw-normal border" style="background-color: #ffc107;">รออนุมัติ</span>
                     </div>
 
-                    <button class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm d-none d-md-block ms-auto" onclick="openBookingModal()"><i class="bi bi-plus-lg me-1"></i> จองห้องนี้</button>
-                    <button class="btn btn-primary rounded-pill w-100 d-block d-md-none" onclick="openBookingModal()">จอง</button>
+                    <button class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm d-none d-md-block ms-auto" onclick="openBookingModal()">
+                        <i class="bi bi-plus-lg me-1"></i> จองห้องนี้
+                    </button>
+                    <button class="btn btn-primary rounded-pill w-100 d-block d-md-none" onclick="openBookingModal()">
+                        จอง
+                    </button>
                 </div>
             </div>
         </div>
@@ -70,13 +110,13 @@
 </div>
 
 <div class="modal fade" id="bookingModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow">
+    <div class="modal-dialog modal-dialog-centered modal-lg"> <div class="modal-content border-0 shadow">
             <div class="modal-header bg-primary text-white">
                 <h5 class="modal-title fw-bold fs-5">จองห้องประชุม</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body pt-3" id="modalBookingBody"></div>
+            <div class="modal-body pt-3" id="modalBookingBody">
+                </div>
             <div class="modal-footer bg-light border-0">
                 <button type="button" class="btn btn-light text-muted rounded-pill" data-bs-dismiss="modal">ยกเลิก</button>
                 <button type="button" class="btn btn-primary rounded-pill px-4" id="submitBookingBtn">ยืนยัน</button>
@@ -88,7 +128,48 @@
 <div id="bookingFormContainer" class="d-none">
     <form id="hiddenBookingForm" action="{% url 'create_booking' room.id %}" method="post" enctype="multipart/form-data">
         {% csrf_token %}
-        {{ form|crispy }}
+        
+        {% if room.name == 'ห้องประชุมใหญ่' %}
+        
+            <div class="mb-4">
+                <label class="form-label fw-bold mb-2">
+                    <i class="bi bi-grid-3x3-gap-fill text-primary"></i> รูปแบบการจัดห้อง
+                </label>
+                <div class="row g-2">
+                    {% for radio in form.room_layout %}
+                    <div class="col-6 col-md-4">
+                        <label class="layout-card-label w-100 h-100">
+                            {{ radio.tag }} <div class="card h-100 layout-card text-center p-2 shadow-sm position-relative">
+                                <div class="mb-2 d-flex align-items-center justify-content-center" style="height: 80px;">
+                                    {% if radio.data.value == 'other' %}
+                                        <i class="bi bi-pencil-square fs-1 text-muted"></i>
+                                    {% else %}
+                                        <img src="{% static 'images/layouts/'|add:radio.data.value|add:'.png' %}" 
+                                             class="img-fluid" style="max-height: 70px; width: auto;">
+                                    {% endif %}
+                                </div>
+                                
+                                <small class="fw-bold d-block text-dark">{{ radio.choice_label }}</small>
+                                
+                                <div class="check-icon position-absolute top-0 end-0 m-1" style="display: none;">
+                                    <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+        {% else %}
+            <input type="hidden" name="room_layout" value="theatre">
+        {% endif %}
+        {% for field in form %}
+            {% if field.name != 'room_layout' %}
+                {{ field|as_crispy_field }}
+            {% endif %}
+        {% endfor %}
+        
     </form>
 </div>
 
@@ -104,7 +185,7 @@
     const CSRF_TOKEN = '{{ csrf_token }}'; 
     const API_UPDATE_URL = "{% url 'update_booking_time_api' %}";
     
-    // ฟังก์ชันช่วยแปลงเวลาเป็น Local Time (แก้ปัญหาเวลาถอยหลัง 7 ชม.)
+    // ฟังก์ชันแปลงเวลา Local
     function getLocalISOString(date) {
         const offset = date.getTimezoneOffset() * 60000;
         const localDate = new Date(date.getTime() - offset);
@@ -114,20 +195,26 @@
     function openBookingModal(startStr = null, endStr = null) {
         const form = document.getElementById('hiddenBookingForm');
         const modalBody = document.getElementById('modalBookingBody');
-        if(!modalBody.contains(form)) modalBody.appendChild(form);
+        
+        // ย้ายฟอร์มไปใส่ใน Modal Body
+        if(!modalBody.contains(form)) {
+            modalBody.appendChild(form);
+            form.classList.remove('d-none'); // แสดงฟอร์ม
+        }
         form.reset();
 
+        // ตั้งเวลาเริ่มต้น-สิ้นสุด
         if(startStr && endStr) {
             document.getElementById('id_start_time').value = startStr.substring(0, 16);
             document.getElementById('id_end_time').value = endStr.substring(0, 16);
         } else {
             let now = new Date();
             let next = new Date(now.getTime() + 60*60000); 
-            // ใช้ Helper Function แทน toISOString ธรรมดา
             document.getElementById('id_start_time').value = getLocalISOString(now);
             document.getElementById('id_end_time').value = getLocalISOString(next);
         }
 
+        // รีเซ็ต Select2
         if ($('#id_participants').hasClass("select2-hidden-accessible")) {
             $('#id_participants').select2('destroy');
         }
@@ -137,12 +224,14 @@
         bookingModal.show();
     }
 
+    // ตั้งค่า Select2 เมื่อ Modal เปิด
     document.getElementById('bookingModal').addEventListener('shown.bs.modal', function () {
         $('#id_participants').select2({ 
             theme: 'bootstrap-5', width: '100%', dropdownParent: $(this).find('.modal-content'), placeholder: "พิมพ์ชื่อเพื่อค้นหา...", allowClear: true
         });
     });
 
+    // ฟังก์ชันอัปเดตเวลาผ่านการลาก
     function updateBookingOnServer(eventInfo) {
         const event = eventInfo.event;
         
@@ -177,13 +266,12 @@
     document.addEventListener('DOMContentLoaded', function() {
         var calendarEl = document.getElementById('calendar');
         var calendar = new FullCalendar.Calendar(calendarEl, {
-            // ปรับ Default View และเพิ่มปุ่มมุมมองรายสัปดาห์
             initialView: window.innerWidth < 768 ? 'listMonth' : 'dayGridMonth', 
             locale: 'th',
             headerToolbar: { 
                 left: 'prev,next today', 
                 center: 'title', 
-                right: 'dayGridMonth,timeGridWeek,timeGridDay,listMonth' // เพิ่ม timeGridWeek, timeGridDay
+                right: 'dayGridMonth,timeGridWeek,timeGridDay,listMonth' 
             },
             buttonText: { 
                 today: 'วันนี้', 
@@ -193,15 +281,12 @@
                 list: 'รายการ' 
             },
             
-            // --- จุดสำคัญที่ทำให้กดจองได้ ---
             selectable: true, 
             selectMirror: true,
-            // ---------------------------
-
             editable: true, 
             droppable: true,
             eventDurationEditable: true,
-            dayMaxEvents: true, // ถ้าวันไหนจองเยอะ ให้ซ่อนเป็น +more
+            dayMaxEvents: true,
             
             height: 'auto',
             events: "{% url 'bookings_api' %}?room_id={{ room.id }}",
@@ -225,16 +310,11 @@
             select: function(info) {
                 if (window.innerWidth < 768 && info.view.type === 'listMonth') return;
                 
-                // แปลงเวลาให้ถูกต้องตามมุมมอง
                 let start, end;
                 if (info.allDay) {
-                    // ถ้าเลือกจากมุมมองเดือน (All Day) ให้ตั้งเวลา default เป็น 08:00 - 09:00 ของวันนั้น
                     start = info.startStr + 'T08:00';
                     end = info.startStr + 'T09:00';
                 } else {
-                    // ถ้าเลือกจากมุมมองสัปดาห์/วัน (ระบุเวลามาแล้ว) ใช้เวลาจริงได้เลย
-                    // ตัดแค่ 16 ตัวแรก (yyyy-mm-ddThh:mm) เพื่อใส่ input ได้พอดี
-                    // หมายเหตุ: startStr ของ FullCalendar เป็น Local Time อยู่แล้วใน mode นี้
                     start = info.startStr.substring(0, 16);
                     end = info.endStr.substring(0, 16);
                 }
@@ -245,7 +325,7 @@
             eventClick: function(info) {
                 if (info.jsEvent.detail > 1) return;
                 info.jsEvent.preventDefault();
-                // ถ้าจะให้คลิกแล้วไปหน้า Detail
+                // ลิงก์ไปหน้า Detail
                 window.location.href = `/booking/${info.event.id}/detail/`;
             },
 
@@ -266,6 +346,7 @@
         });
         calendar.render();
 
+        // ปุ่มยืนยันการจอง
         document.getElementById('submitBookingBtn').addEventListener('click', function() {
             const pInput = document.getElementById('id_participant_count');
             const count = pInput && pInput.value ? parseInt(pInput.value) : 0;

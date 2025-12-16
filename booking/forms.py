@@ -12,7 +12,7 @@ from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Row, Column, Field, HTML
 
 # -----------------------------------------------
-# 1. BookingForm
+# 1. BookingForm (แก้ไขเพิ่ม room_layout แล้ว)
 # -----------------------------------------------
 class BookingForm(forms.ModelForm):
     RECURRENCE_CHOICES = [
@@ -34,9 +34,10 @@ class BookingForm(forms.ModelForm):
 
     class Meta:
         model = Booking
+        # [จุดแก้ไข 1] เพิ่ม 'room_layout' เข้าไปในรายการ fields
         fields = [
             'room', 'title', 'chairman', 'department', 'start_time',
-            'end_time', 'participant_count', 'participants', 
+            'end_time', 'participant_count', 'room_layout', 'participants', 
             'presentation_file', 'description', 'additional_requests', 'additional_notes',
         ]
         
@@ -46,6 +47,7 @@ class BookingForm(forms.ModelForm):
             'participant_count': 'จำนวนผู้เข้าร่วม (โดยประมาณ)', 'participants': 'รายชื่อผู้เข้าร่วม (ในระบบ)',
             'presentation_file': 'ไฟล์นำเสนอ (ถ้ามี)', 'description': 'รายละเอียด/วาระการประชุม',
             'additional_requests': 'คำขอเพิ่มเติม (เช่นอุปกรณ์เสริมเพิ่มเติม)', 'additional_notes': 'หมายเหตุเพิ่มเติม',
+            'room_layout': 'รูปแบบการจัดห้อง', # [เพิ่ม Label]
         }
         help_texts = {
             'participants': 'พิมพ์ชื่อ, นามสกุล, หรือ username เพื่อค้นหา (ผู้ใช้ในระบบ)',
@@ -69,6 +71,9 @@ class BookingForm(forms.ModelForm):
             'chairman': forms.TextInput(attrs={'class':'form-control'}),
             'department': forms.TextInput(attrs={'class':'form-control', 'placeholder': ''}),
             'participant_count': forms.NumberInput(attrs={'min': '1', 'class':'form-control'}),
+            
+            # [จุดแก้ไข 2] เพิ่ม Widget ให้เป็น RadioSelect
+            'room_layout': forms.RadioSelect(),
         }
 
     def __init__(self, *args, **kwargs):
@@ -83,7 +88,8 @@ class BookingForm(forms.ModelForm):
         self.fields['start_time'].widget = forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'form-control', 'required': 'required'}, format='%Y-%m-%dT%H:%M')
         self.fields['end_time'].widget = forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'form-control', 'required': 'required'}, format='%Y-%m-%dT%H:%M')
         
-        self.order_fields(['title', 'chairman', 'department', 'start_time', 'end_time', 'recurrence', 'recurrence_end_date', 'participant_count', 'participants', 'presentation_file', 'description', 'additional_requests', 'additional_notes', 'room'])
+        # [จุดแก้ไข 3] เพิ่ม room_layout ในลำดับการแสดงผล
+        self.order_fields(['title', 'chairman', 'department', 'start_time', 'end_time', 'recurrence', 'recurrence_end_date', 'participant_count', 'room_layout', 'participants', 'presentation_file', 'description', 'additional_requests', 'additional_notes', 'room'])
 
     def clean(self):
         cleaned_data = super().clean()
@@ -100,7 +106,7 @@ class BookingForm(forms.ModelForm):
 
 
 # -----------------------------------------------
-# 3. RoomForm (แก้ไขภาษาไทยและ Layout)
+# 3. RoomForm (คงเดิม)
 # -----------------------------------------------
 class RoomForm(forms.ModelForm):
     approver = forms.ModelChoiceField(
@@ -113,7 +119,6 @@ class RoomForm(forms.ModelForm):
         model = Room
         fields = '__all__'
         
-        # เพิ่ม labels ภาษาไทย
         labels = {
             'name': 'ชื่อห้องประชุม',
             'building': 'อาคาร / ตึก',
@@ -166,7 +171,7 @@ class RoomForm(forms.ModelForm):
         )
 
 # -----------------------------------------------
-# 4. CustomUserCreationForm
+# 4. CustomUserCreationForm (คงเดิม)
 # -----------------------------------------------
 class CustomUserCreationForm(UserCreationForm):
     groups = forms.ModelMultipleChoiceField(queryset=Group.objects.all(), widget=forms.CheckboxSelectMultiple, required=False, label="กำหนดสิทธิ์ (Groups)")
@@ -181,7 +186,7 @@ class CustomUserCreationForm(UserCreationForm):
         return user
 
 # -----------------------------------------------
-# 5. EquipmentForm
+# 5. EquipmentForm (คงเดิม)
 # -----------------------------------------------
 class EquipmentForm(forms.ModelForm):
     class Meta:

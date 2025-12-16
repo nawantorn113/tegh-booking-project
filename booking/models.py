@@ -25,7 +25,7 @@ class Equipment(models.Model):
         return self.name
 
 # ----------------------------------------------------
-# 3. Model ห้องประชุม (แก้ไขภาษาไทยตรงนี้)
+# 3. Model ห้องประชุม
 # ----------------------------------------------------
 class Room(models.Model):
     name = models.CharField(max_length=100, verbose_name="ชื่อห้องประชุม")
@@ -62,7 +62,7 @@ class Room(models.Model):
         return f"{self.name}{status}"
 
 # ----------------------------------------------------
-# 4. Model การจอง
+# 4. Model การจอง (เพิ่ม room_layout ตรงนี้)
 # ----------------------------------------------------
 class Booking(models.Model):
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='bookings')
@@ -80,13 +80,32 @@ class Booking(models.Model):
 
     is_user_seen = models.BooleanField(default=False, verbose_name="ผู้จองรับทราบแล้ว")
     
-    # [สำคัญ] เชื่อมกับ Equipment
+    # เชื่อมกับ Equipment
     equipments = models.ManyToManyField(Equipment, blank=True, related_name='bookings', verbose_name="อุปกรณ์ที่ขอเพิ่ม")
 
     presentation_file = models.FileField(upload_to='presentations/', blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     additional_requests = models.TextField(blank=True, null=True)
     additional_notes = models.TextField(blank=True, null=True)
+    
+    # --- [เพิ่มใหม่] รูปแบบการจัดห้อง ---
+    LAYOUT_CHOICES = (
+        ('theatre', 'Theatre (เธียเตอร์)'),
+        ('classroom', 'Classroom (แบบห้องเรียน)'),
+        ('u_shape', 'U-Shape (รูปตัว U)'),
+        ('banquet', 'Banquet (แบบจัดเลี้ยง)'),
+        ('banquet_rounds', 'Banquet Rounds (โต๊ะจีน)'),
+        ('conference', 'Conference (ห้องประชุมยาว)'),
+        ('other', 'อื่นๆ (ระบุเพิ่มเติม)'),
+    )
+
+    room_layout = models.CharField(
+        max_length=20,
+        choices=LAYOUT_CHOICES,
+        default='theatre',
+        verbose_name="รูปแบบการจัดห้อง"
+    )
+    # -----------------------------------
     
     STATUS_CHOICES = [
         ('PENDING', 'รออนุมัติ'),
