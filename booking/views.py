@@ -197,15 +197,27 @@ def send_booking_notification(booking, template_name, subject_prefix):
     end_str = booking.end_time.strftime('%H:%M')
     user_name = booking.user.get_full_name() or booking.user.username
 
+    layout_line = ""
+    # เช็คว่าชื่อห้องคือ "ห้องประชุมใหญ่" หรือไม่
+    if booking.room.name == 'ห้องประชุมใหญ่':
+        layout_display = booking.get_room_layout_display()
+        
+        # กรณีเลือก "อื่นๆ" และมีไฟล์แนบ
+        if booking.room_layout == 'other' and booking.room_layout_attachment:
+            layout_display += f" (ไฟล์แนบ: {booking.room_layout_attachment.url})"
+            
+        layout_line = f"รูปแบบ: {layout_display}\n"
+
     msg = (f"{subject_prefix}\n"
-           f"-------------------------\n"
            f"ผู้จอง: {user_name}\n"
            f"ห้อง: {booking.room.name}\n"
            f"เรื่อง: {booking.title}\n"
            f"เวลา: {start_str} - {end_str}\n"
+           f"จำนวนคน: {booking.participant_count} คน\n"
+           f"{layout_line}"
            f"อุปกรณ์ที่ขอ: {equip_text}\n"
            f"เพิ่มเติม: {note_text}\n"
-           f"-------------------------\n"
+           f"\n"
            f"สถานะ: {booking.get_status_display()}")
 
     if line_bot_api:
@@ -383,7 +395,7 @@ def room_calendar_view(request, room_id):
     if request.method == 'POST':
         form = BookingForm(request.POST, request.FILES)
         if form.is_valid():
-            # --- [เพิ่ม Logic: ตรวจสอบเวลาจอง] ---
+            # --- ตรวจสอบเวลาจอง ---
             booking_start = form.cleaned_data.get('start_time')
             now = timezone.now()
 
@@ -393,12 +405,10 @@ def room_calendar_view(request, room_id):
                 return render(request, 'pages/room_calendar.html', {**get_base_context(request), 'room': room, 'form': form})
 
             # 2. ต้องจองล่วงหน้า 30 นาที (เพื่อเตรียมห้อง)
-            # (Note: ถ้าจองย้อนหลัง ก็จะเข้าเคสนี้ด้วย แต่เราดักข้างบนไว้แล้วเพื่อให้ข้อความชัดเจน)
             if booking_start < now + timedelta(minutes=30):
                 messages.error(request, "กรุณาจองล่วงหน้าอย่างน้อย 30 นาที เพื่อเตรียมห้องและอุปกรณ์")
                 return render(request, 'pages/room_calendar.html', {**get_base_context(request), 'room': room, 'form': form})
-            # ----------------------------------------
-
+            
             recurrence = form.cleaned_data.get('recurrence')
             recurrence_end_date = form.cleaned_data.get('recurrence_end_date')
             has_equipments = bool(form.cleaned_data.get('equipments'))
@@ -417,13 +427,18 @@ def room_calendar_view(request, room_id):
 
             while current_start.date() <= loop_limit:
                 current_end = current_start + duration
+                
+                # [แก้ไข] Buffer Time เปลี่ยนเป็น 30 นาที
+                buffer_time = timedelta(minutes=30)
                 is_overlap = Booking.objects.filter(
-                    room=room, start_time__lt=current_end, end_time__gt=current_start,
+                    room=room, 
+                    start_time__lt=current_end + buffer_time, 
+                    end_time__gt=current_start - buffer_time,
                     status__in=['APPROVED', 'PENDING']
                 ).exists()
                 
                 if is_overlap:
-                    conflict_dates.append(current_start.strftime('%d/%m/%Y %H:%M'))
+                    conflict_dates.append(f"{current_start.strftime('%d/%m/%Y %H:%M')} (ติดระยะเวลาพักห้อง 30 นาที)")
                 bookings_to_create.append({'start': current_start, 'end': current_end})
                 
                 if recurrence == 'WEEKLY': current_start += timedelta(weeks=1)
@@ -431,7 +446,7 @@ def room_calendar_view(request, room_id):
                 else: break
 
             if conflict_dates:
-                messages.error(request, f"มีรายการซ้ำ: {', '.join(conflict_dates)}")
+                messages.error(request, f"ไม่สามารถจองได้เนื่องจากเวลาทับซ้อนหรือติดระยะพักห้อง: {', '.join(conflict_dates)}")
             else:
                 count = 0
                 for info in bookings_to_create:
@@ -445,7 +460,8 @@ def room_calendar_view(request, room_id):
                         department=base_booking.department,
                         chairman=base_booking.chairman,
                         presentation_file=base_booking.presentation_file,
-                        room_layout=base_booking.room_layout
+                        room_layout=base_booking.room_layout,
+                        room_layout_attachment=base_booking.room_layout_attachment
                     )
                     
                     restricted_names = ['RD 2', 'RD 4', 'TEIL', 'ห้องประชุมใหญ่']
@@ -583,10 +599,11 @@ def delete_booking_view(request, booking_id):
         
         b.status = 'CANCELLED'
         b.outlook_event_id = None
-        b.is_user_seen = False # แจ้งเตือนแอดมิน
+        b.is_user_seen = False # แจ้งเตือนแอดมิน (Dashboard)
         b.save()
         log_action(request, 'BOOKING_CANCELLED', b, "ยกเลิกการจอง")
         
+        # แจ้งเตือน Line เมื่อยกเลิก
         send_booking_notification(b, '', 'แจ้งเตือน: มีการยกเลิกการจอง ❌')
 
         messages.success(request, "ยกเลิกสำเร็จ และแจ้งเตือนแอดมินแล้ว")
@@ -817,7 +834,7 @@ def update_booking_time_api(request):
         else: 
             end_dt = start_dt + (booking.end_time - booking.start_time)
         
-        # --- [เพิ่ม Logic: ตรวจสอบเวลาจองแบบลากวาง] ---
+        # --- ตรวจสอบเวลาจองแบบลากวาง ---
         now = timezone.now()
         # 1. ห้ามจองย้อนหลัง
         if start_dt < now:
@@ -825,17 +842,18 @@ def update_booking_time_api(request):
         # 2. ต้องจองล่วงหน้า 30 นาที
         if start_dt < now + timedelta(minutes=30):
              return JsonResponse({'status': 'error', 'message': 'ต้องจองล่วงหน้าอย่างน้อย 30 นาที'}, status=400)
-        # ---------------------------------------------
-
+        
+        # 3. [แก้ไข] Buffer Time 30 นาที
+        buffer_time = timedelta(minutes=30)
         is_overlap = Booking.objects.filter(
             room=booking.room,
-            start_time__lt=end_dt,
-            end_time__gt=start_dt,
+            start_time__lt=end_dt + buffer_time,
+            end_time__gt=start_dt - buffer_time,
             status__in=['APPROVED', 'PENDING']
         ).exclude(id=booking.id).exists()
 
         if is_overlap:
-            return JsonResponse({'status': 'error', 'message': 'ช่วงเวลานี้มีคนจองแล้ว'}, status=400)
+            return JsonResponse({'status': 'error', 'message': 'ช่วงเวลานี้มีคนจองแล้ว (หรือติดระยะเวลาพักห้อง 30 นาที)'}, status=400)
 
         booking.start_time = start_dt
         booking.end_time = end_dt
@@ -872,11 +890,12 @@ def delete_booking_api(request, booking_id):
 
         booking.status = 'CANCELLED'
         booking.outlook_event_id = None
-        booking.is_user_seen = False # แจ้งเตือนแอดมิน
+        booking.is_user_seen = False # แจ้งเตือนแอดมิน (Dashboard)
         booking.save()
         
         log_action(request, 'BOOKING_CANCELLED', booking, "ยกเลิกการจองผ่านปฏิทิน")
         
+        # แจ้งเตือน Line เมื่อยกเลิก
         send_booking_notification(booking, '', 'แจ้งเตือน: มีการยกเลิกการจอง ❌')
         
         return JsonResponse({'status': 'success'})

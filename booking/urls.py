@@ -49,6 +49,7 @@ urlpatterns = [
     # Equipment Management
     path('manage/equipments/', views.equipment_management_view, name='equipments'),
     path('manage/equipments/add/', views.add_equipment_view, name='add_equipment'),
+    path('equipment-autocomplete/', views.EquipmentAutocomplete.as_view(), name='equipment-autocomplete'),
     path('manage/equipments/delete/<int:eq_id>/', views.delete_equipment_view, name='delete_equipment'),
 
     # --- Audit Log & Reports ---
