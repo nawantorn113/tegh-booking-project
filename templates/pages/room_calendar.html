@@ -116,7 +116,8 @@
 </div>
 
 <div class="modal fade" id="bookingModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg"> <div class="modal-content border-0 shadow">
+    <div class="modal-dialog modal-dialog-centered modal-lg"> 
+        <div class="modal-content border-0 shadow">
             <div class="modal-header bg-primary text-white">
                 <h5 class="modal-title fw-bold fs-5">จองห้องประชุม</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
@@ -145,13 +146,15 @@
                     {% for radio in form.room_layout %}
                     <div class="col-6 col-md-4">
                         <label class="layout-card-label w-100 h-100">
-                            {{ radio.tag }} <div class="card h-100 layout-card text-center p-2 shadow-sm position-relative">
+                            {{ radio.tag }} 
+                            <div class="card h-100 layout-card text-center p-2 shadow-sm position-relative">
                                 <div class="mb-2 d-flex align-items-center justify-content-center" style="height: 80px;">
                                     {% if radio.data.value == 'other' %}
                                         <i class="bi bi-pencil-square fs-1 text-muted"></i>
                                     {% else %}
                                         <img src="{% static 'images/layouts/'|add:radio.data.value|add:'.png' %}" 
-                                             class="img-fluid" style="max-height: 70px; width: auto;">
+                                             class="img-fluid" style="max-height: 70px; width: auto;"
+                                             onerror="this.style.display='none'">
                                     {% endif %}
                                 </div>
                                 
@@ -167,11 +170,19 @@
                 </div>
             </div>
 
+            <div id="layoutAttachmentDiv" class="mb-3 p-3 bg-light border rounded d-none">
+                <label class="form-label text-danger fw-bold small">
+                    <i class="bi bi-paperclip"></i> กรุณาแนบไฟล์แผนผัง (สำหรับรูปแบบอื่นๆ)
+                </label>
+                {{ form.room_layout_attachment }}
+            </div>
+
         {% else %}
             <input type="hidden" name="room_layout" value="theatre">
         {% endif %}
+
         {% for field in form %}
-            {% if field.name != 'room_layout' %}
+            {% if field.name != 'room_layout' and field.name != 'room_layout_attachment' %}
                 {{ field|as_crispy_field }}
             {% endif %}
         {% endfor %}
@@ -198,6 +209,7 @@
         return localDate.toISOString().slice(0, 16);
     }
 
+    // ฟังก์ชันเปิด Modal
     function openBookingModal(startStr = null, endStr = null) {
         const form = document.getElementById('hiddenBookingForm');
         const modalBody = document.getElementById('modalBookingBody');
@@ -205,9 +217,12 @@
         // ย้ายฟอร์มไปใส่ใน Modal Body
         if(!modalBody.contains(form)) {
             modalBody.appendChild(form);
-            form.classList.remove('d-none'); // แสดงฟอร์ม
+            form.classList.remove('d-none');
         }
         form.reset();
+        
+        // Reset การแสดงผลช่องแนบไฟล์ (เรียกใช้ function toggle ที่เขียนไว้ด้านล่าง)
+        toggleAttachmentField(); 
 
         // ตั้งเวลาเริ่มต้น-สิ้นสุด
         if(startStr && endStr) {
@@ -237,7 +252,29 @@
         });
     });
 
-    // ฟังก์ชันอัปเดตเวลาผ่านการลาก
+    // ฟังก์ชันจัดการการแสดงช่องแนบไฟล์
+    function toggleAttachmentField() {
+        const layoutRadios = document.querySelectorAll('input[name="room_layout"]');
+        const attachmentDiv = document.getElementById('layoutAttachmentDiv');
+        const fileInput = document.getElementById('id_room_layout_attachment');
+        
+        if (!attachmentDiv) return; // ถ้าไม่มี Div นี้ (เช่นห้องอื่น) ให้จบฟังก์ชัน
+
+        let selectedValue = "";
+        layoutRadios.forEach(radio => {
+            if (radio.checked) selectedValue = radio.value;
+        });
+
+        if (selectedValue === 'other') {
+            attachmentDiv.classList.remove('d-none');
+        } else {
+            attachmentDiv.classList.add('d-none');
+            // ล้างค่าไฟล์ออกเมื่อเปลี่ยนใจไม่เลือก Other
+            if (fileInput) fileInput.value = ''; 
+        }
+    }
+
+    // ฟังก์ชันอัปเดตเวลาผ่านการลากบนปฏิทิน
     function updateBookingOnServer(eventInfo) {
         const event = eventInfo.event;
         
@@ -270,6 +307,14 @@
     }
 
     document.addEventListener('DOMContentLoaded', function() {
+        // 1. จัดการ Event การเปลี่ยน Layout
+        const layoutRadios = document.querySelectorAll('input[name="room_layout"]');
+        layoutRadios.forEach(radio => {
+            radio.addEventListener('change', toggleAttachmentField);
+        });
+        toggleAttachmentField(); // เรียกครั้งแรกตอนโหลดหน้า
+
+        // 2. ตั้งค่าปฏิทิน FullCalendar
         var calendarEl = document.getElementById('calendar');
         var calendar = new FullCalendar.Calendar(calendarEl, {
             initialView: window.innerWidth < 768 ? 'listMonth' : 'dayGridMonth', 
@@ -352,13 +397,20 @@
         });
         calendar.render();
 
-        // ปุ่มยืนยันการจอง
+        // 3. ปุ่มยืนยันการจอง
         document.getElementById('submitBookingBtn').addEventListener('click', function() {
             const pInput = document.getElementById('id_participant_count');
             const count = pInput && pInput.value ? parseInt(pInput.value) : 0;
             if (ROOM_CAPACITY > 0 && count > ROOM_CAPACITY) {
                 alert(`เกินความจุ! ห้องนี้รับได้ ${ROOM_CAPACITY} คน`); return;
             }
+            
+            // Validation check (optional)
+            if (!document.getElementById('hiddenBookingForm').checkValidity()) {
+                document.getElementById('hiddenBookingForm').reportValidity();
+                return;
+            }
+
             this.disabled = true;
             this.innerHTML = 'กำลังบันทึก...';
             document.getElementById('hiddenBookingForm').submit();

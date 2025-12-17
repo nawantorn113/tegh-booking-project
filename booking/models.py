@@ -62,7 +62,7 @@ class Room(models.Model):
         return f"{self.name}{status}"
 
 # ----------------------------------------------------
-# 4. Model การจอง (เพิ่ม room_layout ตรงนี้)
+# 4. Model การจอง
 # ----------------------------------------------------
 class Booking(models.Model):
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='bookings')
@@ -104,6 +104,14 @@ class Booking(models.Model):
         choices=LAYOUT_CHOICES,
         default='theatre',
         verbose_name="รูปแบบการจัดห้อง"
+    )
+    
+    # [เพิ่มใหม่] ฟิลด์สำหรับเก็บไฟล์แนบ กรณีเลือกรูปแบบอื่นๆ
+    room_layout_attachment = models.FileField(
+        upload_to='layout_attachments/', 
+        blank=True, 
+        null=True, 
+        verbose_name="ไฟล์แนบรูปแบบการจัดห้อง (กรณีเลือกอื่นๆ)"
     )
     # -----------------------------------
     
