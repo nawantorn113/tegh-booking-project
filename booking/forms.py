@@ -11,7 +11,7 @@ from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Row, Column, Field, HTML
 
 # -----------------------------------------------
-# 1. BookingForm (แก้ไขเพิ่ม room_layout และ attachment)
+# 1. BookingForm
 # -----------------------------------------------
 class BookingForm(forms.ModelForm):
     RECURRENCE_CHOICES = [
@@ -33,11 +33,11 @@ class BookingForm(forms.ModelForm):
 
     class Meta:
         model = Booking
-        # [แก้ไข] เพิ่ม 'room_layout' และ 'room_layout_attachment'
+        # [แก้ไข] เพิ่ม 'equipments' เข้าไปในรายการ fields (บรรทัดนี้สำคัญมาก!)
         fields = [
             'room', 'title', 'chairman', 'department', 'start_time',
             'end_time', 'participant_count', 'room_layout', 'room_layout_attachment',
-            'participants', 'presentation_file', 'description', 'additional_requests', 'additional_notes',
+            'participants', 'equipments', 'presentation_file', 'description', 'additional_requests', 'additional_notes',
         ]
         
         labels = {
@@ -45,9 +45,10 @@ class BookingForm(forms.ModelForm):
             'department': 'แผนกผู้จอง', 'start_time': 'วัน/เวลา เริ่มต้น', 'end_time': 'วัน/เวลา สิ้นสุด',
             'participant_count': 'จำนวนผู้เข้าร่วม (โดยประมาณ)', 'participants': 'รายชื่อผู้เข้าร่วม (ในระบบ)',
             'presentation_file': 'ไฟล์นำเสนอ (ถ้ามี)', 'description': 'รายละเอียด/วาระการประชุม',
-            'additional_requests': 'คำขอเพิ่มเติม (เช่นอุปกรณ์เสริมเพิ่มเติม)', 'additional_notes': 'หมายเหตุเพิ่มเติม',
+            'additional_requests': 'คำขอเพิ่มเติม (กรณีไม่มีในรายการอุปกรณ์)', 'additional_notes': 'หมายเหตุเพิ่มเติม',
             'room_layout': 'รูปแบบการจัดห้อง', 
-            'room_layout_attachment': 'แนบไฟล์รูปแบบการจัดห้อง (เฉพาะกรณีเลือก "อื่นๆ")', # [เพิ่ม Label]
+            'room_layout_attachment': 'แนบไฟล์รูปแบบการจัดห้อง (เฉพาะกรณีเลือก "อื่นๆ")',
+            'equipments': 'อุปกรณ์ที่ต้องการเบิก (ค้นหาและเลือก)',
         }
         help_texts = {
             'participants': 'พิมพ์ชื่อ, นามสกุล, หรือ username เพื่อค้นหา (ผู้ใช้ในระบบ)',
@@ -71,10 +72,14 @@ class BookingForm(forms.ModelForm):
             'chairman': forms.TextInput(attrs={'class':'form-control'}),
             'department': forms.TextInput(attrs={'class':'form-control', 'placeholder': ''}),
             'participant_count': forms.NumberInput(attrs={'min': '1', 'class':'form-control'}),
-            
-            # [แก้ไข] Widget สำหรับ layout และ attachment
             'room_layout': forms.RadioSelect(),
             'room_layout_attachment': forms.ClearableFileInput(attrs={'class':'form-control'}),
+            
+            # Widget สำหรับค้นหาอุปกรณ์
+            'equipments': autocomplete.ModelSelect2Multiple(
+                url='equipment-autocomplete',
+                attrs={'data-placeholder': 'พิมพ์ชื่ออุปกรณ์เพื่อค้นหา...', 'data-theme': 'bootstrap-5'}
+            ),
         }
 
     def __init__(self, *args, **kwargs):
@@ -82,14 +87,21 @@ class BookingForm(forms.ModelForm):
         self.fields['participants'].required = False 
         self.fields['title'].required = True
         self.fields['participant_count'].required = False
+        self.fields['equipments'].required = False # ไม่บังคับเลือกอุปกรณ์
         
         self.fields['start_time'].input_formats = ['%Y-%m-%dT%H:%M']
         self.fields['end_time'].input_formats = ['%Y-%m-%dT%H:%M']
         self.fields['start_time'].widget = forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'form-control', 'required': 'required'}, format='%Y-%m-%dT%H:%M')
         self.fields['end_time'].widget = forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'form-control', 'required': 'required'}, format='%Y-%m-%dT%H:%M')
         
-        # [แก้ไข] จัดลำดับฟิลด์ใหม่ให้ layout และ attachment อยู่ในตำแหน่งที่เหมาะสม
-        self.order_fields(['title', 'chairman', 'department', 'start_time', 'end_time', 'recurrence', 'recurrence_end_date', 'participant_count', 'room_layout', 'room_layout_attachment', 'participants', 'presentation_file', 'description', 'additional_requests', 'additional_notes', 'room'])
+        # จัดลำดับ: เอา equipments มาไว้ก่อน additional_requests
+        self.order_fields([
+            'title', 'chairman', 'department', 'start_time', 'end_time', 
+            'recurrence', 'recurrence_end_date', 'participant_count', 
+            'room_layout', 'room_layout_attachment', 
+            'participants', 'equipments', 'additional_requests', 
+            'presentation_file', 'description', 'additional_notes', 'room'
+        ])
 
     def clean(self):
         cleaned_data = super().clean()

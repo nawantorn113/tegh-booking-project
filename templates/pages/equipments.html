@@ -3,8 +3,8 @@
 
 {% block content %}
 <div class="d-flex justify-content-end align-items-center mb-4">
-        <a href="{% url 'add_user' %}" class="btn btn-primary shadow-sm">
-            <i class="bi bi-person-plus-fill me-1"></i> เพิ่มอุปกรณ์ใหม่
+        <a href="{% url 'add_equipment' %}" class="btn btn-primary shadow-sm">
+            <i class="bi bi-plus-circle-fill me-1"></i> เพิ่มอุปกรณ์ใหม่
         </a>
 </div>
 
@@ -37,7 +37,7 @@
                     <tr>
                         <td colspan="3" class="text-center py-5 text-muted">
                             <i class="bi bi-box-seam display-6 d-block mb-3 opacity-50"></i>
-                            No equipment found.
+                            ยังไม่มีข้อมูลอุปกรณ์ในระบบ
                         </td>
                     </tr>
                     {% endfor %}

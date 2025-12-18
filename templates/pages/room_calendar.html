@@ -6,6 +6,7 @@
 
 {% block extra_head %}
     {{ form.media.css }}
+    
     <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/main.min.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
@@ -14,44 +15,40 @@
         .fc { font-family: 'Kanit', sans-serif; }
         .fc-event { border: none !important; box-shadow: 0 1px 2px rgba(0,0,0,0.1); cursor: pointer; padding: 2px 4px; font-weight: 500; }
         
-        /* สถานะต่างๆ */
         .fc-event.status-past { opacity: 0.6; pointer-events: none; background-color: #6c757d !important; }
         .fc-event.status-cancelled { text-decoration: line-through; opacity: 0.6; background-color: #dc3545 !important; }
 
-        /* Select2 Fix */
+        /* [สำคัญ] ดัน Dropdown ของ Select2 ให้มาอยู่หน้าสุด (ทับ Modal) */
         .select2-container { z-index: 10000 !important; width: 100% !important; }
         .select2-dropdown { z-index: 10001 !important; }
-        .select2-selection--multiple { min-height: 38px !important; border: 1px solid #dee2e6 !important; }
+        .select2-selection--multiple { 
+            min-height: 38px !important; 
+            border: 1px solid #dee2e6 !important; 
+            border-radius: 0.375rem !important;
+        }
         
         @media (max-width: 768px) {
             .fc .fc-toolbar { flex-direction: column; gap: 10px; }
             .fc-view-harness { min-height: 400px; }
         }
 
-        /* --- CSS สำหรับการ์ดเลือกรูปแบบห้อง --- */
-        .layout-card-label input[type="radio"] { display: none; } /* ซ่อนปุ่มกลมๆ */
-        
+        .layout-card-label input[type="radio"] { display: none; }
         .layout-card { 
             border: 2px solid #eee; 
             transition: all 0.2s; 
             background: #fff;
             cursor: pointer;
         }
-        
         .layout-card:hover { 
             border-color: #ccc; 
             background: #f8f9fa; 
             transform: translateY(-3px);
         }
-        
-        /* สไตล์เมื่อถูกเลือก (Checked) */
         .layout-card-label input[type="radio"]:checked + .layout-card {
-            border-color: #0d6efd !important; /* สีขอบตอนเลือก */
-            background-color: #f0f8ff !important; /* สีพื้นหลังตอนเลือก */
+            border-color: #0d6efd !important;
+            background-color: #f0f8ff !important;
             box-shadow: 0 4px 6px rgba(13, 110, 253, 0.15);
         }
-        
-        /* โชว์ไอคอนติ๊กถูกเมื่อเลือก */
         .layout-card-label input[type="radio"]:checked + .layout-card .check-icon { 
             display: block !important; 
         }
@@ -115,7 +112,7 @@
 
 </div>
 
-<div class="modal fade" id="bookingModal" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="bookingModal" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg"> 
         <div class="modal-content border-0 shadow">
             <div class="modal-header bg-primary text-white">
@@ -137,7 +134,6 @@
         {% csrf_token %}
         
         {% if room.name == 'ห้องประชุมใหญ่' %}
-        
             <div class="mb-4">
                 <label class="form-label fw-bold mb-2">
                     <i class="bi bi-grid-3x3-gap-fill text-primary"></i> รูปแบบการจัดห้อง
@@ -157,9 +153,7 @@
                                              onerror="this.style.display='none'">
                                     {% endif %}
                                 </div>
-                                
                                 <small class="fw-bold d-block text-dark">{{ radio.choice_label }}</small>
-                                
                                 <div class="check-icon position-absolute top-0 end-0 m-1" style="display: none;">
                                     <i class="bi bi-check-circle-fill text-success fs-5"></i>
                                 </div>
@@ -169,7 +163,7 @@
                     {% endfor %}
                 </div>
             </div>
-
+            
             <div id="layoutAttachmentDiv" class="mb-3 p-3 bg-light border rounded d-none">
                 <label class="form-label text-danger fw-bold small">
                     <i class="bi bi-paperclip"></i> กรุณาแนบไฟล์แผนผัง (สำหรับรูปแบบอื่นๆ)
@@ -193,8 +187,12 @@
 {% endblock %}
 
 {% block extra_scripts %}
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.full.min.js"></script>
+    
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+    
     {{ form.media.js }}
 
     <script>
@@ -202,63 +200,17 @@
     const CSRF_TOKEN = '{{ csrf_token }}'; 
     const API_UPDATE_URL = "{% url 'update_booking_time_api' %}";
     
-    // ฟังก์ชันแปลงเวลา Local
     function getLocalISOString(date) {
         const offset = date.getTimezoneOffset() * 60000;
         const localDate = new Date(date.getTime() - offset);
         return localDate.toISOString().slice(0, 16);
     }
 
-    // ฟังก์ชันเปิด Modal
-    function openBookingModal(startStr = null, endStr = null) {
-        const form = document.getElementById('hiddenBookingForm');
-        const modalBody = document.getElementById('modalBookingBody');
-        
-        // ย้ายฟอร์มไปใส่ใน Modal Body
-        if(!modalBody.contains(form)) {
-            modalBody.appendChild(form);
-            form.classList.remove('d-none');
-        }
-        form.reset();
-        
-        // Reset การแสดงผลช่องแนบไฟล์ (เรียกใช้ function toggle ที่เขียนไว้ด้านล่าง)
-        toggleAttachmentField(); 
-
-        // ตั้งเวลาเริ่มต้น-สิ้นสุด
-        if(startStr && endStr) {
-            document.getElementById('id_start_time').value = startStr.substring(0, 16);
-            document.getElementById('id_end_time').value = endStr.substring(0, 16);
-        } else {
-            let now = new Date();
-            let next = new Date(now.getTime() + 60*60000); 
-            document.getElementById('id_start_time').value = getLocalISOString(now);
-            document.getElementById('id_end_time').value = getLocalISOString(next);
-        }
-
-        // รีเซ็ต Select2
-        if ($('#id_participants').hasClass("select2-hidden-accessible")) {
-            $('#id_participants').select2('destroy');
-        }
-        
-        const modalEl = document.getElementById('bookingModal');
-        var bookingModal = new bootstrap.Modal(modalEl);
-        bookingModal.show();
-    }
-
-    // ตั้งค่า Select2 เมื่อ Modal เปิด
-    document.getElementById('bookingModal').addEventListener('shown.bs.modal', function () {
-        $('#id_participants').select2({ 
-            theme: 'bootstrap-5', width: '100%', dropdownParent: $(this).find('.modal-content'), placeholder: "พิมพ์ชื่อเพื่อค้นหา...", allowClear: true
-        });
-    });
-
-    // ฟังก์ชันจัดการการแสดงช่องแนบไฟล์
     function toggleAttachmentField() {
         const layoutRadios = document.querySelectorAll('input[name="room_layout"]');
         const attachmentDiv = document.getElementById('layoutAttachmentDiv');
-        const fileInput = document.getElementById('id_room_layout_attachment');
         
-        if (!attachmentDiv) return; // ถ้าไม่มี Div นี้ (เช่นห้องอื่น) ให้จบฟังก์ชัน
+        if (!attachmentDiv) return;
 
         let selectedValue = "";
         layoutRadios.forEach(radio => {
@@ -269,15 +221,47 @@
             attachmentDiv.classList.remove('d-none');
         } else {
             attachmentDiv.classList.add('d-none');
-            // ล้างค่าไฟล์ออกเมื่อเปลี่ยนใจไม่เลือก Other
+            const fileInput = document.getElementById('id_room_layout_attachment');
             if (fileInput) fileInput.value = ''; 
         }
     }
 
-    // ฟังก์ชันอัปเดตเวลาผ่านการลากบนปฏิทิน
+    function openBookingModal(startStr = null, endStr = null) {
+        const form = document.getElementById('hiddenBookingForm');
+        const modalBody = document.getElementById('modalBookingBody');
+        
+        if(!modalBody.contains(form)) {
+            modalBody.appendChild(form);
+            form.classList.remove('d-none');
+        }
+        form.reset();
+        
+        toggleAttachmentField();
+
+        if(startStr && endStr) {
+            document.getElementById('id_start_time').value = startStr.substring(0, 16);
+            document.getElementById('id_end_time').value = endStr.substring(0, 16);
+        } else {
+            let now = new Date();
+            let next = new Date(now.getTime() + 60*60000); 
+            document.getElementById('id_start_time').value = getLocalISOString(now);
+            document.getElementById('id_end_time').value = getLocalISOString(next);
+        }
+
+        // รีเซ็ตค่า Select2 (ให้ DAL จัดการต่อเอง)
+        $('#id_participants').val(null).trigger('change');
+        $('#id_equipments').val(null).trigger('change');
+        
+        const modalEl = document.getElementById('bookingModal');
+        var bookingModal = new bootstrap.Modal(modalEl);
+        bookingModal.show();
+    }
+
+    // [สำคัญ] ลบโค้ดที่ไป overwrite Select2 ออกแล้ว
+    // ปล่อยให้ DAL (Django Autocomplete Light) จัดการเอง
+
     function updateBookingOnServer(eventInfo) {
         const event = eventInfo.event;
-        
         fetch(API_UPDATE_URL, {
             method: 'POST',
             headers: { 
@@ -307,14 +291,12 @@
     }
 
     document.addEventListener('DOMContentLoaded', function() {
-        // 1. จัดการ Event การเปลี่ยน Layout
         const layoutRadios = document.querySelectorAll('input[name="room_layout"]');
         layoutRadios.forEach(radio => {
             radio.addEventListener('change', toggleAttachmentField);
         });
-        toggleAttachmentField(); // เรียกครั้งแรกตอนโหลดหน้า
+        toggleAttachmentField();
 
-        // 2. ตั้งค่าปฏิทิน FullCalendar
         var calendarEl = document.getElementById('calendar');
         var calendar = new FullCalendar.Calendar(calendarEl, {
             initialView: window.innerWidth < 768 ? 'listMonth' : 'dayGridMonth', 
@@ -324,72 +306,41 @@
                 center: 'title', 
                 right: 'dayGridMonth,timeGridWeek,timeGridDay,listMonth' 
             },
-            buttonText: { 
-                today: 'วันนี้', 
-                month: 'เดือน', 
-                week: 'สัปดาห์', 
-                day: 'วัน', 
-                list: 'รายการ' 
-            },
-            
+            buttonText: { today: 'วันนี้', month: 'เดือน', week: 'สัปดาห์', day: 'วัน', list: 'รายการ' },
             selectable: true, 
             selectMirror: true,
             editable: true, 
             droppable: true,
             eventDurationEditable: true,
             dayMaxEvents: true,
-            
             height: 'auto',
             events: "{% url 'bookings_api' %}?room_id={{ room.id }}",
             
             eventDrop: function(info) { 
-                if(confirm("ยืนยันการย้ายวัน/เวลา?")) {
-                    updateBookingOnServer(info);
-                } else {
-                    info.revert();
-                }
+                if(confirm("ยืนยันการย้ายวัน/เวลา?")) { updateBookingOnServer(info); } else { info.revert(); }
             },
-            
             eventResize: function(info) { 
-                if(confirm("ยืนยันการปรับเวลา?")) {
-                    updateBookingOnServer(info);
-                } else {
-                    info.revert();
-                }
+                if(confirm("ยืนยันการปรับเวลา?")) { updateBookingOnServer(info); } else { info.revert(); }
             },
-            
             select: function(info) {
                 if (window.innerWidth < 768 && info.view.type === 'listMonth') return;
-                
-                let start, end;
-                if (info.allDay) {
-                    start = info.startStr + 'T08:00';
-                    end = info.startStr + 'T09:00';
-                } else {
-                    start = info.startStr.substring(0, 16);
-                    end = info.endStr.substring(0, 16);
-                }
-
+                let start = info.allDay ? info.startStr + 'T08:00' : info.startStr.substring(0, 16);
+                let end = info.allDay ? info.startStr + 'T09:00' : info.endStr.substring(0, 16);
                 openBookingModal(start, end);
             },
-            
             eventClick: function(info) {
                 if (info.jsEvent.detail > 1) return;
                 info.jsEvent.preventDefault();
-                // ลิงก์ไปหน้า Detail
                 window.location.href = `/booking/${info.event.id}/detail/`;
             },
-
             eventDidMount: function(info) {
                 var status = info.event.extendedProps.status;
                 var now = new Date();
                 var end = info.event.end || info.event.start;
-                
                 if (end < now) {
                     info.el.classList.add('status-past');
                     info.event.setProp('editable', false);
-                }
-                else if (status === 'CANCELLED' || status === 'REJECTED') {
+                } else if (status === 'CANCELLED' || status === 'REJECTED') {
                     info.el.classList.add('status-cancelled');
                     info.event.setProp('editable', false);
                 }
@@ -397,20 +348,12 @@
         });
         calendar.render();
 
-        // 3. ปุ่มยืนยันการจอง
         document.getElementById('submitBookingBtn').addEventListener('click', function() {
             const pInput = document.getElementById('id_participant_count');
             const count = pInput && pInput.value ? parseInt(pInput.value) : 0;
             if (ROOM_CAPACITY > 0 && count > ROOM_CAPACITY) {
                 alert(`เกินความจุ! ห้องนี้รับได้ ${ROOM_CAPACITY} คน`); return;
             }
-            
-            // Validation check (optional)
-            if (!document.getElementById('hiddenBookingForm').checkValidity()) {
-                document.getElementById('hiddenBookingForm').reportValidity();
-                return;
-            }
-
             this.disabled = true;
             this.innerHTML = 'กำลังบันทึก...';
             document.getElementById('hiddenBookingForm').submit();
