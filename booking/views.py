@@ -283,7 +283,7 @@ class UserAutocomplete(Select2QuerySetView):
             qs = qs.filter(q_filter)
         return qs[:15]
 
-# [เพิ่มใหม่] Class สำหรับค้นหาอุปกรณ์
+# Class สำหรับค้นหาอุปกรณ์
 class EquipmentAutocomplete(Select2QuerySetView):
     def get_queryset(self):
         if not self.request.user.is_authenticated:
@@ -588,10 +588,21 @@ def edit_booking_view(request, booking_id):
         form = BookingForm(request.POST, request.FILES, instance=b)
         if form.is_valid():
             booking = form.save(commit=False)
+            
+            # [แก้ไข 1] ถ้าไม่ใช่ Admin แก้ไข -> เปลี่ยนเป็น PENDING + รีเซ็ตการแจ้งเตือน
+            if not is_approver_or_admin(request.user):
+                booking.status = 'PENDING'
+                booking.is_user_seen = False # เพื่อให้ขึ้นเตือน Admin ว่ามีรายการใหม่(แก้ไข)
+            
             booking.save()
             form.save_m2m()
             
             log_action(request, 'BOOKING_EDITED', booking, "แก้ไขการจอง")
+            
+            # [แก้ไข 2] แจ้งเตือน Line
+            send_booking_notification(booking, '', 'แจ้งเตือน: มีการแก้ไขข้อมูลการจอง 📝')
+
+            # อัปเดต Outlook (ถ้ามี)
             if booking.outlook_event_id and booking.status == 'APPROVED':
                 token = get_valid_token(request.user, request)
                 if token:
@@ -600,7 +611,7 @@ def edit_booking_view(request, booking_id):
                         client.update_calendar_event(token, booking.outlook_event_id, booking)
                     except: pass
 
-            messages.success(request, "แก้ไขเรียบร้อย")
+            messages.success(request, "บันทึกการแก้ไขเรียบร้อย")
             return redirect('history')
     else:
         form = BookingForm(instance=b)
@@ -877,7 +888,16 @@ def update_booking_time_api(request):
 
         booking.start_time = start_dt
         booking.end_time = end_dt
+        
+        # [แก้ไข] เปลี่ยนสถานะเป็น PENDING เมื่อมีการย้ายเวลา (ถ้าไม่ใช่แอดมินทำ)
+        if not is_approver_or_admin(request.user):
+            booking.status = 'PENDING'
+            booking.is_user_seen = False # แจ้งเตือนแอดมินใน Dashboard
+            
         booking.save()
+        
+        # [แก้ไข] ส่งแจ้งเตือน Line
+        send_booking_notification(booking, '', 'แจ้งเตือน: มีการย้ายเวลาการจอง 🕒')
         
         if booking.outlook_event_id and booking.status == 'APPROVED':
             token = get_valid_token(request.user, request)
