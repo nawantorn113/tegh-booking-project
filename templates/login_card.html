@@ -121,7 +121,7 @@
 <body>
     <div class="login-container">
         
-        <h1 class="mb-2 fw-bolder text-dark">TEGH Booking</h1>
+        <h1 class="mb-2 fw-bolder" style="color: #8416f1ff;">TEGH MEETBOOK</h1>
         <p class="text-secondary mb-4">โปรดเข้าสู่ระบบเพื่อดำเนินการต่อ</p>
 
         {% if messages %}
@@ -159,11 +159,11 @@
                     <button type="submit" class="btn btn-main w-100 mb-3">เข้าสู่ระบบ</button>
                 </form>
 
-                {% if enable_sso %}
+                {% comment %} {% if enable_sso %}
                 <a href="{% url 'outlook_login' %}" class="btn btn-outline-secondary w-100 mb-3">
                     <i class="bi bi-microsoft me-2"></i> เข้าสู่ระบบด้วย Microsoft 365
                 </a>
-                {% endif %}
+                {% endif %} {% endcomment %}
 
                 <hr class="my-4 text-muted opacity-25">
 
@@ -174,7 +174,7 @@
         </div>
         
         <div class="text-center mt-4 text-muted small">
-            &copy; {% now "Y" %} TEGH Booking. All rights reserved.
+            &copy; {% now "Y" %} TEGH MEETBOOK. All rights reserved.
         </div>
 
     </div>

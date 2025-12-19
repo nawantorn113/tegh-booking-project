@@ -141,7 +141,6 @@ def get_base_context(request):
 
     if request.user.is_authenticated:
         if is_approver_or_admin(request.user):
-            # 1. รายการรออนุมัติ (Pending)
             if is_admin(request.user):
                 qs = Booking.objects.filter(status='PENDING').select_related('room', 'user').order_by('-created_at')
             else:
@@ -150,7 +149,6 @@ def get_base_context(request):
             pending_items_count = qs.count()
             pending_notifications = qs[:10]
 
-            # 2. รายการยกเลิก (Cancelled) ภายใน 24 ชม. และยังไม่กดรับทราบ
             cancellations_qs = Booking.objects.filter(
                 status='CANCELLED',
                 updated_at__gte=timezone.now() - timedelta(days=1),
@@ -160,11 +158,9 @@ def get_base_context(request):
             cancel_items_count = cancellations_qs.count()
             recent_cancellations = cancellations_qs[:10]
             
-            # รวมยอดแจ้งเตือน (รออนุมัติ + ยกเลิก) เพื่อแสดงใน Badge
             pending_count = pending_items_count + cancel_items_count
         
         else:
-            # สำหรับ User ทั่วไป (แจ้งผลอนุมัติ)
             qs = Booking.objects.filter(
                 user=request.user,
                 is_user_seen=False
@@ -207,14 +203,10 @@ def send_booking_notification(booking, template_name, subject_prefix):
     user_name = booking.user.get_full_name() or booking.user.username
 
     layout_line = ""
-    # เช็คว่าชื่อห้องคือ "ห้องประชุมใหญ่" หรือไม่
     if booking.room.name == 'ห้องประชุมใหญ่':
         layout_display = booking.get_room_layout_display()
-        
-        # กรณีเลือก "อื่นๆ" และมีไฟล์แนบ
         if booking.room_layout == 'other' and booking.room_layout_attachment:
             layout_display += f" (ไฟล์แนบ: {booking.room_layout_attachment.url})"
-            
         layout_line = f"รูปแบบ: {layout_display}\n"
 
     msg = (f"{subject_prefix}\n"
@@ -283,17 +275,13 @@ class UserAutocomplete(Select2QuerySetView):
             qs = qs.filter(q_filter)
         return qs[:15]
 
-# Class สำหรับค้นหาอุปกรณ์
 class EquipmentAutocomplete(Select2QuerySetView):
     def get_queryset(self):
         if not self.request.user.is_authenticated:
             return Equipment.objects.none()
-
         qs = Equipment.objects.all().order_by('name')
-
         if self.q:
             qs = qs.filter(name__icontains=self.q)
-
         return qs
 
 def login_view(request):
@@ -421,12 +409,10 @@ def room_calendar_view(request, room_id):
             booking_start = form.cleaned_data.get('start_time')
             now = timezone.now()
 
-            # 1. ห้ามจองย้อนหลัง
             if booking_start < now:
                 messages.error(request, "ไม่สามารถจองย้อนหลังได้ กรุณาเลือกเวลาใหม่")
                 return render(request, 'pages/room_calendar.html', {**get_base_context(request), 'room': room, 'form': form})
 
-            # 2. ต้องจองล่วงหน้า 30 นาที
             if booking_start < now + timedelta(minutes=30):
                 messages.error(request, "กรุณาจองล่วงหน้าอย่างน้อย 30 นาที เพื่อเตรียมห้องและอุปกรณ์")
                 return render(request, 'pages/room_calendar.html', {**get_base_context(request), 'room': room, 'form': form})
@@ -500,7 +486,7 @@ def room_calendar_view(request, room_id):
                     
                     new_b.save()
                     
-                    if 'participants' in form.cleaned_data: new_b.participants.set(form.cleaned_data['participants'])
+                    # [แก้ไข] เอาการบันทึก participants ออก
                     if 'equipments' in form.cleaned_data: new_b.equipments.set(form.cleaned_data['equipments'])
 
                     log_action(request, 'BOOKING_CREATED', new_b, f"จองห้อง {room.name}")
@@ -589,20 +575,18 @@ def edit_booking_view(request, booking_id):
         if form.is_valid():
             booking = form.save(commit=False)
             
-            # [แก้ไข 1] ถ้าไม่ใช่ Admin แก้ไข -> เปลี่ยนเป็น PENDING + รีเซ็ตการแจ้งเตือน
+            # [แก้ไข] ถ้าไม่ใช่ Admin แก้ไข -> เปลี่ยนเป็น PENDING
             if not is_approver_or_admin(request.user):
                 booking.status = 'PENDING'
-                booking.is_user_seen = False # เพื่อให้ขึ้นเตือน Admin ว่ามีรายการใหม่(แก้ไข)
+                booking.is_user_seen = False 
             
             booking.save()
             form.save_m2m()
             
             log_action(request, 'BOOKING_EDITED', booking, "แก้ไขการจอง")
             
-            # [แก้ไข 2] แจ้งเตือน Line
             send_booking_notification(booking, '', 'แจ้งเตือน: มีการแก้ไขข้อมูลการจอง 📝')
 
-            # อัปเดต Outlook (ถ้ามี)
             if booking.outlook_event_id and booking.status == 'APPROVED':
                 token = get_valid_token(request.user, request)
                 if token:
@@ -630,14 +614,12 @@ def delete_booking_view(request, booking_id):
                     client.delete_calendar_event(token, b.outlook_event_id)
                 except: pass
         
-        # แจ้งเตือนแอดมิน (Dashboard)
         b.status = 'CANCELLED'
         b.outlook_event_id = None
         b.is_user_seen = False 
         b.save()
         log_action(request, 'BOOKING_CANCELLED', b, "ยกเลิกการจอง")
         
-        # แจ้งเตือน Line
         send_booking_notification(b, '', 'แจ้งเตือน: มีการยกเลิกการจอง ❌')
 
         messages.success(request, "ยกเลิกสำเร็จ และแจ้งเตือนแอดมินแล้ว")
@@ -868,7 +850,7 @@ def update_booking_time_api(request):
         else: 
             end_dt = start_dt + (booking.end_time - booking.start_time)
         
-        # --- ตรวจสอบเวลาจองแบบลากวาง ---
+        # --- ตรวจสอบเวลาจอง ---
         now = timezone.now()
         if start_dt < now:
              return JsonResponse({'status': 'error', 'message': 'ไม่สามารถจองย้อนหลังได้'}, status=400)
@@ -889,14 +871,13 @@ def update_booking_time_api(request):
         booking.start_time = start_dt
         booking.end_time = end_dt
         
-        # [แก้ไข] เปลี่ยนสถานะเป็น PENDING เมื่อมีการย้ายเวลา (ถ้าไม่ใช่แอดมินทำ)
+        # [แก้ไข] เปลี่ยนเป็น PENDING ถ้าลากแก้
         if not is_approver_or_admin(request.user):
             booking.status = 'PENDING'
-            booking.is_user_seen = False # แจ้งเตือนแอดมินใน Dashboard
+            booking.is_user_seen = False
             
         booking.save()
         
-        # [แก้ไข] ส่งแจ้งเตือน Line
         send_booking_notification(booking, '', 'แจ้งเตือน: มีการย้ายเวลาการจอง 🕒')
         
         if booking.outlook_event_id and booking.status == 'APPROVED':
@@ -928,7 +909,6 @@ def delete_booking_api(request, booking_id):
                      client.delete_calendar_event(token, booking.outlook_event_id)
                  except: pass
 
-        # แจ้งเตือนแอดมิน (Dashboard)
         booking.status = 'CANCELLED'
         booking.outlook_event_id = None
         booking.is_user_seen = False 
@@ -936,7 +916,6 @@ def delete_booking_api(request, booking_id):
         
         log_action(request, 'BOOKING_CANCELLED', booking, "ยกเลิกการจองผ่านปฏิทิน")
         
-        # แจ้งเตือน Line
         send_booking_notification(booking, '', 'แจ้งเตือน: มีการยกเลิกการจอง ❌')
         
         return JsonResponse({'status': 'success'})
@@ -948,14 +927,12 @@ def api_pending_count(request):
     count = 0
     latest_booking = None
     if is_approver_or_admin(request.user):
-        # 1. รออนุมัติ
         if is_admin(request.user):
             pending_qs = Booking.objects.filter(status='PENDING').order_by('-created_at')
         else:
             pending_qs = Booking.objects.filter(room__approver=request.user, status='PENDING').order_by('-created_at')
         pending_count = pending_qs.count()
         
-        # 2. รายการยกเลิก
         cancel_qs = Booking.objects.filter(
             status='CANCELLED',
             updated_at__gte=timezone.now() - timedelta(days=1),
@@ -963,7 +940,6 @@ def api_pending_count(request):
         )
         cancel_count = cancel_qs.count()
         
-        # รวมยอด
         count = pending_count + cancel_count
 
         if cancel_qs.exists():

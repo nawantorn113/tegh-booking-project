@@ -33,25 +33,26 @@ class BookingForm(forms.ModelForm):
 
     class Meta:
         model = Booking
-        # [แก้ไข] เพิ่ม 'equipments' เข้าไปในรายการ fields (บรรทัดนี้สำคัญมาก!)
+        # [แก้ไข] ลบ 'participants' ออกจากรายการ fields
         fields = [
             'room', 'title', 'chairman', 'department', 'start_time',
             'end_time', 'participant_count', 'room_layout', 'room_layout_attachment',
-            'participants', 'equipments', 'presentation_file', 'description', 'additional_requests', 'additional_notes',
+            'equipments', 'presentation_file', 'description', 
+            'additional_requests', 'additional_notes',
         ]
         
         labels = {
             'room': 'ห้องประชุม', 'title': 'หัวข้อการประชุม', 'chairman': 'ประธานในที่ประชุม (ถ้ามี)',
             'department': 'แผนกผู้จอง', 'start_time': 'วัน/เวลา เริ่มต้น', 'end_time': 'วัน/เวลา สิ้นสุด',
-            'participant_count': 'จำนวนผู้เข้าร่วม (โดยประมาณ)', 'participants': 'รายชื่อผู้เข้าร่วม (ในระบบ)',
+            'participant_count': 'จำนวนผู้เข้าร่วม (โดยประมาณ)', 
             'presentation_file': 'ไฟล์นำเสนอ (ถ้ามี)', 'description': 'รายละเอียด/วาระการประชุม',
-            'additional_requests': 'คำขอเพิ่มเติม (กรณีไม่มีในรายการอุปกรณ์)', 'additional_notes': 'หมายเหตุเพิ่มเติม',
+            'additional_notes': 'หมายเหตุเพิ่มเติม',
             'room_layout': 'รูปแบบการจัดห้อง', 
             'room_layout_attachment': 'แนบไฟล์รูปแบบการจัดห้อง (เฉพาะกรณีเลือก "อื่นๆ")',
             'equipments': 'อุปกรณ์ที่ต้องการเบิก (ค้นหาและเลือก)',
+            'additional_requests': 'คำขออื่นๆ (กรณีไม่มีในรายการอุปกรณ์)',
         }
         help_texts = {
-            'participants': 'พิมพ์ชื่อ, นามสกุล, หรือ username เพื่อค้นหา (ผู้ใช้ในระบบ)',
             'participant_count': 'ระบุจำนวนคร่าวๆ สำหรับการเตรียมห้อง',
         }
         
@@ -60,10 +61,6 @@ class BookingForm(forms.ModelForm):
             'status': forms.HiddenInput(),
             'start_time': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class':'form-control'}),
             'end_time': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class':'form-control'}),
-            'participants': autocomplete.ModelSelect2Multiple(
-                url='user-autocomplete',
-                attrs={'data-placeholder': 'พิมพ์เพื่อค้นหา...', 'data-theme': 'bootstrap-5'}
-            ),
             'presentation_file': forms.ClearableFileInput(attrs={'class':'form-control'}),
             'description': forms.Textarea(attrs={'rows': 3, 'class':'form-control'}),
             'additional_requests': forms.Textarea(attrs={'rows': 2, 'class':'form-control'}),
@@ -84,22 +81,22 @@ class BookingForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['participants'].required = False 
+        
         self.fields['title'].required = True
         self.fields['participant_count'].required = False
-        self.fields['equipments'].required = False # ไม่บังคับเลือกอุปกรณ์
+        self.fields['equipments'].required = False
         
         self.fields['start_time'].input_formats = ['%Y-%m-%dT%H:%M']
         self.fields['end_time'].input_formats = ['%Y-%m-%dT%H:%M']
         self.fields['start_time'].widget = forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'form-control', 'required': 'required'}, format='%Y-%m-%dT%H:%M')
         self.fields['end_time'].widget = forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'form-control', 'required': 'required'}, format='%Y-%m-%dT%H:%M')
         
-        # จัดลำดับ: เอา equipments มาไว้ก่อน additional_requests
+        # [แก้ไข] เอา participants ออกจากการจัดเรียง
         self.order_fields([
             'title', 'chairman', 'department', 'start_time', 'end_time', 
             'recurrence', 'recurrence_end_date', 'participant_count', 
             'room_layout', 'room_layout_attachment', 
-            'participants', 'equipments', 'additional_requests', 
+            'equipments', 'additional_requests', 
             'presentation_file', 'description', 'additional_notes', 'room'
         ])
 
