@@ -6,105 +6,78 @@
 
 {% block extra_head %}
     {{ form.media.css }}
-    
     <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/main.min.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
 
     <style>
         .fc { font-family: 'Kanit', sans-serif; }
-        .fc-event { border: none !important; box-shadow: 0 1px 2px rgba(0,0,0,0.1); cursor: pointer; padding: 2px 4px; font-weight: 500; }
+        .fc-event { border: none !important; box-shadow: 0 1px 2px rgba(0,0,0,0.1); cursor: pointer; padding: 2px 5px; border-radius: 3px; }
+        .fc-event.status-past { background-color: #ced4da !important; border-left: 3px solid #6c757d !important; opacity: 0.8; }
         
-        .fc-event.status-past { opacity: 0.6; pointer-events: none; background-color: #6c757d !important; }
-        .fc-event.status-cancelled { text-decoration: line-through; opacity: 0.6; background-color: #dc3545 !important; }
-
-        /* [สำคัญ] ดัน Dropdown ของ Select2 ให้มาอยู่หน้าสุด (ทับ Modal) */
+        /* Select2 Fixes */
         .select2-container { z-index: 10000 !important; width: 100% !important; }
         .select2-dropdown { z-index: 10001 !important; }
-        .select2-selection--multiple { 
-            min-height: 38px !important; 
-            border: 1px solid #dee2e6 !important; 
-            border-radius: 0.375rem !important;
-        }
-        
-        @media (max-width: 768px) {
-            .fc .fc-toolbar { flex-direction: column; gap: 10px; }
-            .fc-view-harness { min-height: 400px; }
-        }
+        .select2-selection--multiple { min-height: 38px; border-color: #dee2e6; }
 
+        /* Layout Cards */
         .layout-card-label input[type="radio"] { display: none; }
-        .layout-card { 
-            border: 2px solid #eee; 
-            transition: all 0.2s; 
-            background: #fff;
-            cursor: pointer;
-        }
-        .layout-card:hover { 
-            border-color: #ccc; 
-            background: #f8f9fa; 
-            transform: translateY(-3px);
-        }
+        .layout-card { border: 1px solid #dee2e6; background: #fff; cursor: pointer; border-radius: 8px; transition: all 0.2s; }
+        .layout-card:hover { border-color: #adb5bd; background: #f8f9fa; }
         .layout-card-label input[type="radio"]:checked + .layout-card {
-            border-color: #0d6efd !important;
-            background-color: #f0f8ff !important;
-            box-shadow: 0 4px 6px rgba(13, 110, 253, 0.15);
+            border-color: #0d6efd !important; background-color: #e7f1ff !important; color: #0d6efd;
         }
-        .layout-card-label input[type="radio"]:checked + .layout-card .check-icon { 
-            display: block !important; 
-        }
+        .layout-card-label input[type="radio"]:checked + .layout-card .check-icon { display: block !important; }
     </style>
 {% endblock %}
 
 {% block content %}
-<div class="container py-3 px-2 px-md-3">
-    
-    <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden">
+<div class="container py-4"> <div class="card border-0 shadow-sm rounded-3 mb-4 overflow-hidden">
         <div class="row g-0">
-            <div class="col-md-4 position-relative" style="min-height: 200px;">
+            <div class="col-md-3 position-relative" style="min-height: 200px;">
                 {% if room.image %}
-                    <img src="{{ room.image.url }}" class="w-100 h-100 object-fit-cover position-absolute top-0 start-0">
+                    <img src="{{ room.image.url }}" class="w-100 h-100 object-fit-cover position-absolute">
                 {% else %}
-                    <div class="bg-light w-100 h-100 d-flex align-items-center justify-content-center text-muted position-absolute top-0 start-0">
+                    <div class="bg-light w-100 h-100 d-flex align-items-center justify-content-center text-muted position-absolute">
                         <i class="bi bi-image fs-1 opacity-25"></i>
                     </div>
                 {% endif %}
             </div>
-            <div class="col-md-8">
-                <div class="card-body p-3 p-md-4">
-                    <h4 class="fw-bold text-primary mb-1">{{ room.name }}</h4>
-                    <p class="text-muted small mb-2">
-                        <i class="bi bi-geo-alt-fill"></i> {{ room.building|default:"-" }} | จุ {{ room.capacity }} คน
-                    </p>
+            <div class="col-md-9">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h3 class="fw-bold text-primary mb-1">{{ room.name }}</h3>
+                            <p class="text-muted mb-2">
+                                <i class="bi bi-geo-alt"></i> {{ room.building|default:"-" }} &bull; ชั้น {{ room.floor }}
+                            </p>
+                            <div class="text-muted small mb-3">
+                                <span class="me-3"><i class="bi bi-people-fill"></i> จุ {{ room.capacity }} คน</span>
+                                <span><i class="bi bi-tools"></i> {{ room.equipment_in_room|default:"-" }}</span>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary px-4 rounded-pill shadow-sm" onclick="openBookingModal()">
+                            <i class="bi bi-plus-lg me-1"></i> จองห้อง
+                        </button>
+                    </div>
                     
-                    <div class="d-flex flex-wrap gap-2 small mb-3">
-                        <span class="badge bg-secondary fw-normal opacity-50">ใช้งานแล้ว</span>
+                    <div class="d-flex gap-2 align-items-center small mt-3 flex-wrap">
+                        <span class="badge bg-secondary fw-normal">ใช้งานแล้ว</span>
                         <span class="badge bg-primary fw-normal">กำลังใช้</span>
                         <span class="badge bg-success fw-normal">จองแล้ว</span>
-                        <span class="badge text-dark fw-normal border" style="background-color: #ffc107;">รออนุมัติ</span>
+                        <span class="badge bg-warning text-dark fw-normal">รออนุมัติ</span>
+                        <span class="ms-auto text-danger fw-bold"><i class="bi bi-info-circle"></i> จองล่วงหน้า 30 นาที</span>
                     </div>
-
-                    <div class="d-flex flex-wrap gap-3 mb-4">
-                        <span class="badge bg-danger-subtle text-dark border border-danger border-opacity-25 fw-normal fs-6 px-3 py-2">
-                            <i class="bi bi-exclamation-circle me-1"></i> กรุณาจองเวลาก่อนเข้าใช้งาน 30 นาที
-                        </span>
-                    </div>
-
-                    <button class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm d-none d-md-block ms-auto" onclick="openBookingModal()">
-                        <i class="bi bi-plus-lg me-1"></i> จองห้องนี้
-                    </button>
-                    <button class="btn btn-primary rounded-pill w-100 d-block d-md-none" onclick="openBookingModal()">
-                        จอง
-                    </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="card border-0 shadow-sm rounded-4">
-        <div class="card-body p-2 p-md-4">
-            <div class="alert alert-info border-0 d-flex align-items-center small mb-3">
-                <i class="bi bi-arrows-move me-2"></i>
-                <div><strong>Tip:</strong> คุณสามารถ <u>คลิกลาก</u> บนปฏิทินเพื่อจอง หรือ <u>ลากรายการเดิม</u> เพื่อเปลี่ยนเวลาได้ทันที</div>
+    <div class="card border-0 shadow-sm rounded-3">
+        <div class="card-body p-4">
+            <div class="alert alert-light d-flex align-items-center small mb-3 text-muted">
+                <i class="bi bi-info-circle me-2"></i> 
+                คลิกลากบนปฏิทินเพื่อจอง หรือ ลากรายการเดิมเพื่อย้ายเวลา
             </div>
             <div id="calendar"></div>
         </div>
@@ -116,14 +89,43 @@
     <div class="modal-dialog modal-dialog-centered modal-lg"> 
         <div class="modal-content border-0 shadow">
             <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title fw-bold fs-5">จองห้องประชุม</h5>
+                <h5 class="modal-title fw-bold"><i class="bi bi-calendar-plus me-2"></i>จองห้องประชุม</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body pt-3" id="modalBookingBody">
-                </div>
+            <div class="modal-body p-4" id="modalBookingBody"></div>
             <div class="modal-footer bg-light border-0">
-                <button type="button" class="btn btn-light text-muted rounded-pill" data-bs-dismiss="modal">ยกเลิก</button>
+                <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">ยกเลิก</button>
                 <button type="button" class="btn btn-primary rounded-pill px-4" id="submitBookingBtn">ยืนยัน</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="eventDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow rounded-3">
+            <div class="modal-header bg-light border-bottom-0">
+                <h5 class="modal-title fw-bold">รายละเอียด</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body px-4 pb-4">
+                <div class="mb-3">
+                    <label class="small text-muted fw-bold text-uppercase">ห้องประชุม</label>
+                    <div id="detailModalRoom" class="fs-5 text-primary fw-bold"></div>
+                </div>
+                <div class="row">
+                    <div class="col-6">
+                        <label class="small text-muted fw-bold text-uppercase">ผู้จอง</label>
+                        <div id="detailModalUser" class="text-dark"></div>
+                    </div>
+                    <div class="col-6">
+                        <label class="small text-muted fw-bold text-uppercase">สถานะ</label>
+                        <div id="detailModalStatus"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-0 bg-light p-2">
+                <a href="#" id="detailModalLink" class="btn btn-sm btn-outline-primary w-100">ดูรายละเอียดเต็ม</a>
             </div>
         </div>
     </div>
@@ -132,55 +134,30 @@
 <div id="bookingFormContainer" class="d-none">
     <form id="hiddenBookingForm" action="{% url 'create_booking' room.id %}" method="post" enctype="multipart/form-data">
         {% csrf_token %}
-        
         {% if room.name == 'ห้องประชุมใหญ่' %}
             <div class="mb-4">
-                <label class="form-label fw-bold mb-2">
-                    <i class="bi bi-grid-3x3-gap-fill text-primary"></i> รูปแบบการจัดห้อง
-                </label>
+                <label class="form-label fw-bold"><i class="bi bi-grid-fill text-primary"></i> รูปแบบการจัดห้อง</label>
                 <div class="row g-2">
                     {% for radio in form.room_layout %}
                     <div class="col-6 col-md-4">
                         <label class="layout-card-label w-100 h-100">
                             {{ radio.tag }} 
-                            <div class="card h-100 layout-card text-center p-2 shadow-sm position-relative">
-                                <div class="mb-2 d-flex align-items-center justify-content-center" style="height: 80px;">
-                                    {% if radio.data.value == 'other' %}
-                                        <i class="bi bi-pencil-square fs-1 text-muted"></i>
-                                    {% else %}
-                                        <img src="{% static 'images/layouts/'|add:radio.data.value|add:'.png' %}" 
-                                             class="img-fluid" style="max-height: 70px; width: auto;"
-                                             onerror="this.style.display='none'">
-                                    {% endif %}
+                            <div class="card h-100 layout-card text-center p-3">
+                                <div class="mb-2 d-flex align-items-center justify-content-center" style="height: 60px;">
+                                    {% if radio.data.value == 'other' %} <i class="bi bi-pencil-square fs-2 text-muted"></i>
+                                    {% else %} <img src="{% static 'images/layouts/'|add:radio.data.value|add:'.png' %}" class="img-fluid" style="max-height: 50px;" onerror="this.style.display='none'"> {% endif %}
                                 </div>
-                                <small class="fw-bold d-block text-dark">{{ radio.choice_label }}</small>
-                                <div class="check-icon position-absolute top-0 end-0 m-1" style="display: none;">
-                                    <i class="bi bi-check-circle-fill text-success fs-5"></i>
-                                </div>
+                                <small class="fw-bold d-block">{{ radio.choice_label }}</small>
+                                <div class="check-icon position-absolute top-0 end-0 m-2" style="display: none;"><i class="bi bi-check-circle-fill text-primary"></i></div>
                             </div>
                         </label>
                     </div>
                     {% endfor %}
                 </div>
             </div>
-            
-            <div id="layoutAttachmentDiv" class="mb-3 p-3 bg-light border rounded d-none">
-                <label class="form-label text-danger fw-bold small">
-                    <i class="bi bi-paperclip"></i> กรุณาแนบไฟล์แผนผัง (สำหรับรูปแบบอื่นๆ)
-                </label>
-                {{ form.room_layout_attachment }}
-            </div>
-
-        {% else %}
-            <input type="hidden" name="room_layout" value="theatre">
-        {% endif %}
-
-        {% for field in form %}
-            {% if field.name != 'room_layout' and field.name != 'room_layout_attachment' %}
-                {{ field|as_crispy_field }}
-            {% endif %}
-        {% endfor %}
-        
+            <div id="layoutAttachmentDiv" class="mb-3 d-none"><label class="form-label small text-danger fw-bold">แนบไฟล์แผนผัง</label>{{ form.room_layout_attachment }}</div>
+        {% else %} <input type="hidden" name="room_layout" value="theatre"> {% endif %}
+        {% for field in form %}{% if field.name != 'room_layout' and field.name != 'room_layout_attachment' %}<div class="mb-2">{{ field|as_crispy_field }}</div>{% endif %}{% endfor %}
     </form>
 </div>
 
@@ -188,13 +165,9 @@
 
 {% block extra_scripts %}
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.full.min.js"></script>
-    
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
-    
     {{ form.media.js }}
-
     <script>
     const ROOM_CAPACITY = parseInt("{{ room.capacity|default:0 }}");
     const CSRF_TOKEN = '{{ csrf_token }}'; 
@@ -209,141 +182,76 @@
     function toggleAttachmentField() {
         const layoutRadios = document.querySelectorAll('input[name="room_layout"]');
         const attachmentDiv = document.getElementById('layoutAttachmentDiv');
-        
         if (!attachmentDiv) return;
-
         let selectedValue = "";
-        layoutRadios.forEach(radio => {
-            if (radio.checked) selectedValue = radio.value;
-        });
-
-        if (selectedValue === 'other') {
-            attachmentDiv.classList.remove('d-none');
-        } else {
-            attachmentDiv.classList.add('d-none');
-            const fileInput = document.getElementById('id_room_layout_attachment');
-            if (fileInput) fileInput.value = ''; 
-        }
+        layoutRadios.forEach(radio => { if (radio.checked) selectedValue = radio.value; });
+        if (selectedValue === 'other') { attachmentDiv.classList.remove('d-none'); } 
+        else { attachmentDiv.classList.add('d-none'); document.getElementById('id_room_layout_attachment').value = ''; }
     }
 
     function openBookingModal(startStr = null, endStr = null) {
         const form = document.getElementById('hiddenBookingForm');
         const modalBody = document.getElementById('modalBookingBody');
-        
-        if(!modalBody.contains(form)) {
-            modalBody.appendChild(form);
-            form.classList.remove('d-none');
-        }
-        form.reset();
-        
-        toggleAttachmentField();
-
+        if(!modalBody.contains(form)) { modalBody.appendChild(form); form.classList.remove('d-none'); }
+        form.reset(); toggleAttachmentField();
         if(startStr && endStr) {
             document.getElementById('id_start_time').value = startStr.substring(0, 16);
             document.getElementById('id_end_time').value = endStr.substring(0, 16);
         } else {
-            let now = new Date();
-            let next = new Date(now.getTime() + 60*60000); 
+            let now = new Date(); let next = new Date(now.getTime() + 60*60000); 
             document.getElementById('id_start_time').value = getLocalISOString(now);
             document.getElementById('id_end_time').value = getLocalISOString(next);
         }
-
-        // รีเซ็ตค่า Select2 (ให้ DAL จัดการต่อเอง)
         $('#id_participants').val(null).trigger('change');
         $('#id_equipments').val(null).trigger('change');
-        
-        const modalEl = document.getElementById('bookingModal');
-        var bookingModal = new bootstrap.Modal(modalEl);
-        bookingModal.show();
+        new bootstrap.Modal(document.getElementById('bookingModal')).show();
     }
-
-    // [สำคัญ] ลบโค้ดที่ไป overwrite Select2 ออกแล้ว
-    // ปล่อยให้ DAL (Django Autocomplete Light) จัดการเอง
 
     function updateBookingOnServer(eventInfo) {
         const event = eventInfo.event;
         fetch(API_UPDATE_URL, {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json', 
-                'X-CSRFToken': CSRF_TOKEN
-            },
-            body: JSON.stringify({
-                id: event.id,
-                start: event.start.toISOString(),
-                end: event.end ? event.end.toISOString() : null
-            })
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.status === 'success') {
-                console.log("Update success");
-            } else {
-                eventInfo.revert();
-                alert('แก้ไขไม่ได้: ' + (data.message || 'เกิดข้อผิดพลาด'));
-            }
-        })
-        .catch(err => {
-            eventInfo.revert();
-            alert('เกิดข้อผิดพลาดในการเชื่อมต่อ Server');
-            console.error(err);
+            method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN },
+            body: JSON.stringify({ id: event.id, start: event.start.toISOString(), end: event.end ? event.end.toISOString() : null })
+        }).then(res => res.json()).then(data => {
+            if (data.status === 'success') { alert('ย้ายเวลาสำเร็จ (รออนุมัติ)'); eventInfo.event.setProp('backgroundColor', '#ffc107'); }
+            else { eventInfo.revert(); alert('แก้ไขไม่ได้: ' + (data.message || 'เกิดข้อผิดพลาด')); }
         });
     }
 
     document.addEventListener('DOMContentLoaded', function() {
         const layoutRadios = document.querySelectorAll('input[name="room_layout"]');
-        layoutRadios.forEach(radio => {
-            radio.addEventListener('change', toggleAttachmentField);
-        });
+        layoutRadios.forEach(radio => { radio.addEventListener('change', toggleAttachmentField); });
         toggleAttachmentField();
 
         var calendarEl = document.getElementById('calendar');
         var calendar = new FullCalendar.Calendar(calendarEl, {
-            initialView: window.innerWidth < 768 ? 'listMonth' : 'dayGridMonth', 
-            locale: 'th',
-            headerToolbar: { 
-                left: 'prev,next today', 
-                center: 'title', 
-                right: 'dayGridMonth,timeGridWeek,timeGridDay,listMonth' 
-            },
-            buttonText: { today: 'วันนี้', month: 'เดือน', week: 'สัปดาห์', day: 'วัน', list: 'รายการ' },
-            selectable: true, 
-            selectMirror: true,
-            editable: true, 
-            droppable: true,
-            eventDurationEditable: true,
-            dayMaxEvents: true,
-            height: 'auto',
-            events: "{% url 'bookings_api' %}?room_id={{ room.id }}",
-            
-            eventDrop: function(info) { 
-                if(confirm("ยืนยันการย้ายวัน/เวลา?")) { updateBookingOnServer(info); } else { info.revert(); }
-            },
-            eventResize: function(info) { 
-                if(confirm("ยืนยันการปรับเวลา?")) { updateBookingOnServer(info); } else { info.revert(); }
-            },
+            initialView: window.innerWidth < 768 ? 'listMonth' : 'dayGridMonth', locale: 'th',
+            headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,listMonth' },
+            events: "{% url 'bookings_api' %}?room_id={{ room.id }}&t=" + new Date().getTime(),
+            editable: true, selectable: true,
+            eventDrop: function(info) { if(confirm("ยืนยันย้ายเวลา? (รออนุมัติใหม่)")) { updateBookingOnServer(info); } else { info.revert(); } },
+            eventResize: function(info) { if(confirm("ยืนยันปรับเวลา? (รออนุมัติใหม่)")) { updateBookingOnServer(info); } else { info.revert(); } },
             select: function(info) {
-                if (window.innerWidth < 768 && info.view.type === 'listMonth') return;
                 let start = info.allDay ? info.startStr + 'T08:00' : info.startStr.substring(0, 16);
                 let end = info.allDay ? info.startStr + 'T09:00' : info.endStr.substring(0, 16);
                 openBookingModal(start, end);
             },
             eventClick: function(info) {
-                if (info.jsEvent.detail > 1) return;
-                info.jsEvent.preventDefault();
-                window.location.href = `/booking/${info.event.id}/detail/`;
+                if (info.jsEvent.detail > 1) return; info.jsEvent.preventDefault();
+                document.getElementById('detailModalTitle').innerText = info.event.title;
+                document.getElementById('detailModalRoom').innerText = info.event.extendedProps.room;
+                document.getElementById('detailModalUser').innerText = info.event.extendedProps.user;
+                
+                let statusKey = info.event.extendedProps.status;
+                let statusText = statusKey === 'APPROVED' ? 'อนุมัติแล้ว' : statusKey === 'PENDING' ? 'รออนุมัติ' : statusKey === 'REJECTED' ? 'ไม่อนุมัติ' : 'ยกเลิก';
+                let bg = statusKey === 'APPROVED' ? 'bg-success' : statusKey === 'PENDING' ? 'bg-warning text-dark' : 'bg-danger';
+                document.getElementById('detailModalStatus').innerHTML = `<span class="badge ${bg}">${statusText}</span>`;
+                document.getElementById('detailModalLink').href = `/booking/${info.event.id}/detail/`;
+                new bootstrap.Modal(document.getElementById('eventDetailModal')).show();
             },
             eventDidMount: function(info) {
-                var status = info.event.extendedProps.status;
-                var now = new Date();
-                var end = info.event.end || info.event.start;
-                if (end < now) {
-                    info.el.classList.add('status-past');
-                    info.event.setProp('editable', false);
-                } else if (status === 'CANCELLED' || status === 'REJECTED') {
-                    info.el.classList.add('status-cancelled');
-                    info.event.setProp('editable', false);
-                }
+                var now = new Date(); var end = info.event.end || info.event.start;
+                if (end < now) { info.el.classList.add('status-past'); info.event.setProp('editable', false); }
             }
         });
         calendar.render();
@@ -351,11 +259,8 @@
         document.getElementById('submitBookingBtn').addEventListener('click', function() {
             const pInput = document.getElementById('id_participant_count');
             const count = pInput && pInput.value ? parseInt(pInput.value) : 0;
-            if (ROOM_CAPACITY > 0 && count > ROOM_CAPACITY) {
-                alert(`เกินความจุ! ห้องนี้รับได้ ${ROOM_CAPACITY} คน`); return;
-            }
-            this.disabled = true;
-            this.innerHTML = 'กำลังบันทึก...';
+            if (ROOM_CAPACITY > 0 && count > ROOM_CAPACITY) { alert(`เกินความจุ! ห้องนี้รับได้ ${ROOM_CAPACITY} คน`); return; }
+            this.disabled = true; this.innerHTML = 'กำลังบันทึก...';
             document.getElementById('hiddenBookingForm').submit();
         });
     });

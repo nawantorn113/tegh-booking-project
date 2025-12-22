@@ -1,3 +1,4 @@
+import os
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User, Group
@@ -33,7 +34,7 @@ class BookingForm(forms.ModelForm):
 
     class Meta:
         model = Booking
-        # [แก้ไข] ลบ 'participants' ออกจากรายการ fields
+        # [แก้ไข] ลบ participants ออก
         fields = [
             'room', 'title', 'chairman', 'department', 'start_time',
             'end_time', 'participant_count', 'room_layout', 'room_layout_attachment',
@@ -45,10 +46,11 @@ class BookingForm(forms.ModelForm):
             'room': 'ห้องประชุม', 'title': 'หัวข้อการประชุม', 'chairman': 'ประธานในที่ประชุม (ถ้ามี)',
             'department': 'แผนกผู้จอง', 'start_time': 'วัน/เวลา เริ่มต้น', 'end_time': 'วัน/เวลา สิ้นสุด',
             'participant_count': 'จำนวนผู้เข้าร่วม (โดยประมาณ)', 
-            'presentation_file': 'ไฟล์นำเสนอ (ถ้ามี)', 'description': 'รายละเอียด/วาระการประชุม',
+            'presentation_file': 'ไฟล์นำเสนอ (Max 100MB)', 
+            'description': 'รายละเอียด/วาระการประชุม',
             'additional_notes': 'หมายเหตุเพิ่มเติม',
             'room_layout': 'รูปแบบการจัดห้อง', 
-            'room_layout_attachment': 'แนบไฟล์รูปแบบการจัดห้อง (เฉพาะกรณีเลือก "อื่นๆ")',
+            'room_layout_attachment': 'แนบไฟล์รูปแบบการจัดห้อง (JPEG, PNG, PDF เท่านั้น)',
             'equipments': 'อุปกรณ์ที่ต้องการเบิก (ค้นหาและเลือก)',
             'additional_requests': 'คำขออื่นๆ (กรณีไม่มีในรายการอุปกรณ์)',
         }
@@ -61,7 +63,10 @@ class BookingForm(forms.ModelForm):
             'status': forms.HiddenInput(),
             'start_time': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class':'form-control'}),
             'end_time': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class':'form-control'}),
+            
+            # [แก้ไข] Presentation: รับทุกไฟล์แต่เดี๋ยวเช็คขนาด
             'presentation_file': forms.ClearableFileInput(attrs={'class':'form-control'}),
+            
             'description': forms.Textarea(attrs={'rows': 3, 'class':'form-control'}),
             'additional_requests': forms.Textarea(attrs={'rows': 2, 'class':'form-control'}),
             'additional_notes': forms.Textarea(attrs={'rows': 2, 'class':'form-control'}),
@@ -70,7 +75,9 @@ class BookingForm(forms.ModelForm):
             'department': forms.TextInput(attrs={'class':'form-control', 'placeholder': ''}),
             'participant_count': forms.NumberInput(attrs={'min': '1', 'class':'form-control'}),
             'room_layout': forms.RadioSelect(),
-            'room_layout_attachment': forms.ClearableFileInput(attrs={'class':'form-control'}),
+            
+            # [แก้ไข] Layout Attachment: บังคับนามสกุลใน HTML
+            'room_layout_attachment': forms.ClearableFileInput(attrs={'class':'form-control', 'accept': '.jpg,.jpeg,.png,.pdf'}),
             
             # Widget สำหรับค้นหาอุปกรณ์
             'equipments': autocomplete.ModelSelect2Multiple(
@@ -91,7 +98,7 @@ class BookingForm(forms.ModelForm):
         self.fields['start_time'].widget = forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'form-control', 'required': 'required'}, format='%Y-%m-%dT%H:%M')
         self.fields['end_time'].widget = forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'form-control', 'required': 'required'}, format='%Y-%m-%dT%H:%M')
         
-        # [แก้ไข] เอา participants ออกจากการจัดเรียง
+        # [แก้ไข] จัดลำดับใหม่ (เอา participants ออก)
         self.order_fields([
             'title', 'chairman', 'department', 'start_time', 'end_time', 
             'recurrence', 'recurrence_end_date', 'participant_count', 
@@ -102,20 +109,48 @@ class BookingForm(forms.ModelForm):
 
     def clean(self):
         cleaned_data = super().clean()
-        start_time = cleaned_data.get('start_time'); end_time = cleaned_data.get('end_time'); room = cleaned_data.get('room'); participant_count = cleaned_data.get('participant_count')
+        start_time = cleaned_data.get('start_time')
+        end_time = cleaned_data.get('end_time')
+        room = cleaned_data.get('room')
+        participant_count = cleaned_data.get('participant_count')
+
+        # 1. ตรวจสอบเวลา
         if start_time and end_time and start_time >= end_time:
             raise ValidationError("วัน/เวลา สิ้นสุด ต้องอยู่หลังจาก วัน/เวลา เริ่มต้น", code='invalid_time_range')
         if start_time:
             start_time_aware = timezone.make_aware(start_time, timezone.get_current_timezone()) if timezone.is_naive(start_time) else start_time
             if not self.instance.pk and start_time_aware < timezone.now():
                 raise ValidationError("ไม่สามารถจองเวลาย้อนหลังได้ กรุณาเลือกเวลาใหม่", code='invalid_past_date')
+        
+        # 2. ตรวจสอบความจุ
         if room and participant_count and participant_count > room.capacity:
              raise ValidationError(f"จองไม่ได้: จำนวนผู้เข้าร่วม ({participant_count} คน) เกินความจุของห้อง ({room.capacity} คน)! ", code='capacity_exceeded')
+
+        # ----------------------------------------------------------------
+        # [ใหม่] 3. ตรวจสอบขนาดไฟล์ Presentation (Max 100MB)
+        # ----------------------------------------------------------------
+        p_file = cleaned_data.get('presentation_file')
+        if p_file:
+            limit_mb = 100
+            # แปลง MB เป็น Bytes (1 MB = 1024 * 1024 bytes)
+            if p_file.size > limit_mb * 1024 * 1024:
+                self.add_error('presentation_file', f"ขนาดไฟล์ใหญ่เกินกำหนด! (สูงสุด {limit_mb} MB)")
+
+        # ----------------------------------------------------------------
+        # [ใหม่] 4. ตรวจสอบนามสกุลไฟล์แนบผังห้อง (JPEG, PNG, PDF Only)
+        # ----------------------------------------------------------------
+        l_file = cleaned_data.get('room_layout_attachment')
+        if l_file:
+            valid_extensions = ['.jpg', '.jpeg', '.png', '.pdf']
+            ext = os.path.splitext(l_file.name)[1].lower()
+            if ext not in valid_extensions:
+                self.add_error('room_layout_attachment', "ไฟล์ไม่ถูกต้อง: รองรับเฉพาะ JPG, PNG และ PDF เท่านั้น")
+
         return cleaned_data
 
 
 # -----------------------------------------------
-# 3. RoomForm (คงเดิม)
+# 2. RoomForm (สำหรับ Admin)
 # -----------------------------------------------
 class RoomForm(forms.ModelForm):
     approver = forms.ModelChoiceField(
@@ -161,7 +196,6 @@ class RoomForm(forms.ModelForm):
         self.fields['maintenance_end'].required = False
         self.helper = FormHelper(); self.helper.form_tag = False 
 
-        # จัด Layout ใหม่ให้สวยงาม
         self.helper.layout = Layout(
             'non_field_errors', 
             Row(Column('name', css_class='col-md-6 mb-3'), Column('capacity', css_class='col-md-6 mb-3')),
@@ -180,7 +214,7 @@ class RoomForm(forms.ModelForm):
         )
 
 # -----------------------------------------------
-# 4. CustomUserCreationForm (คงเดิม)
+# 3. CustomUserCreationForm (สำหรับ Admin)
 # -----------------------------------------------
 class CustomUserCreationForm(UserCreationForm):
     groups = forms.ModelMultipleChoiceField(queryset=Group.objects.all(), widget=forms.CheckboxSelectMultiple, required=False, label="กำหนดสิทธิ์ (Groups)")
@@ -195,7 +229,7 @@ class CustomUserCreationForm(UserCreationForm):
         return user
 
 # -----------------------------------------------
-# 5. EquipmentForm (คงเดิม)
+# 4. EquipmentForm (สำหรับ Admin)
 # -----------------------------------------------
 class EquipmentForm(forms.ModelForm):
     class Meta:

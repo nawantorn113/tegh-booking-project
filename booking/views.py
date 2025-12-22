@@ -486,7 +486,6 @@ def room_calendar_view(request, room_id):
                     
                     new_b.save()
                     
-                    # [แก้ไข] เอาการบันทึก participants ออก
                     if 'equipments' in form.cleaned_data: new_b.equipments.set(form.cleaned_data['equipments'])
 
                     log_action(request, 'BOOKING_CREATED', new_b, f"จองห้อง {room.name}")
@@ -575,7 +574,6 @@ def edit_booking_view(request, booking_id):
         if form.is_valid():
             booking = form.save(commit=False)
             
-            # [แก้ไข] ถ้าไม่ใช่ Admin แก้ไข -> เปลี่ยนเป็น PENDING
             if not is_approver_or_admin(request.user):
                 booking.status = 'PENDING'
                 booking.is_user_seen = False 
@@ -774,7 +772,7 @@ def delete_equipment_view(request, eq_id):
 
 @login_required
 def audit_log_view(request):
-    logs = AuditLog.objects.all()
+    logs = AuditLog.objects.all().order_by('-timestamp')
     paginator = Paginator(logs, 25)
     page_obj = paginator.get_page(request.GET.get('page'))
     return render(request, 'pages/audit_log.html', {**get_base_context(request), 'page_obj': page_obj})
@@ -871,7 +869,6 @@ def update_booking_time_api(request):
         booking.start_time = start_dt
         booking.end_time = end_dt
         
-        # [แก้ไข] เปลี่ยนเป็น PENDING ถ้าลากแก้
         if not is_approver_or_admin(request.user):
             booking.status = 'PENDING'
             booking.is_user_seen = False
@@ -1012,8 +1009,17 @@ def reports_view(request):
     except Exception as e:
         print(f"Dept Stats Error: {e}")
 
+    # [FIXED] เพิ่ม summary_cards เพื่อให้ตัวเลขในหน้า report ไม่หาย
+    summary = {
+        'total_rooms': Room.objects.count(),
+        'today_bookings': Booking.objects.filter(start_time__date=today, status='APPROVED').count(),
+        'pending_approvals': Booking.objects.filter(status='PENDING').count(),
+        'total_users_count': User.objects.count()
+    }
+
     context = get_base_context(request)
     context.update({
+        'summary_cards': summary, # <<<< แก้ตรงนี้
         'room_usage_labels': json.dumps(room_labels), 
         'room_usage_data': json.dumps(room_data),
         'dept_usage_labels': json.dumps(dept_labels),
@@ -1022,10 +1028,6 @@ def reports_view(request):
         'current_period': period,
         'current_department': dept_filter,
         'report_title': report_title,
-        'total_rooms_count': Room.objects.count(),
-        'today_bookings_count': Booking.objects.filter(start_time__date=today, status='APPROVED').count(),
-        'pending_count': Booking.objects.filter(status='PENDING').count(),
-        'total_users_count': User.objects.count()
     })
     return render(request, 'pages/reports.html', context)
 

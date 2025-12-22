@@ -5,149 +5,296 @@
 
 {% block extra_head %}
 <style>
+    /* CSS ตกแต่งการ์ดรายละเอียด */
     .detail-card {
-        border: 1px solid #e5e7eb;
-        border-radius: 8px;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
         background: white;
+        overflow: hidden;
     }
-    .detail-label {
-        color: #65676b;
-        font-weight: 500;
+    .detail-header {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        padding: 2rem;
+        border-bottom: 1px solid #dee2e6;
     }
-    .detail-value {
-        color: #050505;
+    .detail-body {
+        padding: 2rem;
+    }
+    .info-group {
+        margin-bottom: 1.5rem;
+    }
+    .info-label {
+        font-size: 0.9rem;
+        color: #6c757d;
+        font-weight: 600;
+        margin-bottom: 0.3rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .info-value {
+        font-size: 1.05rem;
+        color: #212529;
         font-weight: 400;
     }
-    .status-badge {
-        font-size: 0.9rem;
-        padding: 0.4em 0.8em;
+    .file-attachment-box {
+        background-color: #f8f9fa;
+        border: 1px dashed #ced4da;
+        border-radius: 8px;
+        padding: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        transition: all 0.2s;
+    }
+    .file-attachment-box:hover {
+        background-color: #e9ecef;
+        border-color: #adb5bd;
+    }
+    .status-badge-lg {
+        padding: 0.5rem 1rem;
         border-radius: 50px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container py-4">
+<div class="container py-5 animate__animated animate__fadeIn">
     <div class="row justify-content-center">
-        <div class="col-md-8">
+        <div class="col-lg-10">
             
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h4 class="fw-bold mb-0">
-                    <a href="javascript:history.back()" class="text-decoration-none text-dark me-2">
-                        <i class=""></i>
-                    </a>
-                    รายละเอียดการจอง
-                </h4>
-                
-                <div>
-                    {% if booking.status == 'APPROVED' %}
-                        <span class="badge bg-success status-badge"><i class="bi bi-check-circle me-1"></i>อนุมัติแล้ว</span>
-                    {% elif booking.status == 'PENDING' %}
-                        <span class="badge bg-warning text-dark status-badge"><i class="bi bi-clock me-1"></i>รออนุมัติ</span>
-                    {% elif booking.status == 'REJECTED' %}
-                        <span class="badge bg-danger status-badge"><i class="bi bi-x-circle me-1"></i>ไม่อนุมัติ</span>
-                    {% elif booking.status == 'CANCELLED' %}
-                        <span class="badge bg-secondary status-badge"><i class="bi bi-slash-circle me-1"></i>ยกเลิกแล้ว</span>
-                    {% endif %}
-                </div>
-            </div>
-
-            <div class="card detail-card mb-4">
-                <div class="card-body p-4">
-                    
-                    <h5 class="text-primary fw-bold mb-4">{{ booking.title }}</h5>
-
-                    <div class="row g-3">
-                        <div class="col-sm-4 detail-label">ห้องประชุม</div>
-                        <div class="col-sm-8 detail-value fw-bold">{{ booking.room.name }}</div>
-
-                        <div class="col-12"><hr class="my-1 text-muted opacity-25"></div>
-
-                        <div class="col-sm-4 detail-label">ผู้จอง</div>
-                        <div class="col-sm-8 detail-value">
-                            {% if booking.user %}
-                                <div class="d-flex align-items-center">
-                                    <i class="bi bi-person-circle text-secondary me-2 fs-5"></i>
-                                    {{ booking.user.get_full_name|default:booking.user.username }}
-                                </div>
-                            {% else %}
-                                <span class="text-muted fst-italic">(ไม่ระบุข้อมูล)</span>
+            <div class="detail-card">
+                <div class="detail-header">
+                    <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+                        <div>
+                            <h3 class="fw-bold text-primary mb-2">{{ booking.title }}</h3>
+                            <p class="text-muted mb-0 fs-5">
+                                <i class="bi bi-geo-alt-fill text-danger me-2"></i>{{ booking.room.name }} 
+                                <span class="fs-6">({{ booking.room.building|default:"ไม่ระบุตึก" }} ชั้น {{ booking.room.floor|default:"-" }})</span>
+                            </p>
+                        </div>
+                        <div>
+                            {% if booking.status == 'APPROVED' %}
+                                <span class="badge bg-success status-badge-lg"><i class="bi bi-check-circle-fill me-2"></i>อนุมัติแล้ว</span>
+                            {% elif booking.status == 'PENDING' %}
+                                <span class="badge bg-warning text-dark status-badge-lg"><i class="bi bi-clock-fill me-2"></i>รออนุมัติ</span>
+                            {% elif booking.status == 'REJECTED' %}
+                                <span class="badge bg-danger status-badge-lg"><i class="bi bi-x-circle-fill me-2"></i>ไม่อนุมัติ</span>
+                            {% elif booking.status == 'CANCELLED' %}
+                                <span class="badge bg-secondary status-badge-lg"><i class="bi bi-slash-circle-fill me-2"></i>ยกเลิกแล้ว</span>
                             {% endif %}
                         </div>
-
-                        <div class="col-12"><hr class="my-1 text-muted opacity-25"></div>
-
-                        <div class="col-sm-4 detail-label">วันและเวลา</div>
-                        <div class="col-sm-8 detail-value">
-                            <div>เริ่ม: <strong>{{ booking.start_time|date:"d M Y, H:i" }} น.</strong></div>
-                            <div class="text-muted small">ถึง: {{ booking.end_time|date:"d M Y, H:i" }} น.</div>
-                        </div>
-
-                        <div class="col-12"><hr class="my-1 text-muted opacity-25"></div>
-
-                        <div class="col-sm-4 detail-label">จำนวนคน</div>
-                        <div class="col-sm-8 detail-value">{{ booking.participant_count }} ท่าน</div>
-
-                        {% if booking.additional_requests %}
-                        <div class="col-sm-4 detail-label">คำขอเพิ่มเติม</div>
-                        <div class="col-sm-8 detail-value text-muted">
-                            {{ booking.additional_requests|linebreaksbr }}
-                        </div>
-                        {% endif %}
-
-                        {% if booking.equipments.exists %}
-                        <div class="col-sm-4 detail-label">อุปกรณ์</div>
-                        <div class="col-sm-8 detail-value">
-                            {% for eq in booking.equipments.all %}
-                                <span class="badge bg-light text-dark border me-1">{{ eq.name }}</span>
-                            {% endfor %}
-                        </div>
-                        {% endif %}
                     </div>
-
                 </div>
-                
-                <div class="card-footer bg-white border-top p-3 d-flex justify-content-between align-items-center">
+
+                <div class="detail-body">
+                    <div class="row">
+                        <div class="col-md-7 pe-md-5 border-end-md">
+                            
+                            <h5 class="text-primary fw-bold mb-4 border-bottom pb-2"><i class="bi bi-info-circle me-2"></i>ข้อมูลการประชุม</h5>
+
+                            <div class="row mb-3">
+                                <div class="col-6">
+                                    <div class="info-group">
+                                        <div class="info-label">วันเริ่มต้น</div>
+                                        <div class="info-value text-success fw-bold">
+                                            {{ booking.start_time|date:"d M Y" }} <br> 
+                                            <span class="fs-6 text-muted">เวลา {{ booking.start_time|date:"H:i" }} น.</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="info-group">
+                                        <div class="info-label">วันสิ้นสุด</div>
+                                        <div class="info-value text-danger fw-bold">
+                                            {{ booking.end_time|date:"d M Y" }} <br> 
+                                            <span class="fs-6 text-muted">เวลา {{ booking.end_time|date:"H:i" }} น.</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="info-group">
+                                <div class="info-label">รายละเอียด / วาระการประชุม</div>
+                                <div class="info-value bg-light p-3 rounded text-break">
+                                    {% if booking.description %}
+                                        {{ booking.description|linebreaks }}
+                                    {% else %}
+                                        <span class="text-muted fst-italic">- ไม่ระบุรายละเอียด -</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="info-group">
+                                        <div class="info-label">ประธานในที่ประชุม</div>
+                                        <div class="info-value">{{ booking.chairman|default:"-" }}</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="info-group">
+                                        <div class="info-label">จำนวนผู้เข้าร่วม</div>
+                                        <div class="info-value">
+                                            <span class="badge bg-info text-dark fs-6">
+                                                <i class="bi bi-people-fill me-1"></i> {{ booking.participant_count }} ท่าน
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="info-group">
+                                <div class="info-label">ผู้จอง / แผนก</div>
+                                <div class="info-value">
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 35px; height: 35px;">
+                                            {{ booking.user.username|slice:":1"|upper }}
+                                        </div>
+                                        <div>
+                                            {{ booking.user.get_full_name|default:booking.user.username }}
+                                            <small class="text-muted d-block">{{ booking.department|default:"ไม่ระบุแผนก" }}</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="info-group mt-4">
+                                <div class="info-label">ไฟล์นำเสนอ (Presentation)</div>
+                                {% if booking.presentation_file %}
+                                    <a href="{{ booking.presentation_file.url }}" target="_blank" class="text-decoration-none">
+                                        <div class="file-attachment-box">
+                                            <i class="bi bi-file-earmark-slides-fill text-warning fs-3"></i>
+                                            <div class="overflow-hidden">
+                                                <div class="fw-bold text-dark text-truncate">ดาวน์โหลดไฟล์นำเสนอ</div>
+                                                <div class="small text-muted">คลิกเพื่อเปิดดู</div>
+                                            </div>
+                                            <i class="bi bi-download ms-auto text-muted"></i>
+                                        </div>
+                                    </a>
+                                {% else %}
+                                    <span class="text-muted">- ไม่มีไฟล์แนบ -</span>
+                                {% endif %}
+                            </div>
+
+                        </div>
+
+                        <div class="col-md-5 mt-4 mt-md-0">
+                            <h5 class="text-primary fw-bold mb-4 border-bottom pb-2"><i class="bi bi-tools me-2"></i>การจัดเตรียมห้อง</h5>
+
+                            {% if booking.room.name == 'ห้องประชุมใหญ่' %}
+                                <div class="info-group">
+                                    <div class="info-label">รูปแบบการจัดห้อง</div>
+                                    <div class="info-value fw-bold text-primary fs-5">
+                                        {{ booking.get_room_layout_display }}
+                                    </div>
+                                    
+                                    {% if booking.room_layout != 'other' %}
+                                        <div class="mt-2 p-2 border rounded text-center bg-white" style="max-width: 150px;">
+                                            <img src="{% static 'images/layouts/'|add:booking.room_layout|add:'.png' %}" 
+                                                 alt="{{ booking.get_room_layout_display }}" 
+                                                 class="img-fluid"
+                                                 onerror="this.style.display='none'">
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                {% if booking.room_layout_attachment %}
+                                <div class="info-group">
+                                    <div class="info-label text-danger">ไฟล์แนบผังห้อง (เพิ่มเติม)</div>
+                                    <a href="{{ booking.room_layout_attachment.url }}" target="_blank" class="text-decoration-none">
+                                        <div class="file-attachment-box border-primary bg-primary-subtle">
+                                            <i class="bi bi-image-fill text-primary fs-3"></i>
+                                            <div class="overflow-hidden">
+                                                <div class="fw-bold text-dark">เปิดดูไฟล์แนบ</div>
+                                                <div class="small text-muted">แผนผังห้องที่ผู้จองแนบมา</div>
+                                            </div>
+                                            <i class="bi bi-box-arrow-up-right ms-auto text-primary"></i>
+                                        </div>
+                                    </a>
+                                </div>
+                                {% endif %}
+                            {% endif %}
+                            <div class="info-group mt-4">
+                                <div class="info-label">อุปกรณ์ที่เบิกเพิ่มเติม</div>
+                                {% if booking.equipments.exists %}
+                                    <div class="d-flex flex-wrap gap-2 mt-2">
+                                        {% for eq in booking.equipments.all %}
+                                            <span class="badge bg-white text-dark border shadow-sm py-2 px-3 fw-normal">
+                                                <i class="bi bi-check-lg text-success me-1"></i> {{ eq.name }}
+                                            </span>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <span class="text-muted">- ไม่มีการเบิกอุปกรณ์เพิ่ม -</span>
+                                {% endif %}
+                            </div>
+
+                            <div class="info-group">
+                                <div class="info-label">คำขออื่นๆ / หมายเหตุ</div>
+                                <div class="info-value bg-light p-3 rounded small text-muted">
+                                    {% if booking.additional_requests %}
+                                        <strong>คำขอ:</strong> {{ booking.additional_requests }}<br>
+                                    {% endif %}
+                                    {% if booking.additional_notes %}
+                                        <strong>หมายเหตุ:</strong> {{ booking.additional_notes }}
+                                    {% endif %}
+                                    
+                                    {% if not booking.additional_requests and not booking.additional_notes %}
+                                        -
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-footer bg-light p-4 d-flex justify-content-between align-items-center">
                     
-                    <a href="javascript:history.back()" class="btn btn-outline-dark btn-sm rounded-pill px-3 me-2">
-                        <i class="bi bi-arrow-left me-1"></i> ย้อนกลับ
+                    <a href="javascript:history.back()" class="btn btn-secondary rounded-pill px-4 shadow-sm">
+                        <i class="bi bi-arrow-left me-2"></i> ย้อนกลับ
                     </a>
 
-                    {% if can_edit_or_cancel %}
-                        {% if booking.status == 'PENDING' or booking.status == 'APPROVED' %}
-                        <div>
-                            <a href="{% url 'edit_booking' booking.id %}" class="btn btn-outline-primary btn-sm rounded-pill px-3 me-2">
-                                <i class="bi bi-pencil me-1"></i> แก้ไข
-                            </a>
-                            <button type="button" class="btn btn-outline-danger btn-sm rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#cancelModal">
-                                <i class="bi bi-trash me-1"></i> ยกเลิกการจอง
-                            </button>
-                        </div>
+                    <div>
+                        {% if can_edit_or_cancel %}
+                            {% if booking.status == 'PENDING' or booking.status == 'APPROVED' %}
+                                <a href="{% url 'edit_booking' booking.id %}" class="btn btn-warning text-dark px-4 rounded-pill shadow-sm me-2">
+                                    <i class="bi bi-pencil-square me-1"></i> แก้ไขข้อมูล
+                                </a>
+                                <button type="button" class="btn btn-outline-danger px-4 rounded-pill shadow-sm" data-bs-toggle="modal" data-bs-target="#cancelModal">
+                                    <i class="bi bi-trash me-1"></i> ยกเลิกการจอง
+                                </button>
+                            {% endif %}
                         {% endif %}
-                    {% endif %}
+                    </div>
                 </div>
             </div>
-
         </div>
     </div>
 </div>
 
 <div class="modal fade" id="cancelModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-sm">
-        <div class="modal-content">
-            <div class="modal-header border-0 pb-0">
-                <h5 class="modal-title fw-bold text-danger">ยกเลิกการจอง?</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header border-0 pb-0 justify-content-center pt-4">
+                <div class="bg-danger bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                    <i class="bi bi-exclamation-triangle-fill text-danger fs-3"></i>
+                </div>
             </div>
-            <div class="modal-body text-center text-muted">
-                คุณแน่ใจหรือไม่ที่จะยกเลิกรายการนี้?
+            <div class="modal-body text-center pt-3">
+                <h5 class="fw-bold mb-2">ยืนยันการยกเลิก?</h5>
+                <p class="text-muted small mb-0">คุณต้องการยกเลิกการจองห้องนี้ใช่หรือไม่</p>
             </div>
-            <div class="modal-footer border-0 justify-content-center">
-                <button type="button" class="btn btn-light btn-sm rounded-pill px-4" data-bs-dismiss="modal">ไม่</button>
+            <div class="modal-footer border-0 justify-content-center pb-4">
+                <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">ไม่</button>
                 <form action="{% url 'delete_booking' booking.id %}" method="post" class="d-inline">
                     {% csrf_token %}
-                    <button type="submit" class="btn btn-danger btn-sm rounded-pill px-4">ใช่, ยกเลิกเลย</button>
+                    <button type="submit" class="btn btn-danger rounded-pill px-4">ใช่, ยกเลิก</button>
                 </form>
             </div>
         </div>

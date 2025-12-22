@@ -1,252 +1,255 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block title %}Dashboard - TEGH{% endblock %}
+{% block title %}Dashboard{% endblock %}
 
 {% block extra_head %}
 <style>
-    /* --- Card Styles --- */
-    .kpi-card:hover, .room-card-hover:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1) !important;
-        transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+    /* --- Search Bar Styling --- */
+    .search-input-container {
+        max-width: 600px;
+        margin: 0 auto;
     }
-    .kpi-card .card-body { padding: 1rem; }
-    .room-card .card-body { padding: 1.25rem; }
-    .kpi-icon { font-size: 2rem; opacity: 0.2; }
-    .section-divider {
-        margin-top: 1.5rem; margin-bottom: 1.5rem; 
-        border-color: #adb5bd; border-top-width: 1px; opacity: 0.5; 
+    .search-input-group {
+        border: 1px solid #ced4da;
+        border-radius: 50px;
+        padding: 4px;
+        background-color: #fff;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        transition: all 0.3s ease;
     }
-    .room-maintenance { background-color: #f8f8f8; opacity: 0.9; }
-    .btn-maintenance-alert { background-color: #e9ecef; color: #6c757d; border-color: #ced4da; }
-    .btn-maintenance-alert:hover { background-color: #d1d5db; color: #495057; }
+    .search-input-group:focus-within {
+        border-color: #0d6efd;
+        box-shadow: 0 4px 15px rgba(13, 110, 253, 0.15);
+        transform: translateY(-1px);
+    }
+    .search-input-group .form-control {
+        border: none;
+        box-shadow: none;
+        padding-left: 15px;
+    }
+    .search-input-group .btn-search {
+        border-radius: 50px;
+        padding-left: 25px;
+        padding-right: 25px;
+        font-weight: 600;
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+        color: white;
+    }
+    .search-input-group .btn-search:hover { background-color: #0b5ed7; }
+
+    /* --- Card Styling --- */
+    .kpi-card {
+        border: 1px solid #dee2e6;
+        border-radius: 12px;
+        background: #fff;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        transition: transform 0.2s;
+    }
+    .kpi-card:hover { transform: translateY(-5px); box-shadow: 0 5px 15px rgba(0,0,0,0.08); }
+    .kpi-icon { font-size: 2.5rem; opacity: 0.15; }
+
+    .border-l-primary { border-left: 5px solid #0d6efd; }
+    .border-l-success { border-left: 5px solid #198754; }
+    .border-l-warning { border-left: 5px solid #ffc107; }
+    .border-l-info { border-left: 5px solid #0dcaf0; }
+
+    /* --- Room Cards --- */
+    .room-card-hover {
+        border: 1px solid #dee2e6;
+        border-radius: 12px;
+        background: #fff;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+        transition: all 0.2s;
+        overflow: hidden;
+    }
+    .room-card-hover:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+        border-color: #0d6efd;
+    }
+    
+    .room-img-wrapper {
+        height: 150px;
+        overflow: hidden;
+        background-color: #f8f9fa;
+        position: relative;
+        border-bottom: 1px solid #eee;
+    }
+    .room-img-top { width: 100%; height: 100%; object-fit: cover; }
+
+    /* --- [แก้ไข] เส้นแบ่งตึกให้ชัดขึ้น --- */
+    .building-divider {
+        border: 0; 
+        border-top: 3px dashed #a0a0a0; /* เปลี่ยนสีให้เข้มขึ้น (เทากลาง) และหนาขึ้น */
+        margin-top: 3.5rem;
+        margin-bottom: 2.5rem;
+        opacity: 1; /* ปิดความโปร่งแสง ให้เห็นชัดเต็มที่ */
+    }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid px-0">
 
-    <div class="row mb-4">
-        <div class="col-12">
-            <form action="{% url 'smart_search' %}" method="get">
-                <div class="input-group">
-                    <span class="input-group-text bg-white border-end-0 rounded-start-pill ps-3">
-                        <i class="bi bi-search text-muted"></i>
+<div class="row mb-5 justify-content-center pt-3">
+    <div class="col-md-10 col-lg-8">
+        <form action="{% url 'smart_search' %}" method="get">
+            <div class="search-input-container">
+                <div class="input-group search-input-group">
+                    <span class="input-group-text border-0 bg-white ps-3 text-muted">
+                        <i class="bi bi-search"></i>
                     </span>
-                    <input type="text" class="form-control border-start-0 rounded-end-pill py-2 bg-white shadow-sm" 
-                           name="q" id="smartSearchInput" 
-                           placeholder="ค้นหาห้องว่าง..." 
+                    <input type="text" class="form-control" 
+                           name="q" placeholder="ค้นหาห้องประชุม... (ระบุชื่อ หรือจำนวนคน)" 
                            value="{{ query_text|default:'' }}">
-                    <button class="btn btn-primary rounded-pill px-4 ms-2 shadow-sm" type="submit">
-                        ค้นหา
-                    </button>
+                    <button class="btn btn-search" type="submit">ค้นหา</button>
                 </div>
-            </form>
-        </div>
+            </div>
+        </form>
     </div>
-    
-    <hr class="section-divider mt-0">
-    
-    {# --- KPI Cards Section --- #}
+</div>
+
 {% if is_admin_user %}
-<div class="row g-3 mb-4">
-    <div class="col-12 col-sm-6 col-xl-3">
-        <div class="card kpi-card border-start border-primary border-3 shadow-sm h-100">
+<div class="row g-3 mb-5">
+    <div class="col-6 col-md-3">
+        <div class="card kpi-card border-l-primary h-100">
             <div class="card-body d-flex justify-content-between align-items-center">
                 <div>
-                    <h6 class="card-subtitle text-muted mb-1 small">ห้องประชุมทั้งหมด</h6>
-                    <h2 class="card-title fw-bold mb-0">{{ summary_cards.total_rooms }} <small class="text-muted fs-6">ห้อง</small></h2>
+                    <h6 class="text-muted small text-uppercase fw-bold mb-1">ห้องทั้งหมด</h6>
+                    <h3 class="mb-0 fw-bold text-dark">{{ summary_cards.total_rooms }}</h3>
                 </div>
                 <i class="bi bi-door-open-fill kpi-icon text-primary"></i>
             </div>
         </div>
     </div>
-    <div class="col-12 col-sm-6 col-xl-3">
-        <div class="card kpi-card border-start border-success border-3 shadow-sm h-100">
+    <div class="col-6 col-md-3">
+        <div class="card kpi-card border-l-success h-100">
             <div class="card-body d-flex justify-content-between align-items-center">
                 <div>
-                    <h6 class="card-subtitle text-muted mb-1 small">จองวันนี้ (อนุมัติ)</h6>
-                    <h2 class="card-title fw-bold mb-0">{{ summary_cards.today_bookings }} <small class="text-muted fs-6">รายการ</small></h2>
+                    <h6 class="text-muted small text-uppercase fw-bold mb-1">จองวันนี้</h6>
+                    <h3 class="mb-0 fw-bold text-dark">{{ summary_cards.today_bookings }}</h3>
                 </div>
-                 <i class="bi bi-calendar-check-fill kpi-icon text-success"></i>
+                <i class="bi bi-calendar-check-fill kpi-icon text-success"></i>
             </div>
         </div>
     </div>
-    <div class="col-12 col-sm-6 col-xl-3">
-        <div class="card kpi-card border-start border-warning border-3 shadow-sm h-100">
+    <div class="col-6 col-md-3">
+        <div class="card kpi-card border-l-warning h-100">
             <div class="card-body d-flex justify-content-between align-items-center">
                 <div>
-                    <h6 class="card-subtitle text-muted mb-1 small">รออนุมัติ</h6>
-                    <h2 class="card-title fw-bold mb-0">{{ summary_cards.pending_approvals }} <small class="text-muted fs-6">รายการ</small></h2>
+                    <h6 class="text-muted small text-uppercase fw-bold mb-1">รออนุมัติ</h6>
+                    <h3 class="mb-0 fw-bold text-dark">{{ summary_cards.pending_approvals }}</h3>
                 </div>
-                 <i class="bi bi-hourglass-split kpi-icon text-warning"></i>
+                <i class="bi bi-hourglass-split kpi-icon text-warning"></i>
             </div>
         </div>
     </div>
-    <div class="col-12 col-sm-6 col-xl-3">
-        <div class="card kpi-card border-start border-info border-3 shadow-sm h-100">
-             <div class="card-body d-flex justify-content-between align-items-center">
+    <div class="col-6 col-md-3">
+        <div class="card kpi-card border-l-info h-100">
+            <div class="card-body d-flex justify-content-between align-items-center">
                 <div>
-                    <h6 class="card-subtitle text-muted mb-1 small">ผู้ใช้ทั้งหมด</h6>
-                    <h2 class="card-title fw-bold mb-0">{{ summary_cards.total_users_count }} <small class="text-muted fs-6">คน</small></h2>
+                    <h6 class="text-muted small text-uppercase fw-bold mb-1">ผู้ใช้งาน</h6>
+                    <h3 class="mb-0 fw-bold text-dark">{{ summary_cards.total_users_count }}</h3>
                 </div>
-                 <i class="bi bi-person-check-fill kpi-icon text-info"></i>
+                <i class="bi bi-people-fill kpi-icon text-info"></i>
             </div>
         </div>
     </div>
 </div>
 {% endif %}
 
-    
-    
-    {# --- Room List Section --- #}
-    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
-        <h2 class="mb-0 fw-bold text-primary fs-3">สถานะห้องประชุม</h2>
-        
-        <div class="d-flex align-items-center ms-auto">
-            <label for="sortSelect" class="form-label me-2 mb-0 small text-muted text-nowrap">เรียงตาม:</label>
-            <select class="form-select form-select-sm" id="sortSelect" style="width: auto;" onchange="window.location.href='?sort='+this.value">
-                <option value="floor" {% if current_sort == 'floor' %}selected{% endif %}>อาคาร / ชั้น</option>
-                <option value="status" {% if current_sort == 'status' %}selected{% endif %}>สถานะ</option>
-                <option value="capacity" {% if current_sort == 'capacity' %}selected{% endif %}>ที่นั่ง</option>
-                <option value="name" {% if current_sort == 'name' %}selected{% endif %}>ชื่อห้อง</option>
-            </select>
-        </div>
+<div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
+    <h4 class="mb-0 fw-bold text-secondary">
+        <i class="bi bi-grid-fill me-2 text-primary"></i>สถานะห้องประชุม
+    </h4>
+    <div class="d-flex align-items-center bg-white p-1 rounded border">
+        <label class="small text-muted me-2 ps-2">เรียงตาม:</label>
+        <select class="form-select form-select-sm border-0 shadow-none text-secondary fw-bold" style="width: auto;" onchange="window.location.href='?sort='+this.value">
+            <option value="floor" {% if current_sort == 'floor' %}selected{% endif %}>ชั้น</option>
+            <option value="status" {% if current_sort == 'status' %}selected{% endif %}>สถานะ</option>
+            <option value="capacity" {% if current_sort == 'capacity' %}selected{% endif %}>ความจุ</option>
+        </select>
     </div>
+</div>
 
-    {% for building_name, rooms_in_building in buildings.items %}
+{% for building_name, rooms_in_building in buildings.items %}
+    
+    {% if not forloop.first %}
+        <hr class="building-divider">
+    {% endif %}
+
+    <div class="mb-4">
+        <h5 class="mb-3 text-primary fw-bold d-flex align-items-center">
+            <i class="bi bi-building me-2"></i> {{ building_name }}
+        </h5>
         
-        {% if not forloop.first %}
-            <hr class="section-divider my-4">
-        {% endif %}
-        <div class="mb-4">
-            <h5 class="mb-3 text-secondary border-bottom pb-2 d-inline-block"><i class="bi bi-building me-2"></i>{{ building_name }}</h5>
-            
-            <div class="row g-3 row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xl-4">
-                {% for room in rooms_in_building %}
-                <div class="col">
+        <div class="row g-3 row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-4">
+            {% for room in rooms_in_building %}
+            <div class="col">
+                <div class="card room-card-hover h-100">
+                    <div class="room-img-wrapper">
+                        {% if room.image %}
+                            <img src="{{ room.image.url }}" class="room-img-top">
+                        {% else %}
+                            <div class="w-100 h-100 d-flex align-items-center justify-content-center text-muted">
+                                <i class="bi bi-image fs-1 opacity-25"></i>
+                            </div>
+                        {% endif %}
+                        
+                        <div class="position-absolute top-0 end-0 m-2">
+                            {% if room.is_maintenance %}
+                               <span class="badge rounded-pill bg-secondary shadow-sm">ปิดปรับปรุง</span>
+                            {% elif room.status == 'ว่าง' %}
+                                <span class="badge rounded-pill bg-success shadow-sm">ว่าง</span>
+                            {% else %}
+                                <span class="badge rounded-pill bg-danger shadow-sm">ไม่ว่าง</span>
+                            {% endif %}
+                        </div>
+                    </div>
                     
-                    <div class="card room-card-hover border-start border-2 
-                        {% if room.is_maintenance %}border-secondary room-maintenance
-                        {% elif room.status == 'ว่าง' %}border-success
-                        {% else %}border-danger{% endif %} shadow-sm h-100">
-                        <div class="card-body d-flex flex-column p-3">
-                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                <h5 class="card-title mb-0 fs-5 text-truncate" title="{{ room.name }}">{{ room.name }}</h5>
-                                
-                                {% if room.is_maintenance %}
-                                   <span class="badge bg-secondary text-dark rounded-pill small">
-                                        ปิดปรับปรุง
-                                    </span>
-                                {% else %}
-                                    <span class="badge {% if room.status == 'ว่าง' %}bg-success-subtle text-success-emphasis{% else %}bg-danger-subtle text-danger-emphasis{% endif %} rounded-pill small">
-                                        {{ room.status }}
-                                    </span>
-                                {% endif %}
-                            </div>
-                            <p class="card-subtitle mb-2 text-muted small">
-                                ชั้น {{ room.floor|default:"-" }}
-                            </p>
-                            <p class="card-text small mb-1"><i class="bi bi-people-fill me-1"></i>{{ room.capacity }} คน</p>
-                            <p class="card-text small mb-3 text-truncate">
-                                <i class="bi bi-tools me-1"></i>
-                                {{ room.equipment_in_room|truncatewords:4|default:"-" }}
-                            </p>
+                    <div class="card-body d-flex flex-column p-3">
+                        <h6 class="card-title fw-bold text-dark mb-1 text-truncate" title="{{ room.name }}">
+                            {{ room.name }}
+                        </h6>
+                        <p class="text-muted small mb-2"><i class="bi bi-layers"></i> ชั้น {{ room.floor|default:"-" }}</p>
+                        
+                        <div class="small text-muted mb-3 d-flex justify-content-between align-items-center bg-light p-2 rounded">
+                            <span><i class="bi bi-people-fill me-1"></i> {{ room.capacity }} คน</span>
+                            <span class="text-truncate" style="max-width: 100px;">
+                                <i class="bi bi-tools me-1"></i> {{ room.equipment_in_room|default:"-" }}
+                            </span>
+                        </div>
 
-                            <div class="mt-auto border-top pt-2">
-                                {% if room.is_maintenance %}
-                                    <p class="small mb-1 text-secondary">
-                                        <i class="bi bi-tools"></i> **ไม่สามารถจองได้**
-                                    </p>
-                                    
-                                    <button type="button" class="btn btn-sm btn-maintenance-alert mt-2 w-100" 
-                                            data-bs-toggle="modal" 
-                                            data-bs-target="#maintenanceAlertModal" 
-                                            data-room-name="{{ room.name }}">
-                                        <i class="bi bi-calendar3-x me-1"></i> แจ้งเตือน
-                                    </button>
-                                    
-                                {% elif room.current_booking_info %}
-                                    <p class="small mb-1 text-danger text-truncate">
-                                        <i class="bi bi-calendar-x"></i> <strong>ถึง:</strong> {{ room.current_booking_info.end_time|date:"H:i" }} น.
-                                    </p>
-                                    <p class="small mb-1 text-muted text-truncate" title="{{ room.current_booking_info.user.get_full_name|default:room.current_booking_info.user.username }}">
-                                       <i class="bi bi-person"></i> {{ room.current_booking_info.user.get_full_name|default:room.current_booking_info.user.username }}
-                                    </p>
-                                    <a href="{% url 'room_calendar' room.id %}" class="btn btn-sm btn-outline-primary mt-2 w-100">
-                                        <i class="bi bi-calendar3 me-1"></i> จอง
-                                    </a>
-                                {% elif room.next_booking_info %}
-                                     <p class="small mb-1 text-primary text-truncate">
-                                          <i class="bi bi-calendar-plus"></i> <strong>ถัดไป:</strong> {{ room.next_booking_info.start_time|date:"H:i" }} น.
-                                     </p>
-                                     <p class="small mb-1 text-muted text-truncate">
-                                         <i class="bi bi-person"></i> {{ room.next_booking_info.user.get_full_name|default:room.next_booking_info.user.username }}
-                                     </p>
-                                     <a href="{% url 'room_calendar' room.id %}" class="btn btn-sm btn-outline-primary mt-2 w-100">
-                                         <i class="bi bi-calendar3 me-1"></i> จอง
-                                     </a>
-                                {% else %}
-                                    <p class="small mb-1 text-success"><i class="bi bi-calendar-check"></i> ว่างตลอด</p>
-                                    <p class="small mb-1 text-muted">&nbsp;</p> {# Placeholder #}
-                                    <a href="{% url 'room_calendar' room.id %}" class="btn btn-sm btn-outline-success mt-2 w-100">
-                                        <i class="bi bi-calendar3 me-1"></i> จองทันที
-                                    </a>
-                                {% endif %}
-                            </div>
+                        <div class="mt-auto pt-2 border-top">
+                            {% if room.is_maintenance %}
+                                <button class="btn btn-sm btn-outline-secondary w-100 rounded-pill" disabled>
+                                    <i class="bi bi-cone-striped"></i> ปิดปรับปรุง
+                                </button>
+                            {% elif room.current_booking_info %}
+                                <div class="bg-danger bg-opacity-10 p-1 rounded mb-2 border border-danger border-opacity-25 text-center">
+                                    <small class="d-block text-danger fw-bold">ถึง: {{ room.current_booking_info.end_time|date:"H:i" }}</small>
+                                </div>
+                                <a href="{% url 'room_calendar' room.id %}" class="btn btn-sm btn-outline-danger w-100 rounded-pill">
+                                    จองต่อ
+                                </a>
+                            {% else %}
+                                <a href="{% url 'room_calendar' room.id %}" class="btn btn-sm btn-primary w-100 rounded-pill shadow-sm">
+                                    <i class="bi bi-cursor-fill me-1"></i> จองห้อง
+                                </a>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
-                {% endfor %}
             </div>
+            {% endfor %}
         </div>
-    {% empty %}
-        <div class="alert alert-warning text-center">
-            <i class="bi bi-exclamation-triangle-fill me-2"></i> ยังไม่มีห้องประชุมในระบบ
-        </div>
-    {% endfor %}
-</div> 
-
-{# --- Modal สำหรับแจ้งเตือน ปิดปรับปรุง --- #}
-<div class="modal fade" id="maintenanceAlertModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered modal-sm"> 
-    <div class="modal-content">
-      <div class="modal-header border-0 pb-0">
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body text-center pt-0">
-        <i class="bi bi-exclamation-triangle-fill display-4 text-warning mb-3 d-block"></i> 
-        <h5 class="fw-bold text-danger">ไม่สามารถจองได้</h5>
-        <p class="text-primary fw-bold mb-1" id="roomNameAlert"></p>
-        <p class="small text-muted">ห้องนี้กำลังปิดปรับปรุงชั่วคราว</p>
-      </div>
-      <div class="modal-footer justify-content-center border-0 pt-0">
-        <button type="button" class="btn btn-secondary btn-sm px-4" data-bs-dismiss="modal">ปิด</button>
-      </div>
     </div>
-  </div>
-</div>
+{% empty %}
+    <div class="alert alert-light text-center py-5 border shadow-sm rounded-4">
+        <i class="bi bi-inbox fs-1 text-muted opacity-50 mb-3 d-block"></i>
+        <h5 class="text-muted">ไม่พบข้อมูลห้องประชุม</h5>
+        <p class="small text-muted">กรุณาเพิ่มข้อมูลห้องในระบบจัดการ</p>
+    </div>
+{% endfor %}
 
-{% endblock %}
-
-
-{% block extra_scripts %}
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    var maintenanceModal = document.getElementById('maintenanceAlertModal');
-    
-    if (maintenanceModal) {
-        var roomNameAlert = document.getElementById('roomNameAlert');
-
-        maintenanceModal.addEventListener('show.bs.modal', function (event) {
-            var button = event.relatedTarget;
-            var roomName = button.getAttribute('data-room-name');
-            
-            if (roomNameAlert) {
-                roomNameAlert.textContent = roomName;
-            }
-        });
-    }
-});
-</script>
 {% endblock %}
