@@ -1,18 +1,21 @@
 import os
+import re # ใช้สำหรับตรวจสอบอักขระพิเศษ
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User, Group
-from .models import Booking, Room, Equipment 
-from dal import autocomplete
-from django.utils import timezone
 from django.core.exceptions import ValidationError
-from django.db.models import Q 
+from django.db.models import Q
+from django.utils import timezone
+from dal import autocomplete
 
+# Crispy Forms
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Row, Column, Field, HTML
 
+from .models import Booking, Room, Equipment 
+
 # -----------------------------------------------
-# 1. BookingForm
+# 1. BookingForm (ฟอร์มจองห้อง)
 # -----------------------------------------------
 class BookingForm(forms.ModelForm):
     RECURRENCE_CHOICES = [
@@ -34,7 +37,6 @@ class BookingForm(forms.ModelForm):
 
     class Meta:
         model = Booking
-        # [แก้ไข] ลบ participants ออก
         fields = [
             'room', 'title', 'chairman', 'department', 'start_time',
             'end_time', 'participant_count', 'room_layout', 'room_layout_attachment',
@@ -43,8 +45,12 @@ class BookingForm(forms.ModelForm):
         ]
         
         labels = {
-            'room': 'ห้องประชุม', 'title': 'หัวข้อการประชุม', 'chairman': 'ประธานในที่ประชุม (ถ้ามี)',
-            'department': 'แผนกผู้จอง', 'start_time': 'วัน/เวลา เริ่มต้น', 'end_time': 'วัน/เวลา สิ้นสุด',
+            'room': 'ห้องประชุม', 
+            'title': 'หัวข้อการประชุม', 
+            'chairman': 'ประธานในที่ประชุม (ถ้ามี)',
+            'department': 'แผนกผู้จอง', 
+            'start_time': 'วัน/เวลา เริ่มต้น', 
+            'end_time': 'วัน/เวลา สิ้นสุด',
             'participant_count': 'จำนวนผู้เข้าร่วม (โดยประมาณ)', 
             'presentation_file': 'ไฟล์นำเสนอ (Max 100MB)', 
             'description': 'รายละเอียด/วาระการประชุม',
@@ -60,13 +66,9 @@ class BookingForm(forms.ModelForm):
         
         widgets = {
             'room': forms.HiddenInput(),
-            'status': forms.HiddenInput(),
             'start_time': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class':'form-control'}),
             'end_time': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class':'form-control'}),
-            
-            # [แก้ไข] Presentation: รับทุกไฟล์แต่เดี๋ยวเช็คขนาด
             'presentation_file': forms.ClearableFileInput(attrs={'class':'form-control'}),
-            
             'description': forms.Textarea(attrs={'rows': 3, 'class':'form-control'}),
             'additional_requests': forms.Textarea(attrs={'rows': 2, 'class':'form-control'}),
             'additional_notes': forms.Textarea(attrs={'rows': 2, 'class':'form-control'}),
@@ -75,11 +77,8 @@ class BookingForm(forms.ModelForm):
             'department': forms.TextInput(attrs={'class':'form-control', 'placeholder': ''}),
             'participant_count': forms.NumberInput(attrs={'min': '1', 'class':'form-control'}),
             'room_layout': forms.RadioSelect(),
-            
-            # [แก้ไข] Layout Attachment: บังคับนามสกุลใน HTML
             'room_layout_attachment': forms.ClearableFileInput(attrs={'class':'form-control', 'accept': '.jpg,.jpeg,.png,.pdf'}),
             
-            # Widget สำหรับค้นหาอุปกรณ์
             'equipments': autocomplete.ModelSelect2Multiple(
                 url='equipment-autocomplete',
                 attrs={'data-placeholder': 'พิมพ์ชื่ออุปกรณ์เพื่อค้นหา...', 'data-theme': 'bootstrap-5'}
@@ -98,7 +97,6 @@ class BookingForm(forms.ModelForm):
         self.fields['start_time'].widget = forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'form-control', 'required': 'required'}, format='%Y-%m-%dT%H:%M')
         self.fields['end_time'].widget = forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'form-control', 'required': 'required'}, format='%Y-%m-%dT%H:%M')
         
-        # [แก้ไข] จัดลำดับใหม่ (เอา participants ออก)
         self.order_fields([
             'title', 'chairman', 'department', 'start_time', 'end_time', 
             'recurrence', 'recurrence_end_date', 'participant_count', 
@@ -114,31 +112,23 @@ class BookingForm(forms.ModelForm):
         room = cleaned_data.get('room')
         participant_count = cleaned_data.get('participant_count')
 
-        # 1. ตรวจสอบเวลา
         if start_time and end_time and start_time >= end_time:
             raise ValidationError("วัน/เวลา สิ้นสุด ต้องอยู่หลังจาก วัน/เวลา เริ่มต้น", code='invalid_time_range')
+        
         if start_time:
             start_time_aware = timezone.make_aware(start_time, timezone.get_current_timezone()) if timezone.is_naive(start_time) else start_time
             if not self.instance.pk and start_time_aware < timezone.now():
                 raise ValidationError("ไม่สามารถจองเวลาย้อนหลังได้ กรุณาเลือกเวลาใหม่", code='invalid_past_date')
         
-        # 2. ตรวจสอบความจุ
         if room and participant_count and participant_count > room.capacity:
              raise ValidationError(f"จองไม่ได้: จำนวนผู้เข้าร่วม ({participant_count} คน) เกินความจุของห้อง ({room.capacity} คน)! ", code='capacity_exceeded')
 
-        # ----------------------------------------------------------------
-        # [ใหม่] 3. ตรวจสอบขนาดไฟล์ Presentation (Max 100MB)
-        # ----------------------------------------------------------------
         p_file = cleaned_data.get('presentation_file')
         if p_file:
             limit_mb = 100
-            # แปลง MB เป็น Bytes (1 MB = 1024 * 1024 bytes)
             if p_file.size > limit_mb * 1024 * 1024:
                 self.add_error('presentation_file', f"ขนาดไฟล์ใหญ่เกินกำหนด! (สูงสุด {limit_mb} MB)")
 
-        # ----------------------------------------------------------------
-        # [ใหม่] 4. ตรวจสอบนามสกุลไฟล์แนบผังห้อง (JPEG, PNG, PDF Only)
-        # ----------------------------------------------------------------
         l_file = cleaned_data.get('room_layout_attachment')
         if l_file:
             valid_extensions = ['.jpg', '.jpeg', '.png', '.pdf']
@@ -150,13 +140,14 @@ class BookingForm(forms.ModelForm):
 
 
 # -----------------------------------------------
-# 2. RoomForm (สำหรับ Admin)
+# 2. RoomForm (สำหรับ Admin จัดการห้อง)
 # -----------------------------------------------
 class RoomForm(forms.ModelForm):
     approver = forms.ModelChoiceField(
         queryset=User.objects.filter(Q(groups__name__in=['Approver', 'Admin']) | Q(is_superuser=True)).distinct(),
         widget=autocomplete.ModelSelect2(url='user-autocomplete', attrs={'data-placeholder': 'พิมพ์ค้นหา Admin หรือ Approver...', 'data-theme': 'bootstrap-5'}),
-        required=False, label="ผู้อนุมัติประจำห้อง"
+        required=False, 
+        label="ผู้อนุมัติประจำห้อง"
     )
 
     class Meta:
@@ -183,10 +174,14 @@ class RoomForm(forms.ModelForm):
             'maintenance_end': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'form-control'}),
             'is_maintenance': forms.CheckboxInput(attrs={'class': 'form-check-input', 'role': 'switch'}),
             'equipment_in_room': forms.Textarea(attrs={'rows': 5, 'class': 'form-control'}),
-            'name': forms.TextInput(attrs={'class': 'form-control'}), 'building': forms.TextInput(attrs={'class': 'form-control'}),
-            'floor': forms.TextInput(attrs={'class': 'form-control'}), 'capacity': forms.NumberInput(attrs={'class': 'form-control'}),
-            'location': forms.TextInput(attrs={'class': 'form-control'}), 'image': forms.ClearableFileInput(attrs={'class': 'form-control'}),
-            'line_notify_token': forms.TextInput(attrs={'class': 'form-control'}), 'teams_webhook_url': forms.Textarea(attrs={'rows': 3, 'class': 'form-control'}),
+            'name': forms.TextInput(attrs={'class': 'form-control'}), 
+            'building': forms.TextInput(attrs={'class': 'form-control'}),
+            'floor': forms.TextInput(attrs={'class': 'form-control'}), 
+            'capacity': forms.NumberInput(attrs={'class': 'form-control'}),
+            'location': forms.TextInput(attrs={'class': 'form-control'}), 
+            'image': forms.ClearableFileInput(attrs={'class': 'form-control'}),
+            'line_notify_token': forms.TextInput(attrs={'class': 'form-control'}), 
+            'teams_webhook_url': forms.Textarea(attrs={'rows': 3, 'class': 'form-control'}),
         }
 
     def __init__(self, *args, **kwargs):
@@ -194,7 +189,8 @@ class RoomForm(forms.ModelForm):
 
         self.fields['maintenance_start'].required = False
         self.fields['maintenance_end'].required = False
-        self.helper = FormHelper(); self.helper.form_tag = False 
+        self.helper = FormHelper()
+        self.helper.form_tag = False 
 
         self.helper.layout = Layout(
             'non_field_errors', 
@@ -208,28 +204,117 @@ class RoomForm(forms.ModelForm):
             'line_notify_token', 
             'teams_webhook_url',
             HTML('<hr class="my-4">'), 
-            HTML('<h5 class="text-muted mb-3"><i class="fas fa-tools"></i> ตั้งค่าการปิดปรับปรุง</h5>'),
+            HTML('<h5 class="text-muted mb-3"><i class="bi bi-tools"></i> ตั้งค่าการปิดปรับปรุง</h5>'),
             Row(Column('maintenance_start', css_class='col-md-6 mb-3'), Column('maintenance_end', css_class='col-md-6 mb-3')),
             Field('is_maintenance', wrapper_class="form-check form-switch fs-6 mb-3"),
         )
 
+
 # -----------------------------------------------
-# 3. CustomUserCreationForm (สำหรับ Admin)
+# 3. CustomUserCreationForm (ฉบับเพิ่มกฎพิเศษ)
 # -----------------------------------------------
-class CustomUserCreationForm(UserCreationForm):
-    groups = forms.ModelMultipleChoiceField(queryset=Group.objects.all(), widget=forms.CheckboxSelectMultiple, required=False, label="กำหนดสิทธิ์ (Groups)")
+class CustomUserCreationForm(forms.ModelForm):
+    password = forms.CharField(
+        label="รหัสผ่าน",
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control', 
+            'id': 'id_password',
+            'placeholder': 'ตั้งรหัสผ่านของคุณ'
+        }),
+        help_text="", 
+        required=True
+    )
+    
+    password_confirmation = forms.CharField(
+        label="ยืนยันรหัสผ่าน",
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control', 
+            'id': 'id_password_confirmation',
+            'placeholder': 'กรอกรหัสผ่านอีกครั้ง'
+        }),
+        required=True
+    )
+
+    groups = forms.ModelMultipleChoiceField(
+        queryset=Group.objects.all(), 
+        widget=forms.CheckboxSelectMultiple, 
+        required=False, 
+        label="กำหนดสิทธิ์ (Groups)"
+    )
+
     class Meta:
         model = User
         fields = ['username', 'first_name', 'last_name', 'email', 'groups']
+
+    def __init__(self, *args, **kwargs):
+        super(CustomUserCreationForm, self).__init__(*args, **kwargs)
+        
+        self.fields['username'].label = "ชื่อผู้ใช้ (Username)"
+        self.fields['username'].required = True
+        self.fields['username'].widget.attrs.update({'class': 'form-control', 'placeholder': 'เช่น somchai.t'})
+        
+        self.fields['first_name'].label = "ชื่อจริง"
+        self.fields['first_name'].required = True
+        self.fields['first_name'].widget.attrs.update({'class': 'form-control', 'placeholder': 'เช่น สมชาย'})
+
+        self.fields['last_name'].label = "นามสกุล"
+        self.fields['last_name'].required = True
+        self.fields['last_name'].widget.attrs.update({'class': 'form-control', 'placeholder': 'เช่น ใจดี'})
+
+        self.fields['email'].label = "อีเมล"
+        self.fields['email'].required = True
+        self.fields['email'].widget.attrs.update({'class': 'form-control', 'placeholder': 'somchai@example.com'})
+
+    def clean(self):
+        cleaned_data = super().clean()
+        password = cleaned_data.get("password")
+        password_confirmation = cleaned_data.get("password_confirmation")
+        email = cleaned_data.get("email")
+
+        # 1. เช็ครหัสผ่านตรงกัน
+        if password and password_confirmation:
+            if password != password_confirmation:
+                raise ValidationError("รหัสผ่านทั้งสองช่องไม่ตรงกัน กรุณาตรวจสอบ")
+
+        # 2. เช็คเงื่อนไขความปลอดภัย
+        if password:
+            if len(password) < 8:
+                self.add_error('password', "รหัสผ่านต้องมีความยาวอย่างน้อย 8 ตัวอักษร")
+
+            if not re.search(r'[a-zA-Z]', password):
+                self.add_error('password', "รหัสผ่านต้องมีตัวอักษรภาษาอังกฤษ (a-z, A-Z)")
+
+            if not re.search(r'\d', password):
+                self.add_error('password', "รหัสผ่านต้องมีตัวเลข (0-9)")
+
+            if not re.search(r'[@#$%&*()_ \[\]]', password):
+                self.add_error('password', "รหัสผ่านต้องมีอักขระพิเศษอย่างน้อย 1 ตัว เช่น @#$%&*()_ []")
+
+        # 3. เช็คอีเมลซ้ำ
+        if email and User.objects.filter(email=email).exists():
+            self.add_error('email', "อีเมลนี้มีผู้ใช้งานแล้ว")
+
+        return cleaned_data
+
     def save(self, commit=True):
         user = super().save(commit=False)
+        user.set_password(self.cleaned_data["password"])
+        
         if commit:
-            user.save(); self.save_m2m()
-            if user.groups.filter(name='Admin').exists(): user.is_staff = True; user.is_superuser = True; user.save()
+            user.save()
+            self.cleaned_data.get('groups', []) 
+            self.save_m2m()
+            
+            if user.groups.filter(name='Admin').exists():
+                user.is_staff = True
+                user.is_superuser = True
+                user.save()
+                
         return user
 
+
 # -----------------------------------------------
-# 4. EquipmentForm (สำหรับ Admin)
+# 4. EquipmentForm
 # -----------------------------------------------
 class EquipmentForm(forms.ModelForm):
     class Meta:

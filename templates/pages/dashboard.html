@@ -78,13 +78,13 @@
     }
     .room-img-top { width: 100%; height: 100%; object-fit: cover; }
 
-    /* --- [แก้ไข] เส้นแบ่งตึกให้ชัดขึ้น --- */
+    /* --- Building Divider --- */
     .building-divider {
         border: 0; 
-        border-top: 3px dashed #a0a0a0; /* เปลี่ยนสีให้เข้มขึ้น (เทากลาง) และหนาขึ้น */
+        border-top: 3px dashed #a0a0a0; 
         margin-top: 3.5rem;
         margin-bottom: 2.5rem;
-        opacity: 1; /* ปิดความโปร่งแสง ให้เห็นชัดเต็มที่ */
+        opacity: 1; 
     }
 </style>
 {% endblock %}
@@ -213,11 +213,17 @@
                         </h6>
                         <p class="text-muted small mb-2"><i class="bi bi-layers"></i> ชั้น {{ room.floor|default:"-" }}</p>
                         
-                        <div class="small text-muted mb-3 d-flex justify-content-between align-items-center bg-light p-2 rounded">
-                            <span><i class="bi bi-people-fill me-1"></i> {{ room.capacity }} คน</span>
-                            <span class="text-truncate" style="max-width: 100px;">
-                                <i class="bi bi-tools me-1"></i> {{ room.equipment_in_room|default:"-" }}
-                            </span>
+                        <div class="bg-light p-2 rounded mb-3 border">
+                            <div class="d-flex align-items-center mb-1 border-bottom pb-1">
+                                <i class="bi bi-people-fill text-secondary me-2"></i>
+                                <span class="small fw-bold text-dark">{{ room.capacity }} คน</span>
+                            </div>
+                            <div class="d-flex align-items-start mt-1">
+                                <i class="bi bi-tools text-secondary me-2 mt-1" style="font-size: 0.8rem;"></i>
+                                <span class="small text-muted" style="line-height: 1.4;">
+                                    {{ room.equipment_in_room|default:"-" }}
+                                </span>
+                            </div>
                         </div>
 
                         <div class="mt-auto pt-2 border-top">

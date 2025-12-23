@@ -1,38 +1,33 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}ปฏิทินรวมห้องประชุม{% endblock %}
+{% block title %}ปฏิทินรวม{% endblock %}
 
 {% block extra_head %}
 <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css' rel='stylesheet' />
 <style> 
     .fc-event { cursor: pointer; border: none; } 
-    .fc-license-message { display: none; }
-    /* ปรับขนาดตัวหนังสือในปฏิทินให้พอดี */
-    .fc-toolbar-title { font-size: 1.25rem !important; }
-    .fc-button { font-size: 0.9rem !important; }
+    /* ปรับแต่งปฏิทินให้ดูสะอาดตา */
+    .fc-daygrid-day-number { color: #333; font-weight: 500; text-decoration: none; }
+    .fc-col-header-cell-cushion { color: #555; text-decoration: none; font-weight: 600; }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="container py-4">
-    
     <div class="card border-0 shadow-sm rounded-3">
         <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
             <h5 class="mb-0 fw-bold text-primary">
                 <i class="bi bi-calendar3-range me-2"></i>ปฏิทินรวมทุกห้อง
             </h5>
-            <div>
-                <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
-                    <i class="bi bi-arrow-left me-1"></i>กลับหน้าหลัก
-                </a>
-            </div>
+            <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+                <i class="bi bi-arrow-left me-1"></i>กลับหน้าหลัก
+            </a>
         </div>
         <div class="card-body p-4">
             <div id='calendar'></div>
         </div>
     </div>
-
 </div>
 
 <div class="modal fade" id="eventModal" tabindex="-1">
@@ -89,12 +84,17 @@
             events: "{% url 'bookings_api' %}?t=" + new Date().getTime(),
             eventTimeFormat: { hour: '2-digit', minute: '2-digit', meridiem: false },
 
+            // เมื่อคลิกที่ Event ในปฏิทิน
             eventClick: function(info) {
+                // ใส่ข้อมูลลงใน Modal
                 document.getElementById('modalTitle').innerText = info.event.title;
                 document.getElementById('modalRoom').innerText = info.event.extendedProps.room;
                 document.getElementById('modalUser').innerText = info.event.extendedProps.user;
-                document.getElementById('modalLink').href = "/booking/" + info.event.id + "/";
+                
+                // [แก้ไขจุดที่ Error] เติม /detail/ ต่อท้ายลิงก์
+                document.getElementById('modalLink').href = "/booking/" + info.event.id + "/detail/";
 
+                // จัดการสีป้ายสถานะ (Badge)
                 let statusKey = info.event.extendedProps.status;
                 let badgeElem = document.getElementById('modalStatusBadge');
                 let badgeClass = 'badge rounded-pill fs-6 w-100 ';
@@ -113,6 +113,7 @@
                 badgeElem.className = badgeClass;
                 badgeElem.innerText = statusText;
 
+                // เปิด Modal
                 var myModal = new bootstrap.Modal(document.getElementById('eventModal'));
                 myModal.show();
             }

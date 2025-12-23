@@ -13,56 +13,61 @@
     <style>
         body {
             font-family: 'Kanit', sans-serif;
-            background-color: #f4f6f9; /* สีพื้นหลังเทาอ่อน สบายตา */
+            background-color: #f0f2f5; /* สีพื้นหลังเข้มขึ้นนิดนึงเพื่อให้การ์ดสีขาวเด่น */
             color: #333;
             display: flex;
             flex-direction: column;
             min-height: 100vh;
         }
 
-        /* --- Professional Navbar --- */
+        /* --- Navbar --- */
         .navbar-custom {
-            background-color: #0d6efd; /* สีน้ำเงินมาตรฐาน Bootstrap */
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            padding: 0.6rem 0;
+            background: linear-gradient(90deg, #0d6efd 0%, #0043a8 100%); /* ไล่สีให้ดูมีมิติ */
+            box-shadow: 0 4px 6px rgba(0,0,0,0.15); /* เงาชัดขึ้น */
+            padding: 0.7rem 0;
+            border-bottom: 3px solid #ffc107; /* เพิ่มเส้นสีเหลืองตัดขอบล่างให้ดูเด่น */
         }
+        .navbar-brand { font-weight: 700; font-size: 1.4rem; text-shadow: 1px 1px 2px rgba(0,0,0,0.2); }
+        .nav-link { color: rgba(255,255,255,0.9) !important; margin: 0 4px; transition: 0.3s; }
+        .nav-link:hover { background: rgba(255,255,255,0.2); border-radius: 5px; }
+        .nav-link.active { background: rgba(255,255,255,0.3); border-radius: 5px; font-weight: 600; }
 
-        .navbar-brand {
-            font-weight: 600;
-            font-size: 1.3rem;
-        }
-
-        .nav-link {
-            font-size: 0.95rem;
-            margin: 0 5px;
-            border-radius: 4px;
-            transition: all 0.2s;
-        }
-
-        .nav-link:hover {
-            background-color: rgba(255,255,255,0.15);
-        }
-
-        .nav-link.active {
-            background-color: rgba(255,255,255,0.25);
-            font-weight: 500;
-        }
-
-        /* Dropdown */
-        .dropdown-menu {
-            border: none;
-            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-            font-size: 0.9rem;
-        }
-        .dropdown-item:hover { background-color: #f8f9fa; color: #0d6efd; }
-
-        /* Footer */
-        .footer-custom {
+        /* --- Global Card Style (ใส่ขอบให้ทุกการ์ดในระบบ) --- */
+        .card {
+            border: 1px solid #d1d5db; /* ขอบสีเทาชัด */
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05); /* เงาบางๆ */
             background-color: #fff;
-            border-top: 1px solid #dee2e6;
-            color: #6c757d;
-            font-size: 0.85rem;
         }
+        .card-header {
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #d1d5db;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        /* --- Global Inputs & Selects (ใส่ขอบให้ช่องกรอกข้อมูล) --- */
+        .form-control, .form-select {
+            border: 1px solid #ced4da;
+            background-color: #fff;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+        }
+
+        /* --- Global Table (ใส่ขอบให้ตาราง) --- */
+        .table-bordered {
+            border: 1px solid #dee2e6;
+        }
+        .table thead th {
+            background-color: #e9ecef; /* หัวตารางสีเทา */
+            border-bottom: 2px solid #ced4da;
+            color: #495057;
+        }
+
+        /* --- Footer --- */
+        .footer-custom { background: #fff; border-top: 1px solid #dee2e6; color: #6c757d; }
     </style>
     {% block extra_head %}{% endblock %}
 </head>
@@ -73,7 +78,7 @@
             <a class="navbar-brand d-flex align-items-center" href="{% url 'dashboard' %}">
                 <i class="bi bi-calendar-check-fill me-2"></i> TEGH MeetBook
             </a>
-            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
@@ -87,21 +92,22 @@
                     {% endfor %}
                     {% if is_admin_user %}
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle {% for item in admin_menu_items %}{% if item.active %}active{% endif %}{% endfor %}" href="#" role="button" data-bs-toggle="dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                                 <i class="bi bi-gear-fill me-1"></i> ผู้ดูแล
                             </a>
-                            <ul class="dropdown-menu mt-2">
-                                <li><span class="dropdown-header">Admin Zone</span></li>
+                            <ul class="dropdown-menu shadow border-0 mt-2">
+                                <li><span class="dropdown-header fw-bold bg-light">Admin Zone</span></li>
                                 {% for item in admin_menu_items %}
-                                    <li><a class="dropdown-item" href="{% url item.url_name %}"><i class="bi {{ item.icon }} me-2 text-secondary"></i> {{ item.label }}</a></li>
+                                    <li><a class="dropdown-item py-2" href="{% url item.url_name %}"><i class="bi {{ item.icon }} me-2 text-primary"></i> {{ item.label }}</a></li>
                                 {% endfor %}
                             </ul>
                         </li>
                     {% endif %}
                 </ul>
+                
                 <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-center gap-3">
                     <li class="nav-item dropdown">
-                        <a class="nav-link position-relative" href="#" role="button" data-bs-toggle="dropdown">
+                        <a class="nav-link position-relative" href="javascript:void(0);" role="button" data-bs-toggle="dropdown">
                             <i class="bi bi-bell-fill fs-5"></i>
                             {% if pending_count > 0 %}
                                 <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-light">
@@ -109,22 +115,29 @@
                                 </span>
                             {% endif %}
                         </a>
-                        <div class="dropdown-menu dropdown-menu-end mt-2 p-0 shadow" style="width: 300px;">
+                        <div class="dropdown-menu dropdown-menu-end mt-2 p-0 shadow border-0" style="width: 320px;">
                             <div class="card border-0">
-                                <div class="card-header bg-white fw-bold">การแจ้งเตือน</div>
+                                <div class="card-header bg-primary text-white fw-bold d-flex justify-content-between">
+                                    <span><i class="bi bi-bell me-1"></i> การแจ้งเตือน</span>
+                                    <a href="{% url 'history' %}" class="text-white text-decoration-none small" style="opacity: 0.8;">ดูทั้งหมด</a>
+                                </div>
                                 <div class="list-group list-group-flush" style="max-height: 300px; overflow-y: auto;">
-                                    {% if pending_notifications or recent_cancellations %}
+                                    {% if pending_notifications %}
                                         {% for booking in pending_notifications %}
-                                            <a href="{% url 'approvals' %}" class="list-group-item list-group-item-action">
-                                                <div class="d-flex w-100 justify-content-between"><small class="fw-bold text-primary">ใหม่</small><small class="text-muted">{{ booking.created_at|timesince }}</small></div>
-                                                <p class="mb-1 small">{{ booking.title }}</p>
+                                            <a href="{% url 'approvals' %}" class="list-group-item list-group-item-action border-bottom">
+                                                <div class="d-flex w-100 justify-content-between">
+                                                    <small class="fw-bold text-primary"><i class="bi bi-circle-fill small me-1"></i> ใหม่</small>
+                                                    <small class="text-muted">{{ booking.created_at|timesince }}</small>
+                                                </div>
+                                                <p class="mb-1 small fw-bold text-truncate">{{ booking.title }}</p>
+                                                <small class="text-muted">ห้อง: {{ booking.room.name }}</small>
                                             </a>
                                         {% endfor %}
-                                        {% for booking in recent_cancellations %}
-                                            <a href="#" class="list-group-item list-group-item-action bg-light"><small class="fw-bold text-danger">ยกเลิก</small> <span class="small text-muted">{{ booking.title }}</span></a>
-                                        {% endfor %}
                                     {% else %}
-                                        <div class="p-3 text-center text-muted small">ไม่มีการแจ้งเตือน</div>
+                                        <div class="p-4 text-center text-muted">
+                                            <i class="bi bi-bell-slash fs-1 d-block mb-2 opacity-25"></i>
+                                            <small>ไม่มีการแจ้งเตือนใหม่</small>
+                                        </div>
                                     {% endif %}
                                 </div>
                             </div>
@@ -132,17 +145,20 @@
                     </li>
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" role="button" data-bs-toggle="dropdown">
-                            <div class="bg-white text-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                            <div class="bg-white text-primary rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 35px; height: 35px;">
                                 <i class="bi bi-person-fill"></i>
                             </div>
-                            <span class="d-none d-lg-inline small">{{ user.first_name|default:user.username }}</span>
+                            <span class="d-none d-lg-inline small fw-bold">{{ user.first_name|default:user.username }}</span>
                         </a>
-                        <ul class="dropdown-menu dropdown-menu-end mt-2 shadow">
+                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2">
                             <li><h6 class="dropdown-header">บัญชีผู้ใช้</h6></li>
+                            <li><hr class="dropdown-divider"></li>
                             <li>
-                                <form action="{% url 'logout' %}" method="post" class="px-2 py-1">
+                                <form action="{% url 'logout' %}" method="post" class="px-2">
                                     {% csrf_token %}
-                                    <button type="submit" class="btn btn-sm btn-outline-danger w-100">ออกจากระบบ</button>
+                                    <button type="submit" class="btn btn-outline-danger btn-sm w-100 rounded-pill">
+                                        <i class="bi bi-box-arrow-right me-1"></i> ออกจากระบบ
+                                    </button>
                                 </form>
                             </li>
                         </ul>
@@ -154,22 +170,21 @@
 
     <main class="container py-4 flex-grow-1">
         {% if messages %}
-            <div class="mb-3">
+            <div class="mb-4">
                 {% for message in messages %}
-                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                        {{ message }}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm border-start border-5 border-{{ message.tags }}" role="alert">
+                        <i class="bi bi-info-circle-fill me-2"></i> {{ message }}
                         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
                 {% endfor %}
             </div>
         {% endif %}
-
         {% block content %}{% endblock %}
     </main>
 
     <footer class="footer-custom py-3 mt-auto text-center">
         <div class="container">
-            <span>© 2025 TEGH MeetBook</span>
+            <span class="text-muted small">© 2025 TEGH MeetBook</span>
         </div>
     </footer>
 

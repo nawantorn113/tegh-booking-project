@@ -1,58 +1,321 @@
 {% extends 'base.html' %}
+{% load static %}
 {% load crispy_forms_tags %}
 
-{% block title %}{{ title }} - TEGH Booking{% endblock %}
+{% block title %}จัดการผู้ใช้{% endblock %}
+
+{% block extra_head %}
+<style>
+    body {
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        min-height: 100vh;
+    }
+    .premium-card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+        background-color: #fff;
+        overflow: hidden;
+    }
+    .card-header-premium {
+        background: linear-gradient(90deg, #0d6efd 0%, #0056b3 100%);
+        color: white;
+        padding: 1.5rem;
+        border-bottom: 4px solid #ffc107;
+    }
+    .form-floating > .form-control:focus, 
+    .form-floating > .form-control:not(:placeholder-shown) {
+        padding-top: 1.625rem;
+        padding-bottom: 0.625rem;
+    }
+    .form-floating > .form-control {
+        border-radius: 8px 0 0 8px;
+        border: 1px solid #ced4da;
+    }
+    .form-floating > .form-control:focus {
+        box-shadow: none;
+        border-color: #0d6efd;
+    }
+    .btn-toggle-pw {
+        border-radius: 0 8px 8px 0;
+        border: 1px solid #ced4da;
+        border-left: none;
+        background-color: #fff;
+        color: #6c757d;
+    }
+    .btn-toggle-pw:hover {
+        background-color: #f8f9fa;
+        color: #0d6efd;
+    }
+    .password-rules-box {
+        background-color: #f8f9fa;
+        border-left: 4px solid #6c757d;
+        padding: 1rem;
+        border-radius: 4px;
+        transition: all 0.3s;
+    }
+    .password-rules-box.valid {
+        border-left-color: #198754;
+        background-color: #e8f5e9;
+    }
+    .rule-item i { transition: 0.3s; }
+    .rule-pass { color: #198754; font-weight: 600; }
+    .rule-pass i { transform: scale(1.2); }
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="container py-5">
     <div class="row justify-content-center">
-        <div class="col-lg-8 col-md-10">
+        <div class="col-md-10 col-lg-8">
             
-            <div class="card shadow border-0 rounded-3">
-                
-                <div class="card-header bg-primary text-white py-3 px-4">
-                    <div class="d-flex align-items-center">
-                        <i class="bi bi-person-plus-fill fs-4 me-3"></i>
-                        <h5 class="mb-0 fw-bold">{{ title }}</h5>
+            <div class="premium-card">
+                <div class="card-header-premium text-center">
+                    <div class="mb-2">
+                        <i class="bi bi-person-fill-add" style="font-size: 3rem;"></i>
                     </div>
+                    <h4 class="fw-bold m-0">{{ title|default:"สร้างบัญชีผู้ใช้ใหม่" }}</h4>
+                    <p class="text-white-50 small m-0">กรอกข้อมูลให้ครบถ้วนเพื่อลงทะเบียน</p>
                 </div>
 
-                <div class="card-body p-4 p-md-5 bg-white">
-                    
-                    <form method="post">
+                <div class="card-body p-4 p-md-5">
+                    <form method="post" novalidate id="userForm">
                         {% csrf_token %}
                         
                         {% if form.errors %}
-                            <div class="alert alert-danger shadow-sm" role="alert">
-                                <i class="bi bi-exclamation-triangle-fill me-2"></i> 
-                                โปรดตรวจสอบข้อมูลด้านล่าง
+                            <div class="alert alert-danger d-flex align-items-center mb-4 shadow-sm">
+                                <i class="bi bi-exclamation-triangle-fill fs-3 me-3"></i>
+                                <div>
+                                    <strong>เกิดข้อผิดพลาด!</strong>
+                                    <ul class="mb-0 ps-3 small">
+                                        {% for field in form %}
+                                            {% for error in field.errors %}<li>{{ field.label }}: {{ error }}</li>{% endfor %}
+                                        {% endfor %}
+                                        {% for error in form.non_field_errors %}<li>{{ error }}</li>{% endfor %}
+                                    </ul>
+                                </div>
                             </div>
                         {% endif %}
 
-                        <div class="mb-4">
-                            {{ form|crispy }}
+                        <h6 class="text-primary fw-bold text-uppercase mb-3 small"><i class="bi bi-person-vcard me-1"></i> ข้อมูลส่วนตัว</h6>
+                        
+                        <div class="form-floating mb-3">
+                            {{ form.username }}
+                            <label for="{{ form.username.id_for_label }}">{{ form.username.label }} *</label>
+                            <div class="form-text ms-1">{{ form.username.help_text }}</div>
                         </div>
 
-                        <hr class="my-4 text-muted">
+                        <div class="row g-2 mb-3">
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    {{ form.first_name }}
+                                    <label for="{{ form.first_name.id_for_label }}">{{ form.first_name.label }} *</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    {{ form.last_name }}
+                                    <label for="{{ form.last_name.id_for_label }}">{{ form.last_name.label }} *</label>
+                                </div>
+                            </div>
+                        </div>
 
-                        <div class="d-flex justify-content-end gap-2">
-                            <a href="{% url 'user_management' %}" class="btn btn-light border px-4">
-                                <i class="bi bi-x-lg me-1"></i> ยกเลิก
-                            </a>
-                            <button type="submit" class="btn btn-primary px-4 shadow-sm">
-                                <i class="bi bi-save me-1"></i> บันทึกข้อมูล
+                        <div class="form-floating mb-4">
+                            {{ form.email }}
+                            <label for="{{ form.email.id_for_label }}">{{ form.email.label }} *</label>
+                        </div>
+
+                        {% if form.groups %}
+                        <div class="mb-4">
+                            <label class="fw-bold small text-muted mb-2">{{ form.groups.label }}</label>
+                            <div class="border rounded p-3 bg-light">{{ form.groups }}</div>
+                        </div>
+                        {% endif %}
+
+                        <hr class="my-4 text-muted opacity-25">
+
+                        <h6 class="text-primary fw-bold text-uppercase mb-3 small"><i class="bi bi-shield-lock me-1"></i> กำหนดรหัสผ่าน</h6>
+
+                        <div class="input-group mb-2">
+                            <div class="form-floating flex-grow-1">
+                                {{ form.password }}
+                                <label for="{{ form.password.id_for_label }}">{{ form.password.label }} *</label>
+                            </div>
+                            <button class="btn btn-toggle-pw px-3" type="button" onclick="togglePassword('id_password', this)">
+                                <i class="bi bi-eye"></i>
                             </button>
                         </div>
-                    </form>
 
+                        <div class="password-rules-box mb-3" id="rulesBox">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="bi bi-info-circle me-2"></i>
+                                <small class="fw-bold">ต้องประกอบด้วย:</small>
+                            </div>
+                            <ul class="list-unstyled mb-0 small text-muted ps-2">
+                                <li id="rule-length" class="rule-item mb-1"><i class="bi bi-circle me-2"></i>ความยาวอย่างน้อย 8 ตัวอักษร</li>
+                                <li id="rule-eng" class="rule-item mb-1"><i class="bi bi-circle me-2"></i>มีอักษรภาษาอังกฤษ (A-Z)</li>
+                                <li id="rule-num" class="rule-item mb-1"><i class="bi bi-circle me-2"></i>มีตัวเลข (0-9)</li>
+                                <li id="rule-special" class="rule-item mb-1"><i class="bi bi-circle me-2"></i>มีอักขระพิเศษ @#$%&*()_ []</li>
+                                <li id="rule-match" class="rule-item"><i class="bi bi-circle me-2"></i>ไม่ซ้ำกับชื่อผู้ใช้</li>
+                            </ul>
+                        </div>
+
+                        <div class="input-group mb-1">
+                            <div class="form-floating flex-grow-1">
+                                {{ form.password_confirmation }}
+                                <label for="{{ form.password_confirmation.id_for_label }}">{{ form.password_confirmation.label }} *</label>
+                            </div>
+                            <button class="btn btn-toggle-pw px-3" type="button" onclick="togglePassword('id_password_confirmation', this)">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </div>
+                        
+                        <div id="passwordMismatch" class="text-danger small mt-1 fw-bold shake-animation ms-1" style="display: none;">
+                            <i class="bi bi-x-circle-fill me-1"></i> รหัสผ่านไม่ตรงกัน
+                        </div>
+                        <div id="passwordMatch" class="text-success small mt-1 fw-bold ms-1" style="display: none;">
+                            <i class="bi bi-check-circle-fill me-1"></i> รหัสผ่านตรงกันพร้อมใช้งาน
+                        </div>
+
+                        <div class="d-grid gap-2 mt-5">
+                            <button type="submit" class="btn btn-primary btn-lg shadow fw-bold" id="submitBtn">
+                                <i class="bi bi-check-lg me-2"></i>สร้างบัญชีผู้ใช้
+                            </button>
+                            <a href="{% url 'user_management' %}" class="btn btn-outline-secondary btn-sm border-0">
+                                ยกเลิกและกลับไปหน้าจัดการ
+                            </a>
+                        </div>
+                    </form>
                 </div>
             </div>
-            
-            <div class="text-center mt-3 text-muted small">
-                * ข้อมูลที่บันทึกจะถูกนำไปใช้ในการเข้าสู่ระบบทันที
-            </div>
-
         </div>
     </div>
 </div>
+
+<script>
+    function togglePassword(fieldId, btn) {
+        const input = document.getElementById(fieldId);
+        const icon = btn.querySelector('i');
+        if (input.type === "password") {
+            input.type = "text";
+            icon.classList.replace('bi-eye', 'bi-eye-slash');
+        } else {
+            input.type = "password";
+            icon.classList.replace('bi-eye-slash', 'bi-eye');
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const username = document.getElementById('id_username');
+        const password = document.getElementById('id_password');
+        const confirmPassword = document.getElementById('id_password_confirmation');
+        
+        const ruleLength = document.getElementById('rule-length');
+        const ruleEng = document.getElementById('rule-eng');
+        const ruleNum = document.getElementById('rule-num');
+        const ruleSpecial = document.getElementById('rule-special');
+        const ruleMatch = document.getElementById('rule-match');
+        const rulesBox = document.getElementById('rulesBox');
+        
+        const mismatchAlert = document.getElementById('passwordMismatch');
+        const matchAlert = document.getElementById('passwordMatch');
+        const userForm = document.getElementById('userForm');
+
+        function updateRule(element, isValid) {
+            const icon = element.querySelector('i');
+            if (isValid) {
+                element.classList.add('rule-pass');
+                element.classList.remove('text-muted');
+                icon.classList.replace('bi-circle', 'bi-check-circle-fill');
+            } else {
+                element.classList.remove('rule-pass');
+                element.classList.add('text-muted');
+                icon.classList.replace('bi-check-circle-fill', 'bi-circle');
+            }
+        }
+
+        function checkAll() {
+            const val = password.value;
+            const userVal = username.value;
+            const confirmVal = confirmPassword.value;
+
+            // 1. Length >= 8
+            const isLen = val.length >= 8;
+            updateRule(ruleLength, isLen);
+
+            // 2. English Letter (A-Z, a-z)
+            const isEng = /[a-zA-Z]/.test(val);
+            updateRule(ruleEng, isEng);
+
+            // 3. Number (0-9)
+            const isNum = /[0-9]/.test(val);
+            updateRule(ruleNum, isNum);
+
+            // 4. Special Chars (@#$%&*()_ [])
+            const isSpecial = /[@#$%&*()_ \[\]]/.test(val);
+            updateRule(ruleSpecial, isSpecial);
+
+            // 5. Not same as username
+            const isMatchUser = (userVal && val) ? !val.includes(userVal) : false;
+            updateRule(ruleMatch, isMatchUser);
+
+            // Check if all rules passed
+            if (isLen && isEng && isNum && isSpecial && isMatchUser) {
+                rulesBox.classList.add('valid');
+            } else {
+                rulesBox.classList.remove('valid');
+            }
+
+            // Check Confirmation Match
+            if (confirmVal === '') {
+                confirmPassword.classList.remove('is-invalid', 'is-valid');
+                mismatchAlert.style.display = 'none';
+                matchAlert.style.display = 'none';
+                return;
+            }
+
+            if (val === confirmVal) {
+                confirmPassword.classList.remove('is-invalid');
+                confirmPassword.classList.add('is-valid');
+                mismatchAlert.style.display = 'none';
+                matchAlert.style.display = 'block';
+            } else {
+                confirmPassword.classList.remove('is-valid');
+                confirmPassword.classList.add('is-invalid');
+                matchAlert.style.display = 'none';
+                mismatchAlert.style.display = 'block';
+            }
+        }
+
+        password.addEventListener('input', checkAll);
+        username.addEventListener('input', checkAll);
+        confirmPassword.addEventListener('input', checkAll);
+
+        userForm.addEventListener('submit', function(event) {
+            if (password.value !== confirmPassword.value) {
+                event.preventDefault();
+                alert('รหัสผ่านไม่ตรงกัน!');
+                password.focus();
+                checkAll();
+            } 
+            // Client-side Validation for Rules
+            else if (password.value.length < 8 || 
+                     !/[a-zA-Z]/.test(password.value) || 
+                     !/[0-9]/.test(password.value) || 
+                     !/[@#$%&*()_ \[\]]/.test(password.value)) {
+                
+                event.preventDefault();
+                alert('รหัสผ่านยังไม่ตรงตามเงื่อนไข (ต้องมีอังกฤษ, ตัวเลข, อักขระพิเศษ และยาว 8 ตัว)');
+                password.focus();
+            }
+        });
+    });
+</script>
+
+<style>
+    @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+    .shake-animation { animation: shake 0.3s ease-in-out; }
+    .form-floating > .form-control { height: calc(3.5rem + 2px); line-height: 1.25; }
+    .form-floating > label { padding: 1rem 0.75rem; }
+</style>
 {% endblock %}
