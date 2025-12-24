@@ -37,13 +37,13 @@ class Room(models.Model):
     equipment_in_room = models.TextField(blank=True, null=True, help_text="ระบุอุปกรณ์ถาวรในห้อง", verbose_name="อุปกรณ์ถาวรในห้อง")
     image = models.ImageField(upload_to='room_images/', blank=True, null=True, verbose_name="รูปภาพห้อง")
 
-    approver = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='approvable_rooms', verbose_name="ผู้อนุมัติ")
+    # [สำคัญ] ผู้อนุมัติห้อง (Approver)
+    approver = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='approver_rooms', verbose_name="ผู้อนุมัติ")
     
     is_maintenance = models.BooleanField(default=False, verbose_name="สถานะปิดปรับปรุง")
     maintenance_start = models.DateTimeField(null=True, blank=True, verbose_name="เริ่มปิดปรับปรุง")
     maintenance_end = models.DateTimeField(null=True, blank=True, verbose_name="สิ้นสุดปิดปรับปรุง")
     
-    # เปลี่ยนเป็น True ไว้ก็ได้ครับ เพื่อสื่อความหมายว่าห้องนี้ต้องอนุมัติ
     requires_approval = models.BooleanField(default=True, verbose_name="ต้องรออนุมัติ")
     
     line_notify_token = models.CharField(max_length=50, blank=True, null=True, verbose_name="Line Notify Token")
@@ -64,7 +64,7 @@ class Room(models.Model):
         return f"{self.name}{status}"
 
 # ----------------------------------------------------
-# 4. Model การจอง
+# 4. Model การจอง (Booking)
 # ----------------------------------------------------
 class Booking(models.Model):
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='bookings')
@@ -117,10 +117,10 @@ class Booking(models.Model):
         ('PENDING', 'รออนุมัติ'),
         ('APPROVED', 'อนุมัติแล้ว'),
         ('REJECTED', 'ไม่อนุมัติ'),
-        ('CANCELLED', 'ยกเลิกแล้ว'),
+        ('CANCELLED', 'ยกเลิกแล้ว'),  # ต้องมีอันนี้ด้วย ไม่งั้นระบบยกเลิกจะ Error
     ]
     
-    # [จุดสำคัญ] ตั้ง Default เป็น PENDING (รออนุมัติ) สำหรับทุกการจอง
+    # [จุดสำคัญ] บังคับ Default เป็น PENDING เพื่อให้ทุกการจองต้องรออนุมัติ
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='PENDING')
     
     created_at = models.DateTimeField(auto_now_add=True)

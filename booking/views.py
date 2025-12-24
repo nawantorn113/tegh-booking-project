@@ -416,7 +416,7 @@ def room_calendar_view(request, room_id):
             
             recurrence = form.cleaned_data.get('recurrence')
             recurrence_end_date = form.cleaned_data.get('recurrence_end_date')
-            has_equipments = bool(form.cleaned_data.get('equipments'))
+            # has_equipments = bool(form.cleaned_data.get('equipments'))
 
             base_booking = form.save(commit=False)
             base_booking.room = room
@@ -472,7 +472,9 @@ def room_calendar_view(request, room_id):
                     if 'ใหญ่' not in room.name:
                         new_b.room_layout = ''
 
-                    new_b.status = 'APPROVED'
+                    # [แก้ไขจุดนี้] บังคับให้เป็น PENDING เสมอ
+                    new_b.status = 'PENDING'
+                    
                     new_b.save()
                     
                     if 'equipments' in form.cleaned_data: 
@@ -480,6 +482,7 @@ def room_calendar_view(request, room_id):
 
                     log_action(request, 'BOOKING_CREATED', new_b, f"จองห้อง {room.name}")
                     
+                    # Outlook Sync จะทำงานเมื่อ Approve แล้วเท่านั้น
                     if new_b.status == 'APPROVED':
                         token = get_valid_token(request.user, request)
                         if token:
@@ -496,7 +499,7 @@ def room_calendar_view(request, room_id):
 
                     count += 1
 
-                messages.success(request, f"จองสำเร็จ {count} รายการ")
+                messages.success(request, f"จองสำเร็จ {count} รายการ (รอการอนุมัติ)")
                 return redirect('dashboard')
     else:
         form = BookingForm(initial={'room': room})
@@ -562,6 +565,7 @@ def edit_booking_view(request, booking_id):
         if form.is_valid():
             booking = form.save(commit=False)
             
+            # หากแก้ไข ก็ต้องรออนุมัติใหม่เสมอ (ตามคอนเซปต์ทุกห้องต้องอนุมัติ)
             if not is_approver_or_admin(request.user):
                 booking.status = 'PENDING'
                 booking.is_user_seen = False 
@@ -852,6 +856,7 @@ def update_booking_time_api(request):
         booking.start_time = start_dt
         booking.end_time = end_dt
         
+        # แก้ไขเวลายังคงใช้เงื่อนไขเดิม คือถ้าไม่ใช่ Admin ให้รออนุมัติ
         if not is_approver_or_admin(request.user):
             booking.status = 'PENDING'
             booking.is_user_seen = False
