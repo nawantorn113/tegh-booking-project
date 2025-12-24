@@ -18,13 +18,16 @@ from django.db.models import Count, Q, Prefetch
 from django.views.decorators.http import require_POST, require_http_methods
 from django.contrib.auth.models import User, Group
 from django.core.paginator import Paginator
-from dal_select2.views import Select2QuerySetView
 from django.core.mail import send_mail
 from django.conf import settings
 from django.db import transaction
 from django.utils import timezone
 from django.contrib.auth.forms import AuthenticationForm
 from django.views.decorators.csrf import csrf_exempt
+
+# [ส่วนสำคัญ] Import สำหรับระบบค้นหา (Autocomplete)
+from dal import autocomplete
+from dal_select2.views import Select2QuerySetView
 
 try:
     from weasyprint import HTML, CSS
@@ -53,9 +56,7 @@ if hasattr(settings, 'LINE_CHANNEL_ACCESS_TOKEN') and hasattr(settings, 'LINE_CH
     except:
         pass
 
-# ----------------------------------------------------------------------
-# A. HELPER FUNCTIONS
-# ----------------------------------------------------------------------
+# --- HELPER FUNCTIONS ---
 
 def is_admin(user):
     return user.is_authenticated and (user.is_superuser or user.is_staff or user.groups.filter(name='Admin').exists())
@@ -258,9 +259,7 @@ def send_booking_notification(booking, template_name, subject_prefix):
             )
         except: pass
 
-# ----------------------------------------------------------------------
-# B. AUTH VIEWS
-# ----------------------------------------------------------------------
+# --- AUTH VIEWS ---
 
 class UserAutocomplete(Select2QuerySetView):
     def get_queryset(self):
@@ -275,6 +274,7 @@ class UserAutocomplete(Select2QuerySetView):
             qs = qs.filter(q_filter)
         return qs[:15]
 
+# [Class นี้สำคัญสำหรับการค้นหาอุปกรณ์]
 class EquipmentAutocomplete(Select2QuerySetView):
     def get_queryset(self):
         if not self.request.user.is_authenticated:
@@ -327,9 +327,7 @@ def outlook_callback_view(request):
             messages.error(request, f"Error: {e}")
     return redirect('dashboard')
 
-# ----------------------------------------------------------------------
-# C. MAIN VIEWS
-# ----------------------------------------------------------------------
+# --- MAIN VIEWS ---
 
 def public_calendar_view(request):
     ctx = get_base_context(request)
@@ -405,7 +403,6 @@ def room_calendar_view(request, room_id):
     if request.method == 'POST':
         form = BookingForm(request.POST, request.FILES)
         if form.is_valid():
-            # --- ตรวจสอบเวลาจอง ---
             booking_start = form.cleaned_data.get('start_time')
             now = timezone.now()
 
@@ -436,7 +433,6 @@ def room_calendar_view(request, room_id):
             while current_start.date() <= loop_limit:
                 current_end = current_start + duration
                 
-                # --- Buffer Time 30 นาที ---
                 buffer_time = timedelta(minutes=30)
                 is_overlap = Booking.objects.filter(
                     room=room, 
@@ -472,21 +468,15 @@ def room_calendar_view(request, room_id):
                         room_layout_attachment=base_booking.room_layout_attachment
                     )
                     
-                    restricted_names = ['RD 2', 'RD 4', 'TEIL', 'ห้องประชุมใหญ่']
-                    is_restricted_room = False
-                    for r_name in restricted_names:
-                        if r_name.lower() in room.name.lower():
-                            is_restricted_room = True
-                            break
-                    
-                    if is_restricted_room or has_equipments or room.requires_approval:
-                         new_b.status = 'PENDING'
-                    else:
-                         new_b.status = 'APPROVED'
-                    
+                    # ถ้าไม่ใช่ห้องใหญ่ ไม่ต้องสนใจ layout
+                    if 'ใหญ่' not in room.name:
+                        new_b.room_layout = ''
+
+                    new_b.status = 'APPROVED'
                     new_b.save()
                     
-                    if 'equipments' in form.cleaned_data: new_b.equipments.set(form.cleaned_data['equipments'])
+                    if 'equipments' in form.cleaned_data: 
+                        new_b.equipments.set(form.cleaned_data['equipments'])
 
                     log_action(request, 'BOOKING_CREATED', new_b, f"จองห้อง {room.name}")
                     
@@ -558,9 +548,7 @@ def booking_detail_view(request, booking_id):
     can_edit = b.can_user_edit_or_cancel(request.user)
     return render(request, 'pages/booking_detail.html', {**get_base_context(request), 'booking': b, 'can_edit_or_cancel': can_edit})
 
-# ----------------------------------------------------------------------
-# D. CRUD & APPROVALS
-# ----------------------------------------------------------------------
+# --- CRUD & APPROVALS ---
 
 @login_required
 def edit_booking_view(request, booking_id):
@@ -673,9 +661,7 @@ def reject_booking_view(request, booking_id):
     messages.success(request, "ปฏิเสธเรียบร้อย และส่งแจ้งเตือนแล้ว")
     return redirect('approvals')
 
-# ----------------------------------------------------------------------
-# E. ADMIN MANAGEMENT (Rooms & Users & Equipments)
-# ----------------------------------------------------------------------
+# --- ADMIN MANAGEMENT ---
 
 @login_required
 @user_passes_test(is_admin)
@@ -777,9 +763,7 @@ def audit_log_view(request):
     page_obj = paginator.get_page(request.GET.get('page'))
     return render(request, 'pages/audit_log.html', {**get_base_context(request), 'page_obj': page_obj})
 
-# ----------------------------------------------------------------------
-# F. APIS & REPORTS
-# ----------------------------------------------------------------------
+# --- APIS & REPORTS ---
 
 def bookings_api(request):
     start = request.GET.get('start')
@@ -848,7 +832,6 @@ def update_booking_time_api(request):
         else: 
             end_dt = start_dt + (booking.end_time - booking.start_time)
         
-        # --- ตรวจสอบเวลาจอง ---
         now = timezone.now()
         if start_dt < now:
              return JsonResponse({'status': 'error', 'message': 'ไม่สามารถจองย้อนหลังได้'}, status=400)
@@ -1009,7 +992,6 @@ def reports_view(request):
     except Exception as e:
         print(f"Dept Stats Error: {e}")
 
-    # [FIXED] เพิ่ม summary_cards เพื่อให้ตัวเลขในหน้า report ไม่หาย
     summary = {
         'total_rooms': Room.objects.count(),
         'today_bookings': Booking.objects.filter(start_time__date=today, status='APPROVED').count(),
@@ -1019,7 +1001,7 @@ def reports_view(request):
 
     context = get_base_context(request)
     context.update({
-        'summary_cards': summary, # <<<< แก้ตรงนี้
+        'summary_cards': summary,
         'room_usage_labels': json.dumps(room_labels), 
         'room_usage_data': json.dumps(room_data),
         'dept_usage_labels': json.dumps(dept_labels),

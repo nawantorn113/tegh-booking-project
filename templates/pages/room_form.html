@@ -1,131 +1,121 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load crispy_forms_tags %}
 
-{% block title %}{{ title }}{% endblock %}
-{% block page_title %}{{ title }}{% endblock %}
+{% block title %}{{ title|default:"จัดการห้องประชุม" }}{% endblock %}
 
 {% block extra_head %}
-{{ form.media.css }}
 <style>
-    /* (แก้ปัญหา Select2) */
-    .select2-container--bootstrap-5 .select2-selection {
-        width: 100% !important;
-    }
+    /* CSS Premium Theme */
+    body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); min-height: 100vh; }
+    .premium-card { border: none; border-radius: 15px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); background-color: #fff; overflow: hidden; }
+    .card-header-premium { background: linear-gradient(90deg, #0d6efd 0%, #0056b3 100%); color: white; padding: 1.5rem; border-bottom: 4px solid #ffc107; }
+    
+    .form-label { font-weight: 600; font-size: 0.9rem; color: #495057; }
+    .form-control, .form-select { border-radius: 8px; border: 1px solid #ced4da; padding: 0.6rem 1rem; transition: all 0.2s; background-color: #f8f9fa; }
+    .form-control:focus, .form-select:focus { background-color: #fff; border-color: #0d6efd; box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15); }
+    
+    /* Animation กล่องปิดปรับปรุง */
+    #maintenance_dates_area { background-color: #fff3cd; border: 1px solid #ffecb5; border-radius: 10px; padding: 15px; margin-top: 10px; display: none; opacity: 0; transform: translateY(-10px); transition: all 0.4s ease-in-out; }
+    #maintenance_dates_area.show { display: block; opacity: 1; transform: translateY(0); }
+    
+    .form-switch .form-check-input { width: 3em; height: 1.5em; cursor: pointer; }
+    .form-check-input:checked { background-color: #198754; border-color: #198754; }
+
+    /* Image Preview Style */
+    .img-thumbnail { transition: transform 0.3s ease; }
+    .img-thumbnail:hover { transform: scale(1.02); }
 </style>
 {% endblock %}
 
-
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-lg-10 col-xl-9"> 
-        <div class="content-card shadow-sm border p-3 p-md-4">
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-10 col-lg-8">
             
-            <form method="post" enctype="multipart/form-data">
-                {% csrf_token %}
-                
-                {% if form.non_field_errors %}
-                    <div class="alert alert-danger">{{ form.non_field_errors }}</div>
-                {% endif %}
-
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label for="{{ form.name.id_for_label }}" class="form-label">{{ form.name.label }}{% if form.name.field.required %}<span class="text-danger">*</span>{% endif %}</label>
-                        {{ form.name }}
-                        {% if form.name.errors %}<div class="invalid-feedback d-block">{{ form.name.errors }}</div>{% endif %}
+            <div class="premium-card">
+                <div class="card-header-premium text-center">
+                    <div class="mb-2">
+                        <i class="bi bi-door-open-fill" style="font-size: 3rem;"></i>
                     </div>
-                    <div class="col-md-6 mb-3">
-                        <label for="{{ form.capacity.id_for_label }}" class="form-label">{{ form.capacity.label }}{% if form.capacity.field.required %}<span class="text-danger">*</span>{% endif %}</label>
-                        {{ form.capacity }}
-                        {% if form.capacity.errors %}<div class="invalid-feedback d-block">{{ form.capacity.errors }}</div>{% endif %}
-                    </div>
+                    <h4 class="fw-bold m-0">{{ title|default:"ข้อมูลห้องประชุม" }}</h4>
+                    <p class="text-white-50 small m-0">กรอกรายละเอียดเพื่อเพิ่มหรือแก้ไขห้องประชุม</p>
                 </div>
 
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label for="{{ form.building.id_for_label }}" class="form-label">{{ form.building.label }}</label>
-                        {{ form.building }}
-                        {% if form.building.errors %}<div class="invalid-feedback d-block">{{ form.building.errors }}</div>{% endif %}
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label for="{{ form.floor.id_for_label }}" class="form-label">{{ form.floor.label }}</label>
-                        {{ form.floor }}
-                        {% if form.floor.errors %}<div class="invalid-feedback d-block">{{ form.floor.errors }}</div>{% endif %}
-                    </div>
+                <div class="card-body p-4 p-md-5">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        {% crispy form %}
+
+                        <div class="d-flex justify-content-between align-items-center mt-5 pt-3 border-top">
+                            <a href="{% url 'rooms' %}" class="btn btn-light text-muted border rounded-pill px-4 fw-bold">
+                                <i class="bi bi-arrow-left me-1"></i> ยกเลิก
+                            </a>
+                            <button type="submit" class="btn btn-primary btn-lg rounded-pill px-5 shadow fw-bold">
+                                <i class="bi bi-save-fill me-2"></i> บันทึกข้อมูล
+                            </button>
+                        </div>
+                    </form>
                 </div>
+            </div>
 
-                <div class="mb-3">
-                    <label for="{{ form.location.id_for_label }}" class="form-label">{{ form.location.label }}</label>
-                    {{ form.location }}
-                    <div class="form-text">{{ form.location.help_text }}</div>
-                    {% if form.location.errors %}<div class="invalid-feedback d-block">{{ form.location.errors }}</div>{% endif %}
-                </div>
-
-                <div class="mb-3">
-                    <label for="{{ form.equipment_in_room.id_for_label }}" class="form-label">{{ form.equipment_in_room.label }}</label>
-                    {{ form.equipment_in_room }}
-                    <div class="form-text">{{ form.equipment_in_room.help_text }}</div>
-                    {% if form.equipment_in_room.errors %}<div class="invalid-feedback d-block">{{ form.equipment_in_room.errors }}</div>{% endif %}
-                </div>
-
-                <div class="mb-3">
-                    <label for="{{ form.image.id_for_label }}" class="form-label">{{ form.image.label }}</label>
-                    {{ form.image }}
-                    <div class="form-text">{{ form.image.help_text }}</div>
-                    {% if form.image.errors %}<div class="invalid-feedback d-block">{{ form.image.errors }}</div>{% endif %}
-                </div>
-
-                <hr class="my-4">
-                
-                <div class="mb-3">
-                    <label for="{{ form.approver.id_for_label }}" class="form-label">{{ form.approver.label }}</label>
-                    {{ form.approver }}
-                    <div class="form-text">{{ form.approver.help_text }}</div>
-                    {% if form.approver.errors %}<div class="invalid-feedback d-block">{{ form.approver.errors }}</div>{% endif %}
-                </div>
-
-
-                <hr class="my-4">
-                <p class="text-muted">ตั้งค่าการปิดปรับปรุง (Maintenance)</p>
-
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label for="{{ form.maintenance_start.id_for_label }}" class="form-label">{{ form.maintenance_start.label }}</label>
-                        {{ form.maintenance_start }}
-                        {% if form.maintenance_start.errors %}<div class="invalid-feedback d-block">{{ form.maintenance_start.errors }}</div>{% endif %}
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label for="{{ form.maintenance_end.id_for_label }}" class="form-label">{{ form.maintenance_end.label }}</label>
-                        {{ form.maintenance_end }}
-                        {% if form.maintenance_end.errors %}<div class="invalid-feedback d-block">{{ form.maintenance_end.errors }}</div>{% endif %}
-                    </div>
-                </div>
-                <div class="mb-3">
-                    <div class="form-check form-switch fs-7">
-                        {{ form.is_maintenance }}
-                        <label class="form-check-label fw-bold text-danger" for="{{ form.is_maintenance.id_for_label }}">
-                            {{ form.is_maintenance.label }} 
-                        </label>
-                    </div>
-                    <div class="form-text ms-2 text-muted">{{ form.is_maintenance.help_text }}</div>
-                    {% if form.is_maintenance.errors %}<div class="invalid-feedback d-block">{{ form.is_maintenance.errors }}</div>{% endif %}
-                </div>
-
-                <hr class="my-4">
-                <div class="d-flex justify-content-end">
-                    <a href="{% url 'rooms' %}" class="btn btn-outline-secondary me-2">
-                        <i class=""></i>ยกเลิก
-                    </a>
-
-                    <button type="submit" class="btn btn-primary px-4">
-                        <i class=""></i>บันทึกข้อมูล
-                    </button>
-                    </div>
-            </form>
         </div>
     </div>
 </div>
-{% endblock %}
 
-{% block extra_scripts %}
-{{ form.media.js }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // --- 1. Script สำหรับ Maintenance Toggle (สไลด์ปิดปรับปรุง) ---
+        const toggleBtn = document.getElementById('maintenance_toggle'); 
+        const dateArea = document.getElementById('maintenance_dates_area');
+
+        function toggleDateArea() {
+            if (toggleBtn && dateArea) {
+                if (toggleBtn.checked) {
+                    dateArea.style.display = 'block';
+                    setTimeout(() => { dateArea.classList.add('show'); }, 10);
+                } else {
+                    dateArea.classList.remove('show');
+                    setTimeout(() => { if (!toggleBtn.checked) dateArea.style.display = 'none'; }, 400);
+                }
+            }
+        }
+        if(toggleBtn) {
+            // เช็คสถานะตอนโหลดหน้า
+            if (toggleBtn.checked) { dateArea.style.display = 'block'; dateArea.classList.add('show'); } 
+            else { dateArea.style.display = 'none'; dateArea.classList.remove('show'); }
+            // เช็คสถานะตอนกดคลิก
+            toggleBtn.addEventListener('change', toggleDateArea);
+        }
+
+        // --- 2. Script สำหรับ Image Preview (แสดงรูปทันทีที่เลือก) ---
+        const imageInput = document.getElementById('id_image_input');
+        const newPreviewContainer = document.getElementById('new-image-preview-container');
+        const newPreviewImage = document.getElementById('new-image-preview');
+        const currentImageContainer = document.getElementById('current-image-container');
+
+        if (imageInput) {
+            imageInput.addEventListener('change', function(event) {
+                const file = event.target.files[0];
+                
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        newPreviewImage.src = e.target.result;
+                        newPreviewContainer.style.display = 'block';
+                        // จางรูปเก่าลงเพื่อให้รู้ว่ากำลังจะถูกแทนที่
+                        if (currentImageContainer) currentImageContainer.style.opacity = '0.3';
+                    }
+                    reader.readAsDataURL(file);
+                } else {
+                    // ถ้ากดยกเลิกเลือกไฟล์
+                    newPreviewContainer.style.display = 'none';
+                    newPreviewImage.src = '#';
+                    if (currentImageContainer) currentImageContainer.style.opacity = '1';
+                }
+            });
+        }
+    });
+</script>
 {% endblock %}

@@ -5,22 +5,42 @@
 {% block title %}ปฏิทินห้อง: {{ room.name }}{% endblock %}
 
 {% block extra_head %}
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js'></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
     {{ form.media.css }}
-    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/main.min.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
 
     <style>
+        /* --- General --- */
         .fc { font-family: 'Kanit', sans-serif; }
         .fc-event { border: none !important; box-shadow: 0 1px 2px rgba(0,0,0,0.1); cursor: pointer; padding: 2px 5px; border-radius: 3px; }
         .fc-event.status-past { background-color: #ced4da !important; border-left: 3px solid #6c757d !important; opacity: 0.8; }
-        
-        /* Select2 Fixes */
-        .select2-container { z-index: 10000 !important; width: 100% !important; }
-        .select2-dropdown { z-index: 10001 !important; }
-        .select2-selection--multiple { min-height: 38px; border-color: #dee2e6; }
 
-        /* Layout Cards */
+        /* =========================================
+           SELECT2 FORCE LEFT
+           ========================================= */
+        .select2-container { width: 100% !important; text-align: left !important; z-index: 99999 !important; }
+        
+        .select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__rendered {
+            display: flex !important; flex-direction: row !important; justify-content: flex-start !important;
+            flex-wrap: wrap !important; text-align: left !important; padding-left: 0 !important;
+        }
+        
+        .select2-container--bootstrap-5 .select2-selection--multiple .select2-search--inline .select2-search__field {
+            text-align: left !important; margin-left: 0 !important; margin-top: 5px !important; 
+            width: 100% !important; font-family: 'Kanit', sans-serif;
+        }
+        
+        .select2-search__field::-webkit-input-placeholder { text-align: left !important; }
+        .select2-search__field:-moz-placeholder { text-align: left !important; }
+        .select2-search__field::-moz-placeholder { text-align: left !important; }
+        .select2-search__field:-ms-input-placeholder { text-align: left !important; }
+        
+        .select2-results__option { text-align: left !important; }
+
+        /* --- Layout Cards --- */
         .layout-card-label input[type="radio"] { display: none; }
         .layout-card { border: 1px solid #dee2e6; background: #fff; cursor: pointer; border-radius: 8px; transition: all 0.2s; }
         .layout-card:hover { border-color: #adb5bd; background: #f8f9fa; }
@@ -32,7 +52,8 @@
 {% endblock %}
 
 {% block content %}
-<div class="container py-4"> <div class="card border-0 shadow-sm rounded-3 mb-4 overflow-hidden">
+<div class="container py-4"> 
+    <div class="card border-0 shadow-sm rounded-3 mb-4 overflow-hidden">
         <div class="row g-0">
             <div class="col-md-3 position-relative" style="min-height: 200px;">
                 {% if room.image %}
@@ -82,7 +103,6 @@
             <div id="calendar"></div>
         </div>
     </div>
-
 </div>
 
 <div class="modal fade" id="bookingModal" aria-hidden="true">
@@ -134,6 +154,7 @@
 <div id="bookingFormContainer" class="d-none">
     <form id="hiddenBookingForm" action="{% url 'create_booking' room.id %}" method="post" enctype="multipart/form-data">
         {% csrf_token %}
+        
         {% if room.name == 'ห้องประชุมใหญ่' %}
             <div class="mb-4">
                 <label class="form-label fw-bold"><i class="bi bi-grid-fill text-primary"></i> รูปแบบการจัดห้อง</label>
@@ -144,20 +165,45 @@
                             {{ radio.tag }} 
                             <div class="card h-100 layout-card text-center p-3">
                                 <div class="mb-2 d-flex align-items-center justify-content-center" style="height: 60px;">
-                                    {% if radio.data.value == 'other' %} <i class="bi bi-pencil-square fs-2 text-muted"></i>
-                                    {% else %} <img src="{% static 'images/layouts/'|add:radio.data.value|add:'.png' %}" class="img-fluid" style="max-height: 50px;" onerror="this.style.display='none'"> {% endif %}
+                                    {% if radio.data.value == 'other' %} 
+                                        <i class="bi bi-pencil-square fs-2 text-muted"></i>
+                                    {% else %} 
+                                        <img src="{% static 'images/layouts/'|add:radio.data.value|add:'.png' %}" class="img-fluid" style="max-height: 50px;" onerror="this.style.display='none'"> 
+                                    {% endif %}
                                 </div>
                                 <small class="fw-bold d-block">{{ radio.choice_label }}</small>
-                                <div class="check-icon position-absolute top-0 end-0 m-2" style="display: none;"><i class="bi bi-check-circle-fill text-primary"></i></div>
+                                <div class="check-icon position-absolute top-0 end-0 m-2" style="display: none;">
+                                    <i class="bi bi-check-circle-fill text-primary"></i>
+                                </div>
                             </div>
                         </label>
                     </div>
                     {% endfor %}
                 </div>
             </div>
-            <div id="layoutAttachmentDiv" class="mb-3 d-none"><label class="form-label small text-danger fw-bold">แนบไฟล์แผนผัง</label>{{ form.room_layout_attachment }}</div>
-        {% else %} <input type="hidden" name="room_layout" value="theatre"> {% endif %}
-        {% for field in form %}{% if field.name != 'room_layout' and field.name != 'room_layout_attachment' %}<div class="mb-2">{{ field|as_crispy_field }}</div>{% endif %}{% endfor %}
+            <div id="layoutAttachmentDiv" class="mb-3 d-none">
+                <label class="form-label small text-danger fw-bold">แนบไฟล์แผนผัง</label>
+                {{ form.room_layout_attachment }}
+            </div>
+        {% else %} 
+            <input type="hidden" name="room_layout" value="theatre"> 
+        {% endif %}
+        
+        {% for field in form %}
+            {% if field.name != 'room_layout' and field.name != 'room_layout_attachment' and field.name != 'recurrence_end_date' %}
+                
+                {% if field.name == 'recurrence' %}
+                    <div class="mb-2">{{ field|as_crispy_field }}</div>
+                    
+                    <div class="mb-2 d-none" id="recurrenceDateContainer">
+                        {{ form.recurrence_end_date|as_crispy_field }}
+                    </div>
+                {% else %}
+                    <div class="mb-2">{{ field|as_crispy_field }}</div>
+                {% endif %}
+
+            {% endif %}
+        {% endfor %}
     </form>
 </div>
 
@@ -167,12 +213,15 @@
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+    
     {{ form.media.js }}
+    
     <script>
     const ROOM_CAPACITY = parseInt("{{ room.capacity|default:0 }}");
     const CSRF_TOKEN = '{{ csrf_token }}'; 
     const API_UPDATE_URL = "{% url 'update_booking_time_api' %}";
-    
+    var bookingModalInstance = null;
+
     function getLocalISOString(date) {
         const offset = date.getTimezoneOffset() * 60000;
         const localDate = new Date(date.getTime() - offset);
@@ -189,11 +238,35 @@
         else { attachmentDiv.classList.add('d-none'); document.getElementById('id_room_layout_attachment').value = ''; }
     }
 
+    // ฟังก์ชัน Show/Hide วันที่จองซ้ำ
+    function toggleRecurrenceDate() {
+        const recurrenceSelect = document.getElementById('id_recurrence');
+        const dateContainer = document.getElementById('recurrenceDateContainer');
+        const dateInput = document.getElementById('id_recurrence_end_date');
+
+        if (recurrenceSelect && dateContainer) {
+            if (recurrenceSelect.value !== 'NONE') {
+                dateContainer.classList.remove('d-none');
+                if(dateInput) dateInput.required = true;
+            } else {
+                dateContainer.classList.add('d-none');
+                if(dateInput) { dateInput.value = ''; dateInput.required = false; }
+            }
+        }
+    }
+
     function openBookingModal(startStr = null, endStr = null) {
         const form = document.getElementById('hiddenBookingForm');
         const modalBody = document.getElementById('modalBookingBody');
+        
+        // ย้ายฟอร์มเข้า Modal
         if(!modalBody.contains(form)) { modalBody.appendChild(form); form.classList.remove('d-none'); }
-        form.reset(); toggleAttachmentField();
+        
+        form.reset(); 
+        toggleAttachmentField();
+        toggleRecurrenceDate(); // เช็คสถานะเริ่มต้น
+
+        // ตั้งค่าเวลา
         if(startStr && endStr) {
             document.getElementById('id_start_time').value = startStr.substring(0, 16);
             document.getElementById('id_end_time').value = endStr.substring(0, 16);
@@ -202,9 +275,11 @@
             document.getElementById('id_start_time').value = getLocalISOString(now);
             document.getElementById('id_end_time').value = getLocalISOString(next);
         }
-        $('#id_participants').val(null).trigger('change');
-        $('#id_equipments').val(null).trigger('change');
-        new bootstrap.Modal(document.getElementById('bookingModal')).show();
+
+        // เปิด Modal
+        var modalEl = document.getElementById('bookingModal');
+        bookingModalInstance = new bootstrap.Modal(modalEl);
+        bookingModalInstance.show();
     }
 
     function updateBookingOnServer(eventInfo) {
@@ -221,21 +296,50 @@
     document.addEventListener('DOMContentLoaded', function() {
         const layoutRadios = document.querySelectorAll('input[name="room_layout"]');
         layoutRadios.forEach(radio => { radio.addEventListener('change', toggleAttachmentField); });
-        toggleAttachmentField();
+        
+        // Listener การเปลี่ยนค่าจองซ้ำ
+        const recurrenceSelect = document.getElementById('id_recurrence');
+        if (recurrenceSelect) {
+            recurrenceSelect.addEventListener('change', toggleRecurrenceDate);
+        }
 
+        // --- Select2 Fix (ทำงานตอน Modal เปิดเสร็จ) ---
+        var modalEl = document.getElementById('bookingModal');
+        modalEl.addEventListener('shown.bs.modal', function () {
+            // 1. ทำลาย instance เดิม
+            if ($('.django-select2').data('select2')) {
+                $('.django-select2').select2('destroy');
+            }
+            // 2. สร้างใหม่พร้อมบังคับ Config
+            $('.django-select2').select2({
+                theme: 'bootstrap-5',
+                dropdownParent: $('#bookingModal'),
+                placeholder: 'พิมพ์ชื่ออุปกรณ์เพื่อค้นหา...',
+                allowClear: true,
+                width: '100%',
+                language: { noResults: () => "ไม่พบข้อมูล" }
+            });
+            // Clear Select2 Values เพื่อไม่ให้ค้าง
+            $('#id_equipments').val(null).trigger('change');
+        });
+
+        // --- FullCalendar ---
         var calendarEl = document.getElementById('calendar');
         var calendar = new FullCalendar.Calendar(calendarEl, {
             initialView: window.innerWidth < 768 ? 'listMonth' : 'dayGridMonth', locale: 'th',
             headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,listMonth' },
             events: "{% url 'bookings_api' %}?room_id={{ room.id }}&t=" + new Date().getTime(),
             editable: true, selectable: true,
+            
             eventDrop: function(info) { if(confirm("ยืนยันย้ายเวลา? (รออนุมัติใหม่)")) { updateBookingOnServer(info); } else { info.revert(); } },
             eventResize: function(info) { if(confirm("ยืนยันปรับเวลา? (รออนุมัติใหม่)")) { updateBookingOnServer(info); } else { info.revert(); } },
+            
             select: function(info) {
                 let start = info.allDay ? info.startStr + 'T08:00' : info.startStr.substring(0, 16);
                 let end = info.allDay ? info.startStr + 'T09:00' : info.endStr.substring(0, 16);
                 openBookingModal(start, end);
             },
+            
             eventClick: function(info) {
                 if (info.jsEvent.detail > 1) return; info.jsEvent.preventDefault();
                 document.getElementById('detailModalTitle').innerText = info.event.title;
@@ -246,9 +350,11 @@
                 let statusText = statusKey === 'APPROVED' ? 'อนุมัติแล้ว' : statusKey === 'PENDING' ? 'รออนุมัติ' : statusKey === 'REJECTED' ? 'ไม่อนุมัติ' : 'ยกเลิก';
                 let bg = statusKey === 'APPROVED' ? 'bg-success' : statusKey === 'PENDING' ? 'bg-warning text-dark' : 'bg-danger';
                 document.getElementById('detailModalStatus').innerHTML = `<span class="badge ${bg}">${statusText}</span>`;
+                
                 document.getElementById('detailModalLink').href = `/booking/${info.event.id}/detail/`;
                 new bootstrap.Modal(document.getElementById('eventDetailModal')).show();
             },
+            
             eventDidMount: function(info) {
                 var now = new Date(); var end = info.event.end || info.event.start;
                 if (end < now) { info.el.classList.add('status-past'); info.event.setProp('editable', false); }
@@ -256,6 +362,7 @@
         });
         calendar.render();
 
+        // Submit Button Logic
         document.getElementById('submitBookingBtn').addEventListener('click', function() {
             const pInput = document.getElementById('id_participant_count');
             const count = pInput && pInput.value ? parseInt(pInput.value) : 0;

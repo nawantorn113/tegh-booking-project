@@ -20,7 +20,7 @@
     .search-input-group:focus-within {
         border-color: #0d6efd;
         box-shadow: 0 4px 15px rgba(13, 110, 253, 0.15);
-        transform: translateY(-1px);
+        /* เอา transform ออก เพื่อไม่ให้ขยับ */
     }
     .search-input-group .form-control {
         border: none;
@@ -38,15 +38,18 @@
     }
     .search-input-group .btn-search:hover { background-color: #0b5ed7; }
 
-    /* --- Card Styling --- */
+    /* --- Card Styling (KPI) --- */
     .kpi-card {
         border: 1px solid #dee2e6;
         border-radius: 12px;
         background: #fff;
         box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-        transition: transform 0.2s;
+        transition: box-shadow 0.2s; /* เปลี่ยนแค่เงา ไม่เปลี่ยนตำแหน่ง */
     }
-    .kpi-card:hover { transform: translateY(-5px); box-shadow: 0 5px 15px rgba(0,0,0,0.08); }
+    .kpi-card:hover { 
+        /* ลบ transform: translateY(-5px); ออกเพื่อไม่ให้เด้ง */
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08); 
+    }
     .kpi-icon { font-size: 2.5rem; opacity: 0.15; }
 
     .border-l-primary { border-left: 5px solid #0d6efd; }
@@ -60,11 +63,11 @@
         border-radius: 12px;
         background: #fff;
         box-shadow: 0 2px 6px rgba(0,0,0,0.03);
-        transition: all 0.2s;
+        transition: border-color 0.2s, box-shadow 0.2s; /* เปลี่ยนแค่สีขอบและเงา */
         overflow: hidden;
     }
     .room-card-hover:hover {
-        transform: translateY(-5px);
+        /* ลบ transform: translateY(-5px); ออกเพื่อไม่ให้เด้ง */
         box-shadow: 0 10px 20px rgba(0,0,0,0.08);
         border-color: #0d6efd;
     }

@@ -2,52 +2,66 @@
 {% block title %}จัดการผู้ใช้ - {{ block.super }}{% endblock %}
 
 {% block content %}
-<!-- <h1 class="mb-4"><i class="bi bi-people-fill me-2"></i>จัดการผู้ใช้</h1> -->
 
-<div class="d-flex justify-content-end align-items-center mb-4">
+<div class="container py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-bold text-primary m-0">
+            <i class="bi bi-people-fill me-2"></i>จัดการผู้ใช้
+        </h3>
         <a href="{% url 'add_user' %}" class="btn btn-primary shadow-sm">
             <i class="bi bi-person-plus-fill me-1"></i> เพิ่มผู้ใช้ใหม่
         </a>
-</div>
-</div>
-<div class="card shadow-sm">
-    <div class="table-responsive">
-        <table class="table table-hover table-striped mb-0">
-            <thead class="table-light">
-                <tr>
-                    <th scope="col">Username</th>
-                    <th scope="col">ชื่อ-นามสกุล</th>
-                    <th scope="col">อีเมล</th>
-                    <th scope="col">สิทธิ์การใช้งาน (Roles)</th>
-                    <th scope="col" class="text-end">จัดการ</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for u in users %}
-                <tr>
-                    <td>{{ u.username }}</td>
-                    <td>{{ u.get_full_name|default:"-" }}</td>
-                    <td>{{ u.email|default:"-" }}</td>
-                    <td>
-                        {% for group in u.groups.all %}
-                            <span class="badge 
-                                {% if group.name == 'Admin' %}bg-danger
-                                {% elif group.name == 'Approver' %}bg-info text-dark
-                                {% else %}bg-secondary
-                                {% endif %}">{{ group.name }}</span>
-                        {% empty %}
-                            <span class="badge bg-secondary">User</span>
-                        {% endfor %}
-                    </td>
-                    <td class="text-end">
-                        <a href="{% url 'edit_user_roles' u.id %}" class="btn btn-outline-success">
-                            <i class="bi bi-shield-lock-fill"></i> จัดการสิทธิ์
-                        </a>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
     </div>
-</div>
-{% endblock %}
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-0"> <div class="table-responsive">
+                <table class="table table-hover table-striped mb-0 align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th scope="col" class="py-3 ps-4">Username</th>
+                            <th scope="col" class="py-3">ชื่อ-นามสกุล</th>
+                            <th scope="col" class="py-3">อีเมล</th>
+                            <th scope="col" class="py-3">สิทธิ์การใช้งาน (Roles)</th>
+                            <th scope="col" class="text-end py-3 pe-4">จัดการ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for u in users %}
+                        <tr>
+                            <td class="ps-4 fw-bold text-secondary">{{ u.username }}</td>
+                            <td>{{ u.get_full_name|default:"-" }}</td>
+                            <td>{{ u.email|default:"-" }}</td>
+                            <td>
+                                {% for group in u.groups.all %}
+                                    <span class="badge rounded-pill 
+                                        {% if group.name == 'Admin' %}bg-danger
+                                        {% elif group.name == 'Approver' %}bg-info text-dark
+                                        {% else %}bg-secondary
+                                        {% endif %}">
+                                        {{ group.name }}
+                                    </span>
+                                {% empty %}
+                                    <span class="badge rounded-pill bg-light text-dark border">User (ทั่วไป)</span>
+                                {% endfor %}
+                            </td>
+                            <td class="text-end pe-4">
+                                <a href="{% url 'edit_user_roles' u.id %}" class="btn btn-sm btn-outline-success">
+                                    <i class="bi bi-shield-lock-fill"></i> สิทธิ์
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-4 text-muted">
+                                ไม่พบข้อมูลผู้ใช้งาน
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div> {% endblock %}

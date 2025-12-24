@@ -42,7 +42,9 @@ class Room(models.Model):
     is_maintenance = models.BooleanField(default=False, verbose_name="สถานะปิดปรับปรุง")
     maintenance_start = models.DateTimeField(null=True, blank=True, verbose_name="เริ่มปิดปรับปรุง")
     maintenance_end = models.DateTimeField(null=True, blank=True, verbose_name="สิ้นสุดปิดปรับปรุง")
-    requires_approval = models.BooleanField(default=False, verbose_name="ต้องรออนุมัติ")
+    
+    # เปลี่ยนเป็น True ไว้ก็ได้ครับ เพื่อสื่อความหมายว่าห้องนี้ต้องอนุมัติ
+    requires_approval = models.BooleanField(default=True, verbose_name="ต้องรออนุมัติ")
     
     line_notify_token = models.CharField(max_length=50, blank=True, null=True, verbose_name="Line Notify Token")
     teams_webhook_url = models.TextField(blank=True, null=True, verbose_name="Teams Webhook URL")
@@ -50,9 +52,9 @@ class Room(models.Model):
     @property
     def is_currently_under_maintenance(self):
         now = timezone.now()
-        if self.is_maintenance and (not self.maintenance_start or not self.maintenance_end):
-            return True
-        if self.maintenance_start and self.maintenance_end:
+        if self.is_maintenance:
+            if not self.maintenance_start or not self.maintenance_end:
+                return True
             if self.maintenance_start <= now <= self.maintenance_end:
                 return True
         return False
@@ -68,27 +70,25 @@ class Booking(models.Model):
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='bookings')
     room = models.ForeignKey(Room, on_delete=models.CASCADE, related_name='bookings')
     
-    title = models.CharField(max_length=200)
-    start_time = models.DateTimeField()
-    end_time = models.DateTimeField()
+    title = models.CharField(max_length=200, verbose_name="หัวข้อการประชุม")
+    start_time = models.DateTimeField(verbose_name="เวลาเริ่ม")
+    end_time = models.DateTimeField(verbose_name="เวลาสิ้นสุด")
     
-    chairman = models.CharField(max_length=200, blank=True, null=True)
-    department = models.CharField(max_length=200, blank=True, null=True)
-    participant_count = models.PositiveIntegerField(default=1)
+    chairman = models.CharField(max_length=200, blank=True, null=True, verbose_name="ประธาน")
+    department = models.CharField(max_length=200, blank=True, null=True, verbose_name="แผนก")
+    participant_count = models.PositiveIntegerField(default=1, verbose_name="จำนวนคน")
     
-    participants = models.ManyToManyField(User, related_name='participating_in', blank=True)
+    participants = models.ManyToManyField(User, related_name='participating_in', blank=True, verbose_name="ผู้เข้าร่วม")
 
     is_user_seen = models.BooleanField(default=False, verbose_name="ผู้จองรับทราบแล้ว")
     
-    # เชื่อมกับ Equipment
     equipments = models.ManyToManyField(Equipment, blank=True, related_name='bookings', verbose_name="อุปกรณ์ที่ขอเพิ่ม")
 
-    presentation_file = models.FileField(upload_to='presentations/', blank=True, null=True)
-    description = models.TextField(blank=True, null=True)
-    additional_requests = models.TextField(blank=True, null=True)
-    additional_notes = models.TextField(blank=True, null=True)
+    presentation_file = models.FileField(upload_to='presentations/', blank=True, null=True, verbose_name="ไฟล์นำเสนอ")
+    description = models.TextField(blank=True, null=True, verbose_name="รายละเอียด")
+    additional_requests = models.TextField(blank=True, null=True, verbose_name="คำขอเพิ่มเติม")
+    additional_notes = models.TextField(blank=True, null=True, verbose_name="หมายเหตุ")
     
-    # --- [เพิ่มใหม่] รูปแบบการจัดห้อง ---
     LAYOUT_CHOICES = (
         ('theatre', 'Theatre (เธียเตอร์)'),
         ('classroom', 'Classroom (แบบห้องเรียน)'),
@@ -106,14 +106,12 @@ class Booking(models.Model):
         verbose_name="รูปแบบการจัดห้อง"
     )
     
-    # [เพิ่มใหม่] ฟิลด์สำหรับเก็บไฟล์แนบ กรณีเลือกรูปแบบอื่นๆ
     room_layout_attachment = models.FileField(
         upload_to='layout_attachments/', 
         blank=True, 
         null=True, 
-        verbose_name="ไฟล์แนบรูปแบบการจัดห้อง (กรณีเลือกอื่นๆ)"
+        verbose_name="ไฟล์แนบผังห้อง"
     )
-    # -----------------------------------
     
     STATUS_CHOICES = [
         ('PENDING', 'รออนุมัติ'),
@@ -121,6 +119,8 @@ class Booking(models.Model):
         ('REJECTED', 'ไม่อนุมัติ'),
         ('CANCELLED', 'ยกเลิกแล้ว'),
     ]
+    
+    # [จุดสำคัญ] ตั้ง Default เป็น PENDING (รออนุมัติ) สำหรับทุกการจอง
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='PENDING')
     
     created_at = models.DateTimeField(auto_now_add=True)
@@ -171,9 +171,14 @@ class AuditLog(models.Model):
     class Meta:
         ordering = ['-timestamp']
 
+# ----------------------------------------------------
+# 6. Model ข้อมูลเสริมผู้ใช้ (UserProfile)
+# ----------------------------------------------------
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    department = models.CharField(max_length=100, blank=True, null=True, verbose_name="แผนก")
     line_user_id = models.CharField(max_length=100, blank=True, null=True)
 
     def __str__(self):
-        return f"Profile: {self.user.username}"
+        dept_str = f" ({self.department})" if self.department else ""
+        return f"{self.user.username}{dept_str}"
