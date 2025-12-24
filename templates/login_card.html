@@ -49,7 +49,6 @@
             font-size: 1rem;
         }
         
-        /* แก้ไขมุมของ Input เมื่อมีปุ่มต่อท้าย */
         .input-group-login .form-control:not(:last-child) {
             border-top-right-radius: 0;
             border-bottom-right-radius: 0;
@@ -74,13 +73,13 @@
         }
         .btn-password-toggle:hover {
             background-color: #f8f9fa;
-            color: #6f42c1;
+            color: #0e71e2ff;
         }
 
         /* --- ปุ่มหลัก (Login) --- */
         .btn-main {
-            background-color: #6f42c1;
-            border-color: #6f42c1;
+            background-color: #2e40e4ff;
+            border-color: #2a48cfff;
             color: white;
             padding: 12px 25px;
             border-radius: 8px;
@@ -96,19 +95,19 @@
             box-shadow: 0 6px 15px rgba(111, 66, 193, 0.35);
         }
 
-        .btn-outline-public {
-            border-color: #28a745;
-            color: #28a745;
-            padding: 12px 25px;
+        /* ปุ่มกลับหน้าหลัก */
+        .btn-outline-home {
+            border-color: #6c757d;
+            color: #6c757d;
+            padding: 10px 25px;
             border-radius: 8px;
-            font-weight: 600;
+            font-weight: 500;
             transition: all 0.2s ease-in-out;
         }
-        .btn-outline-public:hover {
-            background-color: #28a745;
+        .btn-outline-home:hover {
+            background-color: #6c757d;
             color: white;
             transform: translateY(-2px);
-            box-shadow: 0 4px 10px rgba(40, 167, 69, 0.2);
         }
 
         .form-control:focus {
@@ -159,16 +158,10 @@
                     <button type="submit" class="btn btn-main w-100 mb-3">เข้าสู่ระบบ</button>
                 </form>
 
-                {% comment %} {% if enable_sso %}
-                <a href="{% url 'outlook_login' %}" class="btn btn-outline-secondary w-100 mb-3">
-                    <i class="bi bi-microsoft me-2"></i> เข้าสู่ระบบด้วย Microsoft 365
-                </a>
-                {% endif %} {% endcomment %}
-
                 <hr class="my-4 text-muted opacity-25">
 
-                <a href="{% url 'public_calendar' %}" class="btn btn-outline-public w-100">
-                    <i class="bi bi-calendar3-range me-2"></i> ดูปฏิทิน (สาธารณะ)
+                <a href="/" class="btn btn-outline-home w-100 border-0">
+                    <i class="bi bi-arrow-left me-2"></i> กลับหน้าหลัก
                 </a>
             </div>
         </div>

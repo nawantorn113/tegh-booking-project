@@ -25,7 +25,6 @@ from django.utils import timezone
 from django.contrib.auth.forms import AuthenticationForm
 from django.views.decorators.csrf import csrf_exempt
 
-# [ส่วนสำคัญ] Import สำหรับระบบค้นหา (Autocomplete)
 from dal import autocomplete
 from dal_select2.views import Select2QuerySetView
 
@@ -109,10 +108,12 @@ def get_base_context(request):
     current_url_name = request.resolver_match.url_name if request.resolver_match else ''
     is_admin_user = is_admin(request.user)
 
+    # [แก้ไข] เปลี่ยน show: True เป็น show: request.user.is_authenticated
+    # เพื่อให้ซ่อนเมนูเมื่อยังไม่ได้ล็อกอิน
     menu_structure = [
-        {'label': 'หน้าหลัก', 'url_name': 'dashboard', 'icon': 'bi-house-fill', 'show': True},
-        {'label': 'ปฏิทินรวม', 'url_name': 'master_calendar', 'icon': 'bi-calendar3-range', 'show': True},
-        {'label': 'ประวัติการจอง', 'url_name': 'history', 'icon': 'bi-clock-history', 'show': True},
+        {'label': 'หน้าหลัก', 'url_name': 'dashboard', 'icon': 'bi-house-fill', 'show': request.user.is_authenticated},
+        {'label': 'ปฏิทินรวม', 'url_name': 'master_calendar', 'icon': 'bi-calendar3-range', 'show': request.user.is_authenticated},
+        {'label': 'ประวัติการจอง', 'url_name': 'history', 'icon': 'bi-clock-history', 'show': request.user.is_authenticated},
         {'label': 'รออนุมัติ', 'url_name': 'approvals', 'icon': 'bi-check2-circle', 'show': is_approver_or_admin(request.user)},
     ]
 
@@ -143,9 +144,9 @@ def get_base_context(request):
     if request.user.is_authenticated:
         if is_approver_or_admin(request.user):
             if is_admin(request.user):
-                qs = Booking.objects.filter(status='PENDING').select_related('room', 'user').order_by('-created_at')
+                qs = Booking.objects.filter(status='PENDING', is_user_seen=False).select_related('room', 'user').order_by('-created_at')
             else:
-                qs = Booking.objects.filter(room__approver=request.user, status='PENDING').select_related('room', 'user').order_by('-created_at')
+                qs = Booking.objects.filter(room__approver=request.user, status='PENDING', is_user_seen=False).select_related('room', 'user').order_by('-created_at')
             
             pending_items_count = qs.count()
             pending_notifications = qs[:10]
@@ -274,7 +275,6 @@ class UserAutocomplete(Select2QuerySetView):
             qs = qs.filter(q_filter)
         return qs[:15]
 
-# [Class นี้สำคัญสำหรับการค้นหาอุปกรณ์]
 class EquipmentAutocomplete(Select2QuerySetView):
     def get_queryset(self):
         if not self.request.user.is_authenticated:
@@ -416,7 +416,6 @@ def room_calendar_view(request, room_id):
             
             recurrence = form.cleaned_data.get('recurrence')
             recurrence_end_date = form.cleaned_data.get('recurrence_end_date')
-            # has_equipments = bool(form.cleaned_data.get('equipments'))
 
             base_booking = form.save(commit=False)
             base_booking.room = room
@@ -468,12 +467,11 @@ def room_calendar_view(request, room_id):
                         room_layout_attachment=base_booking.room_layout_attachment
                     )
                     
-                    # ถ้าไม่ใช่ห้องใหญ่ ไม่ต้องสนใจ layout
                     if 'ใหญ่' not in room.name:
                         new_b.room_layout = ''
 
-                    # [แก้ไขจุดนี้] บังคับให้เป็น PENDING เสมอ
                     new_b.status = 'PENDING'
+                    new_b.is_user_seen = False
                     
                     new_b.save()
                     
@@ -482,7 +480,6 @@ def room_calendar_view(request, room_id):
 
                     log_action(request, 'BOOKING_CREATED', new_b, f"จองห้อง {room.name}")
                     
-                    # Outlook Sync จะทำงานเมื่อ Approve แล้วเท่านั้น
                     if new_b.status == 'APPROVED':
                         token = get_valid_token(request.user, request)
                         if token:
@@ -565,7 +562,6 @@ def edit_booking_view(request, booking_id):
         if form.is_valid():
             booking = form.save(commit=False)
             
-            # หากแก้ไข ก็ต้องรออนุมัติใหม่เสมอ (ตามคอนเซปต์ทุกห้องต้องอนุมัติ)
             if not is_approver_or_admin(request.user):
                 booking.status = 'PENDING'
                 booking.is_user_seen = False 
@@ -856,7 +852,6 @@ def update_booking_time_api(request):
         booking.start_time = start_dt
         booking.end_time = end_dt
         
-        # แก้ไขเวลายังคงใช้เงื่อนไขเดิม คือถ้าไม่ใช่ Admin ให้รออนุมัติ
         if not is_approver_or_admin(request.user):
             booking.status = 'PENDING'
             booking.is_user_seen = False

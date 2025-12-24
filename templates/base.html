@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="th">
 <head>
@@ -28,7 +29,7 @@
         .nav-link:hover { transform: translateY(-1px); opacity: 1; }
         .nav-link.active { font-weight: 700; border-bottom: 2px solid #ffc107; }
 
-        /* Badge แจ้งเตือน (จัดตำแหน่งให้ตรงเป๊ะ) */
+        /* Badge แจ้งเตือน */
         .badge-notify {
             font-size: 0.65rem;
             padding: 0.35em 0.6em;
@@ -74,7 +75,7 @@
 
     <nav class="navbar navbar-expand-lg navbar-dark navbar-premium sticky-top">
         <div class="container">
-            <a class="navbar-brand fw-bold d-flex align-items-center" href="{% url 'dashboard' %}">
+            <a class="navbar-brand fw-bold d-flex align-items-center" href="{% url 'root' %}">
                 <i class="bi bi-calendar-check-fill me-2 text-warning"></i>
                 TEGH MeetBook
             </a>
@@ -95,6 +96,7 @@
                 </ul>
 
                 <ul class="navbar-nav align-items-center gap-1">
+                    
                     {% if is_admin_user %}
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle text-white" href="#" data-bs-toggle="dropdown">
@@ -112,6 +114,7 @@
                     </li>
                     {% endif %}
 
+                    {% if user.is_authenticated %}
                     <li class="nav-item dropdown">
                         <a class="nav-link position-relative text-white" href="#" id="notificationDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="bi bi-bell-fill fs-5"></i>
@@ -180,8 +183,7 @@
                             </div>
                         </ul>
                     </li>
-
-                    {% if user.is_authenticated %}
+                    {% endif %} {% if user.is_authenticated %}
                     <li class="nav-item dropdown ms-2">
                         <a class="nav-link dropdown-toggle text-white d-flex align-items-center" href="#" data-bs-toggle="dropdown">
                             <div class="bg-white text-primary rounded-circle d-flex align-items-center justify-content-center fw-bold me-2 shadow-sm" style="width: 32px; height: 32px;">
@@ -196,7 +198,11 @@
                         </ul>
                     </li>
                     {% else %}
-                    <li class="nav-item"><a class="nav-link text-white fw-bold" href="{% url 'login' %}">เข้าสู่ระบบ</a></li>
+                    <li class="nav-item">
+                        <a class="btn btn-outline-light fw-bold ms-2 px-3 py-1" href="{% url 'login' %}">
+                            เข้าสู่ระบบ
+                        </a>
+                    </li>
                     {% endif %}
                 </ul>
             </div>
@@ -223,7 +229,7 @@
 
     <footer class="bg-white border-top py-4 mt-auto">
         <div class="container text-center text-muted small">
-            <p class="mb-1">&copy; 2026 TEGH Meeting Room Booking System.</p>
+            <p class="mb-1">&copy; {% now "Y" %} TEGH Meeting Room Booking System.</p>
         </div>
     </footer>
 
@@ -233,31 +239,34 @@
 
     <script>
         $(document).ready(function() {
+            // Auto close alerts
             setTimeout(function() { $('.alert').alert('close'); }, 5000);
-            if ($('.select2').length) { $('.select2').select2({ theme: 'bootstrap-5' }); }
+            
+            // Init Global Select2 (if needed)
+            if ($('.select2').length) { 
+                $('.select2').select2({ theme: 'bootstrap-5' }); 
+            }
         });
 
-        // --- JavaScript ทำให้กดแล้วหายวับ (Optimistic UI) ---
+        // --- ฟังก์ชันกดแล้วหาย (Mark as Read) ---
         function markAsRead(event, bookingId) {
-            // หยุดไม่ให้ Dropdown ปิด หรือลิงก์ทำงาน
             event.preventDefault();
-            event.stopPropagation();
+            event.stopPropagation(); // ห้ามไม่ให้ Dropdown ปิด
 
-            // 1. ลบออกจากหน้าจอทันที (ไม่ต้องรอ Server ตอบ)
             const item = document.getElementById(`notif-${bookingId}`);
             if (item) {
-                // ใส่ Animation เลื่อนขวาและจางหาย
+                // Animation เลื่อนขวาและจางหาย
                 item.classList.add('fade-out-right');
                 
-                // รอ Animation จบแล้วลบทิ้ง
+                // รอ Animation จบ (400ms) แล้วลบทิ้ง
                 setTimeout(() => {
                     item.remove();
-                    updateBadgeCount(); // ลดตัวเลข
+                    updateBadgeCount(); // อัปเดตตัวเลข
                 }, 400);
             }
 
-            // 2. ส่งข้อมูลไปบอก Server เงียบๆ
-            fetch(`/bookings/mark-read/${bookingId}/`, {
+            // ส่ง Request ไปยัง Server
+            fetch(`/booking/notification/read/${bookingId}/`, {
                 method: 'POST',
                 headers: {
                     'X-CSRFToken': '{{ csrf_token }}',
@@ -269,6 +278,7 @@
             }).catch(err => console.error(err));
         }
 
+        // ฟังก์ชันอัปเดตตัวเลขแจ้งเตือนที่ UI
         function updateBadgeCount() {
             const badge = document.getElementById('notificationBadge');
             const inlineBadge = document.getElementById('notificationCountInline');
@@ -285,8 +295,7 @@
                     badge.remove();
                     if(inlineBadge) inlineBadge.remove();
                     
-                    // เช็คว่าถ้าไม่มีรายการเหลือแล้ว ให้ขึ้นข้อความ "ไม่มีการแจ้งเตือน"
-                    // (ตรวจสอบจำนวนลูก li ที่เหลืออยู่)
+                    // ถ้าไม่มีรายการเหลือแล้ว ให้ขึ้นข้อความ "ไม่มีการแจ้งเตือน"
                     const remainingItems = list.querySelectorAll('li[id^="notif-"]').length;
                     if (remainingItems === 0) {
                         list.innerHTML = `
