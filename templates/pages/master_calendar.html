@@ -73,11 +73,18 @@
         var calendar = new FullCalendar.Calendar(calendarEl, {
             locale: 'th',
             initialView: 'dayGridMonth',
+            
+            // [แก้ไข] ตั้งค่าชื่อปุ่มเฉพาะ View
+            views: {
+                listMonth: { buttonText: 'รายการ' } 
+            },
+
             headerToolbar: {
                 left: 'prev,next today',
                 center: 'title',
                 right: 'dayGridMonth,timeGridWeek,listMonth'
             },
+            
             events: "{% url 'bookings_api' %}?t=" + new Date().getTime(),
             eventTimeFormat: { hour: '2-digit', minute: '2-digit', meridiem: false },
 
@@ -88,7 +95,7 @@
                 document.getElementById('modalRoom').innerText = info.event.extendedProps.room;
                 document.getElementById('modalUser').innerText = info.event.extendedProps.user;
                 
-                // [แก้ไขจุดที่ Error] เติม /detail/ ต่อท้ายลิงก์
+                // สร้างลิงก์ไปยังหน้ารายละเอียด
                 document.getElementById('modalLink').href = "/booking/" + info.event.id + "/detail/";
 
                 // จัดการสีป้ายสถานะ (Badge)

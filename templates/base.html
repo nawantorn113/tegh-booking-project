@@ -75,9 +75,10 @@
 
     <nav class="navbar navbar-expand-lg navbar-dark navbar-premium sticky-top">
         <div class="container">
-            <a class="navbar-brand fw-bold d-flex align-items-center" href="{% url 'root' %}">
+            <a class="navbar-brand fw-bold d-flex align-items-center" 
+                href="{% if user.is_authenticated %}{% url 'dashboard' %}{% else %}{% url 'root' %}{% endif %}">
                 <i class="bi bi-calendar-check-fill me-2 text-warning"></i>
-                TEGH MeetBook
+                TEGH MeetBook       
             </a>
             
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">

@@ -326,8 +326,22 @@
         // --- FullCalendar ---
         var calendarEl = document.getElementById('calendar');
         var calendar = new FullCalendar.Calendar(calendarEl, {
-            initialView: window.innerWidth < 768 ? 'listMonth' : 'dayGridMonth', locale: 'th',
-            headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,listMonth' },
+            locale: 'th',
+            initialView: window.innerWidth < 768 ? 'listMonth' : 'dayGridMonth',
+            
+            // [แก้ไข] เปลี่ยนข้อความปุ่มที่นี่
+            views: {
+                dayGridMonth: { buttonText: 'เดือน' },
+                timeGridWeek: { buttonText: 'สัปดาห์' },
+                listMonth: { buttonText: 'รายการ' }
+            },
+
+            headerToolbar: { 
+                left: 'prev,next today', 
+                center: 'title', 
+                right: 'dayGridMonth,timeGridWeek,listMonth' 
+            },
+            
             events: "{% url 'bookings_api' %}?room_id={{ room.id }}&t=" + new Date().getTime(),
             editable: true, selectable: true,
             
