@@ -2,19 +2,22 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    # [แก้ไข] ตั้งหน้าแรก ('') ให้เป็น public_calendar_view
+    # หน้าแรก ('') ให้เป็น public_calendar_view
     path('', views.public_calendar_view, name='root'),
     
-    # [แก้ไข] ย้ายหน้า Login มาที่ '/login/'
+    # ย้ายหน้า Login มาที่ '/login/'
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
 
-    # Path อื่นๆ (คงเดิม)
+    # Path อื่นๆ
     path('dashboard/', views.dashboard_view, name='dashboard'),
     path('master-calendar/', views.master_calendar_view, name='master_calendar'),
     path('room/<int:room_id>/', views.room_calendar_view, name='room_calendar'),
-    path('booking/create/<int:room_id>/', views.room_calendar_view, name='create_booking'), # ใช้ view เดียวกันกับ calendar
-    path('booking/<int:booking_id>/', views.booking_detail_view, name='booking_detail'),
+    path('booking/create/<int:room_id>/', views.room_calendar_view, name='create_booking'),
+    
+    # Detail View
+    path('booking/<int:booking_id>/detail/', views.booking_detail_view, name='booking_detail'),
+    
     path('booking/<int:booking_id>/edit/', views.edit_booking_view, name='edit_booking'),
     path('booking/<int:booking_id>/delete/', views.delete_booking_view, name='delete_booking'),
     
@@ -43,22 +46,25 @@ urlpatterns = [
     path('users/add/', views.add_user_view, name='add_user'),
     path('users/<int:user_id>/edit-roles/', views.edit_user_roles_view, name='edit_user_roles'),
     
+    # Equipments Management
     path('equipments/', views.equipment_management_view, name='equipments'),
     path('equipments/add/', views.add_equipment_view, name='add_equipment'),
+    # [เพิ่มใหม่] สำหรับแก้ไขอุปกรณ์
+    path('equipments/<int:eq_id>/edit/', views.edit_equipment_view, name='edit_equipment'),
     path('equipments/<int:eq_id>/delete/', views.delete_equipment_view, name='delete_equipment'),
     
     path('audit-log/', views.audit_log_view, name='audit_log'),
     
     # Reports
     path('reports/', views.reports_view, name='reports'),
-    path('reports/export/excel/', views.export_reports_excel, name='export_reports_excel'),
-    path('reports/export/pdf/', views.export_reports_pdf, name='export_reports_pdf'),
+    path('reports/export/excel/', views.export_reports_excel, name='export_excel'),
+    path('reports/export/pdf/', views.export_reports_pdf, name='export_pdf'),
 
     # Outlook SSO
     path('outlook/login/', views.outlook_login_view, name='outlook_login'),
     path('outlook/callback/', views.outlook_callback_view, name='outlook_callback'),
     
-    # Teams Webhook (Optional)
+    # Teams Webhook
     path('webhook/teams/', views.teams_action_receiver, name='teams_webhook'),
 
     # Autocomplete URLs

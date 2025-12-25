@@ -9,13 +9,12 @@ from django.utils import timezone
 # ต้องติดตั้ง: pip install django-autocomplete-light
 from dal import autocomplete 
 
-from .models import Booking, Room, Equipment 
+from .models import Booking, Room, Equipment, UserProfile 
 
 # -----------------------------------------------
 # 1. Booking Form (ฟอร์มจองห้อง)
 # -----------------------------------------------
 class BookingForm(forms.ModelForm):
-    # ตัวเลือกการจองซ้ำ
     RECURRENCE_CHOICES = [
         ('NONE', 'ไม่จองซ้ำ'),
         ('WEEKLY', 'ทุกสัปดาห์ (วันเดียวกัน)'),
@@ -46,12 +45,8 @@ class BookingForm(forms.ModelForm):
         
         widgets = {
             'room': forms.HiddenInput(),
-            
-            # วันที่และเวลา
             'start_time': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class':'form-control'}),
             'end_time': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class':'form-control'}),
-            
-            # ข้อมูลทั่วไป
             'title': forms.TextInput(attrs={'class':'form-control'}),
             'chairman': forms.TextInput(attrs={'class':'form-control'}),
             'department': forms.TextInput(attrs={'class':'form-control'}),
@@ -61,11 +56,7 @@ class BookingForm(forms.ModelForm):
             'additional_notes': forms.Textarea(attrs={'rows': 2, 'class':'form-control'}),
             'presentation_file': forms.ClearableFileInput(attrs={'class':'form-control'}),
             'room_layout_attachment': forms.ClearableFileInput(attrs={'class':'form-control'}),
-
-            # [สำคัญ] Class 'layout-option-input' ใช้สำหรับ CSS ซ่อนปุ่ม Radio เพื่อทำเป็นการ์ด
             'room_layout': forms.RadioSelect(attrs={'class': 'layout-option-input'}),
-            
-            # [สำคัญ] Autocomplete Widget
             'equipments': autocomplete.ModelSelect2Multiple(
                 url='equipment-autocomplete',
                 attrs={
@@ -75,6 +66,22 @@ class BookingForm(forms.ModelForm):
                 }
             ),
         }
+        
+        labels = {
+            'title': 'หัวข้อการประชุม',
+            'chairman': 'ประธานในที่ประชุม',
+            'department': 'แผนก/หน่วยงาน',
+            'participant_count': 'จำนวนผู้เข้าประชุม',
+            'description': 'รายละเอียดเพิ่มเติม',
+            'additional_requests': 'ความต้องการเพิ่มเติม',
+            'additional_notes': 'หมายเหตุ',
+            'room_layout': 'รูปแบบการจัดห้อง',
+            'room_layout_attachment': 'ไฟล์แนบผังห้อง (ถ้ามี)',
+            'presentation_file': 'ไฟล์นำเสนอ (Presentation)',
+            'equipments': 'อุปกรณ์ที่ต้องการ',
+            'start_time': 'เวลาเริ่ม',
+            'end_time': 'เวลาสิ้นสุด',
+        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -83,10 +90,9 @@ class BookingForm(forms.ModelForm):
         self.fields['start_time'].input_formats = ['%Y-%m-%dT%H:%M']
         self.fields['end_time'].input_formats = ['%Y-%m-%dT%H:%M']
 
-        # [จุดสำคัญ] บังคับลำดับฟิลด์: เอา recurrence มาก่อน participant_count
         self.order_fields([
             'title', 'chairman', 'department', 'start_time', 'end_time', 
-            'recurrence', 'recurrence_end_date', # <--- ย้ายมาตรงนี้
+            'recurrence', 'recurrence_end_date',
             'participant_count', 
             'room_layout', 'room_layout_attachment', 
             'equipments', 'presentation_file', 
@@ -136,6 +142,11 @@ class RoomForm(forms.ModelForm):
             'is_maintenance': 'เปิดใช้งานโหมดปิดปรับปรุง',
             'maintenance_start': 'วัน/เวลา เริ่มปิดปรับปรุง',
             'maintenance_end': 'วัน/เวลา สิ้นสุดปิดปรับปรุง',
+            'location': 'สถานที่',
+            'floor': 'ชั้น',
+            'building': 'อาคาร',
+            'description': 'รายละเอียดเพิ่มเติม',
+            'is_active': 'สถานะใช้งาน',
         }
         
         widgets = {
@@ -146,6 +157,10 @@ class RoomForm(forms.ModelForm):
             'name': forms.TextInput(attrs={'class': 'form-control'}),
             'capacity': forms.NumberInput(attrs={'class': 'form-control'}),
             'image': forms.ClearableFileInput(attrs={'class': 'form-control'}),
+            'location': forms.TextInput(attrs={'class': 'form-control'}),
+            'floor': forms.TextInput(attrs={'class': 'form-control'}),
+            'building': forms.TextInput(attrs={'class': 'form-control'}),
+            'description': forms.Textarea(attrs={'rows': 3, 'class': 'form-control'}),
         }
 
     def __init__(self, *args, **kwargs):
@@ -155,17 +170,40 @@ class RoomForm(forms.ModelForm):
 
 
 # -----------------------------------------------
-# 3. Custom User Form (ฟอร์มจัดการผู้ใช้)
+# 3. Custom User Form (แก้ไขภาษาไทย + เพิ่มแผนก)
 # -----------------------------------------------
 class CustomUserCreationForm(forms.ModelForm):
+    first_name = forms.CharField(
+        label="ชื่อจริง", 
+        required=True,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'เช่น สมชาย'})
+    )
+    last_name = forms.CharField(
+        label="นามสกุล", 
+        required=True,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'เช่น ใจดี'})
+    )
+    # [เพิ่ม] ช่องกรอกแผนก
+    department = forms.CharField(
+        label="แผนก / หน่วยงาน",
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'เช่น ฝ่ายไอที, ฝ่ายบัญชี'})
+    )
+    email = forms.EmailField(
+        label="อีเมล", 
+        required=True,
+        widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'example@tegh.com'})
+    )
+    
     password = forms.CharField(
         label="รหัสผ่าน",
-        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'ตั้งรหัสผ่านของคุณ'}),
-        required=True
+        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'ตั้งรหัสผ่านอย่างน้อย 8 ตัวอักษร'}),
+        required=True,
+        help_text="รหัสผ่านควรมีความยาวอย่างน้อย 8 ตัวอักษร"
     )
     password_confirmation = forms.CharField(
         label="ยืนยันรหัสผ่าน",
-        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'กรอกรหัสผ่านอีกครั้ง'}),
+        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'กรอกรหัสผ่านอีกครั้งเพื่อยืนยัน'}),
         required=True
     )
     groups = forms.ModelMultipleChoiceField(
@@ -178,13 +216,21 @@ class CustomUserCreationForm(forms.ModelForm):
     class Meta:
         model = User
         fields = ['username', 'first_name', 'last_name', 'email', 'groups']
+        
+        labels = {
+            'username': 'ชื่อผู้ใช้ (Username)',
+        }
+        help_texts = {
+            'username': 'ใช้สำหรับเข้าสู่ระบบ (ภาษาอังกฤษ ตัวเลข หรือ @/./+/-/_ เท่านั้น)',
+        }
 
     def __init__(self, *args, **kwargs):
         super(CustomUserCreationForm, self).__init__(*args, **kwargs)
-        self.fields['username'].widget.attrs.update({'class': 'form-control'})
-        self.fields['first_name'].widget.attrs.update({'class': 'form-control'})
-        self.fields['last_name'].widget.attrs.update({'class': 'form-control'})
-        self.fields['email'].widget.attrs.update({'class': 'form-control'})
+        self.fields['username'].widget.attrs.update({'class': 'form-control', 'placeholder': 'เช่น somchai.j'})
+        
+        # ถ้าเป็นการแก้ไขข้อมูลเก่า ให้ดึงแผนกเดิมมาแสดง
+        if self.instance.pk and hasattr(self.instance, 'profile'):
+            self.fields['department'].initial = self.instance.profile.department
 
     def clean(self):
         cleaned_data = super().clean()
@@ -193,24 +239,49 @@ class CustomUserCreationForm(forms.ModelForm):
         email = cleaned_data.get("email")
 
         if password and password_confirmation and password != password_confirmation:
-            self.add_error('password_confirmation', "รหัสผ่านไม่ตรงกัน")
+            self.add_error('password_confirmation', "รหัสผ่านทั้งสองช่องไม่ตรงกัน")
 
-        if email and User.objects.filter(email=email).exists():
-            self.add_error('email', "อีเมลนี้มีผู้ใช้งานแล้ว")
+        if email:
+            # เช็คอีเมลซ้ำ (ยกเว้นตัวเองกรณีแก้ไข)
+            qs = User.objects.filter(email=email)
+            if self.instance.pk:
+                qs = qs.exclude(pk=self.instance.pk)
+            if qs.exists():
+                self.add_error('email', "อีเมลนี้มีผู้ใช้งานในระบบแล้ว")
 
         return cleaned_data
 
     def save(self, commit=True):
         user = super().save(commit=False)
-        user.set_password(self.cleaned_data["password"])
+        
+        # ถ้ามีการกรอกรหัสผ่านใหม่ (หรือสร้าง user ใหม่) ให้ตั้งรหัสผ่าน
+        if self.cleaned_data.get("password"):
+            user.set_password(self.cleaned_data["password"])
+        
         if commit:
             user.save()
             self.cleaned_data.get('groups', []) 
             self.save_m2m()
+            
+            # บันทึกสิทธิ์ Admin อัตโนมัติถ้าเลือกกลุ่ม Admin
             if user.groups.filter(name='Admin').exists():
                 user.is_staff = True
                 user.is_superuser = True
                 user.save()
+            else:
+                # ถ้าเอา Admin ออก ก็ต้องถอนสิทธิ์ด้วย
+                if user.is_staff and not user.is_superuser: # ป้องกันแก้ superuser หลัก
+                     user.is_staff = False
+                     user.save()
+
+            # [ส่วนสำคัญ] บันทึกแผนกลงใน UserProfile
+            dept = self.cleaned_data.get('department')
+            if dept:
+                # ใช้ get_or_create เพื่อป้องกัน error ถ้า profile ไม่มีอยู่จริง
+                profile, created = UserProfile.objects.get_or_create(user=user)
+                profile.department = dept
+                profile.save()
+                
         return user
 
 

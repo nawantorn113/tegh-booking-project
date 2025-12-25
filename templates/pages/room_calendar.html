@@ -9,6 +9,7 @@
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
     {{ form.media.css }}
+    
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
 
@@ -18,29 +19,16 @@
         .fc-event { border: none !important; box-shadow: 0 1px 2px rgba(0,0,0,0.1); cursor: pointer; padding: 2px 5px; border-radius: 3px; }
         .fc-event.status-past { background-color: #ced4da !important; border-left: 3px solid #6c757d !important; opacity: 0.8; }
 
-        /* =========================================
-           SELECT2 FORCE LEFT
-           ========================================= */
         .select2-container { width: 100% !important; text-align: left !important; z-index: 99999 !important; }
-        
         .select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__rendered {
             display: flex !important; flex-direction: row !important; justify-content: flex-start !important;
             flex-wrap: wrap !important; text-align: left !important; padding-left: 0 !important;
         }
-        
         .select2-container--bootstrap-5 .select2-selection--multiple .select2-search--inline .select2-search__field {
             text-align: left !important; margin-left: 0 !important; margin-top: 5px !important; 
             width: 100% !important; font-family: 'Kanit', sans-serif;
         }
         
-        .select2-search__field::-webkit-input-placeholder { text-align: left !important; }
-        .select2-search__field:-moz-placeholder { text-align: left !important; }
-        .select2-search__field::-moz-placeholder { text-align: left !important; }
-        .select2-search__field:-ms-input-placeholder { text-align: left !important; }
-        
-        .select2-results__option { text-align: left !important; }
-
-        /* --- Layout Cards --- */
         .layout-card-label input[type="radio"] { display: none; }
         .layout-card { border: 1px solid #dee2e6; background: #fff; cursor: pointer; border-radius: 8px; transition: all 0.2s; }
         .layout-card:hover { border-color: #adb5bd; background: #f8f9fa; }
@@ -48,6 +36,14 @@
             border-color: #0d6efd !important; background-color: #e7f1ff !important; color: #0d6efd;
         }
         .layout-card-label input[type="radio"]:checked + .layout-card .check-icon { display: block !important; }
+
+        /* [ไม้ตาย] ซ่อน Error สีแดงทั้งหมด ไม่ให้โผล่มาให้เห็น */
+        .invalid-feedback { display: none !important; }
+        .is-invalid { border-color: #dee2e6 !important; background-image: none !important; }
+        .text-danger { display: none !important; }
+        /* ยกเว้น text-danger ที่เราเขียนเองใน Javascript Alert หรือ Badge */
+        .badge.bg-danger { display: inline-block !important; color: white !important; }
+        .badge.text-danger { display: inline-block !important; }
     </style>
 {% endblock %}
 
@@ -87,7 +83,9 @@
                         <span class="badge bg-primary fw-normal">กำลังใช้</span>
                         <span class="badge bg-success fw-normal">จองแล้ว</span>
                         <span class="badge bg-warning text-dark fw-normal">รออนุมัติ</span>
-                        <span class="ms-auto text-danger fw-bold"><i class="bi bi-info-circle"></i> จองล่วงหน้า 30 นาที</span>
+                        <span class="ms-auto fw-bold" style="color: #dc3545 !important; display: inline-block !important;">
+                            <i class="bi bi-info-circle"></i> จองล่วงหน้า 30 นาที
+                        </span>
                     </div>
                 </div>
             </div>
@@ -129,6 +127,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body px-4 pb-4">
+                <h5 id="detailModalTitle" class="fw-bold text-dark mb-3"></h5>
                 <div class="mb-3">
                     <label class="small text-muted fw-bold text-uppercase">ห้องประชุม</label>
                     <div id="detailModalRoom" class="fs-5 text-primary fw-bold"></div>
@@ -182,7 +181,7 @@
                 </div>
             </div>
             <div id="layoutAttachmentDiv" class="mb-3 d-none">
-                <label class="form-label small text-danger fw-bold">แนบไฟล์แผนผัง</label>
+                <label class="form-label small text-muted fw-bold">แนบไฟล์แผนผัง</label>
                 {{ form.room_layout_attachment }}
             </div>
         {% else %} 
@@ -238,7 +237,6 @@
         else { attachmentDiv.classList.add('d-none'); document.getElementById('id_room_layout_attachment').value = ''; }
     }
 
-    // ฟังก์ชัน Show/Hide วันที่จองซ้ำ
     function toggleRecurrenceDate() {
         const recurrenceSelect = document.getElementById('id_recurrence');
         const dateContainer = document.getElementById('recurrenceDateContainer');
@@ -259,14 +257,16 @@
         const form = document.getElementById('hiddenBookingForm');
         const modalBody = document.getElementById('modalBookingBody');
         
-        // ย้ายฟอร์มเข้า Modal
         if(!modalBody.contains(form)) { modalBody.appendChild(form); form.classList.remove('d-none'); }
         
         form.reset(); 
+        
+        // Remove error classes manualy
+        form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+        
         toggleAttachmentField();
-        toggleRecurrenceDate(); // เช็คสถานะเริ่มต้น
+        toggleRecurrenceDate();
 
-        // ตั้งค่าเวลา
         if(startStr && endStr) {
             document.getElementById('id_start_time').value = startStr.substring(0, 16);
             document.getElementById('id_end_time').value = endStr.substring(0, 16);
@@ -276,7 +276,6 @@
             document.getElementById('id_end_time').value = getLocalISOString(next);
         }
 
-        // เปิด Modal
         var modalEl = document.getElementById('bookingModal');
         bookingModalInstance = new bootstrap.Modal(modalEl);
         bookingModalInstance.show();
@@ -297,20 +296,16 @@
         const layoutRadios = document.querySelectorAll('input[name="room_layout"]');
         layoutRadios.forEach(radio => { radio.addEventListener('change', toggleAttachmentField); });
         
-        // Listener การเปลี่ยนค่าจองซ้ำ
         const recurrenceSelect = document.getElementById('id_recurrence');
         if (recurrenceSelect) {
             recurrenceSelect.addEventListener('change', toggleRecurrenceDate);
         }
 
-        // --- Select2 Fix (ทำงานตอน Modal เปิดเสร็จ) ---
         var modalEl = document.getElementById('bookingModal');
         modalEl.addEventListener('shown.bs.modal', function () {
-            // 1. ทำลาย instance เดิม
             if ($('.django-select2').data('select2')) {
                 $('.django-select2').select2('destroy');
             }
-            // 2. สร้างใหม่พร้อมบังคับ Config
             $('.django-select2').select2({
                 theme: 'bootstrap-5',
                 dropdownParent: $('#bookingModal'),
@@ -319,29 +314,23 @@
                 width: '100%',
                 language: { noResults: () => "ไม่พบข้อมูล" }
             });
-            // Clear Select2 Values เพื่อไม่ให้ค้าง
             $('#id_equipments').val(null).trigger('change');
         });
 
-        // --- FullCalendar ---
         var calendarEl = document.getElementById('calendar');
         var calendar = new FullCalendar.Calendar(calendarEl, {
             locale: 'th',
             initialView: window.innerWidth < 768 ? 'listMonth' : 'dayGridMonth',
-            
-            // [แก้ไข] เปลี่ยนข้อความปุ่มที่นี่
             views: {
                 dayGridMonth: { buttonText: 'เดือน' },
                 timeGridWeek: { buttonText: 'สัปดาห์' },
                 listMonth: { buttonText: 'รายการ' }
             },
-
             headerToolbar: { 
                 left: 'prev,next today', 
                 center: 'title', 
                 right: 'dayGridMonth,timeGridWeek,listMonth' 
             },
-            
             events: "{% url 'bookings_api' %}?room_id={{ room.id }}&t=" + new Date().getTime(),
             editable: true, selectable: true,
             
@@ -376,12 +365,45 @@
         });
         calendar.render();
 
-        // Submit Button Logic
+        // ------------------------------------------------------------------
+        // [Logic สำคัญ] ตรวจสอบเวลาก่อนส่งฟอร์ม (ถ้าผิด จะ Alert และไม่ส่ง)
+        // ------------------------------------------------------------------
         document.getElementById('submitBookingBtn').addEventListener('click', function() {
+            // ดึงค่า
+            const startInput = document.getElementById('id_start_time').value;
+            const endInput = document.getElementById('id_end_time').value;
             const pInput = document.getElementById('id_participant_count');
+            
+            if (startInput) {
+                const startDate = new Date(startInput);
+                const now = new Date();
+
+                // 1. เช็คย้อนหลัง (สำคัญที่สุด)
+                if (startDate < now) {
+                    alert("⚠️ ไม่สามารถจองเวลาย้อนหลังได้\nกรุณาเลือกวันและเวลาที่ถูกต้อง");
+                    return; // หยุดทำงานตรงนี้ (หน้าไม่รีเฟรช แดงไม่ขึ้น)
+                }
+
+                // 2. เช็คเวลาจบ < เริ่ม
+                if (endInput) {
+                    const endDate = new Date(endInput);
+                    if (endDate <= startDate) {
+                        alert("⚠️ เวลาสิ้นสุดต้องอยู่หลังเวลาเริ่มต้น");
+                        return;
+                    }
+                }
+            }
+
+            // 3. เช็คความจุ
             const count = pInput && pInput.value ? parseInt(pInput.value) : 0;
-            if (ROOM_CAPACITY > 0 && count > ROOM_CAPACITY) { alert(`เกินความจุ! ห้องนี้รับได้ ${ROOM_CAPACITY} คน`); return; }
-            this.disabled = true; this.innerHTML = 'กำลังบันทึก...';
+            if (ROOM_CAPACITY > 0 && count > ROOM_CAPACITY) { 
+                alert(`⚠️ เกินความจุ! ห้องนี้รับได้สูงสุด ${ROOM_CAPACITY} ท่าน`); 
+                return; 
+            }
+
+            // ถ้าทุกอย่างถูกต้อง -> ส่งฟอร์ม
+            this.disabled = true; 
+            this.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>กำลังบันทึก...';
             document.getElementById('hiddenBookingForm').submit();
         });
     });

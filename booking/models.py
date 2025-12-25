@@ -177,8 +177,8 @@ class AuditLog(models.Model):
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     department = models.CharField(max_length=100, blank=True, null=True, verbose_name="แผนก")
+    phone = models.CharField(max_length=20, blank=True, null=True, verbose_name="เบอร์โทรศัพท์")
     line_user_id = models.CharField(max_length=100, blank=True, null=True)
 
     def __str__(self):
-        dept_str = f" ({self.department})" if self.department else ""
-        return f"{self.user.username}{dept_str}"
+        return f"Profile of {self.user.username}"

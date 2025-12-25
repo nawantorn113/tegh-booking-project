@@ -20,7 +20,6 @@
     .search-input-group:focus-within {
         border-color: #0d6efd;
         box-shadow: 0 4px 15px rgba(13, 110, 253, 0.15);
-        /* เอา transform ออก เพื่อไม่ให้ขยับ */
     }
     .search-input-group .form-control {
         border: none;
@@ -44,10 +43,9 @@
         border-radius: 12px;
         background: #fff;
         box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-        transition: box-shadow 0.2s; /* เปลี่ยนแค่เงา ไม่เปลี่ยนตำแหน่ง */
+        transition: box-shadow 0.2s; 
     }
     .kpi-card:hover { 
-        /* ลบ transform: translateY(-5px); ออกเพื่อไม่ให้เด้ง */
         box-shadow: 0 5px 15px rgba(0,0,0,0.08); 
     }
     .kpi-icon { font-size: 2.5rem; opacity: 0.15; }
@@ -63,11 +61,10 @@
         border-radius: 12px;
         background: #fff;
         box-shadow: 0 2px 6px rgba(0,0,0,0.03);
-        transition: border-color 0.2s, box-shadow 0.2s; /* เปลี่ยนแค่สีขอบและเงา */
+        transition: border-color 0.2s, box-shadow 0.2s; 
         overflow: hidden;
     }
     .room-card-hover:hover {
-        /* ลบ transform: translateY(-5px); ออกเพื่อไม่ให้เด้ง */
         box-shadow: 0 10px 20px rgba(0,0,0,0.08);
         border-color: #0d6efd;
     }
@@ -235,9 +232,27 @@
                                     <i class="bi bi-cone-striped"></i> ปิดปรับปรุง
                                 </button>
                             {% elif room.current_booking_info %}
-                                <div class="bg-danger bg-opacity-10 p-1 rounded mb-2 border border-danger border-opacity-25 text-center">
-                                    <small class="d-block text-danger fw-bold">ถึง: {{ room.current_booking_info.end_time|date:"H:i" }}</small>
+                                <div class="bg-light bg-opacity-50 p-2 rounded mb-2 border text-start" style="font-size: 0.8rem;">
+                                    <div class="d-flex align-items-center mb-1 text-truncate" title="ผู้จอง">
+                                        <i class="bi bi-person-circle text-primary me-2"></i>
+                                        <span class="fw-bold text-dark text-truncate">
+                                            {{ room.current_booking_info.user.get_full_name|default:room.current_booking_info.user.username }}
+                                        </span>
+                                    </div>
+                                    <div class="d-flex align-items-center mb-1 text-truncate" title="แผนก">
+                                        <i class="bi bi-building text-muted me-2"></i>
+                                        <span class="text-muted text-truncate">
+                                            {{ room.current_booking_info.department|default:"-" }}
+                                        </span>
+                                    </div>
+                                    <div class="d-flex align-items-center" title="เวลา">
+                                        <i class="bi bi-clock-history text-danger me-2"></i>
+                                        <span class="text-danger fw-bold">
+                                            {{ room.current_booking_info.start_time|date:"H:i" }} - {{ room.current_booking_info.end_time|date:"H:i" }}
+                                        </span>
+                                    </div>
                                 </div>
+                                
                                 <a href="{% url 'room_calendar' room.id %}" class="btn btn-sm btn-outline-danger w-100 rounded-pill">
                                     จองต่อ
                                 </a>

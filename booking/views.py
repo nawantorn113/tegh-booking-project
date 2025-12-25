@@ -108,8 +108,7 @@ def get_base_context(request):
     current_url_name = request.resolver_match.url_name if request.resolver_match else ''
     is_admin_user = is_admin(request.user)
 
-    # [แก้ไข] เปลี่ยน show: True เป็น show: request.user.is_authenticated
-    # เพื่อให้ซ่อนเมนูเมื่อยังไม่ได้ล็อกอิน
+    # เมนูหลัก (แสดงเฉพาะเมื่อ Login แล้ว)
     menu_structure = [
         {'label': 'หน้าหลัก', 'url_name': 'dashboard', 'icon': 'bi-house-fill', 'show': request.user.is_authenticated},
         {'label': 'ปฏิทินรวม', 'url_name': 'master_calendar', 'icon': 'bi-calendar3-range', 'show': request.user.is_authenticated},
@@ -302,7 +301,7 @@ def login_view(request):
 def logout_view(request):
     log_action(request, 'LOGIN', None, "ออกจากระบบ")
     logout(request)
-    return redirect('login')
+    return redirect('root')
 
 @login_required
 def outlook_login_view(request):
@@ -731,6 +730,8 @@ def edit_user_roles_view(request, user_id):
         return redirect('user_management')
     return render(request, 'pages/edit_user_roles.html', {**get_base_context(request), 'user_to_edit': u, 'all_groups': Group.objects.all()})
 
+# --- EQUIPMENT MANAGEMENT ---
+
 @login_required
 @user_passes_test(is_admin)
 def equipment_management_view(request):
@@ -750,11 +751,32 @@ def add_equipment_view(request):
     return render(request, 'pages/equipment_form.html', {**get_base_context(request), 'form': form, 'title': 'เพิ่มอุปกรณ์'})
 
 @login_required
+@user_passes_test(is_admin)
+def edit_equipment_view(request, eq_id):
+    eq = get_object_or_404(Equipment, pk=eq_id)
+    if request.method == 'POST':
+        form = EquipmentForm(request.POST, instance=eq)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "แก้ไขข้อมูลอุปกรณ์เรียบร้อย")
+            return redirect('equipments')
+    else:
+        form = EquipmentForm(instance=eq)
+    
+    return render(request, 'pages/equipment_form.html', {
+        **get_base_context(request), 
+        'form': form, 
+        'title': 'แก้ไขอุปกรณ์'
+    })
+
+@login_required
 @require_POST
 def delete_equipment_view(request, eq_id):
     Equipment.objects.filter(pk=eq_id).delete()
     messages.success(request, "ลบอุปกรณ์แล้ว")
     return redirect('equipments')
+
+# --- APIS & REPORTS & LOGS ---
 
 @login_required
 def audit_log_view(request):
@@ -762,8 +784,6 @@ def audit_log_view(request):
     paginator = Paginator(logs, 25)
     page_obj = paginator.get_page(request.GET.get('page'))
     return render(request, 'pages/audit_log.html', {**get_base_context(request), 'page_obj': page_obj})
-
-# --- APIS & REPORTS ---
 
 def bookings_api(request):
     start = request.GET.get('start')
