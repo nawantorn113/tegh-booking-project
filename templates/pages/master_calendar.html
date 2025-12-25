@@ -1,128 +1,246 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}ปฏิทินรวม{% endblock %}
+{% block title %}ปฏิทินรวมทุกห้อง{% endblock %}
 
 {% block extra_head %}
-<link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css' rel='stylesheet' />
-<style> 
-    .fc-event { cursor: pointer; border: none; } 
-    /* ปรับแต่งปฏิทินให้ดูสะอาดตา */
-    .fc-daygrid-day-number { color: #333; font-weight: 500; text-decoration: none; }
-    .fc-col-header-cell-cushion { color: #555; text-decoration: none; font-weight: 600; }
-</style>
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js'></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+    <style>
+        .fc { font-family: 'Kanit', sans-serif; }
+        
+        /* ปรับแต่งการ์ดรายการในปฏิทิน */
+        .fc-event { 
+            cursor: pointer; 
+            border: none !important; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05); 
+            border-radius: 4px;
+            transition: transform 0.1s;
+        }
+        .fc-event:hover {
+            transform: scale(1.02);
+            z-index: 5;
+        }
+        
+        /* จัดรูปแบบเนื้อหาในการ์ด */
+        .custom-event-content {
+            padding: 2px 4px;
+            overflow: hidden;
+            font-size: 0.85rem;
+            line-height: 1.2;
+        }
+        .event-time { font-weight: bold; font-size: 0.8rem; opacity: 0.9; }
+        .event-title { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .event-info { font-size: 0.75rem; opacity: 0.9; margin-top: 2px; }
+
+        /* สีสถานะ */
+        .status-badge {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+    </style>
 {% endblock %}
 
 {% block content %}
 <div class="container py-4">
-    <div class="card border-0 shadow-sm rounded-3">
-        <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
-            <h5 class="mb-0 fw-bold text-primary">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold text-primary mb-0">
                 <i class="bi bi-calendar3-range me-2"></i>ปฏิทินรวมทุกห้อง
-            </h5>
+            </h3>
+            <p class="text-muted small mb-0">ดูตารางการใช้ห้องประชุมทั้งหมดในบริษัท</p>
         </div>
+        
+        <div class="d-flex gap-2">
+            <select id="roomFilter" class="form-select form-select-sm shadow-sm" style="width: 200px;">
+                <option value="">แสดงทุกห้อง</option>
+                {% for r in all_rooms %}
+                    <option value="{{ r.id }}">{{ r.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4">
         <div class="card-body p-4">
-            <div id='calendar'></div>
+            <div id="calendar"></div>
         </div>
     </div>
 </div>
 
-<div class="modal fade" id="eventModal" tabindex="-1">
+<div class="modal fade" id="eventDetailModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow">
-            <div class="modal-header bg-light">
-                <h5 class="modal-title fw-bold" id="modalTitle">รายละเอียด</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        <div class="modal-content border-0 shadow rounded-4 overflow-hidden">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-bold"><i class="bi bi-info-circle me-2"></i>รายละเอียดการจอง</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-4">
-                <div class="mb-3">
-                    <label class="small text-muted fw-bold text-uppercase">ห้องประชุม</label>
-                    <div id="modalRoom" class="fs-5 text-primary fw-bold"></div>
-                </div>
+                <h4 id="modalTitle" class="fw-bold text-dark mb-3"></h4>
+                
                 <div class="row g-3">
-                    <div class="col-6">
-                        <div class="p-2 bg-light rounded border">
-                            <label class="small text-muted d-block">ผู้จอง</label>
-                            <strong id="modalUser" class="text-dark"></strong>
+                    <div class="col-12">
+                        <div class="d-flex align-items-start">
+                            <div class="bg-light rounded-circle p-2 me-3 text-primary">
+                                <i class="bi bi-clock fs-5"></i>
+                            </div>
+                            <div>
+                                <small class="text-muted fw-bold text-uppercase">วันและเวลา</small>
+                                <div id="modalTime" class="fs-6 text-dark fw-bold"></div>
+                            </div>
                         </div>
                     </div>
-                    <div class="col-6">
-                        <div class="p-2 bg-light rounded border">
-                            <label class="small text-muted d-block">สถานะ</label>
-                            <span id="modalStatusBadge"></span>
+
+                    <div class="col-12">
+                        <div class="d-flex align-items-start">
+                            <div class="bg-light rounded-circle p-2 me-3 text-danger">
+                                <i class="bi bi-geo-alt fs-5"></i>
+                            </div>
+                            <div>
+                                <small class="text-muted fw-bold text-uppercase">ห้องประชุม</small>
+                                <div id="modalRoom" class="fs-6 text-dark"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <div class="d-flex align-items-start">
+                            <div class="bg-light rounded-circle p-2 me-3 text-success">
+                                <i class="bi bi-person fs-5"></i>
+                            </div>
+                            <div>
+                                <small class="text-muted fw-bold text-uppercase">ผู้จอง</small>
+                                <div id="modalUser" class="fs-6 text-dark"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-12">
+                        <div class="d-flex align-items-start">
+                            <div class="bg-light rounded-circle p-2 me-3 text-warning">
+                                <i class="bi bi-flag fs-5"></i>
+                            </div>
+                            <div>
+                                <small class="text-muted fw-bold text-uppercase">สถานะ</small>
+                                <div id="modalStatus" class="mt-1"></div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="modal-footer border-0 bg-light p-3">
-                <a href="#" id="modalLink" class="btn btn-primary rounded-pill w-100 shadow-sm">
-                    ดูรายละเอียดเต็ม
+            <div class="modal-footer bg-light border-0 p-3">
+                <a href="#" id="modalDetailLink" class="btn btn-outline-primary w-100 rounded-pill">
+                    <i class="bi bi-box-arrow-up-right me-2"></i>ดูรายละเอียดเพิ่มเติม
                 </a>
             </div>
         </div>
     </div>
 </div>
+
 {% endblock %}
 
 {% block extra_scripts %}
-<script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js'></script>
-<script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/locales/th.js'></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         var calendarEl = document.getElementById('calendar');
+        var roomFilter = document.getElementById('roomFilter');
+
+        // ฟังก์ชันแปลงวันที่ให้อ่านง่าย
+        function formatThaiDateTime(dateStr) {
+            const date = new Date(dateStr);
+            return date.toLocaleString('th-TH', {
+                dateStyle: 'medium', timeStyle: 'short'
+            });
+        }
+
         var calendar = new FullCalendar.Calendar(calendarEl, {
             locale: 'th',
             initialView: 'dayGridMonth',
+            headerToolbar: { 
+                left: 'prev,next today', 
+                center: 'title', 
+                right: 'dayGridMonth,timeGridWeek,listWeek' 
+            },
+            buttonText: {
+                today: 'วันนี้',
+                month: 'เดือน',
+                week: 'สัปดาห์',
+                list: 'รายการ'
+            },
+            events: "{% url 'bookings_api' %}", // ดึงข้อมูลจาก API
+            eventTimeFormat: { hour: '2-digit', minute: '2-digit', hour12: false },
             
-            // [แก้ไข] ตั้งค่าชื่อปุ่มเฉพาะ View
-            views: {
-                listMonth: { buttonText: 'รายการ' } 
+            // 1. ปรับแต่งหน้าตาการ์ด (Event Content)
+            eventContent: function(arg) {
+                let timeText = arg.timeText;
+                let title = arg.event.title;
+                let user = arg.event.extendedProps.user || '-';
+                let room = arg.event.extendedProps.room || '';
+                
+                // HTML ที่จะแสดงบนการ์ด
+                return {
+                    html: `
+                        <div class="custom-event-content">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="event-time">${timeText}</span>
+                            </div>
+                            <div class="event-title">${title}</div>
+                            <div class="event-info">
+                                <i class="bi bi-person-fill"></i> ${user} <br>
+                                <i class="bi bi-geo-alt-fill"></i> ${room}
+                            </div>
+                        </div>
+                    `
+                };
             },
 
-            headerToolbar: {
-                left: 'prev,next today',
-                center: 'title',
-                right: 'dayGridMonth,timeGridWeek,listMonth'
-            },
-            
-            events: "{% url 'bookings_api' %}?t=" + new Date().getTime(),
-            eventTimeFormat: { hour: '2-digit', minute: '2-digit', meridiem: false },
-
-            // เมื่อคลิกที่ Event ในปฏิทิน
+            // 2. เมื่อกดที่รายการ (Event Click) -> เปิด Modal
             eventClick: function(info) {
-                // ใส่ข้อมูลลงใน Modal
+                info.jsEvent.preventDefault(); // ป้องกันการเด้งไป Link ปกติ
+                
+                const props = info.event.extendedProps;
+                const startStr = info.event.start ? formatThaiDateTime(info.event.start) : '-';
+                const endStr = info.event.end ? formatThaiDateTime(info.event.end) : '-';
+
+                // ใส่ข้อมูลลง Modal
                 document.getElementById('modalTitle').innerText = info.event.title;
-                document.getElementById('modalRoom').innerText = info.event.extendedProps.room;
-                document.getElementById('modalUser').innerText = info.event.extendedProps.user;
+                document.getElementById('modalTime').innerText = `${startStr} - ${endStr}`;
+                document.getElementById('modalRoom').innerText = props.room;
+                document.getElementById('modalUser').innerText = props.user;
                 
-                // สร้างลิงก์ไปยังหน้ารายละเอียด
-                document.getElementById('modalLink').href = "/booking/" + info.event.id + "/detail/";
+                // จัดการสถานะ (Badge)
+                let statusBadge = '';
+                if (props.status === 'APPROVED') statusBadge = '<span class="badge bg-success">อนุมัติแล้ว</span>';
+                else if (props.status === 'PENDING') statusBadge = '<span class="badge bg-warning text-dark">รออนุมัติ</span>';
+                else if (props.status === 'REJECTED') statusBadge = '<span class="badge bg-danger">ไม่อนุมัติ</span>';
+                else statusBadge = '<span class="badge bg-secondary">ยกเลิก</span>';
+                document.getElementById('modalStatus').innerHTML = statusBadge;
 
-                // จัดการสีป้ายสถานะ (Badge)
-                let statusKey = info.event.extendedProps.status;
-                let badgeElem = document.getElementById('modalStatusBadge');
-                let badgeClass = 'badge rounded-pill fs-6 w-100 ';
-                let statusText = statusKey;
+                // ลิงก์ไปหน้า Detail เต็ม
+                document.getElementById('modalDetailLink').href = `/booking/${info.event.id}/detail/`;
 
-                if(statusKey === 'APPROVED') {
-                    statusText = 'อนุมัติแล้ว'; badgeClass += 'bg-success';
-                } else if(statusKey === 'PENDING') {
-                    statusText = 'รออนุมัติ'; badgeClass += 'bg-warning text-dark';
-                } else if(statusKey === 'REJECTED') {
-                    statusText = 'ไม่อนุมัติ'; badgeClass += 'bg-danger';
-                } else if(statusKey === 'CANCELLED') {
-                    statusText = 'ยกเลิก'; badgeClass += 'bg-secondary';
-                }
-                
-                badgeElem.className = badgeClass;
-                badgeElem.innerText = statusText;
-
-                // เปิด Modal
-                var myModal = new bootstrap.Modal(document.getElementById('eventModal'));
-                myModal.show();
+                // Show Modal
+                new bootstrap.Modal(document.getElementById('eventDetailModal')).show();
             }
         });
+
         calendar.render();
+
+        // เมื่อเลือก Filter ห้อง -> ให้โหลด Events ใหม่
+        roomFilter.addEventListener('change', function() {
+            let roomId = this.value;
+            let url = "{% url 'bookings_api' %}";
+            if(roomId) {
+                url += `?room_id=${roomId}`;
+            }
+            // ลบ Event Source เดิม และเพิ่มใหม่
+            calendar.removeAllEventSources();
+            calendar.addEventSource(url);
+        });
     });
 </script>
 {% endblock %}
