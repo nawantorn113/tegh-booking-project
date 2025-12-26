@@ -46,7 +46,6 @@ except ImportError:
     WebhookHandler = None
 
 from .models import Room, Booking, AuditLog, OutlookToken, UserProfile, Equipment
-# [แก้ไข] เพิ่ม CustomUserEditForm ในการ import
 from .forms import BookingForm, RoomForm, CustomUserCreationForm, CustomUserEditForm, EquipmentForm
 from .outlook_client import OutlookClient
 
@@ -270,7 +269,10 @@ class EquipmentAutocomplete(Select2QuerySetView):
     def get_queryset(self):
         if not self.request.user.is_authenticated:
             return Equipment.objects.none()
-        qs = Equipment.objects.all().order_by('name')
+        
+        # [แก้ไข] กรองเฉพาะอุปกรณ์ที่ is_active=True (ไม่เสีย)
+        qs = Equipment.objects.filter(is_active=True).order_by('name')
+        
         if self.q:
             qs = qs.filter(name__icontains=self.q)
         return qs
@@ -327,16 +329,66 @@ def public_calendar_view(request):
 
 @login_required 
 def smart_search_view(request):
-    query = request.GET.get('q', '').strip()
-    rooms = Room.objects.all()
-    if query:
-        match = re.search(r'(\d+)', query)
-        capacity = int(match.group(1)) if match else None
-        kw = re.sub(r'\d+\s*(คน|ท่าน)?', '', query).strip()
-        if capacity: rooms = rooms.filter(capacity__gte=capacity)
-        if kw: rooms = rooms.filter(Q(name__icontains=kw) | Q(building__icontains=kw))
+    """
+    ฟังก์ชันค้นหาห้องประชุม รองรับ Logic กวนๆ และการค้นหาแบบ Smart (มีตัวเลข = หาความจุ)
+    """
+    query = request.GET.get('q') # รับค่าแบบ Raw เพื่อเช็ค None ได้
+    
+    # เริ่มต้น: ดึงห้องทั้งหมดเรียงตามชื่อ
+    rooms = Room.objects.all().order_by('name')
+    
+    search_message = None
+    alert_type = "info"
+    clean_query = ""
+
+    if query is not None:
+        clean_query = query.strip() # ตัดช่องว่างหัวท้าย
+
+        # --- ZONE: ดักคนกวน (Fun Logic) ---
+        if len(clean_query) == 0:
+            # กรณี: มีแต่ช่องว่าง หรือไม่พิมพ์อะไรเลย
+            search_message = "ใจเย็นวัยรุ่น! พิมพ์ข้อความก่อนกดค้นหานะครับ (ปุ่มไม่ได้เสียนะ)"
+            alert_type = "warning"
+            # ไม่ filter rooms ปล่อยให้แสดงทั้งหมดเหมือนเดิม
+
+        elif len(clean_query) > 50:
+            # กรณี: พิมพ์มายาวเหยียด
+            search_message = "ยาวไปไม่อ่าน! (พิมพ์สั้นๆ ก็พอครับ ระบบเหนื่อย)"
+            alert_type = "danger"
+            rooms = Room.objects.none() # เคลียร์ผลลัพธ์ ไม่ให้โชว์อะไรเลย
+
+        else:
+            # --- ZONE: ค้นหาจริง (Smart Search Logic) ---
+            
+            # 1. ดึงตัวเลขเพื่อหา Capacity (เช่น "ห้อง 20 คน")
+            match = re.search(r'(\d+)', clean_query)
+            capacity = int(match.group(1)) if match else None
+            
+            # 2. ตัดตัวเลขและคำขยายออกเพื่อหา Keyword ชื่อห้อง (เหลือแค่ "ห้อง")
+            kw = re.sub(r'\d+\s*(คน|ท่าน|ที่นั่ง)?', '', clean_query).strip()
+            
+            # เริ่มกรอง
+            if capacity:
+                rooms = rooms.filter(capacity__gte=capacity)
+            
+            if kw:
+                rooms = rooms.filter(Q(name__icontains=kw) | Q(building__icontains=kw))
+
+            # --- ZONE: ตรวจสอบผลลัพธ์ ---
+            if not rooms.exists():
+                search_message = f"หา '{clean_query}' ไม่เจอเลยครับ... (ลองคำอื่น หรือจองใจแอดมินแทนไหม?)"
+                alert_type = "secondary"
+
+    # เตรียม Context ส่งไปหน้าเว็บ
     ctx = get_base_context(request)
-    ctx.update({'query': query, 'available_rooms': rooms, 'search_count': rooms.count()})
+    ctx.update({
+        'query': clean_query,             # ส่งคำค้นกลับไปแปะที่ input
+        'available_rooms': rooms,         # รายการห้องที่เจอ
+        'search_count': rooms.count(),    # จำนวนที่เจอ
+        'search_message': search_message, # ข้อความกวนๆ (ถ้ามี)
+        'alert_type': alert_type          # สีของ Alert
+    })
+    
     return render(request, 'pages/search_results.html', ctx)
 
 @login_required
@@ -733,7 +785,6 @@ def add_user_view(request):
         form = CustomUserCreationForm()
     return render(request, 'pages/user_form.html', {**get_base_context(request), 'form': form, 'title': 'เพิ่มผู้ใช้'})
 
-# [เพิ่มใหม่] ฟังก์ชันแก้ไขผู้ใช้ (Edit User)
 @login_required
 @user_passes_test(is_admin)
 def edit_user_view(request, user_id):

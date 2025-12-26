@@ -332,12 +332,16 @@ class CustomUserEditForm(forms.ModelForm):
 class EquipmentForm(forms.ModelForm):
     class Meta:
         model = Equipment
-        fields = ['name', 'description']
+        fields = ['name', 'description', 'is_active', 'status_note']
         labels = {
             'name': 'ชื่ออุปกรณ์', 
-            'description': 'รายละเอียด / หมายเหตุ'
+            'description': 'รายละเอียด',
+            'is_active': 'สถานะพร้อมใช้งาน',
+            'status_note': 'หมายเหตุ (กรณีชำรุด/ส่งซ่อม)'
         }
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control'}),
             'description': forms.Textarea(attrs={'rows': 3, 'class': 'form-control'}),
+            'status_note': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'ระบุสาเหตุการเสีย (ถ้ามี)'}),
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input', 'role': 'switch'}),
         }
