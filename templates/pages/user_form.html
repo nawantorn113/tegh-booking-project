@@ -2,21 +2,23 @@
 {% load static %}
 {% load crispy_forms_tags %}
 
-{% block title %}จัดการผู้ใช้{% endblock %}
+{% block title %}{{ title }} - {{ block.super }}{% endblock %}
 
 {% block extra_head %}
 <style>
+    /* Premium Theme Styles */
     body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); min-height: 100vh; }
     .premium-card { border: none; border-radius: 15px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); background-color: #fff; overflow: hidden; }
     .card-header-premium { background: linear-gradient(90deg, #0d6efd 0%, #0056b3 100%); color: white; padding: 1.5rem; border-bottom: 4px solid #ffc107; }
     
-    /* Layout Input แบบมาตรฐาน (แก้ปัญหาตัวหนังสือทับกัน) */
+    /* Input Styles */
     .input-group-text { background-color: #f8f9fa; border: 1px solid #ced4da; border-right: none; color: #6c757d; }
     .form-control { border-left: none; background-color: #fff; padding: 0.7rem; }
     .form-control:focus { border-color: #ced4da; box-shadow: none; border-left: 1px solid #0d6efd; }
+    .form-control[readonly] { background-color: #e9ecef; opacity: 1; }
     .form-label { font-weight: 600; font-size: 0.9rem; color: #495057; margin-bottom: 0.4rem; }
     
-    /* ปุ่ม Toggle Password */
+    /* Toggle Password Button */
     .btn-toggle-pw { border: 1px solid #ced4da; border-left: none; background-color: #fff; color: #6c757d; }
     .btn-toggle-pw:hover { background-color: #f8f9fa; color: #0d6efd; }
     
@@ -26,6 +28,10 @@
     .rule-item i { transition: 0.3s; }
     .rule-pass { color: #198754; font-weight: 600; }
     .rule-pass i { transform: scale(1.2); }
+
+    /* Animation */
+    @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+    .shake-animation { animation: shake 0.3s ease-in-out; }
 </style>
 {% endblock %}
 
@@ -34,10 +40,17 @@
     <div class="row justify-content-center">
         <div class="col-md-10 col-lg-8">
             <div class="premium-card">
+                
                 <div class="card-header-premium text-center">
-                    <div class="mb-2"><i class="bi bi-person-fill-add" style="font-size: 3rem;"></i></div>
-                    <h4 class="fw-bold m-0">{{ title|default:"สร้างบัญชีผู้ใช้ใหม่" }}</h4>
-                    <p class="text-white-50 small m-0">กรอกข้อมูลให้ครบถ้วนเพื่อลงทะเบียน</p>
+                    <div class="mb-2">
+                        {% if form.instance.pk %}
+                            <i class="bi bi-person-gear" style="font-size: 3rem;"></i>
+                        {% else %}
+                            <i class="bi bi-person-fill-add" style="font-size: 3rem;"></i>
+                        {% endif %}
+                    </div>
+                    <h4 class="fw-bold m-0">{{ title }}</h4>
+                    <p class="text-white-50 small m-0">กรอกข้อมูลให้ครบถ้วนเพื่อบันทึก</p>
                 </div>
 
                 <div class="card-body p-4 p-md-5">
@@ -58,7 +71,9 @@
                             </div>
                         {% endif %}
 
-                        <h6 class="text-primary fw-bold text-uppercase mb-3 small border-bottom pb-2"><i class="bi bi-person-vcard me-1"></i> ข้อมูลส่วนตัว</h6>
+                        <h6 class="text-primary fw-bold text-uppercase mb-3 small border-bottom pb-2">
+                            <i class="bi bi-person-vcard me-1"></i> ข้อมูลส่วนตัว
+                        </h6>
                         
                         <div class="mb-3">
                             <label class="form-label">{{ form.username.label }} <span class="text-danger">*</span></label>
@@ -66,7 +81,9 @@
                                 <span class="input-group-text"><i class="bi bi-person-badge"></i></span>
                                 {{ form.username }}
                             </div>
-                            <div class="form-text ms-1 text-muted small">{{ form.username.help_text }}</div>
+                            {% if not form.instance.pk %}
+                                <div class="form-text ms-1 text-muted small">{{ form.username.help_text }}</div>
+                            {% endif %}
                         </div>
 
                         <div class="row g-3 mb-3">
@@ -87,7 +104,7 @@
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label">{{ form.department.label }} <span class="text-danger">*</span></label>
+                            <label class="form-label">{{ form.department.label }}</label>
                             <div class="input-group">
                                 <span class="input-group-text"><i class="bi bi-buildings"></i></span>
                                 {{ form.department }}
@@ -109,52 +126,56 @@
                         </div>
                         {% endif %}
 
-                        <h6 class="text-primary fw-bold text-uppercase mb-3 small border-bottom pb-2 pt-3"><i class="bi bi-shield-lock me-1"></i> กำหนดรหัสผ่าน</h6>
+                        {% if form.password %}
+                            <h6 class="text-primary fw-bold text-uppercase mb-3 small border-bottom pb-2 pt-3">
+                                <i class="bi bi-shield-lock me-1"></i> กำหนดรหัสผ่าน
+                            </h6>
 
-                        <div class="mb-3">
-                            <label class="form-label">{{ form.password.label }} <span class="text-danger">*</span></label>
-                            <div class="input-group">
-                                <span class="input-group-text"><i class="bi bi-key"></i></span>
-                                {{ form.password }}
-                                <button class="btn btn-toggle-pw" type="button" onclick="togglePassword('id_password', this)">
-                                    <i class="bi bi-eye"></i>
-                                </button>
+                            <div class="mb-3">
+                                <label class="form-label">{{ form.password.label }} <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-key"></i></span>
+                                    {{ form.password }}
+                                    <button class="btn btn-toggle-pw" type="button" onclick="togglePassword('id_password', this)">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                </div>
                             </div>
-                        </div>
 
-                        <div class="password-rules-box mb-3" id="rulesBox">
-                            <div class="d-flex align-items-center mb-2">
-                                <i class="bi bi-info-circle me-2"></i><small class="fw-bold">ต้องประกอบด้วย:</small>
+                            <div class="password-rules-box mb-3" id="rulesBox">
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="bi bi-info-circle me-2"></i><small class="fw-bold">เงื่อนไขรหัสผ่าน:</small>
+                                </div>
+                                <ul class="list-unstyled mb-0 small text-muted ps-2">
+                                    <li id="rule-length" class="rule-item mb-1"><i class="bi bi-circle me-2"></i>ยาวอย่างน้อย 8 ตัวอักษร</li>
+                                    <li id="rule-eng" class="rule-item mb-1"><i class="bi bi-circle me-2"></i>อักษรภาษาอังกฤษ (A-Z)</li>
+                                    <li id="rule-num" class="rule-item mb-1"><i class="bi bi-circle me-2"></i>ตัวเลข (0-9)</li>
+                                    <li id="rule-special" class="rule-item mb-1"><i class="bi bi-circle me-2"></i>อักขระพิเศษ @#$%&*()_ []</li>
+                                    <li id="rule-match" class="rule-item"><i class="bi bi-circle me-2"></i>ไม่ซ้ำกับชื่อผู้ใช้</li>
+                                </ul>
                             </div>
-                            <ul class="list-unstyled mb-0 small text-muted ps-2">
-                                <li id="rule-length" class="rule-item mb-1"><i class="bi bi-circle me-2"></i>ยาวอย่างน้อย 8 ตัวอักษร</li>
-                                <li id="rule-eng" class="rule-item mb-1"><i class="bi bi-circle me-2"></i>อักษรภาษาอังกฤษ (A-Z)</li>
-                                <li id="rule-num" class="rule-item mb-1"><i class="bi bi-circle me-2"></i>ตัวเลข (0-9)</li>
-                                <li id="rule-special" class="rule-item mb-1"><i class="bi bi-circle me-2"></i>อักขระพิเศษ @#$%&*()_ []</li>
-                                <li id="rule-match" class="rule-item"><i class="bi bi-circle me-2"></i>ไม่ซ้ำกับชื่อผู้ใช้</li>
-                            </ul>
-                        </div>
 
-                        <div class="mb-4">
-                            <label class="form-label">{{ form.password_confirmation.label }} <span class="text-danger">*</span></label>
-                            <div class="input-group">
-                                <span class="input-group-text"><i class="bi bi-check2-square"></i></span>
-                                {{ form.password_confirmation }}
-                                <button class="btn btn-toggle-pw" type="button" onclick="togglePassword('id_password_confirmation', this)">
-                                    <i class="bi bi-eye"></i>
-                                </button>
+                            <div class="mb-4">
+                                <label class="form-label">{{ form.password_confirmation.label }} <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-check2-square"></i></span>
+                                    {{ form.password_confirmation }}
+                                    <button class="btn btn-toggle-pw" type="button" onclick="togglePassword('id_password_confirmation', this)">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                </div>
+                                <div id="passwordMismatch" class="text-danger small mt-1 fw-bold shake-animation ms-1" style="display: none;">
+                                    <i class="bi bi-x-circle-fill me-1"></i> รหัสผ่านไม่ตรงกัน
+                                </div>
+                                <div id="passwordMatch" class="text-success small mt-1 fw-bold ms-1" style="display: none;">
+                                    <i class="bi bi-check-circle-fill me-1"></i> รหัสผ่านตรงกันพร้อมใช้งาน
+                                </div>
                             </div>
-                            <div id="passwordMismatch" class="text-danger small mt-1 fw-bold shake-animation ms-1" style="display: none;">
-                                <i class="bi bi-x-circle-fill me-1"></i> รหัสผ่านไม่ตรงกัน
-                            </div>
-                            <div id="passwordMatch" class="text-success small mt-1 fw-bold ms-1" style="display: none;">
-                                <i class="bi bi-check-circle-fill me-1"></i> รหัสผ่านตรงกันพร้อมใช้งาน
-                            </div>
-                        </div>
+                        {% endif %}
 
                         <div class="d-grid gap-2 mt-5">
                             <button type="submit" class="btn btn-primary btn-lg shadow fw-bold" id="submitBtn">
-                                <i class="bi bi-check-lg me-2"></i>สร้างบัญชีผู้ใช้
+                                <i class="bi bi-save-fill me-2"></i>บันทึกข้อมูล
                             </button>
                             <a href="{% url 'user_management' %}" class="btn btn-outline-secondary btn-sm border-0">
                                 ยกเลิกและกลับไปหน้าจัดการ
@@ -178,6 +199,8 @@
         }
     }
 
+    // Script นี้จะทำงานเฉพาะเมื่อมีฟอร์มรหัสผ่าน (หน้า Create User)
+    {% if form.password %}
     document.addEventListener('DOMContentLoaded', function() {
         const username = document.getElementById('id_username');
         const password = document.getElementById('id_password');
@@ -254,10 +277,6 @@
             }
         });
     });
+    {% endif %}
 </script>
-
-<style>
-    @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
-    .shake-animation { animation: shake 0.3s ease-in-out; }
-</style>
 {% endblock %}

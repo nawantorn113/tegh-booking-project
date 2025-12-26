@@ -25,15 +25,18 @@ from django.utils import timezone
 from django.contrib.auth.forms import AuthenticationForm
 from django.views.decorators.csrf import csrf_exempt
 
+# ใช้งาน dal (autocomplete)
 from dal import autocomplete
 from dal_select2.views import Select2QuerySetView
 
+# WeasyPrint (PDF) - Optional
 try:
     from weasyprint import HTML, CSS
 except ImportError:
     HTML = None
     CSS = None
 
+# Line Bot - Optional
 try:
     from linebot import LineBotApi, WebhookHandler
     from linebot.models import TextSendMessage, MessageEvent, TextMessage
@@ -43,9 +46,11 @@ except ImportError:
     WebhookHandler = None
 
 from .models import Room, Booking, AuditLog, OutlookToken, UserProfile, Equipment
-from .forms import BookingForm, RoomForm, CustomUserCreationForm, EquipmentForm
+# [แก้ไข] เพิ่ม CustomUserEditForm ในการ import
+from .forms import BookingForm, RoomForm, CustomUserCreationForm, CustomUserEditForm, EquipmentForm
 from .outlook_client import OutlookClient
 
+# --- CONFIG ---
 line_bot_api = None
 handler = None
 if hasattr(settings, 'LINE_CHANNEL_ACCESS_TOKEN') and hasattr(settings, 'LINE_CHANNEL_SECRET'):
@@ -108,7 +113,7 @@ def get_base_context(request):
     current_url_name = request.resolver_match.url_name if request.resolver_match else ''
     is_admin_user = is_admin(request.user)
 
-    # เมนูหลัก (แสดงเฉพาะเมื่อ Login แล้ว)
+    # เมนูหลัก
     menu_structure = [
         {'label': 'หน้าหลัก', 'url_name': 'dashboard', 'icon': 'bi-house-fill', 'show': request.user.is_authenticated},
         {'label': 'ปฏิทินรวม', 'url_name': 'master_calendar', 'icon': 'bi-calendar3-range', 'show': request.user.is_authenticated},
@@ -178,19 +183,6 @@ def get_base_context(request):
         'pending_notifications': pending_notifications,
         'recent_cancellations': recent_cancellations,
     }
-
-@login_required
-@require_POST
-def mark_notification_read(request, booking_id):
-    try:
-        booking = get_object_or_404(Booking, pk=booking_id)
-        if request.user == booking.user or is_admin(request.user) or is_approver_or_admin(request.user):
-            booking.is_user_seen = True
-            booking.save()
-            return JsonResponse({'status': 'success'})
-        return JsonResponse({'status': 'error', 'message': 'Permission denied'}, status=403)
-    except Exception as e:
-        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 
 def send_booking_notification(booking, template_name, subject_prefix):
     equip_text = "-"
@@ -405,6 +397,7 @@ def room_calendar_view(request, room_id):
             booking_start = form.cleaned_data.get('start_time')
             now = timezone.now()
 
+            # Server-side validation
             if booking_start < now:
                 messages.error(request, "ไม่สามารถจองย้อนหลังได้ กรุณาเลือกเวลาใหม่")
                 return render(request, 'pages/room_calendar.html', {**get_base_context(request), 'room': room, 'form': form})
@@ -498,7 +491,15 @@ def room_calendar_view(request, room_id):
                 messages.success(request, f"จองสำเร็จ {count} รายการ (รอการอนุมัติ)")
                 return redirect('dashboard')
     else:
-        form = BookingForm(initial={'room': room})
+        # ดึงแผนกมาใส่ให้อัตโนมัติ
+        initial_data = {'room': room}
+        try:
+            if hasattr(request.user, 'profile') and request.user.profile.department:
+                initial_data['department'] = request.user.profile.department
+        except:
+            pass
+            
+        form = BookingForm(initial=initial_data)
     
     return render(request, 'pages/room_calendar.html', {**get_base_context(request), 'room': room, 'form': form})
 
@@ -610,6 +611,20 @@ def delete_booking_view(request, booking_id):
         messages.success(request, "ยกเลิกสำเร็จ และแจ้งเตือนแอดมินแล้ว")
     return redirect('history')
 
+# ฟังก์ชันอ่านแจ้งเตือน
+@login_required
+@require_POST
+def mark_notification_read(request, booking_id):
+    try:
+        booking = get_object_or_404(Booking, pk=booking_id)
+        if request.user == booking.user or is_admin(request.user) or is_approver_or_admin(request.user):
+            booking.is_user_seen = True
+            booking.save()
+            return JsonResponse({'status': 'success'})
+        return JsonResponse({'status': 'error', 'message': 'Permission denied'}, status=403)
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
 @login_required
 def approvals_view(request):
     if not is_approver_or_admin(request.user): return redirect('dashboard')
@@ -717,6 +732,26 @@ def add_user_view(request):
     else:
         form = CustomUserCreationForm()
     return render(request, 'pages/user_form.html', {**get_base_context(request), 'form': form, 'title': 'เพิ่มผู้ใช้'})
+
+# [เพิ่มใหม่] ฟังก์ชันแก้ไขผู้ใช้ (Edit User)
+@login_required
+@user_passes_test(is_admin)
+def edit_user_view(request, user_id):
+    u = get_object_or_404(User, pk=user_id)
+    if request.method == 'POST':
+        form = CustomUserEditForm(request.POST, instance=u)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f"แก้ไขข้อมูล {u.username} เรียบร้อย")
+            return redirect('user_management')
+    else:
+        form = CustomUserEditForm(instance=u)
+    
+    return render(request, 'pages/user_form.html', {
+        **get_base_context(request), 
+        'form': form, 
+        'title': 'แก้ไขข้อมูลผู้ใช้'
+    })
 
 @login_required
 @user_passes_test(is_admin)

@@ -9,29 +9,38 @@
         <h3 class="fw-bold text-primary m-0">
             <i class="bi bi-people-fill me-2"></i>จัดการผู้ใช้
         </h3>
-        <a href="{% url 'add_user' %}" class="btn btn-primary shadow-sm">
+        <a href="{% url 'add_user' %}" class="btn btn-primary shadow-sm rounded-pill px-4">
             <i class="bi bi-person-plus-fill me-1"></i> เพิ่มผู้ใช้ใหม่
         </a>
     </div>
 
-    <div class="card shadow-sm border-0">
-        <div class="card-body p-0"> <div class="table-responsive">
+    <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+        <div class="card-body p-0"> 
+            <div class="table-responsive">
                 <table class="table table-hover table-striped mb-0 align-middle">
-                    <thead class="table-light">
+                    <thead class="bg-light border-bottom">
                         <tr>
-                            <th scope="col" class="py-3 ps-4">Username</th>
-                            <th scope="col" class="py-3">ชื่อ-นามสกุล</th>
-                            <th scope="col" class="py-3">อีเมล</th>
-                            <th scope="col" class="py-3">สิทธิ์การใช้งาน (Roles)</th>
-                            <th scope="col" class="text-end py-3 pe-4">จัดการ</th>
+                            <th scope="col" class="py-3 ps-4 text-secondary small fw-bold text-uppercase">Username</th>
+                            <th scope="col" class="py-3 text-secondary small fw-bold text-uppercase">ชื่อ-นามสกุล</th>
+                            <th scope="col" class="py-3 text-secondary small fw-bold text-uppercase">แผนก</th>
+                            <th scope="col" class="py-3 text-secondary small fw-bold text-uppercase">อีเมล</th>
+                            <th scope="col" class="py-3 text-secondary small fw-bold text-uppercase">สิทธิ์การใช้งาน (Roles)</th>
+                            <th scope="col" class="text-end py-3 pe-4 text-secondary small fw-bold text-uppercase" style="width: 180px;">จัดการ</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody class="bg-white">
                         {% for u in users %}
                         <tr>
-                            <td class="ps-4 fw-bold text-secondary">{{ u.username }}</td>
+                            <td class="ps-4 fw-bold text-dark">{{ u.username }}</td>
                             <td>{{ u.get_full_name|default:"-" }}</td>
-                            <td>{{ u.email|default:"-" }}</td>
+                            <td>
+                                {% if u.profile.department %}
+                                    <span class="badge bg-light text-dark border">{{ u.profile.department }}</span>
+                                {% else %}
+                                    <span class="text-muted small">-</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-muted small">{{ u.email|default:"-" }}</td>
                             <td>
                                 {% for group in u.groups.all %}
                                     <span class="badge rounded-pill 
@@ -42,19 +51,30 @@
                                         {{ group.name }}
                                     </span>
                                 {% empty %}
-                                    <span class="badge rounded-pill bg-light text-dark border">User (ทั่วไป)</span>
+                                    <span class="badge rounded-pill bg-light text-muted border fw-normal">User (ทั่วไป)</span>
                                 {% endfor %}
                             </td>
                             <td class="text-end pe-4">
-                                <a href="{% url 'edit_user_roles' u.id %}" class="btn btn-sm btn-outline-success">
-                                    <i class="bi bi-shield-lock-fill"></i> สิทธิ์
-                                </a>
+                                <div class="d-flex justify-content-end gap-2">
+                                    <a href="{% url 'edit_user' u.id %}" class="btn btn-sm btn-outline-warning border-0 rounded-circle shadow-sm" 
+                                       title="แก้ไขข้อมูล" style="width: 32px; height: 32px; padding: 0; line-height: 30px;">
+                                        <i class="bi bi-pencil-fill" style="font-size: 0.8rem;"></i>
+                                    </a>
+
+                                    <a href="{% url 'edit_user_roles' u.id %}" class="btn btn-sm btn-outline-success border-0 rounded-circle shadow-sm" 
+                                       title="จัดการสิทธิ์" style="width: 32px; height: 32px; padding: 0; line-height: 30px;">
+                                        <i class="bi bi-shield-lock-fill" style="font-size: 0.9rem;"></i>
+                                    </a>
+                                </div>
                             </td>
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="5" class="text-center py-4 text-muted">
-                                ไม่พบข้อมูลผู้ใช้งาน
+                            <td colspan="6" class="text-center py-5">
+                                <div class="text-muted opacity-50 mb-2">
+                                    <i class="bi bi-people fs-1"></i>
+                                </div>
+                                <p class="text-muted small mb-0">ไม่พบข้อมูลผู้ใช้งานในระบบ</p>
                             </td>
                         </tr>
                         {% endfor %}
@@ -64,4 +84,11 @@
         </div>
     </div>
 
-</div> {% endblock %}
+</div>
+
+<style>
+    .btn-outline-warning:hover { color: white !important; background-color: #ffc107; }
+    .btn-outline-success:hover { color: white !important; background-color: #198754; }
+</style>
+
+{% endblock %}

@@ -6,7 +6,6 @@ from django.core.exceptions import ValidationError
 from django.db.models import Q
 from django.utils import timezone
 
-# ต้องติดตั้ง: pip install django-autocomplete-light
 from dal import autocomplete 
 
 from .models import Booking, Room, Equipment, UserProfile 
@@ -133,7 +132,6 @@ class RoomForm(forms.ModelForm):
     class Meta:
         model = Room
         fields = '__all__'
-        
         labels = {
             'name': 'ชื่อห้องประชุม',
             'capacity': 'ความจุ (คน)',
@@ -148,7 +146,6 @@ class RoomForm(forms.ModelForm):
             'description': 'รายละเอียดเพิ่มเติม',
             'is_active': 'สถานะใช้งาน',
         }
-        
         widgets = {
             'maintenance_start': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'form-control'}),
             'maintenance_end': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'form-control'}),
@@ -170,7 +167,7 @@ class RoomForm(forms.ModelForm):
 
 
 # -----------------------------------------------
-# 3. Custom User Form (แก้ไขภาษาไทย + เพิ่มแผนก)
+# 3. Custom User Form (เพิ่มผู้ใช้ใหม่)
 # -----------------------------------------------
 class CustomUserCreationForm(forms.ModelForm):
     first_name = forms.CharField(
@@ -183,7 +180,6 @@ class CustomUserCreationForm(forms.ModelForm):
         required=True,
         widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'เช่น ใจดี'})
     )
-    # [เพิ่ม] ช่องกรอกแผนก
     department = forms.CharField(
         label="แผนก / หน่วยงาน",
         required=False,
@@ -194,7 +190,6 @@ class CustomUserCreationForm(forms.ModelForm):
         required=True,
         widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'example@tegh.com'})
     )
-    
     password = forms.CharField(
         label="รหัสผ่าน",
         widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'ตั้งรหัสผ่านอย่างน้อย 8 ตัวอักษร'}),
@@ -216,19 +211,13 @@ class CustomUserCreationForm(forms.ModelForm):
     class Meta:
         model = User
         fields = ['username', 'first_name', 'last_name', 'email', 'groups']
-        
-        labels = {
-            'username': 'ชื่อผู้ใช้ (Username)',
-        }
-        help_texts = {
-            'username': 'ใช้สำหรับเข้าสู่ระบบ (ภาษาอังกฤษ ตัวเลข หรือ @/./+/-/_ เท่านั้น)',
-        }
+        labels = {'username': 'ชื่อผู้ใช้ (Username)'}
+        help_texts = {'username': 'ใช้สำหรับเข้าสู่ระบบ (ภาษาอังกฤษ ตัวเลข หรือ @/./+/-/_ เท่านั้น)'}
 
     def __init__(self, *args, **kwargs):
         super(CustomUserCreationForm, self).__init__(*args, **kwargs)
         self.fields['username'].widget.attrs.update({'class': 'form-control', 'placeholder': 'เช่น somchai.j'})
         
-        # ถ้าเป็นการแก้ไขข้อมูลเก่า ให้ดึงแผนกเดิมมาแสดง
         if self.instance.pk and hasattr(self.instance, 'profile'):
             self.fields['department'].initial = self.instance.profile.department
 
@@ -242,19 +231,15 @@ class CustomUserCreationForm(forms.ModelForm):
             self.add_error('password_confirmation', "รหัสผ่านทั้งสองช่องไม่ตรงกัน")
 
         if email:
-            # เช็คอีเมลซ้ำ (ยกเว้นตัวเองกรณีแก้ไข)
             qs = User.objects.filter(email=email)
             if self.instance.pk:
                 qs = qs.exclude(pk=self.instance.pk)
             if qs.exists():
                 self.add_error('email', "อีเมลนี้มีผู้ใช้งานในระบบแล้ว")
-
         return cleaned_data
 
     def save(self, commit=True):
         user = super().save(commit=False)
-        
-        # ถ้ามีการกรอกรหัสผ่านใหม่ (หรือสร้าง user ใหม่) ให้ตั้งรหัสผ่าน
         if self.cleaned_data.get("password"):
             user.set_password(self.cleaned_data["password"])
         
@@ -263,30 +248,86 @@ class CustomUserCreationForm(forms.ModelForm):
             self.cleaned_data.get('groups', []) 
             self.save_m2m()
             
-            # บันทึกสิทธิ์ Admin อัตโนมัติถ้าเลือกกลุ่ม Admin
             if user.groups.filter(name='Admin').exists():
                 user.is_staff = True
                 user.is_superuser = True
                 user.save()
             else:
-                # ถ้าเอา Admin ออก ก็ต้องถอนสิทธิ์ด้วย
-                if user.is_staff and not user.is_superuser: # ป้องกันแก้ superuser หลัก
+                if user.is_staff and not user.is_superuser:
                      user.is_staff = False
                      user.save()
 
-            # [ส่วนสำคัญ] บันทึกแผนกลงใน UserProfile
             dept = self.cleaned_data.get('department')
             if dept:
-                # ใช้ get_or_create เพื่อป้องกัน error ถ้า profile ไม่มีอยู่จริง
                 profile, created = UserProfile.objects.get_or_create(user=user)
                 profile.department = dept
                 profile.save()
-                
         return user
 
 
 # -----------------------------------------------
-# 4. Equipment Form (ฟอร์มจัดการอุปกรณ์)
+# 4. Custom User Edit Form (แก้ไขข้อมูลผู้ใช้ - ไม่มีรหัสผ่าน)
+# -----------------------------------------------
+class CustomUserEditForm(forms.ModelForm):
+    first_name = forms.CharField(
+        label="ชื่อจริง", 
+        required=True,
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
+    last_name = forms.CharField(
+        label="นามสกุล", 
+        required=True,
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
+    department = forms.CharField(
+        label="แผนก / หน่วยงาน",
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
+    email = forms.EmailField(
+        label="อีเมล", 
+        required=True,
+        widget=forms.EmailInput(attrs={'class': 'form-control'})
+    )
+
+    class Meta:
+        model = User
+        fields = ['username', 'first_name', 'last_name', 'email']
+        labels = {'username': 'ชื่อผู้ใช้ (Username)'}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # ล็อกช่อง Username ไม่ให้แก้
+        self.fields['username'].widget.attrs.update({'class': 'form-control', 'readonly': 'readonly'})
+        
+        # ดึงข้อมูลแผนกมาใส่
+        if self.instance.pk and hasattr(self.instance, 'profile'):
+            self.fields['department'].initial = self.instance.profile.department
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if email:
+            # เช็คว่าอีเมลซ้ำกับคนอื่นไหม (ยกเว้นตัวเอง)
+            qs = User.objects.filter(email=email).exclude(pk=self.instance.pk)
+            if qs.exists():
+                raise forms.ValidationError("อีเมลนี้มีผู้ใช้งานแล้ว")
+        return email
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        if commit:
+            user.save()
+            # บันทึกแผนก
+            dept = self.cleaned_data.get('department')
+            if dept:
+                profile, _ = UserProfile.objects.get_or_create(user=user)
+                profile.department = dept
+                profile.save()
+        return user
+
+
+# -----------------------------------------------
+# 5. Equipment Form (ฟอร์มจัดการอุปกรณ์)
 # -----------------------------------------------
 class EquipmentForm(forms.ModelForm):
     class Meta:
