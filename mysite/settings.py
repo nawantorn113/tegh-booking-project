@@ -81,11 +81,20 @@ TEMPLATES = [
 WSGI_APPLICATION = 'mysite.wsgi.application'
 
 
-# Database
+# ==============================================
+# Database Configuration (แก้ไขแล้ว)
+# ใช้ SQL Server แทน SQLite
+# ==============================================
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'mssql',
+        'NAME': 'Test_DB',
+        'HOST': 'localhost\\SQLEXPRESS',
+        'PORT': '',
+        'OPTIONS': {
+            'driver': 'ODBC Driver 17 for SQL Server',
+            'extra_params': 'Trusted_Connection=yes;TrustServerCertificate=yes',
+        },
     }
 }
 

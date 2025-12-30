@@ -5,14 +5,39 @@ from django.contrib.auth.models import User, Group
 from django.core.exceptions import ValidationError
 from django.db.models import Q
 from django.utils import timezone
-
+from django.utils.safestring import mark_safe 
 from dal import autocomplete 
 
 from .models import Booking, Room, Equipment, UserProfile 
 
-# -----------------------------------------------
-# 1. Booking Form (ฟอร์มจองห้อง)
-# -----------------------------------------------
+# =========================================================
+# 1. Custom Widget (ตัวช่วยแสดงรูปภาพ)
+# =========================================================
+class CustomImageWidget(forms.ClearableFileInput):
+    def render(self, name, value, attrs=None, renderer=None):
+        output = []
+        # ถ้ามีรูปภาพอยู่แล้ว ให้แสดงรูป
+        if value and hasattr(value, "url"):
+            image_html = f"""
+                <div class="mb-3 p-3 border rounded bg-light text-center position-relative">
+                    <img src="{value.url}" alt="Room Preview" 
+                         class="img-fluid rounded shadow-sm" 
+                         style="max-height: 250px; max-width: 100%; object-fit: contain;">
+                    <div class="mt-2 text-primary small fw-bold">
+                        <i class="bi bi-check-circle-fill"></i> รูปภาพปัจจุบัน
+                    </div>
+                </div>
+            """
+            output.append(image_html)
+        
+        # แสดงปุ่ม Upload ปกติ
+        output.append(super().render(name, value, attrs, renderer))
+        return mark_safe(''.join(output))
+
+
+# =========================================================
+# 2. Booking Form (ฟอร์มจองห้อง)
+# =========================================================
 class BookingForm(forms.ModelForm):
     RECURRENCE_CHOICES = [
         ('NONE', 'ไม่จองซ้ำ'),
@@ -115,9 +140,9 @@ class BookingForm(forms.ModelForm):
         return cleaned_data
 
 
-# -----------------------------------------------
-# 2. Room Form (ฟอร์มจัดการห้อง)
-# -----------------------------------------------
+# =========================================================
+# 3. Room Form (ฟอร์มจัดการห้อง) **จุดที่แก้ไข**
+# =========================================================
 class RoomForm(forms.ModelForm):
     approver = forms.ModelChoiceField(
         queryset=User.objects.filter(Q(groups__name__in=['Approver', 'Admin']) | Q(is_superuser=True)).distinct(),
@@ -146,14 +171,22 @@ class RoomForm(forms.ModelForm):
             'description': 'รายละเอียดเพิ่มเติม',
             'is_active': 'สถานะใช้งาน',
         }
+        
+        # --- WIDGETS CONFIGURATION ---
         widgets = {
+            # [!] สำคัญ: เช็คชื่อ Field ใน models.py ของคุณ
+            # ถ้าชื่อ 'image' ให้ใช้บรรทัดนี้:
+            'image': CustomImageWidget(),
+            
+            # ถ้าใน models.py ชื่อ 'room_image' ให้เปิดบรรทัดล่างนี้แทน:
+            # 'room_image': CustomImageWidget(),
+
             'maintenance_start': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'form-control'}),
             'maintenance_end': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'form-control'}),
             'is_maintenance': forms.CheckboxInput(attrs={'class': 'form-check-input', 'role': 'switch'}),
             'equipment_in_room': forms.Textarea(attrs={'rows': 5, 'class': 'form-control'}),
             'name': forms.TextInput(attrs={'class': 'form-control'}),
             'capacity': forms.NumberInput(attrs={'class': 'form-control'}),
-            'image': forms.ClearableFileInput(attrs={'class': 'form-control'}),
             'location': forms.TextInput(attrs={'class': 'form-control'}),
             'floor': forms.TextInput(attrs={'class': 'form-control'}),
             'building': forms.TextInput(attrs={'class': 'form-control'}),
@@ -166,9 +199,9 @@ class RoomForm(forms.ModelForm):
         self.fields['maintenance_end'].required = False
 
 
-# -----------------------------------------------
-# 3. Custom User Form (เพิ่มผู้ใช้ใหม่)
-# -----------------------------------------------
+# =========================================================
+# 4. Custom User Form (เพิ่มผู้ใช้ใหม่)
+# =========================================================
 class CustomUserCreationForm(forms.ModelForm):
     first_name = forms.CharField(
         label="ชื่อจริง", 
@@ -254,8 +287,8 @@ class CustomUserCreationForm(forms.ModelForm):
                 user.save()
             else:
                 if user.is_staff and not user.is_superuser:
-                     user.is_staff = False
-                     user.save()
+                      user.is_staff = False
+                      user.save()
 
             dept = self.cleaned_data.get('department')
             if dept:
@@ -265,9 +298,9 @@ class CustomUserCreationForm(forms.ModelForm):
         return user
 
 
-# -----------------------------------------------
-# 4. Custom User Edit Form (แก้ไขข้อมูลผู้ใช้ - ไม่มีรหัสผ่าน)
-# -----------------------------------------------
+# =========================================================
+# 5. Custom User Edit Form (แก้ไขข้อมูลผู้ใช้ - ไม่มีรหัสผ่าน)
+# =========================================================
 class CustomUserEditForm(forms.ModelForm):
     first_name = forms.CharField(
         label="ชื่อจริง", 
@@ -297,17 +330,14 @@ class CustomUserEditForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # ล็อกช่อง Username ไม่ให้แก้
         self.fields['username'].widget.attrs.update({'class': 'form-control', 'readonly': 'readonly'})
         
-        # ดึงข้อมูลแผนกมาใส่
         if self.instance.pk and hasattr(self.instance, 'profile'):
             self.fields['department'].initial = self.instance.profile.department
 
     def clean_email(self):
         email = self.cleaned_data.get('email')
         if email:
-            # เช็คว่าอีเมลซ้ำกับคนอื่นไหม (ยกเว้นตัวเอง)
             qs = User.objects.filter(email=email).exclude(pk=self.instance.pk)
             if qs.exists():
                 raise forms.ValidationError("อีเมลนี้มีผู้ใช้งานแล้ว")
@@ -317,7 +347,6 @@ class CustomUserEditForm(forms.ModelForm):
         user = super().save(commit=False)
         if commit:
             user.save()
-            # บันทึกแผนก
             dept = self.cleaned_data.get('department')
             if dept:
                 profile, _ = UserProfile.objects.get_or_create(user=user)
@@ -326,9 +355,9 @@ class CustomUserEditForm(forms.ModelForm):
         return user
 
 
-# -----------------------------------------------
-# 5. Equipment Form (ฟอร์มจัดการอุปกรณ์)
-# -----------------------------------------------
+# =========================================================
+# 6. Equipment Form (ฟอร์มจัดการอุปกรณ์)
+# =========================================================
 class EquipmentForm(forms.ModelForm):
     class Meta:
         model = Equipment

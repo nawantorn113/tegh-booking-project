@@ -11,162 +11,214 @@
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <style>
+        :root {
+            /* สีธีมหลักองค์กร */
+            --tegh-blue: #0d6efd;
+            --tegh-blue-dark: #0a58ca;
+            --tegh-yellow: #ffc107;
+            --bg-gray: #f4f6f9;
+        }
+
         body {
             font-family: 'Kanit', sans-serif;
-            background: linear-gradient(135deg, #f0f2f5 0%, #e0e6ed 100%);
+            background-color: var(--bg-gray);
+            background-image: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
             margin: 0;
             padding: 20px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Abstract Shapes */
+        .decoration-circle {
+            position: absolute;
+            border-radius: 50%;
+            z-index: -1;
+            opacity: 0.4;
+        }
+        .circle-1 {
+            top: -10%; left: -5%; width: 500px; height: 500px;
+            background: radial-gradient(circle, rgba(13, 110, 253, 0.1) 0%, rgba(255,255,255,0) 70%);
+        }
+        .circle-2 {
+            bottom: -15%; right: -5%; width: 600px; height: 600px;
+            background: radial-gradient(circle, rgba(13, 110, 253, 0.08) 0%, rgba(255,255,255,0) 70%);
         }
 
         .login-container {
             width: 100%;
-            max-width: 420px;
+            max-width: 440px;
             text-align: center;
+            z-index: 1;
         }
 
+        /* Logo & Header */
+        .brand-title {
+            color: #2c3e50;
+            font-weight: 700;
+            font-size: 2.2rem;
+            margin-bottom: 5px;
+            letter-spacing: 0.5px;
+        }
+        .brand-title span { color: var(--tegh-blue); }
+
+        .brand-subtitle {
+            font-size: 1rem;
+            color: #6c757d;
+            margin-bottom: 30px;
+            position: relative;
+            display: inline-block;
+            padding-bottom: 10px;
+        }
+        .brand-subtitle::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 50%;
+            transform: translateX(-50%);
+            width: 40px; height: 4px;
+            background-color: var(--tegh-yellow);
+            border-radius: 2px;
+        }
+
+        /* Card Design */
         .login-card {
             background: #ffffff;
-            border-radius: 15px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15), 0 4px 10px rgba(0, 0, 0, 0.08);
-            padding: 35px;
-            transition: transform 0.3s ease-in-out;
-            border: none;
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.8);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.05), 0 5px 15px rgba(0, 0, 0, 0.03);
+            padding: 40px;
+            transition: transform 0.3s ease;
         }
-        
-        .login-card:hover {
-            transform: translateY(-5px);
-        }
+        .login-card:hover { transform: translateY(-5px); }
 
-        /* --- ปรับปรุง CSS Input Group --- */
-        .input-group-login .form-control {
-            border-radius: 8px;
-            border: 1px solid #ced4da;
-            padding: 12px 15px;
-            font-size: 1rem;
+        /* Inputs */
+        .form-floating > .form-control {
+            border-radius: 12px;
+            border: 1px solid #e0e0e0;
+            background-color: #fcfcfc;
+            padding-left: 15px;
         }
-        
-        .input-group-login .form-control:not(:last-child) {
-            border-top-right-radius: 0;
-            border-bottom-right-radius: 0;
-            border-right: 0;
+        .form-floating > .form-control:focus {
+            background-color: #fff;
+            border-color: var(--tegh-blue);
+            box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.1);
         }
+        .form-floating > label { padding-left: 15px; color: #999; }
 
-        .input-group-login .input-group-text {
-            border-radius: 8px 0 0 8px;
-            background-color: #e9ecef;
-            border: 1px solid #ced4da;
+        .password-wrapper { position: relative; }
+        .btn-toggle-password {
+            position: absolute; top: 50%; right: 15px;
+            transform: translateY(-50%);
+            background: none; border: none;
+            color: #999; cursor: pointer; z-index: 5;
         }
+        .btn-toggle-password:hover { color: var(--tegh-blue); }
 
-        /* ปุ่มกดดูรหัสผ่าน */
-        .btn-password-toggle {
-            border-top-right-radius: 8px !important;
-            border-bottom-right-radius: 8px !important;
-            border: 1px solid #ced4da;
-            border-left: 0;
-            background-color: white;
-            color: #6c757d;
-            z-index: 4;
-        }
-        .btn-password-toggle:hover {
-            background-color: #f8f9fa;
-            color: #0e71e2ff;
-        }
-
-        /* --- ปุ่มหลัก (Login) --- */
+        /* Buttons */
         .btn-main {
-            background-color: #2e40e4ff;
-            border-color: #2a48cfff;
-            color: white;
-            padding: 12px 25px;
-            border-radius: 8px;
-            font-weight: 600;
-            transition: all 0.2s ease-in-out;
-            box-shadow: 0 4px 10px rgba(111, 66, 193, 0.25);
+            background-color: var(--tegh-blue);
+            border: none; color: white;
+            padding: 14px; border-radius: 12px;
+            font-weight: 600; font-size: 1.1rem;
+            width: 100%; transition: all 0.2s;
+            box-shadow: 0 4px 12px rgba(13, 110, 253, 0.2);
         }
-
         .btn-main:hover {
-            background-color: #5a359b;
-            border-color: #5a359b;
+            background-color: var(--tegh-blue-dark);
             transform: translateY(-2px);
-            box-shadow: 0 6px 15px rgba(111, 66, 193, 0.35);
+            box-shadow: 0 6px 16px rgba(13, 110, 253, 0.3);
         }
 
-        /* ปุ่มกลับหน้าหลัก */
-        .btn-outline-home {
-            border-color: #6c757d;
+        /* [NEW] ปุ่มกลับหน้าหลัก */
+        .btn-home-wrapper { margin-top: 25px; }
+        .btn-home {
             color: #6c757d;
-            padding: 10px 25px;
-            border-radius: 8px;
-            font-weight: 500;
-            transition: all 0.2s ease-in-out;
+            font-size: 0.95rem;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            padding: 8px 16px;
+            border-radius: 50rem;
+            background-color: transparent;
+            border: 1px solid transparent;
+            transition: all 0.2s;
         }
-        .btn-outline-home:hover {
-            background-color: #6c757d;
-            color: white;
-            transform: translateY(-2px);
+        .btn-home:hover {
+            color: var(--tegh-blue);
+            background-color: rgba(13, 110, 253, 0.05);
+            border-color: rgba(13, 110, 253, 0.1);
         }
 
-        .form-control:focus {
-            box-shadow: 0 0 0 0.25rem rgba(111, 66, 193, 0.25);
-            border-color: #6f42c1;
-            z-index: 3;
+        .alert {
+            border-radius: 10px; border: none;
+            border-left: 4px solid;
+            font-size: 0.95rem;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.03);
         }
     </style>
 </head>
 <body>
+    <div class="decoration-circle circle-1"></div>
+    <div class="decoration-circle circle-2"></div>
+
     <div class="login-container">
         
-        <h1 class="mb-2 fw-bolder" style="color: #8416f1ff;">TEGH MEETBOOK</h1>
-        <p class="text-secondary mb-4">โปรดเข้าสู่ระบบเพื่อดำเนินการต่อ</p>
+        <h1 class="brand-title"><span>TEGH</span> MEETBOOK</h1>
+        <div class="brand-subtitle">ระบบจองห้องประชุมออนไลน์</div>
 
         {% if messages %}
             {% for message in messages %}
-                <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm small text-start" role="alert">
-                    <i class="bi bi-info-circle-fill me-2"></i>{{ message }}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show text-start bg-white mb-4" role="alert" style="border-color: var(--tegh-blue);">
+                    <i class="bi bi-info-circle-fill me-2 text-primary"></i> {{ message }}
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
             {% endfor %}
         {% endif %}
 
-        <div class="card login-card mt-4">
-            <div class="card-body">
-                
-                <form method="post" action="{% url 'login' %}" class="needs-validation" novalidate>
-                    {% csrf_token %}
+        <div class="login-card">
+            <div class="text-start mb-4">
+                <h4 class="fw-bold mb-1" style="color: #333;">เข้าสู่ระบบ</h4>
+                <p class="text-muted small">สำหรับเจ้าหน้าที่และผู้ดูแลระบบ</p>
+            </div>
 
-                    <div class="mb-3 input-group input-group-login">
-                        <span class="input-group-text"><i class="bi bi-person-fill"></i></span>
-                        <input type="text" name="username" class="form-control" placeholder="ชื่อผู้ใช้" required autofocus>
-                        <div class="invalid-feedback text-start">กรุณากรอกชื่อผู้ใช้</div>
-                    </div>
+            <form method="post" action="{% url 'login' %}" class="needs-validation" novalidate>
+                {% csrf_token %}
 
-                    <div class="mb-4 input-group input-group-login">
-                        <span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
-                        <input type="password" name="password" class="form-control" placeholder="รหัสผ่าน" required id="id_password">
-                        
-                        <button class="btn btn-password-toggle" type="button" id="togglePassword" tabindex="-1">
-                            <i class="bi bi-eye" id="toggleIcon"></i>
-                        </button>
-                        
+                <div class="form-floating mb-3">
+                    <input type="text" class="form-control" id="username" name="username" placeholder="ชื่อผู้ใช้" required autofocus>
+                    <label for="username"><i class="bi bi-person me-1"></i> ชื่อผู้ใช้</label>
+                    <div class="invalid-feedback text-start">กรุณากรอกชื่อผู้ใช้</div>
+                </div>
+
+                <div class="password-wrapper mb-4">
+                    <div class="form-floating">
+                        <input type="password" class="form-control" id="password" name="password" placeholder="รหัสผ่าน" required>
+                        <label for="password"><i class="bi bi-lock me-1"></i> รหัสผ่าน</label>
                         <div class="invalid-feedback text-start">กรุณากรอกรหัสผ่าน</div>
                     </div>
+                    <button type="button" class="btn-toggle-password" id="togglePassword">
+                        <i class="bi bi-eye" id="toggleIcon"></i>
+                    </button>
+                </div>
 
-                    <button type="submit" class="btn btn-main w-100 mb-3">เข้าสู่ระบบ</button>
-                </form>
+                <button type="submit" class="btn btn-main">
+                    เข้าสู่ระบบ
+                </button>
+            </form>
 
-                <hr class="my-4 text-muted opacity-25">
-
-                <a href="/" class="btn btn-outline-home w-100 border-0">
-                    <i class="bi bi-arrow-left me-2"></i> กลับหน้าหลัก
+            <div class="btn-home-wrapper">
+                <a href="/" class="btn-home">
+                    <i class="bi bi-calendar3 me-2"></i> กลับไปดูปฏิทินห้องว่าง
                 </a>
             </div>
+
         </div>
         
-        <div class="text-center mt-4 text-muted small">
+        <div class="mt-5 text-muted small opacity-50">
             &copy; {% now "Y" %} TEGH MEETBOOK. All rights reserved.
         </div>
 
@@ -174,9 +226,8 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // 1. Script สลับโหมด Password (เปิด/ปิดตา)
         const toggleBtn = document.querySelector('#togglePassword');
-        const passwordInput = document.querySelector('#id_password');
+        const passwordInput = document.querySelector('#password');
         const toggleIcon = document.querySelector('#toggleIcon');
 
         if (toggleBtn && passwordInput) {
@@ -185,29 +236,25 @@
                 passwordInput.setAttribute('type', type);
                 
                 if (type === 'text') {
-                    toggleIcon.classList.remove('bi-eye');
-                    toggleIcon.classList.add('bi-eye-slash');
+                    toggleIcon.classList.replace('bi-eye', 'bi-eye-slash');
                 } else {
-                    toggleIcon.classList.remove('bi-eye-slash');
-                    toggleIcon.classList.add('bi-eye');
+                    toggleIcon.classList.replace('bi-eye-slash', 'bi-eye');
                 }
             });
         }
 
-        // 2. Bootstrap Form Validation
         (function () {
             'use strict'
-            var forms = document.querySelectorAll('.needs-validation')
-            Array.prototype.slice.call(forms)
-                .forEach(function (form) {
-                    form.addEventListener('submit', function (event) {
-                        if (!form.checkValidity()) {
-                            event.preventDefault()
-                            event.stopPropagation()
-                        }
-                        form.classList.add('was-validated')
-                    }, false)
-                })
+            const forms = document.querySelectorAll('.needs-validation')
+            Array.from(forms).forEach(form => {
+                form.addEventListener('submit', event => {
+                    if (!form.checkValidity()) {
+                        event.preventDefault()
+                        event.stopPropagation()
+                    }
+                    form.classList.add('was-validated')
+                }, false)
+            })
         })()
     </script>
 </body>
