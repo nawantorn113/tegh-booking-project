@@ -16,7 +16,6 @@
     <style>
         body {
             font-family: 'Sarabun', sans-serif;
-            /* [แก้ไข] เปลี่ยนสีพื้นหลังเป็นเทาอมฟ้า (เข้ากับธีมน้ำเงิน) */
             background-color: #eef2f7; 
             overflow-x: hidden;
         }
@@ -221,18 +220,6 @@
 
     <main class="main-wrapper mt-4">
         <div class="container">
-            {% if messages %}
-                {% for message in messages %}
-                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm" role="alert">
-                        {% if message.tags == 'success' %}<i class="bi bi-check-circle-fill me-2"></i>
-                        {% elif message.tags == 'error' %}<i class="bi bi-exclamation-triangle-fill me-2"></i>
-                        {% endif %}
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                {% endfor %}
-            {% endif %}
-
             {% block content %}{% endblock %}
         </div>
     </main>
@@ -246,16 +233,26 @@
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
         $(document).ready(function() {
-            // Auto close alerts
-            setTimeout(function() { $('.alert').alert('close'); }, 5000);
-            
             // Init Global Select2
             if ($('.select2').length) { 
                 $('.select2').select2({ theme: 'bootstrap-5' }); 
             }
+
+            // แสดง Popup สำหรับ Django Messages (เช่น "จองสำเร็จ")
+            {% if messages %}
+                {% for message in messages %}
+                    Swal.fire({
+                        icon: '{% if message.tags == "error" %}error{% else %}success{% endif %}',
+                        title: '{{ message }}',
+                        showConfirmButton: false,
+                        timer: 2000
+                    });
+                {% endfor %}
+            {% endif %}
         });
 
         // Mark Notification as Read Function
@@ -275,11 +272,8 @@
                 }, 400);
             }
 
-            // Send AJAX Request
-            // [หมายเหตุ] เช็คให้แน่ใจว่า URL นี้ตรงกับใน urls.py นะครับ
-            // ถ้าใน urls.py ใช้ path('booking/<int:booking_id>/read/', ...) ให้แก้บรรทัดล่างเป็น:
-            // fetch(`/booking/${bookingId}/read/`, {
-            fetch(`/booking/notification/read/${bookingId}/`, {
+            // Send AJAX Request (URL Corrected)
+            fetch(`/booking/${bookingId}/read/`, {
                 method: 'POST',
                 headers: {
                     'X-CSRFToken': '{{ csrf_token }}',
@@ -325,80 +319,5 @@
     </script>
     
     {% block extra_scripts %}{% endblock %}
-    
-    <script>
-        $(document).ready(function() {
-            // Auto close alerts
-            setTimeout(function() { $('.alert').alert('close'); }, 5000);
-            
-            // Init Global Select2
-            if ($('.select2').length) { 
-                $('.select2').select2({ theme: 'bootstrap-5' }); 
-            }
-        });
-
-        // Mark Notification as Read Function
-        function markAsRead(event, bookingId) {
-            event.preventDefault();
-            event.stopPropagation(); // Stop dropdown from closing
-
-            const item = document.getElementById(`notif-${bookingId}`);
-            if (item) {
-                // Animation
-                item.classList.add('fade-out-right');
-                
-                // Remove element after animation
-                setTimeout(() => {
-                    item.remove();
-                    updateBadgeCount();
-                }, 400);
-            }
-
-            // Send AJAX Request
-            // [แก้ไขแล้ว] URL ตรงกับ urls.py แล้ว (booking/<id>/read/)
-            fetch(`/booking/${bookingId}/read/`, {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': '{{ csrf_token }}',
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({})
-            }).then(res => {
-                if(!res.ok) console.error("Mark read failed");
-            }).catch(err => console.error(err));
-        }
-
-        // Update Badge Count Function
-        function updateBadgeCount() {
-            const badge = document.getElementById('notificationBadge');
-            const inlineBadge = document.getElementById('notificationCountInline');
-            const list = document.getElementById('notificationList');
-            
-            if (badge) {
-                let count = parseInt(badge.innerText);
-                if (!isNaN(count) && count > 1) {
-                    count--;
-                    badge.innerText = count;
-                    if(inlineBadge) inlineBadge.innerText = count;
-                } else {
-                    // Remove badge if 0
-                    badge.remove();
-                    if(inlineBadge) inlineBadge.remove();
-                    
-                    // Show empty message if list is empty
-                    const remainingItems = list.querySelectorAll('li[id^="notif-"]').length;
-                    if (remainingItems === 0) {
-                        list.innerHTML = `
-                            <li class="text-center py-4 text-muted">
-                                <i class="bi bi-bell-slash fs-1 d-block mb-2 opacity-25"></i>
-                                <small>ไม่มีการแจ้งเตือนใหม่</small>
-                            </li>
-                            <li><a class="dropdown-item text-center small text-primary fw-bold py-2 bg-light" href="{% url 'history' %}">ดูประวัติทั้งหมด</a></li>
-                        `;
-                    }
-                }
-            }
-        }
-    </script>
 </body>
 </html>

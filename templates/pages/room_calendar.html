@@ -37,11 +37,9 @@
         }
         .layout-card-label input[type="radio"]:checked + .layout-card .check-icon { display: block !important; }
 
-        /* ซ่อน Error สีแดงทั้งหมด */
-        .invalid-feedback { display: none !important; }
-        .is-invalid { border-color: #dee2e6 !important; background-image: none !important; }
-        .text-danger { display: none !important; }
-        /* ยกเว้น Badge */
+        /* เปิดแสดง Error สีแดง */
+        /* .invalid-feedback { display: none !important; } */
+        
         .badge.bg-danger { display: inline-block !important; color: white !important; }
         .badge.text-danger { display: inline-block !important; }
     </style>
@@ -159,7 +157,6 @@
                 <label class="form-label fw-bold"><i class="bi bi-grid-fill text-primary"></i> รูปแบบการจัดห้อง</label>
                 <div class="row g-2">
                     {% for radio in form.room_layout %}
-                    {# ตรวจสอบว่ามีค่า value ไหม ถ้าเป็นค่าว่าง (-------) ให้ข้ามไปเลย ไม่ต้องแสดง #}
                     {% if radio.data.value %} 
                         <div class="col-6 col-md-4">
                             <label class="layout-card-label w-100 h-100">
@@ -279,8 +276,6 @@
         if(!modalBody.contains(form)) { modalBody.appendChild(form); form.classList.remove('d-none'); }
         
         form.reset(); 
-        
-        // Remove error classes manualy
         form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
         
         toggleAttachmentField();
@@ -306,8 +301,13 @@
             method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN },
             body: JSON.stringify({ id: event.id, start: event.start.toISOString(), end: event.end ? event.end.toISOString() : null })
         }).then(res => res.json()).then(data => {
-            if (data.status === 'success') { alert('ย้ายเวลาสำเร็จ (รออนุมัติ)'); eventInfo.event.setProp('backgroundColor', '#ffc107'); }
-            else { eventInfo.revert(); alert('แก้ไขไม่ได้: ' + (data.message || 'เกิดข้อผิดพลาด')); }
+            if (data.status === 'success') { 
+                Swal.fire({ icon: 'success', title: 'ย้ายเวลาสำเร็จ', text: 'รายการอยู่ในสถานะรออนุมัติใหม่', timer: 1500, showConfirmButton: false });
+                eventInfo.event.setProp('backgroundColor', '#ffc107'); 
+            } else { 
+                eventInfo.revert(); 
+                Swal.fire({ icon: 'error', title: 'แก้ไขไม่ได้', text: data.message || 'เกิดข้อผิดพลาด' });
+            }
         });
     }
 
@@ -353,8 +353,16 @@
             events: "{% url 'bookings_api' %}?room_id={{ room.id }}&t=" + new Date().getTime(),
             editable: true, selectable: true,
             
-            eventDrop: function(info) { if(confirm("ยืนยันย้ายเวลา? (รออนุมัติใหม่)")) { updateBookingOnServer(info); } else { info.revert(); } },
-            eventResize: function(info) { if(confirm("ยืนยันปรับเวลา? (รออนุมัติใหม่)")) { updateBookingOnServer(info); } else { info.revert(); } },
+            eventDrop: function(info) { 
+                Swal.fire({ title: 'ยืนยันย้ายเวลา?', text: "ต้องรอการอนุมัติใหม่", icon: 'warning', showCancelButton: true, confirmButtonText: 'ใช่, ย้ายเลย', cancelButtonText: 'ยกเลิก' }).then((result) => {
+                    if (result.isConfirmed) { updateBookingOnServer(info); } else { info.revert(); }
+                });
+            },
+            eventResize: function(info) {
+                Swal.fire({ title: 'ยืนยันปรับเวลา?', text: "ต้องรอการอนุมัติใหม่", icon: 'warning', showCancelButton: true, confirmButtonText: 'ใช่, ปรับเลย', cancelButtonText: 'ยกเลิก' }).then((result) => {
+                    if (result.isConfirmed) { updateBookingOnServer(info); } else { info.revert(); }
+                });
+            },
             
             select: function(info) {
                 let start = info.allDay ? info.startStr + 'T08:00' : info.startStr.substring(0, 16);
@@ -393,14 +401,38 @@
                 const startDate = new Date(startInput);
                 const now = new Date();
 
+                // 1. เช็คจองย้อนหลัง
                 if (startDate < now) {
-                    alert("⚠️ ไม่สามารถจองเวลาย้อนหลังได้\nกรุณาเลือกวันและเวลาที่ถูกต้อง");
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'จองย้อนหลังไม่ได้',
+                        text: 'กรุณาเลือกวันและเวลาในอนาคตครับ',
+                        confirmButtonText: 'ตกลง'
+                    });
                     return; 
                 }
+                
+                // 2. เช็คจองกระชั้นชิด (30 นาที)
+                const thirtyMinutesLater = new Date(now.getTime() + 30 * 60000);
+                if (startDate < thirtyMinutesLater) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'จองกระชั้นชิดเกินไป',
+                        text: 'ต้องจองล่วงหน้าอย่างน้อย 30 นาที เพื่อเตรียมห้องครับ',
+                        confirmButtonText: 'เข้าใจแล้ว'
+                    });
+                    return;
+                }
+
                 if (endInput) {
                     const endDate = new Date(endInput);
                     if (endDate <= startDate) {
-                        alert("⚠️ เวลาสิ้นสุดต้องอยู่หลังเวลาเริ่มต้น");
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'เวลาไม่ถูกต้อง',
+                            text: 'เวลาสิ้นสุดต้องอยู่หลังเวลาเริ่มต้น',
+                            confirmButtonText: 'ตกลง'
+                        });
                         return;
                     }
                 }
@@ -408,7 +440,12 @@
 
             const count = pInput && pInput.value ? parseInt(pInput.value) : 0;
             if (ROOM_CAPACITY > 0 && count > ROOM_CAPACITY) { 
-                alert(`⚠️ เกินความจุ! ห้องนี้รับได้สูงสุด ${ROOM_CAPACITY} ท่าน`); 
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'เกินความจุห้อง!',
+                    text: `ห้องนี้รับได้สูงสุด ${ROOM_CAPACITY} ท่าน`,
+                    confirmButtonText: 'ตกลง'
+                });
                 return; 
             }
 
