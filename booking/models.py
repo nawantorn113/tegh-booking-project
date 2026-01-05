@@ -34,12 +34,12 @@ class Room(models.Model):
             return self.maintenance_start <= now <= self.maintenance_end
         return False
 
-# 2. Equipment Model (แก้ไขเพิ่มสถานะ)
+# 2. Equipment Model
 class Equipment(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True, null=True)
     
-    # [เพิ่มใหม่] สถานะการใช้งาน (True=ปกติ, False=เสีย/ซ่อม)
+    # สถานะการใช้งาน (True=ปกติ, False=เสีย/ซ่อม)
     is_active = models.BooleanField(default=True, verbose_name="สถานะพร้อมใช้งาน")
     status_note = models.CharField(max_length=255, blank=True, null=True, verbose_name="หมายเหตุสถานะ")
     
@@ -61,6 +61,8 @@ class Booking(models.Model):
         ('u_shape', 'แบบตัวยู (U-Shape)'),
         ('boardroom', 'แบบห้องประชุม (Boardroom)'),
         ('banquet', 'แบบจัดเลี้ยง (Banquet)'),
+        # [เพิ่ม] ตัวเลือกนี้เข้าไปแล้วครับ
+        ('banquet_rounds', 'แบบจัดเลี้ยงโต๊ะกลม (Banquet Rounds)'),
         ('other', 'อื่นๆ (ระบุในไฟล์แนบ)'),
     ]
 

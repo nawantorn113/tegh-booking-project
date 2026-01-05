@@ -34,6 +34,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    # [เพิ่มใหม่] เพื่อให้หน้า Reports ใช้งานตัวจัดรูปแบบตัวเลข (เช่น 1,000) ได้
+    'django.contrib.humanize',
+
     # Other 3rd Party Apps
     'crispy_forms',
     'crispy_bootstrap5',
@@ -82,7 +85,7 @@ WSGI_APPLICATION = 'mysite.wsgi.application'
 
 
 # ==============================================
-# Database Configuration (แก้ไขแล้ว)
+# Database Configuration
 # ใช้ SQL Server แทน SQLite
 # ==============================================
 DATABASES = {
@@ -142,7 +145,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # 1. Login/Logout
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'dashboard'
-LOGOUT_REDIRECT_URL = 'login'
+LOGOUT_REDIRECT_URL = 'public_calendar'
 
 # 2. Crispy Forms
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
@@ -159,4 +162,4 @@ LINE_CHANNEL_ACCESS_TOKEN = 'GnoNpDFeLx48BmqV+nv8I10XsdfSx0wqS3V6W9ZXnvBY3vEAav1
 # 5. Azure / Outlook
 AZURE_CLIENT_ID = 'YOUR_AZURE_CLIENT_ID'
 AZURE_CLIENT_SECRET = 'YOUR_AZURE_CLIENT_SECRET'
-AZURE_REDIRECT_URI = 'http://127.0.0.1:8000/outlook/callback/' # แก้ให้ตรงกับ URL จริง
+AZURE_REDIRECT_URI = 'http://127.0.0.1:8000/outlook/callback/'

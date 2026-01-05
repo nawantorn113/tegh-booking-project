@@ -22,6 +22,7 @@
         body {
             font-family: 'Kanit', sans-serif;
             background-color: var(--bg-gray);
+            /* พื้นหลังไล่สีเรียบๆ */
             background-image: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
             display: flex;
             justify-content: center;
@@ -31,22 +32,6 @@
             padding: 20px;
             overflow: hidden;
             position: relative;
-        }
-
-        /* Abstract Shapes */
-        .decoration-circle {
-            position: absolute;
-            border-radius: 50%;
-            z-index: -1;
-            opacity: 0.4;
-        }
-        .circle-1 {
-            top: -10%; left: -5%; width: 500px; height: 500px;
-            background: radial-gradient(circle, rgba(13, 110, 253, 0.1) 0%, rgba(255,255,255,0) 70%);
-        }
-        .circle-2 {
-            bottom: -15%; right: -5%; width: 600px; height: 600px;
-            background: radial-gradient(circle, rgba(13, 110, 253, 0.08) 0%, rgba(255,255,255,0) 70%);
         }
 
         .login-container {
@@ -91,9 +76,11 @@
             border: 1px solid rgba(255,255,255,0.8);
             box-shadow: 0 15px 35px rgba(0, 0, 0, 0.05), 0 5px 15px rgba(0, 0, 0, 0.03);
             padding: 40px;
-            transition: transform 0.3s ease;
+            /* เอา transition ออก เพื่อไม่ให้มีการขยับ */
         }
-        .login-card:hover { transform: translateY(-5px); }
+        
+        /* [LOCKED] เอาส่วนที่ทำให้เด้ง (Hover) ออกแล้วครับ */
+        /* .login-card:hover { transform: translateY(-5px); }  <-- ลบบรรทัดนี้ทิ้งแล้ว */
 
         /* Inputs */
         .form-floating > .form-control {
@@ -129,11 +116,11 @@
         }
         .btn-main:hover {
             background-color: var(--tegh-blue-dark);
-            transform: translateY(-2px);
+            /* เอา transform ออก ไม่ให้ปุ่มเด้งเช่นกัน */
             box-shadow: 0 6px 16px rgba(13, 110, 253, 0.3);
         }
 
-        /* [NEW] ปุ่มกลับหน้าหลัก */
+        /* ปุ่มกลับหน้าหลัก */
         .btn-home-wrapper { margin-top: 25px; }
         .btn-home {
             color: #6c757d;
@@ -162,9 +149,7 @@
     </style>
 </head>
 <body>
-    <div class="decoration-circle circle-1"></div>
-    <div class="decoration-circle circle-2"></div>
-
+    
     <div class="login-container">
         
         <h1 class="brand-title"><span>TEGH</span> MEETBOOK</h1>

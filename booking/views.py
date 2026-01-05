@@ -220,17 +220,20 @@ def send_booking_notification(booking, template_name, subject_prefix):
 
     if line_bot_api:
         line_targets = set()
+        # 1. ส่งหาผู้จอง
         try:
             if hasattr(booking.user, 'profile') and booking.user.profile.line_user_id:
                 line_targets.add(booking.user.profile.line_user_id)
         except: pass
         
+        # 2. ส่งหาผู้อนุมัติห้องนั้น
         if booking.room.approver:
             try:
                 if hasattr(booking.room.approver, 'profile') and booking.room.approver.profile.line_user_id:
                     line_targets.add(booking.room.approver.profile.line_user_id)
             except: pass
 
+        # 3. ส่งหา Admin (Superuser)
         admins = User.objects.filter(is_superuser=True)
         for admin in admins:
             try:

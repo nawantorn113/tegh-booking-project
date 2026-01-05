@@ -37,11 +37,11 @@
         }
         .layout-card-label input[type="radio"]:checked + .layout-card .check-icon { display: block !important; }
 
-        /* [ไม้ตาย] ซ่อน Error สีแดงทั้งหมด ไม่ให้โผล่มาให้เห็น */
+        /* ซ่อน Error สีแดงทั้งหมด */
         .invalid-feedback { display: none !important; }
         .is-invalid { border-color: #dee2e6 !important; background-image: none !important; }
         .text-danger { display: none !important; }
-        /* ยกเว้น text-danger ที่เราเขียนเองใน Javascript Alert หรือ Badge */
+        /* ยกเว้น Badge */
         .badge.bg-danger { display: inline-block !important; color: white !important; }
         .badge.text-danger { display: inline-block !important; }
     </style>
@@ -151,7 +151,7 @@
 </div>
 
 <div id="bookingFormContainer" class="d-none">
-    <form id="hiddenBookingForm" action="{% url 'create_booking' room.id %}" method="post" enctype="multipart/form-data">
+    <form id="hiddenBookingForm" action="{% url 'room_calendar' room.id %}" method="post" enctype="multipart/form-data">
         {% csrf_token %}
         
         {% if room.name == 'ห้องประชุมใหญ่' %}
@@ -159,24 +159,43 @@
                 <label class="form-label fw-bold"><i class="bi bi-grid-fill text-primary"></i> รูปแบบการจัดห้อง</label>
                 <div class="row g-2">
                     {% for radio in form.room_layout %}
-                    <div class="col-6 col-md-4">
-                        <label class="layout-card-label w-100 h-100">
-                            {{ radio.tag }} 
-                            <div class="card h-100 layout-card text-center p-3">
-                                <div class="mb-2 d-flex align-items-center justify-content-center" style="height: 60px;">
-                                    {% if radio.data.value == 'other' %} 
-                                        <i class="bi bi-pencil-square fs-2 text-muted"></i>
-                                    {% else %} 
-                                        <img src="{% static 'images/layouts/'|add:radio.data.value|add:'.png' %}" class="img-fluid" style="max-height: 50px;" onerror="this.style.display='none'"> 
-                                    {% endif %}
+                    {# ตรวจสอบว่ามีค่า value ไหม ถ้าเป็นค่าว่าง (-------) ให้ข้ามไปเลย ไม่ต้องแสดง #}
+                    {% if radio.data.value %} 
+                        <div class="col-6 col-md-4">
+                            <label class="layout-card-label w-100 h-100">
+                                {{ radio.tag }} 
+                                <div class="card h-100 layout-card text-center p-3">
+                                    <div class="mb-2 d-flex align-items-center justify-content-center" style="height: 60px;">
+                                        
+                                        {% if radio.data.value == 'other' %}
+                                            <i class="bi bi-pencil-square fs-2 text-muted"></i>
+
+                                        {% elif radio.data.value == 'boardroom' %}
+                                            <img src="{% static 'images/layouts/conference.png' %}" 
+                                                 class="img-fluid" style="max-height: 50px;"
+                                                 onerror="this.style.display='none';">
+
+                                        {% elif radio.data.value == 'banquet_rounds' %}
+                                            <img src="{% static 'images/layouts/banquet_rounds.png' %}" 
+                                                 class="img-fluid" style="max-height: 50px;"
+                                                 onerror="this.style.display='none';">
+
+                                        {% else %}
+                                            <img src="{% static 'images/layouts/'|add:radio.data.value|add:'.png' %}" 
+                                                 class="img-fluid" 
+                                                 style="max-height: 50px;" 
+                                                 onerror="this.style.display='none';">
+                                        {% endif %}
+
+                                    </div>
+                                    <small class="fw-bold d-block">{{ radio.choice_label }}</small>
+                                    <div class="check-icon position-absolute top-0 end-0 m-2" style="display: none;">
+                                        <i class="bi bi-check-circle-fill text-primary"></i>
+                                    </div>
                                 </div>
-                                <small class="fw-bold d-block">{{ radio.choice_label }}</small>
-                                <div class="check-icon position-absolute top-0 end-0 m-2" style="display: none;">
-                                    <i class="bi bi-check-circle-fill text-primary"></i>
-                                </div>
-                            </div>
-                        </label>
-                    </div>
+                            </label>
+                        </div>
+                    {% endif %}
                     {% endfor %}
                 </div>
             </div>
@@ -365,11 +384,7 @@
         });
         calendar.render();
 
-        // ------------------------------------------------------------------
-        // [Logic สำคัญ] ตรวจสอบเวลาก่อนส่งฟอร์ม (ถ้าผิด จะ Alert และไม่ส่ง)
-        // ------------------------------------------------------------------
         document.getElementById('submitBookingBtn').addEventListener('click', function() {
-            // ดึงค่า
             const startInput = document.getElementById('id_start_time').value;
             const endInput = document.getElementById('id_end_time').value;
             const pInput = document.getElementById('id_participant_count');
@@ -378,13 +393,10 @@
                 const startDate = new Date(startInput);
                 const now = new Date();
 
-                // 1. เช็คย้อนหลัง (สำคัญที่สุด)
                 if (startDate < now) {
                     alert("⚠️ ไม่สามารถจองเวลาย้อนหลังได้\nกรุณาเลือกวันและเวลาที่ถูกต้อง");
-                    return; // หยุดทำงานตรงนี้ (หน้าไม่รีเฟรช แดงไม่ขึ้น)
+                    return; 
                 }
-
-                // 2. เช็คเวลาจบ < เริ่ม
                 if (endInput) {
                     const endDate = new Date(endInput);
                     if (endDate <= startDate) {
@@ -394,14 +406,12 @@
                 }
             }
 
-            // 3. เช็คความจุ
             const count = pInput && pInput.value ? parseInt(pInput.value) : 0;
             if (ROOM_CAPACITY > 0 && count > ROOM_CAPACITY) { 
                 alert(`⚠️ เกินความจุ! ห้องนี้รับได้สูงสุด ${ROOM_CAPACITY} ท่าน`); 
                 return; 
             }
 
-            // ถ้าทุกอย่างถูกต้อง -> ส่งฟอร์ม
             this.disabled = true; 
             this.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>กำลังบันทึก...';
             document.getElementById('hiddenBookingForm').submit();
