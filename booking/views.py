@@ -1,11 +1,16 @@
 import json
-import re
+import re  # ใช้สำหรับแยกคำและตัวเลข
 import csv
 import uuid
-from datetime import datetime, timedelta, time  # [สำคัญ] ต้องมี time ตรงนี้
+from datetime import datetime, timedelta, time
 from collections import defaultdict
 from dateutil.relativedelta import relativedelta
 from dateutil import parser 
+
+# --- Library สำหรับ Smart Search ---
+from thefuzz import process  # แก้คำผิด
+import dateparser  # แปลงภาษาพูดเป็นวันที่
+# ----------------------------------
 
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
@@ -329,108 +334,151 @@ def public_calendar_view(request):
 @login_required 
 def smart_search_view(request):
     """
-    ฟังก์ชันค้นหาห้องประชุมแบบ Smart & Fun:
-    1. กรองคำหยาบ (Anti-Troll)
-    2. รองรับ "เช้า/บ่าย/เย็น" เพื่อหาห้องว่างตามช่วงเวลาของวันนี้
-    3. รองรับตัวเลขเพื่อหาความจุ (Capacity)
+    ฟังก์ชันค้นหาอัจฉริยะ (Super Smart Search)
+    รองรับ: "10คนบ่ายนี้", "ห้องประชุมพรุ่งนี้เช้า", "ขอห้องมีทีวี"
     """
     query = request.GET.get('q')
     
-    # เริ่มต้น: ดึงห้องทั้งหมดมาตั้งหลักไว้ก่อน
+    # 1. ตั้งต้นดึงห้องทั้งหมด
     rooms = Room.objects.all().order_by('name')
-    
-    search_message = None
+    search_message = []
     alert_type = "info"
-    clean_query = ""
     
-    # กำหนดช่วงเวลา (Time Ranges)
-    TIME_RANGES = {
-        'เช้า': (time(8, 0), time(12, 0)),   # 08:00 - 12:00
-        'บ่าย': (time(13, 0), time(17, 0)),  # 13:00 - 17:00
-        'เย็น': (time(17, 0), time(20, 0))   # 17:00 - 20:00
-    }
+    # helper context
+    ctx = get_base_context(request) 
 
-    if query is not None:
-        clean_query = query.strip()
+    if not query:
+        ctx.update({
+            'available_rooms': rooms,
+            'search_message': "พิมพ์ค้นหาได้เลยครับ (เช่น '10 คนบ่ายนี้', 'ห้องว่างพรุ่งนี้มีไมค์')",
+            'alert_type': 'light'
+        })
+        return render(request, 'pages/search_results.html', ctx)
 
-        # --- ZONE A: ดักคนกวน / คำหยาบ ---
-        bad_words = ['ส้นตีน', 'kuy', 'shit', 'เลว', 'โง่', 'fuck']
-        if any(word in clean_query.lower() for word in bad_words):
-            search_message = "พูดจาไม่น่ารักเลยครับ! ไปล้างปากด้วยสบู่ก่อนนะ 🧼 (ระบบงอน ไม่หาให้)"
-            alert_type = "danger"
-            rooms = Room.objects.none()
-
-        elif len(clean_query) == 0:
-            search_message = "ใจเย็นวัยรุ่น! พิมพ์ข้อความก่อนกดค้นหานะครับ"
-            alert_type = "warning"
+    # --- STEP 0: Pre-processing (แยกคำภาษาไทยที่พิมพ์ติดกัน) ---
+    clean_query = query.strip()
+    
+    # แทรกช่องว่างรอบๆ ตัวเลข (เช่น "10คน" -> " 10 คน")
+    clean_query = re.sub(r'(\d+)', r' \1 ', clean_query)
+    
+    # แทรกช่องว่างรอบๆ คีย์เวิร์ดเวลา
+    time_keywords_list = ['เช้า', 'บ่าย', 'เย็น', 'พรุ่งนี้', 'มะรืน', 'วันนี้', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัส', 'ศุกร์']
+    for kw in time_keywords_list:
+        clean_query = clean_query.replace(kw, f" {kw} ")
         
-        elif len(clean_query) > 50:
-            search_message = "ยาวไปไม่อ่าน! (พิมพ์สั้นๆ ก็พอครับ ระบบเหนื่อย)"
-            alert_type = "danger"
-            rooms = Room.objects.none()
+    # ลบช่องว่างซ้ำซ้อน
+    clean_query = re.sub(r'\s+', ' ', clean_query).strip()
 
+    # --- STEP 1: หาจำนวนคน (Capacity) ---
+    numbers = re.findall(r'\d+', clean_query)
+    if numbers:
+        # สมมติว่าเลขที่เจอคือจำนวนคน (เอาเลขมากสุด)
+        wanted_capacity = max([int(n) for n in numbers])
+        rooms = rooms.filter(capacity__gte=wanted_capacity)
+        search_message.append(f"👥 รองรับ {wanted_capacity} คน+")
+        
+        # ลบเลขออกจากคำค้นหา
+        clean_query = re.sub(r'\d+', '', clean_query)
+
+    # --- STEP 2: วิเคราะห์วันและเวลา (Date & Time) ---
+    target_date = timezone.now().date() # ค่าเริ่มต้นคือวันนี้
+    is_date_found = False
+    
+    # 2.1 หา "วัน" (Date)
+    if 'พรุ่งนี้' in clean_query:
+        target_date = timezone.now().date() + timedelta(days=1)
+        is_date_found = True
+        clean_query = clean_query.replace('พรุ่งนี้', '')
+    elif 'มะรืน' in clean_query:
+        target_date = timezone.now().date() + timedelta(days=2)
+        is_date_found = True
+        clean_query = clean_query.replace('มะรืน', '')
+    elif 'วันนี้' in clean_query or 'นี้' in clean_query:
+        target_date = timezone.now().date()
+        clean_query = clean_query.replace('วันนี้', '').replace('นี้', '')
+    else:
+        try:
+            parsed = dateparser.parse(clean_query, settings={'PREFER_DATES_FROM': 'future'})
+            if parsed and parsed.date() != timezone.now().date():
+                target_date = parsed.date()
+                is_date_found = True
+        except: pass
+
+    if is_date_found:
+        search_message.append(f"📅 วันที่ {target_date.strftime('%d/%m/%Y')}")
+
+    # 2.2 หา "ช่วงเวลา" (Time Slot)
+    start_time = None
+    end_time = None
+    
+    if 'เช้า' in clean_query:
+        start_time = time(8, 0); end_time = time(12, 0)
+        search_message.append("🕒 ช่วงเช้า (08:00-12:00)")
+        clean_query = clean_query.replace('เช้า', '')
+    elif 'บ่าย' in clean_query:
+        start_time = time(13, 0); end_time = time(17, 0)
+        search_message.append("🕒 ช่วงบ่าย (13:00-17:00)")
+        clean_query = clean_query.replace('บ่าย', '')
+    elif 'เย็น' in clean_query:
+        start_time = time(17, 0); end_time = time(20, 0)
+        search_message.append("🕒 ช่วงเย็น (17:00-20:00)")
+        clean_query = clean_query.replace('เย็น', '')
+
+    # --- STEP 3: กรองห้องว่าง (Availability Check) ---
+    if start_time and end_time:
+        dt_start = datetime.combine(target_date, start_time)
+        dt_end = datetime.combine(target_date, end_time)
+        
+        # หาห้องที่ไม่ว่างในช่วงเวลานั้น
+        busy_rooms = Booking.objects.filter(
+            start_time__lt=dt_end,
+            end_time__gt=dt_start,
+            status__in=['APPROVED', 'PENDING']
+        ).values_list('room_id', flat=True)
+        
+        rooms = rooms.exclude(id__in=busy_rooms)
+
+    # --- STEP 4: หาชื่อห้อง หรือ อุปกรณ์ (Fuzzy Match) ---
+    stop_words = ['ห้อง', 'ประชุม', 'มี', 'เอา', 'ขอ', 'คน', 'ที่', 'ว่าง', 'ไหม', 'ครับ', 'ค่ะ']
+    for word in stop_words:
+        clean_query = clean_query.replace(word, " ")
+    
+    clean_query = clean_query.strip()
+    
+    if clean_query and len(clean_query) > 1:
+        # 4.1 ค้นหาชื่อห้อง (Direct Match)
+        name_filter = Q(name__icontains=clean_query) | Q(location__icontains=clean_query)
+        
+        # 4.2 ค้นหาอุปกรณ์ (Fuzzy Match)
+        all_equipments = list(Equipment.objects.filter(is_active=True).values_list('name', flat=True))
+        
+        # ใช้ Fuzzy หาอุปกรณ์ที่คล้ายที่สุด (>60%)
+        found_equipments = process.extractBests(clean_query, all_equipments, score_cutoff=60)
+        equipment_names = [e[0] for e in found_equipments]
+        
+        if equipment_names:
+            equip_filter = Q()
+            for eq_name in equipment_names:
+                equip_filter |= Q(equipment_in_room__icontains=eq_name)
+            
+            search_message.append(f"🛠️ หาอุปกรณ์: {', '.join(equipment_names)}")
+            rooms = rooms.filter(name_filter | equip_filter).distinct()
         else:
-            # --- ZONE B: ค้นหาแบบฉลาด (Smart Search) ---
-            today = timezone.now().date()
-            
-            # 1. เช็คคีย์เวิร์ดเวลา (เช้า / บ่าย / เย็น) และกรองห้องที่ไม่ว่างออก
-            for period_name, (start_t, end_t) in TIME_RANGES.items():
-                if period_name in clean_query:
-                    # แปลงเป็น datetime เต็มๆ ของวันนี้
-                    dt_start = datetime.combine(today, start_t)
-                    dt_end = datetime.combine(today, end_t)
-                    
-                    # หา Booking ที่ชนกับช่วงเวลานี้
-                    # (Logic: จองเริ่มก่อนจบช่วงนี้ AND จองจบหลังเริ่มช่วงนี้)
-                    busy_room_ids = Booking.objects.filter(
-                        start_time__lt=dt_end,
-                        end_time__gt=dt_start,
-                        status__in=['APPROVED', 'PENDING']
-                    ).values_list('room_id', flat=True)
-                    
-                    # สั่ง Exclude (ตัดห้องที่ไม่ว่างออก)
-                    rooms = rooms.exclude(id__in=busy_room_ids)
-                    
-                    # แจ้ง User ว่ากำลังหาช่วงเวลานี้
-                    if not search_message:
-                        search_message = f"กำลังแสดงห้องที่ว่างช่วง '{period_name}' ({start_t.strftime('%H:%M')}-{end_t.strftime('%H:%M')}) ครับ 🕒"
-                    else:
-                        search_message += f" และช่วง '{period_name}'"
-            
-            # 2. ดึงตัวเลขเพื่อหา Capacity (เช่น "ห้อง 20 คน")
-            match = re.search(r'(\d+)', clean_query)
-            capacity = int(match.group(1)) if match else None
-            
-            if capacity:
-                rooms = rooms.filter(capacity__gte=capacity)
-                if not search_message:
-                    search_message = f"ค้นหาห้องที่รองรับได้ {capacity} คนขึ้นไป"
+            rooms = rooms.filter(name_filter)
+            search_message.append(f"🔎 คำค้นหา: {clean_query}")
 
-            # 3. ค้นหา Keyword ชื่อห้อง (ตัดคำว่า เช้า/บ่าย/เย็น/คน/ตัวเลข ออก)
-            # เพื่อให้เหลือแค่ชื่อห้อง เช่น "เช้า ห้องใหญ่" -> ค้นหา "ห้องใหญ่"
-            kw = clean_query
-            for w in ['เช้า', 'บ่าย', 'เย็น', 'คน', 'ท่าน']:
-                kw = kw.replace(w, '')
-            kw = re.sub(r'\d+', '', kw).strip()
-            
-            if kw:
-                rooms = rooms.filter(Q(name__icontains=kw) | Q(building__icontains=kw))
+    # --- สรุปผล ---
+    final_msg = " | ".join(search_message) if search_message else "แสดงห้องทั้งหมด"
+    
+    if not rooms.exists():
+        alert_type = "warning"
+        final_msg += " (ไม่พบห้องที่ตรงตามเงื่อนไข ลองลดเงื่อนไขดูนะครับ)"
 
-            # --- ZONE C: ตรวจสอบผลลัพธ์ ---
-            if not rooms.exists():
-                # ถ้าไม่เจอห้องเลย (อาจจะเต็ม หรือไม่มีชื่อนี้)
-                rooms = Room.objects.none() # เพื่อความชัวร์
-                if not search_message or "ไม่น่ารัก" not in search_message:
-                    search_message = f"ไม่พบห้องว่างตามเงื่อนไข '{clean_query}' เลยครับ (เต็มหมดหรือเปล่านะ?)"
-                    alert_type = "secondary"
-
-    # เตรียม Context
-    ctx = get_base_context(request)
     ctx.update({
-        'query': clean_query,
+        'query': query,
         'available_rooms': rooms,
         'search_count': rooms.count(),
-        'search_message': search_message,
+        'search_message': final_msg,
         'alert_type': alert_type
     })
     

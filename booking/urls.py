@@ -50,8 +50,8 @@ urlpatterns = [
     # --- Admin: Reports & Logs ---
     path('audit-log/', views.audit_log_view, name='audit_log'),
     path('reports/', views.reports_view, name='reports'),
-    path('reports/export/excel/', views.export_reports_excel, name='export_reports_excel'),
-    path('reports/export/pdf/', views.export_reports_pdf, name='export_reports_pdf'),
+    path('reports/export/excel/', views.export_reports_excel, name='export_excel'),
+    path('reports/export/pdf/', views.export_reports_pdf, name='export_pdf'),
 
     # --- APIs (JSON) ---
     path('api/bookings/', views.bookings_api, name='bookings_api'),
@@ -67,4 +67,7 @@ urlpatterns = [
     path('outlook/login/', views.outlook_login_view, name='outlook_login'),
     path('outlook/callback/', views.outlook_callback_view, name='outlook_callback'),
     path('webhook/teams/', views.teams_action_receiver, name='teams_webhook'),
+
+    # --- Public Calendar View ---
+    path('calendar/public/', views.public_calendar_view, name='public_calendar'),
 ]
