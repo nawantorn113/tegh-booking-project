@@ -1,0 +1,5153 @@
+[
+{
+    "model": "auth.group",
+    "pk": 1,
+    "fields": {
+        "name": "Admin",
+        "permissions": []
+    }
+},
+{
+    "model": "auth.group",
+    "pk": 2,
+    "fields": {
+        "name": "Approver",
+        "permissions": []
+    }
+},
+{
+    "model": "auth.user",
+    "pk": 1,
+    "fields": {
+        "password": "pbkdf2_sha256$1000000$pDLbmh9RSgRaTe0qYxtfC7$PB6GDpoMyrq8Woefm3ac6+S+DM/mgmQxwAt2mmDbbeE=",
+        "last_login": "2025-12-26T02:58:18.861Z",
+        "is_superuser": true,
+        "username": "admin",
+        "first_name": "",
+        "last_name": "",
+        "email": "",
+        "is_staff": true,
+        "is_active": true,
+        "date_joined": "2025-10-14T02:30:04.381Z",
+        "groups": [
+            1,
+            2
+        ],
+        "user_permissions": []
+    }
+},
+{
+    "model": "auth.user",
+    "pk": 5,
+    "fields": {
+        "password": "pbkdf2_sha256$1000000$fbXoeELJqbUiwnrCzpv25K$WR54r24zmuT6IItDRJHPZ9FMzJOLd3sxg1r9v046r20=",
+        "last_login": "2025-12-26T02:38:49.190Z",
+        "is_superuser": false,
+        "username": "User2",
+        "first_name": "สุดสวย",
+        "last_name": "ประจำตำบล",
+        "email": "hello@o.com",
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2025-10-21T07:07:44Z",
+        "groups": [],
+        "user_permissions": []
+    }
+},
+{
+    "model": "sessions.session",
+    "pk": "42ut19dea56596varn7kbsni2hhaxvdg",
+    "fields": {
+        "session_data": ".eJxVjEsOgjAUAO_y1qZpC8WWpXvO0PT9BDWQUFgZ725IWOh2ZjJvyGXfxrxXWfPE0IODyy_DQk-ZD8GPMt8XQ8u8rROaIzGnrWZYWF63s_0bjKWO0IM6n4Q70hRCYteESNFpaZ2qxGsgRrIkmNCmVj0XadipYiMebeqsh88XCAo4-A:1vQLx7:3uJDmxurwOSB_5F32lRNgoHnSCSuedeaBndPsMvnVOg",
+        "expire_date": "2025-12-16T08:41:41.177Z"
+    }
+},
+{
+    "model": "sessions.session",
+    "pk": "5fqp5ug37l7bd69y1wn5ve1q8rszhb83",
+    "fields": {
+        "session_data": ".eJxVjEsOgjAUAO_y1qZpC8WWpXvO0PT9BDWQUFgZ725IWOh2ZjJvyGXfxrxXWfPE0IODyy_DQk-ZD8GPMt8XQ8u8rROaIzGnrWZYWF63s_0bjKWO0IM6n4Q70hRCYteESNFpaZ2qxGsgRrIkmNCmVj0XadipYiMebeqsh88XCAo4-A:1vYy1y:AI2d7FMej51sUAN-KygfjcOOE4xQp8YvdVNUOouRwRA",
+        "expire_date": "2026-01-09T02:58:18.896Z"
+    }
+},
+{
+    "model": "sessions.session",
+    "pk": "6yzewf7yqspk8gnv3z96auyaq7wa9enz",
+    "fields": {
+        "session_data": ".eJxVjEsOgjAUAO_y1qZpC8WWpXvO0PT9BDWQUFgZ725IWOh2ZjJvyGXfxrxXWfPE0IODyy_DQk-ZD8GPMt8XQ8u8rROaIzGnrWZYWF63s_0bjKWO0IM6n4Q70hRCYteESNFpaZ2qxGsgRrIkmNCmVj0XadipYiMebeqsh88XCAo4-A:1vSqp0:JUAU22LTJxxxWA8zOSHgm43fAnSShCFLOsncp9UJ2OQ",
+        "expire_date": "2025-12-23T06:03:38.858Z"
+    }
+},
+{
+    "model": "sessions.session",
+    "pk": "96yg6vx7qj3j5wbnowg4lfmgfdpg9l37",
+    "fields": {
+        "session_data": ".eJxVjEsOgjAUAO_y1qZpC8WWpXvO0PT9BDWQUFgZ725IWOh2ZjJvyGXfxrxXWfPE0IODyy_DQk-ZD8GPMt8XQ8u8rROaIzGnrWZYWF63s_0bjKWO0IM6n4Q70hRCYteESNFpaZ2qxGsgRrIkmNCmVj0XadipYiMebeqsh88XCAo4-A:1vT9gt:vtauAUWXF_j9EOfTBk0svMQDbAHq4SQD-juh1NMuyM0",
+        "expire_date": "2025-12-24T02:12:31.387Z"
+    }
+},
+{
+    "model": "sessions.session",
+    "pk": "9lthrs95op0hzavu29jlsug7vzxi9mb0",
+    "fields": {
+        "session_data": ".eJxVjDEOgzAMAP_iuYrATjBh7N43oDhOCm0VJAJT1b9XSAztene6N4xh36Zxr2kdZ4UBHFx-mYT4TOUQ-gjlvpi4lG2dxRyJOW01t0XT63q2f4Mp1AkGIKedRRs9xiZhcg0T9z4iUZ9bVMuBsRNh4tyTpszeOYliidoGNTv4fAG_MTce:1vT8pa:4HK5bVs1CVld2CXcV0K2zeNIPaUfLM5_v-ThuvH6pYA",
+        "expire_date": "2025-12-24T01:17:26.867Z"
+    }
+},
+{
+    "model": "sessions.session",
+    "pk": "j0lu3an55xaxk02ofjw5wk91clg57inj",
+    "fields": {
+        "session_data": ".eJxVjEsOgjAUAO_y1qZpC8WWpXvO0PT9BDWQUFgZ725IWOh2ZjJvyGXfxrxXWfPE0IODyy_DQk-ZD8GPMt8XQ8u8rROaIzGnrWZYWF63s_0bjKWO0IM6n4Q70hRCYteESNFpaZ2qxGsgRrIkmNCmVj0XadipYiMebeqsh88XCAo4-A:1vQbX5:Y-BbRGaV7SKZ-LuoQ1iBw0ZDpHa01actYaQTlUBxfXQ",
+        "expire_date": "2025-12-17T01:19:51.086Z"
+    }
+},
+{
+    "model": "sessions.session",
+    "pk": "oeeuijpfioiezzxh3q525anjggezqcro",
+    "fields": {
+        "session_data": ".eJxVjDEOgzAMAP_iuYrATjBh7N43oDhOCm0VJAJT1b9XSAztene6N4xh36Zxr2kdZ4UBHFx-mYT4TOUQ-gjlvpi4lG2dxRyJOW01t0XT63q2f4Mp1AkGIKedRRs9xiZhcg0T9z4iUZ9bVMuBsRNh4tyTpszeOYliidoGNTv4fAG_MTce:1vYdAI:Wv2BRl_08h3fSFPuTqD8F2sHkcjVfWl44lZ9X_LyP58",
+        "expire_date": "2026-01-08T04:41:30.533Z"
+    }
+},
+{
+    "model": "sessions.session",
+    "pk": "truvdrnin4gt208yyjvj45dfrh7wxzji",
+    "fields": {
+        "session_data": ".eJxVjDEOgzAMAP_iuYrATjBh7N43oDhOCm0VJAJT1b9XSAztene6N4xh36Zxr2kdZ4UBHFx-mYT4TOUQ-gjlvpi4lG2dxRyJOW01t0XT63q2f4Mp1AkGIKedRRs9xiZhcg0T9z4iUZ9bVMuBsRNh4tyTpszeOYliidoGNTv4fAG_MTce:1vQMSM:n5uM3bW5Susvpgz0LUf43j_cdOw54t0IsHpTBG1_1WA",
+        "expire_date": "2025-12-16T09:13:58.193Z"
+    }
+},
+{
+    "model": "sessions.session",
+    "pk": "z06clkeicva1oofea06a96d6iaem80nj",
+    "fields": {
+        "session_data": ".eJxVjEsOgjAUAO_y1qZpC8WWpXvO0PT9BDWQUFgZ725IWOh2ZjJvyGXfxrxXWfPE0IODyy_DQk-ZD8GPMt8XQ8u8rROaIzGnrWZYWF63s_0bjKWO0IM6n4Q70hRCYteESNFpaZ2qxGsgRrIkmNCmVj0XadipYiMebeqsh88XCAo4-A:1vPzmj:XfLlhy58luK9MhxKoSWXV01EvWAJtx1-da2B3c_Rli0",
+        "expire_date": "2025-12-15T09:01:29.646Z"
+    }
+},
+{
+    "model": "sessions.session",
+    "pk": "z98swk5maffel2mvajv9nnxyle6ti9xb",
+    "fields": {
+        "session_data": ".eJxVjDEOgzAMAP_iuYrATjBh7N43oDhOCm0VJAJT1b9XSAztene6N4xh36Zxr2kdZ4UBHFx-mYT4TOUQ-gjlvpi4lG2dxRyJOW01t0XT63q2f4Mp1AkGIKedRRs9xiZhcg0T9z4iUZ9bVMuBsRNh4tyTpszeOYliidoGNTv4fAG_MTce:1vRiJU:tzhq_1broiKSyPSHfekeSx3F3bigiy-VhYfdPtI2aqI",
+        "expire_date": "2025-12-20T02:46:24.972Z"
+    }
+},
+{
+    "model": "booking.room",
+    "pk": 1,
+    "fields": {
+        "name": "ห้องประชุม O1-1",
+        "capacity": 13,
+        "equipment_in_room": "ทีวีขนาด 55 นิ้ว จำนวน 1 เครื่อง",
+        "image": "room_images/59b07a1dfd5a80a7b422e7b8854b8392_t_AD7kLZK.jpeg",
+        "location": null,
+        "floor": "-",
+        "building": "สำนักงาน 1",
+        "is_maintenance": false,
+        "maintenance_start": null,
+        "maintenance_end": null,
+        "description": null,
+        "approver": 1,
+        "is_active": true
+    }
+},
+{
+    "model": "booking.room",
+    "pk": 2,
+    "fields": {
+        "name": "ห้องประชุม O1-2",
+        "capacity": 8,
+        "equipment_in_room": "ทีวีขนาด 65 นิ้ว จำนวน 1 เครื่อง",
+        "image": "room_images/Preview-WS-WH-26CKH031_3eYrzuB.webp",
+        "location": null,
+        "floor": null,
+        "building": "สำนักงาน 1",
+        "is_maintenance": false,
+        "maintenance_start": null,
+        "maintenance_end": null,
+        "description": null,
+        "approver": null,
+        "is_active": true
+    }
+},
+{
+    "model": "booking.room",
+    "pk": 3,
+    "fields": {
+        "name": "ห้องประชุมใหญ่",
+        "capacity": 50,
+        "equipment_in_room": "โปรเจกเตอร์ฉายกำแพง ขนาด 120 นิ้ว \r\nระบบเครื่องขยายเสียงพร้อมไมโครโฟนไร้สาย",
+        "image": "room_images/meeting-room-828547_1280_vGmw29E.webp",
+        "location": null,
+        "floor": null,
+        "building": "สำนักงาน 1",
+        "is_maintenance": false,
+        "maintenance_start": null,
+        "maintenance_end": null,
+        "description": null,
+        "approver": null,
+        "is_active": true
+    }
+},
+{
+    "model": "booking.room",
+    "pk": 4,
+    "fields": {
+        "name": "ห้องประชุม RD 1",
+        "capacity": 9,
+        "equipment_in_room": "ทีวีขนาด 55 นิ้ว จำนวน 1 เครื่อง",
+        "image": "room_images/241303537_447362073195021_5854026148259524306_n-1.jpg",
+        "location": null,
+        "floor": "1",
+        "building": "อาคาร R & D",
+        "is_maintenance": false,
+        "maintenance_start": null,
+        "maintenance_end": null,
+        "description": null,
+        "approver": null,
+        "is_active": true
+    }
+},
+{
+    "model": "booking.room",
+    "pk": 5,
+    "fields": {
+        "name": "ห้องประชุม RD 2",
+        "capacity": 14,
+        "equipment_in_room": "ทีวีขนาด 65 นิ้ว จำนวน 3 เครื่อง \r\nระบบเครื่องขยายเสียงพร้อมไมโครโฟนไร้สาย",
+        "image": "room_images/Equipment-หองประชมใหญ_oUV5z2s.jpg",
+        "location": null,
+        "floor": "2",
+        "building": "อาคาร R & D",
+        "is_maintenance": false,
+        "maintenance_start": null,
+        "maintenance_end": null,
+        "description": null,
+        "approver": null,
+        "is_active": true
+    }
+},
+{
+    "model": "booking.room",
+    "pk": 6,
+    "fields": {
+        "name": "ห้องประชุม RD 3",
+        "capacity": 8,
+        "equipment_in_room": "ไม่มีอุปกรณ์พิเศษ",
+        "image": "room_images/pexels-photo-2976970_7BA2Nd5.webp",
+        "location": null,
+        "floor": "2",
+        "building": "อาคาร R & D",
+        "is_maintenance": false,
+        "maintenance_start": null,
+        "maintenance_end": null,
+        "description": null,
+        "approver": null,
+        "is_active": true
+    }
+},
+{
+    "model": "booking.room",
+    "pk": 7,
+    "fields": {
+        "name": "ห้องประชุม RD 4",
+        "capacity": 24,
+        "equipment_in_room": "โปรเจกเตอร์ฉายกำแพง ขนาด 120 นิ้ว\r\nทีวีขนาด 32 นิ้ว จำนวน 3 เครื่อง \r\nระบบเครื่องขยายเสียงพร้อมไมโครโฟนประจำห้อง",
+        "image": "room_images/depositphotos_114546670-stock-photo-conference-table-closeup-toning_oShla9K.jpg",
+        "location": null,
+        "floor": "2",
+        "building": "อาคาร R & D",
+        "is_maintenance": false,
+        "maintenance_start": null,
+        "maintenance_end": null,
+        "description": null,
+        "approver": null,
+        "is_active": true
+    }
+},
+{
+    "model": "booking.room",
+    "pk": 8,
+    "fields": {
+        "name": "ห้องประชุม TEIL 4",
+        "capacity": 30,
+        "equipment_in_room": "โปรเจกเตอร์ฉายกำแพง ขนาด 120 นิ้ว",
+        "image": "room_images/istockphoto-157640822-1024x1024_twBSx2X.jpg",
+        "location": null,
+        "floor": "4",
+        "building": "สำนักงาน TEIL",
+        "is_maintenance": false,
+        "maintenance_start": null,
+        "maintenance_end": null,
+        "description": null,
+        "approver": null,
+        "is_active": true
+    }
+},
+{
+    "model": "booking.room",
+    "pk": 9,
+    "fields": {
+        "name": "ห้องประชุม O3-1",
+        "capacity": 10,
+        "equipment_in_room": "",
+        "image": "room_images/modern-conference-room-blank-whiteboard-260nw-2649502555.webp",
+        "location": "office 3",
+        "floor": null,
+        "building": "office 3",
+        "is_maintenance": false,
+        "maintenance_start": null,
+        "maintenance_end": null,
+        "description": null,
+        "approver": null,
+        "is_active": true
+    }
+},
+{
+    "model": "booking.room",
+    "pk": 10,
+    "fields": {
+        "name": "ห้องประชุม O3-2",
+        "capacity": 10,
+        "equipment_in_room": "ทีวี ขนาด 55 นิ้ว",
+        "image": "room_images/virtual-meeting-background_660067-1882.avif",
+        "location": "office 3",
+        "floor": null,
+        "building": "office 3",
+        "is_maintenance": false,
+        "maintenance_start": null,
+        "maintenance_end": null,
+        "description": null,
+        "approver": null,
+        "is_active": true
+    }
+},
+{
+    "model": "booking.equipment",
+    "pk": 1,
+    "fields": {
+        "name": "ทีวี",
+        "description": "ทีวีขนาด 55 นิ้ว",
+        "is_active": true,
+        "status_note": null
+    }
+},
+{
+    "model": "booking.equipment",
+    "pk": 2,
+    "fields": {
+        "name": "โปรเจคเตอร์",
+        "description": "",
+        "is_active": false,
+        "status_note": null
+    }
+},
+{
+    "model": "booking.equipment",
+    "pk": 3,
+    "fields": {
+        "name": "โน๊ตบุ๊ค",
+        "description": "",
+        "is_active": true,
+        "status_note": null
+    }
+},
+{
+    "model": "booking.equipment",
+    "pk": 4,
+    "fields": {
+        "name": "กล้อง",
+        "description": "",
+        "is_active": true,
+        "status_note": null
+    }
+},
+{
+    "model": "booking.equipment",
+    "pk": 5,
+    "fields": {
+        "name": "ลำโพง",
+        "description": "",
+        "is_active": true,
+        "status_note": null
+    }
+},
+{
+    "model": "booking.equipment",
+    "pk": 6,
+    "fields": {
+        "name": "ไมค์",
+        "description": "",
+        "is_active": true,
+        "status_note": null
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 2,
+    "fields": {
+        "title": "ส่งออกน้ำมัน",
+        "room": 2,
+        "user": 1,
+        "start_time": "2025-10-12T01:00:00Z",
+        "end_time": "2025-10-12T02:00:00Z",
+        "participant_count": 1,
+        "department": null,
+        "chairman": "",
+        "description": null,
+        "additional_requests": "",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "APPROVED",
+        "approver_comment": null,
+        "created_at": "2025-10-14T04:49:56.710Z",
+        "updated_at": "2025-10-30T09:57:17.836Z",
+        "outlook_event_id": null,
+        "is_user_seen": false,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 4,
+    "fields": {
+        "title": "โลจิสติกเกอร์",
+        "room": 7,
+        "user": 1,
+        "start_time": "2025-10-18T02:00:00Z",
+        "end_time": "2025-10-18T08:30:00Z",
+        "participant_count": 15,
+        "department": null,
+        "chairman": "คนหน้าตาดี",
+        "description": null,
+        "additional_requests": "",
+        "additional_notes": "ต้องการกล้องบันทึก และกล้องถ่ายภาพขณะประชุมเพิ่มเติม",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "REJECTED",
+        "approver_comment": null,
+        "created_at": "2025-10-14T09:18:52.437Z",
+        "updated_at": "2025-10-30T09:57:17.836Z",
+        "outlook_event_id": null,
+        "is_user_seen": false,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 5,
+    "fields": {
+        "title": "ส่งออก",
+        "room": 3,
+        "user": 1,
+        "start_time": "2025-10-15T03:00:00Z",
+        "end_time": "2025-10-15T08:30:00Z",
+        "participant_count": 14,
+        "department": null,
+        "chairman": "เจนนี่ได้หมดถ้าสดชื่น",
+        "description": null,
+        "additional_requests": "",
+        "additional_notes": "ต้องการมือถือ ไลฟ์สด",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "APPROVED",
+        "approver_comment": null,
+        "created_at": "2025-10-15T01:19:57.170Z",
+        "updated_at": "2025-10-30T09:57:17.836Z",
+        "outlook_event_id": null,
+        "is_user_seen": false,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 6,
+    "fields": {
+        "title": "ฟกฟก",
+        "room": 2,
+        "user": 1,
+        "start_time": "2025-10-16T03:00:00Z",
+        "end_time": "2025-10-16T03:30:00Z",
+        "participant_count": 5,
+        "department": null,
+        "chairman": "หดกด",
+        "description": null,
+        "additional_requests": "",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "CANCELLED",
+        "approver_comment": null,
+        "created_at": "2025-10-15T02:37:58.135Z",
+        "updated_at": "2025-10-30T09:57:17.836Z",
+        "outlook_event_id": null,
+        "is_user_seen": false,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 7,
+    "fields": {
+        "title": "ฟฟฟฟฟห",
+        "room": 2,
+        "user": 1,
+        "start_time": "2025-10-17T02:00:00Z",
+        "end_time": "2025-10-17T02:30:00Z",
+        "participant_count": 5,
+        "department": null,
+        "chairman": "หกด",
+        "description": null,
+        "additional_requests": "",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "CANCELLED",
+        "approver_comment": null,
+        "created_at": "2025-10-15T03:11:31.645Z",
+        "updated_at": "2025-10-30T09:57:17.836Z",
+        "outlook_event_id": null,
+        "is_user_seen": false,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 8,
+    "fields": {
+        "title": "ส่งออกไปแล้ว",
+        "room": 8,
+        "user": 1,
+        "start_time": "2025-10-17T05:30:00Z",
+        "end_time": "2025-10-17T06:00:00Z",
+        "participant_count": 5,
+        "department": null,
+        "chairman": "พี่หนุ่มกันชง",
+        "description": null,
+        "additional_requests": "",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "CANCELLED",
+        "approver_comment": null,
+        "created_at": "2025-10-15T03:29:47.030Z",
+        "updated_at": "2025-10-30T09:57:17.836Z",
+        "outlook_event_id": null,
+        "is_user_seen": false,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 9,
+    "fields": {
+        "title": "รวมดาว",
+        "room": 8,
+        "user": 1,
+        "start_time": "2025-10-16T06:00:00Z",
+        "end_time": "2025-10-16T06:30:00Z",
+        "participant_count": 15,
+        "department": null,
+        "chairman": "พี่หนุ่มกันชง",
+        "description": null,
+        "additional_requests": "",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "APPROVED",
+        "approver_comment": null,
+        "created_at": "2025-10-15T04:28:52.841Z",
+        "updated_at": "2025-10-30T09:57:17.836Z",
+        "outlook_event_id": null,
+        "is_user_seen": false,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 10,
+    "fields": {
+        "title": "รวมตัวดาว",
+        "room": 1,
+        "user": 1,
+        "start_time": "2025-10-16T02:00:00Z",
+        "end_time": "2025-10-16T08:30:00Z",
+        "participant_count": 1,
+        "department": null,
+        "chairman": "เจนนี่ได้หมด กับ พี่หนุ่มกันชง",
+        "description": null,
+        "additional_requests": "",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "APPROVED",
+        "approver_comment": null,
+        "created_at": "2025-10-15T06:56:23.375Z",
+        "updated_at": "2025-10-30T09:57:17.836Z",
+        "outlook_event_id": null,
+        "is_user_seen": false,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 11,
+    "fields": {
+        "title": "ไลฟ์สดขายของ",
+        "room": 1,
+        "user": 1,
+        "start_time": "2025-10-17T01:30:00Z",
+        "end_time": "2025-10-17T08:00:00Z",
+        "participant_count": 10,
+        "department": null,
+        "chairman": "ผมเอง",
+        "description": null,
+        "additional_requests": "",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "CANCELLED",
+        "approver_comment": null,
+        "created_at": "2025-10-15T09:12:05.940Z",
+        "updated_at": "2025-10-30T09:57:17.836Z",
+        "outlook_event_id": null,
+        "is_user_seen": false,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 12,
+    "fields": {
+        "title": "ส่งออกขวัญ",
+        "room": 2,
+        "user": 1,
+        "start_time": "2025-10-16T07:00:00Z",
+        "end_time": "2025-10-16T10:30:00Z",
+        "participant_count": 10,
+        "department": null,
+        "chairman": "ประธานาธิบดี",
+        "description": null,
+        "additional_requests": "",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "CANCELLED",
+        "approver_comment": null,
+        "created_at": "2025-10-15T09:12:43.806Z",
+        "updated_at": "2025-10-30T09:57:17.836Z",
+        "outlook_event_id": null,
+        "is_user_seen": false,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 13,
+    "fields": {
+        "title": "ประชุมดาวติ๊กต๊อก",
+        "room": 1,
+        "user": 1,
+        "start_time": "2025-10-21T01:30:00Z",
+        "end_time": "2025-10-21T10:00:00Z",
+        "participant_count": 5,
+        "department": null,
+        "chairman": "พลอยเหนื่อยแล้ว ฟาอัลไปคุยกับคนอื่นเถอะ",
+        "description": null,
+        "additional_requests": "",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "APPROVED",
+        "approver_comment": null,
+        "created_at": "2025-10-15T09:52:12.719Z",
+        "updated_at": "2025-10-30T09:57:17.836Z",
+        "outlook_event_id": null,
+        "is_user_seen": false,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 14,
+    "fields": {
+        "title": "การรันตีงาน",
+        "room": 2,
+        "user": 1,
+        "start_time": "2025-10-20T01:00:00Z",
+        "end_time": "2025-10-20T10:00:00Z",
+        "participant_count": 5,
+        "department": null,
+        "chairman": "พี่หนุ่มกันชง",
+        "description": null,
+        "additional_requests": "",
+        "additional_notes": "-",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "REJECTED",
+        "approver_comment": null,
+        "created_at": "2025-10-16T01:26:14.261Z",
+        "updated_at": "2025-10-30T09:57:17.836Z",
+        "outlook_event_id": null,
+        "is_user_seen": false,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 15,
+    "fields": {
+        "title": "ไม่มี",
+        "room": 7,
+        "user": 1,
+        "start_time": "2025-10-29T05:00:00Z",
+        "end_time": "2025-10-29T11:00:00Z",
+        "participant_count": 20,
+        "department": null,
+        "chairman": "พลอยเหนื่อยแล้ว ฟาอัลไปคุยกับคนอื่นเถอะ",
+        "description": null,
+        "additional_requests": "",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "APPROVED",
+        "approver_comment": null,
+        "created_at": "2025-10-16T02:48:38.956Z",
+        "updated_at": "2025-10-30T09:57:17.836Z",
+        "outlook_event_id": null,
+        "is_user_seen": false,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 16,
+    "fields": {
+        "title": "การเดินทาง",
+        "room": 2,
+        "user": 1,
+        "start_time": "2025-10-17T01:00:00Z",
+        "end_time": "2025-10-17T08:30:00Z",
+        "participant_count": 5,
+        "department": null,
+        "chairman": "ประธานาธิบดี",
+        "description": null,
+        "additional_requests": "",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "APPROVED",
+        "approver_comment": null,
+        "created_at": "2025-10-16T06:43:44.629Z",
+        "updated_at": "2025-10-30T09:57:17.836Z",
+        "outlook_event_id": null,
+        "is_user_seen": false,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 17,
+    "fields": {
+        "title": "หมอลำ",
+        "room": 2,
+        "user": 1,
+        "start_time": "2025-10-22T09:50:00Z",
+        "end_time": "2025-10-22T11:00:00Z",
+        "participant_count": 5,
+        "department": null,
+        "chairman": "พี่หนุ่มกันชง",
+        "description": null,
+        "additional_requests": "",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "APPROVED",
+        "approver_comment": null,
+        "created_at": "2025-10-22T09:21:47.979Z",
+        "updated_at": "2025-10-30T09:57:17.836Z",
+        "outlook_event_id": null,
+        "is_user_seen": false,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 18,
+    "fields": {
+        "title": "หมอลำประจำปี",
+        "room": 3,
+        "user": 1,
+        "start_time": "2025-10-23T02:40:00Z",
+        "end_time": "2025-10-23T05:00:00Z",
+        "participant_count": 20,
+        "department": null,
+        "chairman": "กันจอมพัง",
+        "description": null,
+        "additional_requests": "ขอกล้องถ่ายภาพ",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "APPROVED",
+        "approver_comment": null,
+        "created_at": "2025-10-23T02:35:36.253Z",
+        "updated_at": "2025-10-30T09:57:17.836Z",
+        "outlook_event_id": null,
+        "is_user_seen": false,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 19,
+    "fields": {
+        "title": "ส่งออก",
+        "room": 3,
+        "user": 1,
+        "start_time": "2025-10-27T09:00:00Z",
+        "end_time": "2025-10-27T11:00:00Z",
+        "participant_count": 30,
+        "department": null,
+        "chairman": "กันจอมพัง",
+        "description": null,
+        "additional_requests": "",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "REJECTED",
+        "approver_comment": null,
+        "created_at": "2025-10-27T08:02:59.466Z",
+        "updated_at": "2025-10-30T09:57:17.836Z",
+        "outlook_event_id": null,
+        "is_user_seen": false,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 20,
+    "fields": {
+        "title": "ส่งออก",
+        "room": 8,
+        "user": 1,
+        "start_time": "2025-10-27T09:00:00Z",
+        "end_time": "2025-10-27T10:00:00Z",
+        "participant_count": 15,
+        "department": null,
+        "chairman": null,
+        "description": null,
+        "additional_requests": "",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "APPROVED",
+        "approver_comment": null,
+        "created_at": "2025-10-27T08:29:15.078Z",
+        "updated_at": "2025-10-30T09:57:17.836Z",
+        "outlook_event_id": null,
+        "is_user_seen": false,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 21,
+    "fields": {
+        "title": "ส่งออก",
+        "room": 1,
+        "user": 1,
+        "start_time": "2025-10-28T01:30:00Z",
+        "end_time": "2025-10-28T10:30:00Z",
+        "participant_count": 8,
+        "department": null,
+        "chairman": "กันจอมพัง",
+        "description": null,
+        "additional_requests": "",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "APPROVED",
+        "approver_comment": null,
+        "created_at": "2025-10-27T09:19:37.245Z",
+        "updated_at": "2025-10-30T09:57:17.836Z",
+        "outlook_event_id": null,
+        "is_user_seen": false,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 22,
+    "fields": {
+        "title": "เรื่องการไลฟ์สด",
+        "room": 3,
+        "user": 1,
+        "start_time": "2025-10-28T09:00:00Z",
+        "end_time": "2025-10-28T11:00:00Z",
+        "participant_count": 25,
+        "department": null,
+        "chairman": "พี่วิน วินแล้ว",
+        "description": null,
+        "additional_requests": "",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "APPROVED",
+        "approver_comment": null,
+        "created_at": "2025-10-28T08:52:44.995Z",
+        "updated_at": "2025-10-30T09:57:17.836Z",
+        "outlook_event_id": null,
+        "is_user_seen": false,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 23,
+    "fields": {
+        "title": "อัจฉริยะ",
+        "room": 3,
+        "user": 1,
+        "start_time": "2025-10-31T09:30:00Z",
+        "end_time": "2025-10-31T11:00:00Z",
+        "participant_count": 28,
+        "department": null,
+        "chairman": "หนุ่มเจนกัน",
+        "description": null,
+        "additional_requests": "",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "APPROVED",
+        "approver_comment": null,
+        "created_at": "2025-10-31T09:26:22.461Z",
+        "updated_at": "2025-10-31T09:26:53.828Z",
+        "outlook_event_id": null,
+        "is_user_seen": false,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 24,
+    "fields": {
+        "title": "ส่งออก",
+        "room": 3,
+        "user": 5,
+        "start_time": "2025-11-03T07:00:00Z",
+        "end_time": "2025-11-03T10:00:00Z",
+        "participant_count": 29,
+        "department": "การตลาด",
+        "chairman": "พลอยเหนื่อยแล้ว ฟาอัลไปคุยกับคนอื่นเถอะ",
+        "description": "",
+        "additional_requests": "",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "APPROVED",
+        "approver_comment": null,
+        "created_at": "2025-11-03T06:55:14.541Z",
+        "updated_at": "2025-12-08T08:25:12.360Z",
+        "outlook_event_id": null,
+        "is_user_seen": true,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 25,
+    "fields": {
+        "title": "ตรวจสินค้า",
+        "room": 8,
+        "user": 1,
+        "start_time": "2025-11-04T07:00:00Z",
+        "end_time": "2025-11-04T09:30:00Z",
+        "participant_count": 15,
+        "department": "จัดซื้อ",
+        "chairman": null,
+        "description": "",
+        "additional_requests": "",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "CANCELLED",
+        "approver_comment": null,
+        "created_at": "2025-11-03T06:56:27.497Z",
+        "updated_at": "2025-11-04T01:40:18.526Z",
+        "outlook_event_id": null,
+        "is_user_seen": false,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 26,
+    "fields": {
+        "title": "ทททท",
+        "room": 7,
+        "user": 1,
+        "start_time": "2025-11-03T09:35:00Z",
+        "end_time": "2025-11-03T10:00:00Z",
+        "participant_count": 18,
+        "department": "กฏหมาย",
+        "chairman": "ประยุด",
+        "description": "",
+        "additional_requests": "",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "APPROVED",
+        "approver_comment": null,
+        "created_at": "2025-11-03T09:24:08.038Z",
+        "updated_at": "2025-11-03T09:24:44.210Z",
+        "outlook_event_id": null,
+        "is_user_seen": false,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 27,
+    "fields": {
+        "title": "สรุปอะไร",
+        "room": 7,
+        "user": 5,
+        "start_time": "2025-11-04T01:30:00Z",
+        "end_time": "2025-11-04T05:00:00Z",
+        "participant_count": 16,
+        "department": "โลจิสติกส์",
+        "chairman": "ประวิด จันนู้น",
+        "description": "",
+        "additional_requests": "",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "CANCELLED",
+        "approver_comment": null,
+        "created_at": "2025-11-04T01:07:15.497Z",
+        "updated_at": "2025-12-08T08:25:12.031Z",
+        "outlook_event_id": null,
+        "is_user_seen": true,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 28,
+    "fields": {
+        "title": "ร้องเพลงอยู่สยาม",
+        "room": 3,
+        "user": 5,
+        "start_time": "2025-11-04T07:30:00Z",
+        "end_time": "2025-11-04T09:00:00Z",
+        "participant_count": 20,
+        "department": null,
+        "chairman": "ป๊อบสยาม",
+        "description": "",
+        "additional_requests": "",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "APPROVED",
+        "approver_comment": null,
+        "created_at": "2025-11-04T07:10:18.352Z",
+        "updated_at": "2025-12-08T08:25:11.629Z",
+        "outlook_event_id": null,
+        "is_user_seen": true,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 29,
+    "fields": {
+        "title": "เราจะสู้ไปด้วยกันนะ",
+        "room": 8,
+        "user": 1,
+        "start_time": "2025-11-04T07:30:00Z",
+        "end_time": "2025-11-04T09:00:00Z",
+        "participant_count": 1,
+        "department": null,
+        "chairman": "กัล จอมพาลัง",
+        "description": "",
+        "additional_requests": "",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "APPROVED",
+        "approver_comment": null,
+        "created_at": "2025-11-04T07:12:21.758Z",
+        "updated_at": "2025-11-04T07:12:21.758Z",
+        "outlook_event_id": null,
+        "is_user_seen": false,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 30,
+    "fields": {
+        "title": "sad",
+        "room": 2,
+        "user": 5,
+        "start_time": "2025-11-05T04:00:00Z",
+        "end_time": "2025-11-05T05:30:00Z",
+        "participant_count": 5,
+        "department": null,
+        "chairman": "พี่เอง",
+        "description": "",
+        "additional_requests": "",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "APPROVED",
+        "approver_comment": null,
+        "created_at": "2025-11-04T07:44:51.075Z",
+        "updated_at": "2025-12-08T08:25:08.829Z",
+        "outlook_event_id": null,
+        "is_user_seen": true,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 31,
+    "fields": {
+        "title": "sad",
+        "room": 2,
+        "user": 5,
+        "start_time": "2025-11-12T04:00:00Z",
+        "end_time": "2025-11-12T05:30:00Z",
+        "participant_count": 5,
+        "department": null,
+        "chairman": "พี่เอง",
+        "description": "",
+        "additional_requests": "",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "APPROVED",
+        "approver_comment": null,
+        "created_at": "2025-11-04T07:44:51.082Z",
+        "updated_at": "2025-12-08T08:25:08.568Z",
+        "outlook_event_id": null,
+        "is_user_seen": true,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 32,
+    "fields": {
+        "title": "sad",
+        "room": 2,
+        "user": 5,
+        "start_time": "2025-11-19T04:00:00Z",
+        "end_time": "2025-11-19T05:30:00Z",
+        "participant_count": 5,
+        "department": null,
+        "chairman": "พี่เอง",
+        "description": "",
+        "additional_requests": "",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "APPROVED",
+        "approver_comment": null,
+        "created_at": "2025-11-04T07:44:51.082Z",
+        "updated_at": "2025-12-08T08:25:08.369Z",
+        "outlook_event_id": null,
+        "is_user_seen": true,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 33,
+    "fields": {
+        "title": "Ai",
+        "room": 2,
+        "user": 1,
+        "start_time": "2025-11-06T06:50:00Z",
+        "end_time": "2025-11-06T09:00:00Z",
+        "participant_count": 5,
+        "department": "it",
+        "chairman": "gemini and gpt",
+        "description": "สนทนากัน ว่าใครเขียนโค้ดเก่งกว่ากัน",
+        "additional_requests": "",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "APPROVED",
+        "approver_comment": null,
+        "created_at": "2025-11-06T06:32:04.523Z",
+        "updated_at": "2025-11-06T06:32:04.523Z",
+        "outlook_event_id": null,
+        "is_user_seen": false,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 34,
+    "fields": {
+        "title": "ประชุมประจำสัปดาห์",
+        "room": 3,
+        "user": 1,
+        "start_time": "2025-11-06T07:00:00Z",
+        "end_time": "2025-11-06T10:00:00Z",
+        "participant_count": 30,
+        "department": "เลขา",
+        "chairman": "ceo เจนนี่ ได้หมดถ้าสดชื่น",
+        "description": "ประชุมการไลฟ์สดประจำสัปดาห์",
+        "additional_requests": "กล้องไว้ไลฟ์สดเวลาประชุม",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "presentations/unnamed.png",
+        "status": "APPROVED",
+        "approver_comment": null,
+        "created_at": "2025-11-06T06:36:56.423Z",
+        "updated_at": "2025-11-06T06:37:49.016Z",
+        "outlook_event_id": null,
+        "is_user_seen": false,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 35,
+    "fields": {
+        "title": "-",
+        "room": 8,
+        "user": 5,
+        "start_time": "2025-11-06T08:00:00Z",
+        "end_time": "2025-11-06T10:00:00Z",
+        "participant_count": 18,
+        "department": "ท่องเที่ยว",
+        "chairman": "-",
+        "description": "-",
+        "additional_requests": "",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "APPROVED",
+        "approver_comment": null,
+        "created_at": "2025-11-06T06:42:37.441Z",
+        "updated_at": "2025-12-08T08:25:08.172Z",
+        "outlook_event_id": null,
+        "is_user_seen": true,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 36,
+    "fields": {
+        "title": "-",
+        "room": 8,
+        "user": 5,
+        "start_time": "2025-11-13T08:00:00Z",
+        "end_time": "2025-11-13T10:00:00Z",
+        "participant_count": 18,
+        "department": "ท่องเที่ยว",
+        "chairman": "-",
+        "description": "-",
+        "additional_requests": "",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "APPROVED",
+        "approver_comment": null,
+        "created_at": "2025-11-06T06:42:37.450Z",
+        "updated_at": "2025-12-08T08:25:07.753Z",
+        "outlook_event_id": null,
+        "is_user_seen": true,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 37,
+    "fields": {
+        "title": "-",
+        "room": 8,
+        "user": 5,
+        "start_time": "2025-11-20T08:00:00Z",
+        "end_time": "2025-11-20T10:00:00Z",
+        "participant_count": 18,
+        "department": "ท่องเที่ยว",
+        "chairman": "-",
+        "description": "-",
+        "additional_requests": "",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "APPROVED",
+        "approver_comment": null,
+        "created_at": "2025-11-06T06:42:37.450Z",
+        "updated_at": "2025-12-08T08:25:07.501Z",
+        "outlook_event_id": null,
+        "is_user_seen": true,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 38,
+    "fields": {
+        "title": "-",
+        "room": 8,
+        "user": 5,
+        "start_time": "2025-11-27T08:00:00Z",
+        "end_time": "2025-11-27T10:00:00Z",
+        "participant_count": 18,
+        "department": "ท่องเที่ยว",
+        "chairman": "-",
+        "description": "-",
+        "additional_requests": "",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "APPROVED",
+        "approver_comment": null,
+        "created_at": "2025-11-06T06:42:37.451Z",
+        "updated_at": "2025-12-08T08:25:06.662Z",
+        "outlook_event_id": null,
+        "is_user_seen": true,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 39,
+    "fields": {
+        "title": "-",
+        "room": 8,
+        "user": 5,
+        "start_time": "2025-12-04T08:00:00Z",
+        "end_time": "2025-12-04T10:00:00Z",
+        "participant_count": 18,
+        "department": "ท่องเที่ยว",
+        "chairman": "-",
+        "description": "-",
+        "additional_requests": "",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "APPROVED",
+        "approver_comment": null,
+        "created_at": "2025-11-06T06:42:37.451Z",
+        "updated_at": "2025-12-08T08:25:06.191Z",
+        "outlook_event_id": null,
+        "is_user_seen": true,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 40,
+    "fields": {
+        "title": "-",
+        "room": 8,
+        "user": 5,
+        "start_time": "2025-12-11T08:00:00Z",
+        "end_time": "2025-12-11T10:00:00Z",
+        "participant_count": 18,
+        "department": "ท่องเที่ยว",
+        "chairman": "-",
+        "description": "-",
+        "additional_requests": "",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "APPROVED",
+        "approver_comment": null,
+        "created_at": "2025-11-06T06:42:37.451Z",
+        "updated_at": "2025-12-08T08:25:05.961Z",
+        "outlook_event_id": null,
+        "is_user_seen": true,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 41,
+    "fields": {
+        "title": "-",
+        "room": 8,
+        "user": 5,
+        "start_time": "2025-12-18T08:00:00Z",
+        "end_time": "2025-12-18T10:00:00Z",
+        "participant_count": 18,
+        "department": "ท่องเที่ยว",
+        "chairman": "-",
+        "description": "-",
+        "additional_requests": "",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "CANCELLED",
+        "approver_comment": null,
+        "created_at": "2025-11-06T06:42:37.451Z",
+        "updated_at": "2025-12-16T06:42:35.437Z",
+        "outlook_event_id": null,
+        "is_user_seen": true,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 42,
+    "fields": {
+        "title": "-",
+        "room": 8,
+        "user": 5,
+        "start_time": "2025-12-25T08:00:00Z",
+        "end_time": "2025-12-25T10:00:00Z",
+        "participant_count": 18,
+        "department": "ท่องเที่ยว",
+        "chairman": "-",
+        "description": "-",
+        "additional_requests": "",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "APPROVED",
+        "approver_comment": null,
+        "created_at": "2025-11-06T06:42:37.451Z",
+        "updated_at": "2025-12-19T02:28:24.096Z",
+        "outlook_event_id": null,
+        "is_user_seen": true,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 43,
+    "fields": {
+        "title": "-",
+        "room": 8,
+        "user": 5,
+        "start_time": "2026-01-01T08:00:00Z",
+        "end_time": "2026-01-01T10:00:00Z",
+        "participant_count": 18,
+        "department": "ท่องเที่ยว",
+        "chairman": "-",
+        "description": "-",
+        "additional_requests": "",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "CANCELLED",
+        "approver_comment": null,
+        "created_at": "2025-11-06T06:42:37.451Z",
+        "updated_at": "2025-12-19T01:27:25.678Z",
+        "outlook_event_id": null,
+        "is_user_seen": true,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 44,
+    "fields": {
+        "title": "-",
+        "room": 1,
+        "user": 1,
+        "start_time": "2025-11-06T08:30:00Z",
+        "end_time": "2025-11-06T09:00:00Z",
+        "participant_count": 1,
+        "department": null,
+        "chairman": null,
+        "description": "",
+        "additional_requests": "",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "APPROVED",
+        "approver_comment": null,
+        "created_at": "2025-11-06T06:44:39.130Z",
+        "updated_at": "2025-11-06T06:44:39.130Z",
+        "outlook_event_id": null,
+        "is_user_seen": false,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 45,
+    "fields": {
+        "title": "ประชุมเรื่องการตลาด",
+        "room": 5,
+        "user": 1,
+        "start_time": "2025-11-11T01:30:00Z",
+        "end_time": "2025-11-11T11:00:00Z",
+        "participant_count": 15,
+        "department": "การตลาด",
+        "chairman": "หัวหน้าแผนกการตลาด",
+        "description": "",
+        "additional_requests": "",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "APPROVED",
+        "approver_comment": null,
+        "created_at": "2025-11-06T09:26:31.163Z",
+        "updated_at": "2025-11-24T04:43:03.867Z",
+        "outlook_event_id": null,
+        "is_user_seen": false,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 46,
+    "fields": {
+        "title": "ประชุมเรื่องการตลาด",
+        "room": 5,
+        "user": 1,
+        "start_time": "2025-11-18T01:30:00Z",
+        "end_time": "2025-11-18T11:00:00Z",
+        "participant_count": 15,
+        "department": "การตลาด",
+        "chairman": "หัวหน้าแผนกการตลาด",
+        "description": "",
+        "additional_requests": "",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "APPROVED",
+        "approver_comment": null,
+        "created_at": "2025-11-06T09:26:31.171Z",
+        "updated_at": "2025-11-24T04:43:06.261Z",
+        "outlook_event_id": null,
+        "is_user_seen": false,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 47,
+    "fields": {
+        "title": "-",
+        "room": 3,
+        "user": 5,
+        "start_time": "2025-11-27T01:30:00Z",
+        "end_time": "2025-11-27T02:30:00Z",
+        "participant_count": 25,
+        "department": "ไอที",
+        "chairman": "-",
+        "description": "",
+        "additional_requests": "",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "APPROVED",
+        "approver_comment": null,
+        "created_at": "2025-11-24T04:21:22.761Z",
+        "updated_at": "2025-12-08T08:25:06.880Z",
+        "outlook_event_id": null,
+        "is_user_seen": true,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 48,
+    "fields": {
+        "title": "ทดสอบระบบ",
+        "room": 2,
+        "user": 5,
+        "start_time": "2025-11-27T01:30:00Z",
+        "end_time": "2025-11-27T02:30:00Z",
+        "participant_count": 1,
+        "department": "ไอที",
+        "chairman": "-",
+        "description": "",
+        "additional_requests": "",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "APPROVED",
+        "approver_comment": null,
+        "created_at": "2025-11-24T04:31:29.645Z",
+        "updated_at": "2025-12-08T08:25:07.976Z",
+        "outlook_event_id": null,
+        "is_user_seen": true,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 49,
+    "fields": {
+        "title": "ทดสอบระบบ",
+        "room": 8,
+        "user": 1,
+        "start_time": "2025-11-28T01:30:00Z",
+        "end_time": "2025-11-28T02:30:00Z",
+        "participant_count": 15,
+        "department": "ไอที",
+        "chairman": "-",
+        "description": "",
+        "additional_requests": "",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "CANCELLED",
+        "approver_comment": null,
+        "created_at": "2025-11-24T04:39:21.718Z",
+        "updated_at": "2025-11-24T04:42:27.298Z",
+        "outlook_event_id": null,
+        "is_user_seen": false,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 50,
+    "fields": {
+        "title": "ทดสอบระบบ",
+        "room": 8,
+        "user": 1,
+        "start_time": "2025-11-28T01:30:00Z",
+        "end_time": "2025-11-28T02:30:00Z",
+        "participant_count": 15,
+        "department": "ไอที",
+        "chairman": "-",
+        "description": "",
+        "additional_requests": "",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "CANCELLED",
+        "approver_comment": null,
+        "created_at": "2025-11-24T04:42:49.094Z",
+        "updated_at": "2025-11-24T06:00:52.353Z",
+        "outlook_event_id": null,
+        "is_user_seen": false,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 51,
+    "fields": {
+        "title": "ทดสอบระบบ",
+        "room": 8,
+        "user": 1,
+        "start_time": "2025-11-28T01:30:00Z",
+        "end_time": "2025-11-28T02:30:00Z",
+        "participant_count": 15,
+        "department": "ไอที",
+        "chairman": "-",
+        "description": "",
+        "additional_requests": "",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "APPROVED",
+        "approver_comment": null,
+        "created_at": "2025-11-24T06:01:13.333Z",
+        "updated_at": "2025-11-25T04:21:23.763Z",
+        "outlook_event_id": null,
+        "is_user_seen": false,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 52,
+    "fields": {
+        "title": "ทดสอบระบบ",
+        "room": 7,
+        "user": 1,
+        "start_time": "2025-11-25T02:30:00Z",
+        "end_time": "2025-11-25T05:00:00Z",
+        "participant_count": 15,
+        "department": "ไอที",
+        "chairman": "-",
+        "description": "",
+        "additional_requests": "",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "APPROVED",
+        "approver_comment": null,
+        "created_at": "2025-11-25T01:23:14.336Z",
+        "updated_at": "2025-11-25T04:19:58.173Z",
+        "outlook_event_id": null,
+        "is_user_seen": false,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 53,
+    "fields": {
+        "title": "ทดสอบระบบ",
+        "room": 7,
+        "user": 5,
+        "start_time": "2025-11-26T01:30:00Z",
+        "end_time": "2025-11-26T02:30:00Z",
+        "participant_count": 15,
+        "department": "ไอที",
+        "chairman": "-",
+        "description": "",
+        "additional_requests": "",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "CANCELLED",
+        "approver_comment": null,
+        "created_at": "2025-11-25T03:23:26.742Z",
+        "updated_at": "2025-12-08T08:25:07.312Z",
+        "outlook_event_id": null,
+        "is_user_seen": true,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 54,
+    "fields": {
+        "title": "ทดสอบ",
+        "room": 7,
+        "user": 1,
+        "start_time": "2025-11-26T01:30:00Z",
+        "end_time": "2025-11-26T02:30:00Z",
+        "participant_count": 15,
+        "department": "ไอที",
+        "chairman": "-",
+        "description": "",
+        "additional_requests": "",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "APPROVED",
+        "approver_comment": null,
+        "created_at": "2025-11-25T03:24:24.441Z",
+        "updated_at": "2025-11-25T04:21:18.154Z",
+        "outlook_event_id": null,
+        "is_user_seen": false,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 55,
+    "fields": {
+        "title": "ทดสอบระบบ",
+        "room": 3,
+        "user": 1,
+        "start_time": "2025-12-04T21:30:00Z",
+        "end_time": "2025-12-04T22:30:00Z",
+        "participant_count": 20,
+        "department": "ไอที",
+        "chairman": "-",
+        "description": "",
+        "additional_requests": "",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "APPROVED",
+        "approver_comment": null,
+        "created_at": "2025-11-25T03:51:21.321Z",
+        "updated_at": "2025-12-04T06:05:45.913Z",
+        "outlook_event_id": null,
+        "is_user_seen": false,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 56,
+    "fields": {
+        "title": "วันนี้กินไรดี",
+        "room": 8,
+        "user": 5,
+        "start_time": "2025-11-26T01:30:00Z",
+        "end_time": "2025-11-26T02:30:00Z",
+        "participant_count": 10,
+        "department": "ITD",
+        "chairman": "กินไรดี",
+        "description": "",
+        "additional_requests": "ทีวี",
+        "additional_notes": "ไม่มี",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "APPROVED",
+        "approver_comment": null,
+        "created_at": "2025-11-25T04:18:04.047Z",
+        "updated_at": "2025-12-08T08:25:07.109Z",
+        "outlook_event_id": null,
+        "is_user_seen": true,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 57,
+    "fields": {
+        "title": "เย็นนี้กินไรดี",
+        "room": 3,
+        "user": 5,
+        "start_time": "2025-11-28T04:30:00Z",
+        "end_time": "2025-11-28T05:30:00Z",
+        "participant_count": 15,
+        "department": "ITD",
+        "chairman": "กินไรดี",
+        "description": "",
+        "additional_requests": "โปรเจคเตอร์",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "APPROVED",
+        "approver_comment": null,
+        "created_at": "2025-11-25T04:20:23.176Z",
+        "updated_at": "2025-12-08T08:25:06.425Z",
+        "outlook_event_id": null,
+        "is_user_seen": true,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 58,
+    "fields": {
+        "title": "ทดสอบระบบ",
+        "room": 2,
+        "user": 1,
+        "start_time": "2025-12-02T01:30:00Z",
+        "end_time": "2025-12-02T02:30:00Z",
+        "participant_count": 5,
+        "department": "-",
+        "chairman": "-",
+        "description": "",
+        "additional_requests": "",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "APPROVED",
+        "approver_comment": null,
+        "created_at": "2025-11-25T06:26:14.831Z",
+        "updated_at": "2025-11-25T06:26:14.831Z",
+        "outlook_event_id": null,
+        "is_user_seen": false,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 59,
+    "fields": {
+        "title": "ชาบู",
+        "room": 2,
+        "user": 5,
+        "start_time": "2025-11-29T01:30:00Z",
+        "end_time": "2025-11-29T02:30:00Z",
+        "participant_count": 5,
+        "department": "ITD",
+        "chairman": "ไข่เค็ม พลอย",
+        "description": "",
+        "additional_requests": "",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "APPROVED",
+        "approver_comment": null,
+        "created_at": "2025-11-25T06:31:08.002Z",
+        "updated_at": "2025-12-08T08:25:05.129Z",
+        "outlook_event_id": null,
+        "is_user_seen": true,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 60,
+    "fields": {
+        "title": "ทดสอบระบบ2",
+        "room": 2,
+        "user": 5,
+        "start_time": "2025-12-03T01:30:00Z",
+        "end_time": "2025-12-03T02:30:00Z",
+        "participant_count": 5,
+        "department": "ไอที",
+        "chairman": "-",
+        "description": "",
+        "additional_requests": "กล้อง ทีวี",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "APPROVED",
+        "approver_comment": null,
+        "created_at": "2025-11-26T01:37:24.387Z",
+        "updated_at": "2025-12-08T08:25:04.948Z",
+        "outlook_event_id": null,
+        "is_user_seen": true,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 61,
+    "fields": {
+        "title": "ทดสอบระบบ2",
+        "room": 2,
+        "user": 5,
+        "start_time": "2025-12-03T01:30:00Z",
+        "end_time": "2025-12-03T02:30:00Z",
+        "participant_count": 5,
+        "department": "ไอที",
+        "chairman": "-",
+        "description": "",
+        "additional_requests": "กล้อง ทีวี",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "APPROVED",
+        "approver_comment": null,
+        "created_at": "2025-11-26T01:44:52.046Z",
+        "updated_at": "2025-12-08T08:25:04.756Z",
+        "outlook_event_id": null,
+        "is_user_seen": true,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 62,
+    "fields": {
+        "title": "ทดสอบระบบ2",
+        "room": 2,
+        "user": 5,
+        "start_time": "2025-12-02T18:30:00Z",
+        "end_time": "2025-12-02T19:30:00Z",
+        "participant_count": 5,
+        "department": "ไอที",
+        "chairman": "-",
+        "description": "",
+        "additional_requests": "กล้อง ทีวี",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "APPROVED",
+        "approver_comment": null,
+        "created_at": "2025-11-26T01:49:38.675Z",
+        "updated_at": "2025-12-08T08:25:04.369Z",
+        "outlook_event_id": null,
+        "is_user_seen": true,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 63,
+    "fields": {
+        "title": "ทดสอบ",
+        "room": 1,
+        "user": 1,
+        "start_time": "2025-12-07T18:30:00Z",
+        "end_time": "2025-12-07T19:30:00Z",
+        "participant_count": 10,
+        "department": "ไอที",
+        "chairman": "-",
+        "description": "",
+        "additional_requests": "ทีวี",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "APPROVED",
+        "approver_comment": null,
+        "created_at": "2025-11-26T01:52:12.930Z",
+        "updated_at": "2025-12-04T07:31:32.242Z",
+        "outlook_event_id": null,
+        "is_user_seen": false,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 64,
+    "fields": {
+        "title": "ทดสอบระบบ",
+        "room": 1,
+        "user": 1,
+        "start_time": "2025-12-01T04:00:00Z",
+        "end_time": "2025-12-01T04:30:00Z",
+        "participant_count": 10,
+        "department": "ไอที",
+        "chairman": "-",
+        "description": "",
+        "additional_requests": "",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "APPROVED",
+        "approver_comment": null,
+        "created_at": "2025-12-01T03:25:31.164Z",
+        "updated_at": "2025-12-01T03:25:31.164Z",
+        "outlook_event_id": null,
+        "is_user_seen": false,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 65,
+    "fields": {
+        "title": "ทดสอบระบบ",
+        "room": 2,
+        "user": 1,
+        "start_time": "2025-12-01T08:20:00Z",
+        "end_time": "2025-12-01T08:30:00Z",
+        "participant_count": 5,
+        "department": "ไอที",
+        "chairman": "-",
+        "description": "",
+        "additional_requests": "",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "APPROVED",
+        "approver_comment": null,
+        "created_at": "2025-12-01T08:13:59.161Z",
+        "updated_at": "2025-12-01T08:13:59.161Z",
+        "outlook_event_id": null,
+        "is_user_seen": false,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 66,
+    "fields": {
+        "title": "ทดสอบระบบ",
+        "room": 8,
+        "user": 1,
+        "start_time": "2025-12-01T08:20:00Z",
+        "end_time": "2025-12-01T08:30:00Z",
+        "participant_count": 18,
+        "department": "ไอที",
+        "chairman": "-",
+        "description": "",
+        "additional_requests": "",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "APPROVED",
+        "approver_comment": null,
+        "created_at": "2025-12-01T08:14:36.195Z",
+        "updated_at": "2025-12-01T08:28:17.667Z",
+        "outlook_event_id": null,
+        "is_user_seen": false,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 67,
+    "fields": {
+        "title": "ทดสอบระบบ",
+        "room": 8,
+        "user": 1,
+        "start_time": "2025-12-01T08:20:00Z",
+        "end_time": "2025-12-01T08:30:00Z",
+        "participant_count": 18,
+        "department": "ไอที",
+        "chairman": "-",
+        "description": "",
+        "additional_requests": "",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "APPROVED",
+        "approver_comment": null,
+        "created_at": "2025-12-01T08:18:48.333Z",
+        "updated_at": "2025-12-01T08:28:21.130Z",
+        "outlook_event_id": null,
+        "is_user_seen": false,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 68,
+    "fields": {
+        "title": "ทดสอบระบบ",
+        "room": 2,
+        "user": 1,
+        "start_time": "2025-12-01T09:20:00Z",
+        "end_time": "2025-12-01T09:25:00Z",
+        "participant_count": 6,
+        "department": "ไอที",
+        "chairman": "-",
+        "description": "",
+        "additional_requests": "",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "APPROVED",
+        "approver_comment": null,
+        "created_at": "2025-12-01T09:15:01.699Z",
+        "updated_at": "2025-12-01T09:15:01.699Z",
+        "outlook_event_id": null,
+        "is_user_seen": false,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 69,
+    "fields": {
+        "title": "ทดสอบระบบ",
+        "room": 1,
+        "user": 1,
+        "start_time": "2025-12-08T01:30:00Z",
+        "end_time": "2025-12-08T02:30:00Z",
+        "participant_count": 10,
+        "department": "ำอที",
+        "chairman": "-",
+        "description": "",
+        "additional_requests": "",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "CANCELLED",
+        "approver_comment": null,
+        "created_at": "2025-12-01T09:15:38.263Z",
+        "updated_at": "2025-12-01T09:21:34.859Z",
+        "outlook_event_id": null,
+        "is_user_seen": false,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 70,
+    "fields": {
+        "title": "ทดสอบระบบ",
+        "room": 3,
+        "user": 1,
+        "start_time": "2025-12-02T18:40:00Z",
+        "end_time": "2025-12-02T19:40:00Z",
+        "participant_count": 20,
+        "department": "ไอที",
+        "chairman": "-",
+        "description": "",
+        "additional_requests": "",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "APPROVED",
+        "approver_comment": null,
+        "created_at": "2025-12-03T01:32:15.465Z",
+        "updated_at": "2025-12-04T06:05:49.491Z",
+        "outlook_event_id": null,
+        "is_user_seen": false,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 71,
+    "fields": {
+        "title": "HappybirthdaytoMe",
+        "room": 3,
+        "user": 5,
+        "start_time": "2026-02-09T01:00:00Z",
+        "end_time": "2026-02-09T11:00:00Z",
+        "participant_count": 10,
+        "department": null,
+        "chairman": "Nawantorn",
+        "description": "",
+        "additional_requests": "",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "CANCELLED",
+        "approver_comment": null,
+        "created_at": "2025-12-03T06:18:39.233Z",
+        "updated_at": "2025-12-19T01:27:27.109Z",
+        "outlook_event_id": null,
+        "is_user_seen": true,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 72,
+    "fields": {
+        "title": "ทดสอบระบบ",
+        "room": 2,
+        "user": 1,
+        "start_time": "2025-12-04T10:05:00Z",
+        "end_time": "2025-12-04T10:15:00Z",
+        "participant_count": 5,
+        "department": "ไอที",
+        "chairman": "-",
+        "description": "",
+        "additional_requests": "",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "APPROVED",
+        "approver_comment": null,
+        "created_at": "2025-12-04T10:01:59.127Z",
+        "updated_at": "2025-12-04T10:01:59.127Z",
+        "outlook_event_id": null,
+        "is_user_seen": false,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 73,
+    "fields": {
+        "title": "ทดสอบระบบ",
+        "room": 8,
+        "user": 1,
+        "start_time": "2025-12-08T05:00:00Z",
+        "end_time": "2025-12-08T06:00:00Z",
+        "participant_count": 20,
+        "department": "it",
+        "chairman": "-",
+        "description": "",
+        "additional_requests": "",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "APPROVED",
+        "approver_comment": null,
+        "created_at": "2025-12-08T03:42:21.819Z",
+        "updated_at": "2025-12-08T04:08:53.826Z",
+        "outlook_event_id": null,
+        "is_user_seen": false,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 74,
+    "fields": {
+        "title": "ทดสอบระบบ",
+        "room": 8,
+        "user": 1,
+        "start_time": "2025-12-15T05:00:00Z",
+        "end_time": "2025-12-15T06:00:00Z",
+        "participant_count": 20,
+        "department": "it",
+        "chairman": "-",
+        "description": "",
+        "additional_requests": "",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "APPROVED",
+        "approver_comment": null,
+        "created_at": "2025-12-08T03:42:28.403Z",
+        "updated_at": "2025-12-08T06:10:25.113Z",
+        "outlook_event_id": null,
+        "is_user_seen": false,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 75,
+    "fields": {
+        "title": "ทดสอบระบบ",
+        "room": 8,
+        "user": 1,
+        "start_time": "2025-12-22T05:00:00Z",
+        "end_time": "2025-12-22T06:00:00Z",
+        "participant_count": 20,
+        "department": "it",
+        "chairman": "-",
+        "description": "",
+        "additional_requests": "",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "APPROVED",
+        "approver_comment": null,
+        "created_at": "2025-12-08T03:42:28.447Z",
+        "updated_at": "2025-12-08T06:10:27.943Z",
+        "outlook_event_id": null,
+        "is_user_seen": false,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 76,
+    "fields": {
+        "title": "ทดสอบระบบ",
+        "room": 3,
+        "user": 5,
+        "start_time": "2025-12-08T09:00:00Z",
+        "end_time": "2025-12-08T09:10:00Z",
+        "participant_count": 30,
+        "department": "ไอที",
+        "chairman": "-",
+        "description": "",
+        "additional_requests": "",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "APPROVED",
+        "approver_comment": null,
+        "created_at": "2025-12-08T08:10:08.132Z",
+        "updated_at": "2025-12-08T08:25:03.897Z",
+        "outlook_event_id": null,
+        "is_user_seen": true,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 77,
+    "fields": {
+        "title": "ทดสอบระบบ",
+        "room": 2,
+        "user": 5,
+        "start_time": "2025-12-11T07:20:00Z",
+        "end_time": "2025-12-11T07:50:00Z",
+        "participant_count": 5,
+        "department": "ไอที",
+        "chairman": "*",
+        "description": "",
+        "additional_requests": "ไมค์ กล้อง",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "APPROVED",
+        "approver_comment": null,
+        "created_at": "2025-12-11T07:09:51.151Z",
+        "updated_at": "2025-12-11T07:10:37.348Z",
+        "outlook_event_id": null,
+        "is_user_seen": true,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 78,
+    "fields": {
+        "title": "ทดสอบระบบ",
+        "room": 3,
+        "user": 5,
+        "start_time": "2025-12-11T07:30:00Z",
+        "end_time": "2025-12-11T07:50:00Z",
+        "participant_count": 14,
+        "department": "ไอที",
+        "chairman": "-",
+        "description": "",
+        "additional_requests": "ไมค์ ทีวี กล้อง",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "APPROVED",
+        "approver_comment": null,
+        "created_at": "2025-12-11T07:10:31.371Z",
+        "updated_at": "2025-12-11T07:18:09.572Z",
+        "outlook_event_id": null,
+        "is_user_seen": true,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 79,
+    "fields": {
+        "title": "ทดสอบระบบ",
+        "room": 3,
+        "user": 5,
+        "start_time": "2025-12-16T06:00:00Z",
+        "end_time": "2025-12-16T06:10:00Z",
+        "participant_count": 45,
+        "department": "ไอที",
+        "chairman": "-",
+        "description": "",
+        "additional_requests": "",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "CANCELLED",
+        "approver_comment": null,
+        "created_at": "2025-12-16T04:25:49.723Z",
+        "updated_at": "2025-12-16T04:37:46.068Z",
+        "outlook_event_id": null,
+        "is_user_seen": true,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 80,
+    "fields": {
+        "title": "ทดสอบระบบ",
+        "room": 3,
+        "user": 5,
+        "start_time": "2025-12-16T06:10:00Z",
+        "end_time": "2025-12-16T06:30:00Z",
+        "participant_count": 45,
+        "department": "ไอที",
+        "chairman": "-",
+        "description": "",
+        "additional_requests": "",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "APPROVED",
+        "approver_comment": null,
+        "created_at": "2025-12-16T04:38:26.451Z",
+        "updated_at": "2025-12-16T06:15:39.643Z",
+        "outlook_event_id": null,
+        "is_user_seen": true,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 81,
+    "fields": {
+        "title": "ทดสอบระบบ",
+        "room": 8,
+        "user": 5,
+        "start_time": "2025-12-16T07:00:00Z",
+        "end_time": "2025-12-16T07:30:00Z",
+        "participant_count": 15,
+        "department": "ไอที",
+        "chairman": "-",
+        "description": "",
+        "additional_requests": "",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "CANCELLED",
+        "approver_comment": null,
+        "created_at": "2025-12-16T06:14:43.533Z",
+        "updated_at": "2025-12-16T06:15:51.768Z",
+        "outlook_event_id": null,
+        "is_user_seen": true,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 82,
+    "fields": {
+        "title": "ทดสอบ",
+        "room": 8,
+        "user": 1,
+        "start_time": "2025-12-16T08:30:00Z",
+        "end_time": "2025-12-16T08:45:00Z",
+        "participant_count": 10,
+        "department": "ไอที",
+        "chairman": "-",
+        "description": "",
+        "additional_requests": "",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "APPROVED",
+        "approver_comment": null,
+        "created_at": "2025-12-16T08:10:00.045Z",
+        "updated_at": "2025-12-16T08:16:34.114Z",
+        "outlook_event_id": null,
+        "is_user_seen": false,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 83,
+    "fields": {
+        "title": "ทดสอบระบบ",
+        "room": 3,
+        "user": 5,
+        "start_time": "2025-12-17T08:30:00Z",
+        "end_time": "2025-12-17T09:00:00Z",
+        "participant_count": 40,
+        "department": "ไอที",
+        "chairman": "-",
+        "description": "",
+        "additional_requests": "",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "CANCELLED",
+        "approver_comment": null,
+        "created_at": "2025-12-17T07:37:07.713Z",
+        "updated_at": "2025-12-17T08:26:21.543Z",
+        "outlook_event_id": null,
+        "is_user_seen": true,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 84,
+    "fields": {
+        "title": "ทดสอบระบบ",
+        "room": 3,
+        "user": 5,
+        "start_time": "2025-12-17T09:00:00Z",
+        "end_time": "2025-12-17T09:30:00Z",
+        "participant_count": 40,
+        "department": "บัญชี",
+        "chairman": "--",
+        "description": "",
+        "additional_requests": "ทีวี",
+        "additional_notes": "",
+        "room_layout": "classroom",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "CANCELLED",
+        "approver_comment": null,
+        "created_at": "2025-12-17T07:46:44.206Z",
+        "updated_at": "2025-12-17T08:26:22.609Z",
+        "outlook_event_id": null,
+        "is_user_seen": true,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 85,
+    "fields": {
+        "title": "ทดสอบระบบ",
+        "room": 8,
+        "user": 5,
+        "start_time": "2025-12-17T09:20:00Z",
+        "end_time": "2025-12-17T09:30:00Z",
+        "participant_count": 20,
+        "department": "ไอที",
+        "chairman": "--",
+        "description": "",
+        "additional_requests": "",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "CANCELLED",
+        "approver_comment": null,
+        "created_at": "2025-12-17T08:40:30.875Z",
+        "updated_at": "2025-12-17T08:42:20.804Z",
+        "outlook_event_id": null,
+        "is_user_seen": true,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 86,
+    "fields": {
+        "title": "ทดสอบระบบ",
+        "room": 1,
+        "user": 5,
+        "start_time": "2025-12-17T09:30:00Z",
+        "end_time": "2025-12-17T09:50:00Z",
+        "participant_count": 10,
+        "department": "ไอที",
+        "chairman": "*",
+        "description": "",
+        "additional_requests": "",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "CANCELLED",
+        "approver_comment": null,
+        "created_at": "2025-12-17T08:51:10.853Z",
+        "updated_at": "2025-12-17T08:51:39.797Z",
+        "outlook_event_id": null,
+        "is_user_seen": true,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 87,
+    "fields": {
+        "title": "จับฉลากของขวัญ",
+        "room": 9,
+        "user": 5,
+        "start_time": "2025-12-25T01:00:00Z",
+        "end_time": "2025-12-25T10:00:00Z",
+        "participant_count": 9,
+        "department": "ไอที",
+        "chairman": "พี่แอมบาสเตอร์",
+        "description": "",
+        "additional_requests": "",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "APPROVED",
+        "approver_comment": null,
+        "created_at": "2025-12-18T04:56:47.865Z",
+        "updated_at": "2025-12-19T04:01:32.448Z",
+        "outlook_event_id": null,
+        "is_user_seen": true,
+        "equipments": [
+            1,
+            4,
+            5,
+            6
+        ]
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 88,
+    "fields": {
+        "title": "ทดสอบ",
+        "room": 2,
+        "user": 1,
+        "start_time": "2025-12-18T09:15:00Z",
+        "end_time": "2025-12-18T11:00:00Z",
+        "participant_count": 5,
+        "department": "ทดสอบ",
+        "chairman": "ทดสอบ",
+        "description": "",
+        "additional_requests": "",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "APPROVED",
+        "approver_comment": null,
+        "created_at": "2025-12-18T08:35:40.698Z",
+        "updated_at": "2025-12-18T08:35:40.698Z",
+        "outlook_event_id": null,
+        "is_user_seen": false,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 89,
+    "fields": {
+        "title": "mvlv[",
+        "room": 8,
+        "user": 5,
+        "start_time": "2025-12-19T01:00:00Z",
+        "end_time": "2025-12-19T04:00:00Z",
+        "participant_count": 1,
+        "department": "mvlv[",
+        "chairman": "mvlv[",
+        "description": "123456",
+        "additional_requests": "",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "presentations/รออนมต.png",
+        "status": "REJECTED",
+        "approver_comment": null,
+        "created_at": "2025-12-18T08:49:28.902Z",
+        "updated_at": "2025-12-19T04:01:31.171Z",
+        "outlook_event_id": null,
+        "is_user_seen": true,
+        "equipments": [
+            1
+        ]
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 90,
+    "fields": {
+        "title": "ทดสอบ",
+        "room": 9,
+        "user": 5,
+        "start_time": "2025-12-22T01:55:00Z",
+        "end_time": "2025-12-22T02:00:00Z",
+        "participant_count": 5,
+        "department": "-",
+        "chairman": "-",
+        "description": "",
+        "additional_requests": "",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "APPROVED",
+        "approver_comment": null,
+        "created_at": "2025-12-22T01:21:24.486Z",
+        "updated_at": "2025-12-23T04:56:33.865Z",
+        "outlook_event_id": null,
+        "is_user_seen": true,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 91,
+    "fields": {
+        "title": "ทดสอบ",
+        "room": 3,
+        "user": 1,
+        "start_time": "2025-12-24T02:30:00Z",
+        "end_time": "2025-12-24T02:50:00Z",
+        "participant_count": 10,
+        "department": "-",
+        "chairman": "--",
+        "description": "",
+        "additional_requests": "",
+        "additional_notes": "",
+        "room_layout": "other",
+        "room_layout_attachment": "layout_attachments/report_5.pdf",
+        "presentation_file": "presentations/แบบแผนทยงไมไดตงชอ.drawio.png",
+        "status": "APPROVED",
+        "approver_comment": null,
+        "created_at": "2025-12-22T01:54:54.771Z",
+        "updated_at": "2025-12-22T02:14:42.918Z",
+        "outlook_event_id": null,
+        "is_user_seen": false,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 92,
+    "fields": {
+        "title": "ทดสอบ",
+        "room": 9,
+        "user": 5,
+        "start_time": "2025-12-23T05:00:00Z",
+        "end_time": "2025-12-23T05:30:00Z",
+        "participant_count": 1,
+        "department": "ไอที",
+        "chairman": "-",
+        "description": "",
+        "additional_requests": "",
+        "additional_notes": "",
+        "room_layout": "theatre",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "APPROVED",
+        "approver_comment": null,
+        "created_at": "2025-12-23T03:58:29.329Z",
+        "updated_at": "2025-12-23T04:56:32.618Z",
+        "outlook_event_id": null,
+        "is_user_seen": true,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 93,
+    "fields": {
+        "title": "ทดสอบ",
+        "room": 10,
+        "user": 5,
+        "start_time": "2025-12-24T09:00:00Z",
+        "end_time": "2025-12-24T09:30:00Z",
+        "participant_count": 1,
+        "department": "-",
+        "chairman": "-",
+        "description": "",
+        "additional_requests": "",
+        "additional_notes": "",
+        "room_layout": "",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "APPROVED",
+        "approver_comment": null,
+        "created_at": "2025-12-24T07:34:27.618Z",
+        "updated_at": "2025-12-24T08:11:00.267Z",
+        "outlook_event_id": null,
+        "is_user_seen": true,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.booking",
+    "pk": 94,
+    "fields": {
+        "title": "ทดสอบ",
+        "room": 10,
+        "user": 1,
+        "start_time": "2025-12-26T03:00:00Z",
+        "end_time": "2025-12-26T03:30:00Z",
+        "participant_count": 1,
+        "department": "--",
+        "chairman": "--",
+        "description": "",
+        "additional_requests": "",
+        "additional_notes": "",
+        "room_layout": "",
+        "room_layout_attachment": "",
+        "presentation_file": "",
+        "status": "APPROVED",
+        "approver_comment": null,
+        "created_at": "2025-12-26T02:08:45.286Z",
+        "updated_at": "2025-12-26T02:08:53.325Z",
+        "outlook_event_id": null,
+        "is_user_seen": false,
+        "equipments": []
+    }
+},
+{
+    "model": "booking.userprofile",
+    "pk": 1,
+    "fields": {
+        "user": 1,
+        "department": null,
+        "phone": null,
+        "line_user_id": "Uceb077c003771ded0106d27505b22adc"
+    }
+},
+{
+    "model": "booking.userprofile",
+    "pk": 2,
+    "fields": {
+        "user": 5,
+        "department": "ITD",
+        "phone": null,
+        "line_user_id": "U1f696f39b126462268562b99409e4dd7"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 90,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "ออกจากระบบ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-11T07:08:51.037Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 91,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "details": "เข้าสู่ระบบสำเร็จ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-11T07:08:58.787Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 92,
+    "fields": {
+        "user": 5,
+        "action": "BOOKING_CREATED",
+        "details": "จองห้อง ห้องประชุม O1-2 [Target: ทดสอบระบบ - ห้องประชุม O1-2]",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-11T07:09:51.166Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 93,
+    "fields": {
+        "user": 5,
+        "action": "BOOKING_CREATED",
+        "details": "จองห้อง ห้องประชุมใหญ่ [Target: ทดสอบระบบ - ห้องประชุมใหญ่]",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-11T07:10:31.382Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 94,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "details": "ออกจากระบบ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-11T07:10:38.908Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 95,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "เข้าสู่ระบบสำเร็จ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-11T07:10:45.820Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 96,
+    "fields": {
+        "user": 1,
+        "action": "BOOKING_APPROVED",
+        "details": "อนุมัติโดย Admin [Target: ทดสอบระบบ - ห้องประชุมใหญ่]",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-11T07:10:53.100Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 97,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "ออกจากระบบ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-11T07:17:53.218Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 98,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "details": "เข้าสู่ระบบสำเร็จ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-11T07:18:06.624Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 99,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "details": "ออกจากระบบ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-11T07:18:28.787Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 100,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "เข้าสู่ระบบสำเร็จ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-11T07:21:21.563Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 101,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "ออกจากระบบ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-12T02:28:10.357Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 102,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "ออกจากระบบ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-12T06:54:32.543Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 103,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "ออกจากระบบ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-12T08:28:57.086Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 104,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "เข้าสู่ระบบสำเร็จ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-12T08:29:08.030Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 105,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "ออกจากระบบ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-16T01:41:05.786Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 106,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "เข้าสู่ระบบสำเร็จ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-16T01:41:50.326Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 107,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "ออกจากระบบ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-16T04:25:06.452Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 108,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "details": "เข้าสู่ระบบสำเร็จ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-16T04:25:14.930Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 109,
+    "fields": {
+        "user": 5,
+        "action": "BOOKING_CREATED",
+        "details": "จองห้อง ห้องประชุมใหญ่ [Target: ทดสอบระบบ - ห้องประชุมใหญ่]",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-16T04:25:49.736Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 110,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "details": "ออกจากระบบ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-16T04:26:01.517Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 111,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "เข้าสู่ระบบสำเร็จ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-16T04:26:11.402Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 112,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "ออกจากระบบ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-16T04:37:24.288Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 113,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "details": "เข้าสู่ระบบสำเร็จ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-16T04:37:31.966Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 114,
+    "fields": {
+        "user": 5,
+        "action": "BOOKING_CANCELLED",
+        "details": "ยกเลิกการจอง [Target: ทดสอบระบบ - ห้องประชุมใหญ่]",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-16T04:37:46.081Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 115,
+    "fields": {
+        "user": 5,
+        "action": "BOOKING_CREATED",
+        "details": "จองห้อง ห้องประชุมใหญ่ [Target: ทดสอบระบบ - ห้องประชุมใหญ่]",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-16T04:38:26.463Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 116,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "details": "ออกจากระบบ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-16T04:38:35.623Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 117,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "เข้าสู่ระบบสำเร็จ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-16T04:38:46.804Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 118,
+    "fields": {
+        "user": 1,
+        "action": "BOOKING_APPROVED",
+        "details": "อนุมัติโดย Admin [Target: ทดสอบระบบ - ห้องประชุมใหญ่]",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-16T04:39:27.692Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 119,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "ออกจากระบบ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-16T06:13:38.945Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 120,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "details": "เข้าสู่ระบบสำเร็จ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-16T06:13:46.843Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 121,
+    "fields": {
+        "user": 5,
+        "action": "BOOKING_CREATED",
+        "details": "จองห้อง ห้องประชุม TEIL 4 [Target: ทดสอบระบบ - ห้องประชุม TEIL 4]",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-16T06:14:43.545Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 122,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "details": "ออกจากระบบ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-16T06:14:53.051Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 123,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "เข้าสู่ระบบสำเร็จ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-16T06:15:01.024Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 124,
+    "fields": {
+        "user": 1,
+        "action": "BOOKING_APPROVED",
+        "details": "อนุมัติโดย Admin [Target: ทดสอบระบบ - ห้องประชุม TEIL 4]",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-16T06:15:08.911Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 125,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "ออกจากระบบ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-16T06:15:14.251Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 126,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "details": "เข้าสู่ระบบสำเร็จ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-16T06:15:21.788Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 127,
+    "fields": {
+        "user": 5,
+        "action": "BOOKING_CANCELLED",
+        "details": "ยกเลิกการจอง [Target: ทดสอบระบบ - ห้องประชุม TEIL 4]",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-16T06:15:51.780Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 128,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "details": "ออกจากระบบ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-16T06:16:06.144Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 129,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "เข้าสู่ระบบสำเร็จ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-16T06:16:13.966Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 130,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "ออกจากระบบ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-16T06:37:29.627Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 131,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "details": "เข้าสู่ระบบสำเร็จ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-16T06:37:35.536Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 132,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "details": "ออกจากระบบ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-16T06:37:43.215Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 133,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "เข้าสู่ระบบสำเร็จ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-16T06:39:03.917Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 134,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "ออกจากระบบ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-16T06:41:59.851Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 135,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "details": "เข้าสู่ระบบสำเร็จ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-16T06:42:06.713Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 136,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "details": "ออกจากระบบ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-16T06:42:10.371Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 137,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "details": "เข้าสู่ระบบสำเร็จ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-16T06:42:25.331Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 138,
+    "fields": {
+        "user": 5,
+        "action": "BOOKING_CANCELLED",
+        "details": "ยกเลิกการจอง [Target: - - ห้องประชุม TEIL 4]",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-16T06:42:35.449Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 139,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "details": "ออกจากระบบ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-16T06:42:42.962Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 140,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "เข้าสู่ระบบสำเร็จ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-16T06:42:49.846Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 141,
+    "fields": {
+        "user": 1,
+        "action": "BOOKING_CREATED",
+        "details": "จองห้อง ห้องประชุม TEIL 4 [Target: ทดสอบ - ห้องประชุม TEIL 4]",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-16T08:10:00.057Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 142,
+    "fields": {
+        "user": 1,
+        "action": "BOOKING_APPROVED",
+        "details": "อนุมัติโดย Admin [Target: ทดสอบ - ห้องประชุม TEIL 4]",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-16T08:16:34.125Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 143,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "ออกจากระบบ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-17T07:32:16.085Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 144,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "details": "เข้าสู่ระบบสำเร็จ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-17T07:32:22.553Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 145,
+    "fields": {
+        "user": 5,
+        "action": "BOOKING_CREATED",
+        "details": "จองห้อง ห้องประชุมใหญ่ [Target: ทดสอบระบบ - ห้องประชุมใหญ่]",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-17T07:37:07.724Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 146,
+    "fields": {
+        "user": 5,
+        "action": "BOOKING_CREATED",
+        "details": "จองห้อง ห้องประชุมใหญ่ [Target: ทดสอบระบบ - ห้องประชุมใหญ่]",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-17T07:46:44.221Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 147,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "details": "ออกจากระบบ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-17T07:47:23.965Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 148,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "เข้าสู่ระบบสำเร็จ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-17T07:47:32.689Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 149,
+    "fields": {
+        "user": 1,
+        "action": "BOOKING_APPROVED",
+        "details": "อนุมัติโดย Admin [Target: ทดสอบระบบ - ห้องประชุมใหญ่]",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-17T08:24:55.276Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 150,
+    "fields": {
+        "user": 1,
+        "action": "BOOKING_APPROVED",
+        "details": "อนุมัติโดย Admin [Target: ทดสอบระบบ - ห้องประชุมใหญ่]",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-17T08:24:58.385Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 151,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "ออกจากระบบ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-17T08:25:43.463Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 152,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "details": "เข้าสู่ระบบสำเร็จ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-17T08:25:49.057Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 153,
+    "fields": {
+        "user": 5,
+        "action": "BOOKING_CANCELLED",
+        "details": "ยกเลิกการจอง [Target: ทดสอบระบบ - ห้องประชุมใหญ่]",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-17T08:25:59.355Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 154,
+    "fields": {
+        "user": 5,
+        "action": "BOOKING_CANCELLED",
+        "details": "ยกเลิกการจอง [Target: ทดสอบระบบ - ห้องประชุมใหญ่]",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-17T08:26:14.855Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 155,
+    "fields": {
+        "user": 5,
+        "action": "BOOKING_CANCELLED",
+        "details": "ยกเลิกการจอง [Target: ทดสอบระบบ - ห้องประชุมใหญ่]",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-17T08:26:15.922Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 156,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "details": "ออกจากระบบ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-17T08:26:25.794Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 157,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "เข้าสู่ระบบสำเร็จ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-17T08:26:32.533Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 158,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "ออกจากระบบ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-17T08:39:41.943Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 159,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "details": "เข้าสู่ระบบสำเร็จ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-17T08:39:48.954Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 160,
+    "fields": {
+        "user": 5,
+        "action": "BOOKING_CREATED",
+        "details": "จองห้อง ห้องประชุม TEIL 4 [Target: ทดสอบระบบ - ห้องประชุม TEIL 4]",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-17T08:40:30.907Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 161,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "details": "ออกจากระบบ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-17T08:41:10.534Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 162,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "เข้าสู่ระบบสำเร็จ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-17T08:41:17.935Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 163,
+    "fields": {
+        "user": 1,
+        "action": "BOOKING_APPROVED",
+        "details": "อนุมัติโดย Admin [Target: ทดสอบระบบ - ห้องประชุม TEIL 4]",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-17T08:41:29.617Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 164,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "ออกจากระบบ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-17T08:41:34.138Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 165,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "details": "เข้าสู่ระบบสำเร็จ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-17T08:41:46.489Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 166,
+    "fields": {
+        "user": 5,
+        "action": "BOOKING_CANCELLED",
+        "details": "ยกเลิกการจอง [Target: ทดสอบระบบ - ห้องประชุม TEIL 4]",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-17T08:42:13.926Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 167,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "details": "ออกจากระบบ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-17T08:42:22.074Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 168,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "เข้าสู่ระบบสำเร็จ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-17T08:42:30.686Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 169,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "ออกจากระบบ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-17T08:50:27.713Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 170,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "details": "เข้าสู่ระบบสำเร็จ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-17T08:50:37.610Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 171,
+    "fields": {
+        "user": 5,
+        "action": "BOOKING_CREATED",
+        "details": "จองห้อง ห้องประชุม O1-1 [Target: ทดสอบระบบ - ห้องประชุม O1-1]",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-17T08:51:10.868Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 172,
+    "fields": {
+        "user": 5,
+        "action": "BOOKING_CANCELLED",
+        "details": "ยกเลิกการจอง [Target: ทดสอบระบบ - ห้องประชุม O1-1]",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-17T08:51:23.756Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 173,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "details": "ออกจากระบบ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-17T08:51:28.696Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 174,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "เข้าสู่ระบบสำเร็จ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-17T08:51:36.306Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 175,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "ออกจากระบบ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-18T00:55:27.371Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 176,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "details": "เข้าสู่ระบบสำเร็จ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-18T00:55:34.504Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 177,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "details": "ออกจากระบบ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-18T00:56:14.632Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 178,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "เข้าสู่ระบบสำเร็จ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-18T00:56:22.650Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 179,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "ออกจากระบบ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-18T00:57:17.879Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 180,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "details": "เข้าสู่ระบบสำเร็จ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-18T01:03:45.529Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 181,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "details": "ออกจากระบบ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-18T01:06:48.387Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 182,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "เข้าสู่ระบบสำเร็จ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-18T01:07:09.281Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 183,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "ออกจากระบบ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-18T03:52:53.171Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 184,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "details": "เข้าสู่ระบบสำเร็จ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-18T03:53:07.002Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 185,
+    "fields": {
+        "user": 5,
+        "action": "BOOKING_CREATED",
+        "details": "จองห้อง ห้องประชุม O3-1 [Target: จับฉลากของขวัญ - ห้องประชุม O3-1]",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-18T04:56:47.882Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 186,
+    "fields": {
+        "user": 5,
+        "action": "BOOKING_EDITED",
+        "details": "แก้ไขการจอง [Target: จับฉลากของขวัญ - ห้องประชุม O3-1]",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-18T04:57:39.835Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 187,
+    "fields": {
+        "user": 5,
+        "action": "BOOKING_EDITED",
+        "details": "แก้ไขการจอง [Target: จับฉลากของขวัญ - ห้องประชุม O3-1]",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-18T06:07:16.314Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 188,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "details": "ออกจากระบบ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-18T06:07:30.504Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 189,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "เข้าสู่ระบบสำเร็จ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-18T06:07:43.424Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 190,
+    "fields": {
+        "user": 1,
+        "action": "BOOKING_APPROVED",
+        "details": "อนุมัติโดย Admin [Target: จับฉลากของขวัญ - ห้องประชุม O3-1]",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-18T08:06:01.887Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 191,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "ออกจากระบบ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-18T08:17:37.535Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 192,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "เข้าสู่ระบบสำเร็จ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-18T08:18:15.628Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 193,
+    "fields": {
+        "user": 1,
+        "action": "BOOKING_CREATED",
+        "details": "จองห้อง ห้องประชุม O1-2 [Target: ทดสอบ - ห้องประชุม O1-2]",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-18T08:35:40.714Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 194,
+    "fields": {
+        "user": 1,
+        "action": "BOOKING_CANCELLED",
+        "details": "ยกเลิกการจอง [Target: HappybirthdaytoMe - ห้องประชุมใหญ่]",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-18T08:47:06.810Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 195,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "ออกจากระบบ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-18T08:48:32.427Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 196,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "details": "เข้าสู่ระบบสำเร็จ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-18T08:48:40.828Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 197,
+    "fields": {
+        "user": 5,
+        "action": "BOOKING_CREATED",
+        "details": "จองห้อง ห้องประชุม TEIL 4 [Target: mvlv[ - ห้องประชุม TEIL 4]",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-18T08:49:28.927Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 198,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "details": "ออกจากระบบ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-18T08:49:38.371Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 199,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "เข้าสู่ระบบสำเร็จ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-18T08:49:49.832Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 200,
+    "fields": {
+        "user": 1,
+        "action": "BOOKING_APPROVED",
+        "details": "อนุมัติโดย Admin [Target: mvlv[ - ห้องประชุม TEIL 4]",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-18T08:50:03.559Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 201,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "ออกจากระบบ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-18T08:50:21.961Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 202,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "details": "เข้าสู่ระบบสำเร็จ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-18T08:50:29.647Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 203,
+    "fields": {
+        "user": 5,
+        "action": "BOOKING_EDITED",
+        "details": "แก้ไขการจอง [Target: mvlv[ - ห้องประชุม TEIL 4]",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-18T08:51:09.263Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 204,
+    "fields": {
+        "user": 5,
+        "action": "BOOKING_CANCELLED",
+        "details": "ยกเลิกการจอง [Target: - - ห้องประชุม TEIL 4]",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-18T08:51:48.182Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 205,
+    "fields": {
+        "user": 5,
+        "action": "BOOKING_EDITED",
+        "details": "แก้ไขการจอง [Target: mvlv[ - ห้องประชุม TEIL 4]",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-18T08:55:45.024Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 206,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "details": "ออกจากระบบ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-18T09:01:54.721Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 207,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "เข้าสู่ระบบสำเร็จ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-18T09:02:05.804Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 208,
+    "fields": {
+        "user": 1,
+        "action": "BOOKING_REJECTED",
+        "details": "ปฏิเสธโดย Admin [Target: mvlv[ - ห้องประชุม TEIL 4]",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-19T01:27:18.537Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 209,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "ออกจากระบบ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-19T03:17:39.698Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 210,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "details": "เข้าสู่ระบบสำเร็จ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-19T04:01:26.979Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 211,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "details": "ออกจากระบบ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-19T04:41:00.156Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 212,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "เข้าสู่ระบบสำเร็จ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-19T04:41:07.674Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 213,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "ออกจากระบบ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-22T01:12:32.236Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 214,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "details": "เข้าสู่ระบบสำเร็จ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-22T01:13:23.166Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 215,
+    "fields": {
+        "user": 5,
+        "action": "BOOKING_CREATED",
+        "details": "จองห้อง ห้องประชุม O3-1 [Target: ทดสอบ - ห้องประชุม O3-1]",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-22T01:21:24.500Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 216,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "details": "ออกจากระบบ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-22T01:21:56.565Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 217,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "เข้าสู่ระบบสำเร็จ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-22T01:22:04.582Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 218,
+    "fields": {
+        "user": 1,
+        "action": "BOOKING_APPROVED",
+        "details": "อนุมัติโดย Admin [Target: ทดสอบ - ห้องประชุม O3-1]",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-22T01:22:12.001Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 219,
+    "fields": {
+        "user": 1,
+        "action": "BOOKING_CREATED",
+        "details": "จองห้อง ห้องประชุมใหญ่ [Target: ทดสอบ - ห้องประชุมใหญ่]",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-22T01:54:54.788Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 220,
+    "fields": {
+        "user": 1,
+        "action": "BOOKING_APPROVED",
+        "details": "อนุมัติโดย Admin [Target: ทดสอบ - ห้องประชุมใหญ่]",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-22T02:14:42.932Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 221,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "ออกจากระบบ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-22T02:27:26.663Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 222,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "เข้าสู่ระบบสำเร็จ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-22T02:41:40.422Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 223,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "ออกจากระบบ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-22T09:27:15.296Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 224,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "details": "เข้าสู่ระบบสำเร็จ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-22T09:27:22.671Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 225,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "details": "ออกจากระบบ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-23T01:02:31.216Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 226,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "เข้าสู่ระบบสำเร็จ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-23T01:02:40.870Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 227,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "ออกจากระบบ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-23T03:57:48.945Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 228,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "details": "เข้าสู่ระบบสำเร็จ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-23T03:57:55.910Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 229,
+    "fields": {
+        "user": 5,
+        "action": "BOOKING_CREATED",
+        "details": "จองห้อง ห้องประชุม O3-1 [Target: ทดสอบ - ห้องประชุม O3-1]",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-23T03:58:29.343Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 230,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "details": "ออกจากระบบ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-23T04:10:01.487Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 231,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "เข้าสู่ระบบสำเร็จ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-23T04:10:10.233Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 232,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "ออกจากระบบ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-23T04:29:47.480Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 233,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "details": "เข้าสู่ระบบสำเร็จ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-23T04:29:54.607Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 234,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "details": "ออกจากระบบ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-23T06:35:52.343Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 235,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "details": "เข้าสู่ระบบสำเร็จ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-23T06:42:45.537Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 236,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "details": "ออกจากระบบ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-23T06:43:51.437Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 237,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "เข้าสู่ระบบสำเร็จ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-23T06:44:08.910Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 238,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "ออกจากระบบ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-24T01:31:42.006Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 239,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "details": "เข้าสู่ระบบสำเร็จ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-24T01:31:54.991Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 240,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "details": "ออกจากระบบ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-24T04:31:55.946Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 241,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "เข้าสู่ระบบสำเร็จ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-24T04:32:03.916Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 242,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "ออกจากระบบ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-24T07:18:31.971Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 243,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "details": "เข้าสู่ระบบสำเร็จ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-24T07:18:40.096Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 244,
+    "fields": {
+        "user": 5,
+        "action": "BOOKING_CREATED",
+        "details": "จองห้อง ห้องประชุม O3-2 [Target: ทดสอบ - ห้องประชุม O3-2]",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-24T07:34:27.630Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 245,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "details": "ออกจากระบบ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-24T07:34:35.965Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 246,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "เข้าสู่ระบบสำเร็จ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-24T07:34:42.508Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 247,
+    "fields": {
+        "user": 1,
+        "action": "BOOKING_APPROVED",
+        "details": "อนุมัติโดย Admin [Target: ทดสอบ - ห้องประชุม O3-2]",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-24T07:34:48.456Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 248,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "ออกจากระบบ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-24T07:34:58.227Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 249,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "details": "เข้าสู่ระบบสำเร็จ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-24T07:35:06.684Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 250,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "details": "ออกจากระบบ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-24T08:11:04.723Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 251,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "เข้าสู่ระบบสำเร็จ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-24T08:17:48.453Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 252,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "ออกจากระบบ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-24T08:17:51.171Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 253,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "details": "เข้าสู่ระบบสำเร็จ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-24T08:19:46.519Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 254,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "details": "ออกจากระบบ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-24T08:21:16.600Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 255,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "เข้าสู่ระบบสำเร็จ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-24T08:30:15.646Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 256,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "ออกจากระบบ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-24T08:34:07.082Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 257,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "เข้าสู่ระบบสำเร็จ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-24T08:56:58.408Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 258,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "ออกจากระบบ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-24T09:33:42.010Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 259,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "เข้าสู่ระบบสำเร็จ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-24T09:47:05.352Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 260,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "ออกจากระบบ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-25T01:03:49.295Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 261,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "details": "เข้าสู่ระบบสำเร็จ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-25T01:04:16.870Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 262,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "details": "ออกจากระบบ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-25T01:33:40.616Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 263,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "เข้าสู่ระบบสำเร็จ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-25T01:54:30.171Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 264,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "ออกจากระบบ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-25T02:04:39.397Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 265,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "เข้าสู่ระบบสำเร็จ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-25T02:08:42.016Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 266,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "ออกจากระบบ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-25T02:08:44.534Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 267,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "เข้าสู่ระบบสำเร็จ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-25T02:11:38.708Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 268,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "ออกจากระบบ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-25T03:40:50.058Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 269,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "details": "เข้าสู่ระบบสำเร็จ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-25T03:41:00.809Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 270,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "เข้าสู่ระบบสำเร็จ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-25T04:07:55.080Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 271,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "ออกจากระบบ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-25T04:13:04.571Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 272,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "details": "เข้าสู่ระบบสำเร็จ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-25T04:13:33.960Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 273,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "details": "ออกจากระบบ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-25T04:40:37.200Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 274,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "details": "เข้าสู่ระบบสำเร็จ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-25T04:41:30.525Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 275,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "details": "ออกจากระบบ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-25T06:45:15.951Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 276,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "เข้าสู่ระบบสำเร็จ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-25T06:48:23.227Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 277,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "ออกจากระบบ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-25T07:06:33.278Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 278,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "เข้าสู่ระบบสำเร็จ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-25T07:27:34.422Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 279,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "ออกจากระบบ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-25T09:39:21.228Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 280,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "details": "เข้าสู่ระบบสำเร็จ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-25T09:39:29.026Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 281,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "details": "ออกจากระบบ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-25T09:59:25.542Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 282,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "เข้าสู่ระบบสำเร็จ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-26T01:05:47.933Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 283,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "ออกจากระบบ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-26T02:08:03.675Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 284,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "เข้าสู่ระบบสำเร็จ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-26T02:08:12.676Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 285,
+    "fields": {
+        "user": 1,
+        "action": "BOOKING_CREATED",
+        "details": "จองห้อง ห้องประชุม O3-2 [Target: ทดสอบ - ห้องประชุม O3-2]",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-26T02:08:45.300Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 286,
+    "fields": {
+        "user": 1,
+        "action": "BOOKING_APPROVED",
+        "details": "อนุมัติโดย Admin [Target: ทดสอบ - ห้องประชุม O3-2]",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-26T02:08:53.336Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 287,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "ออกจากระบบ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-26T02:14:13.964Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 288,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "details": "เข้าสู่ระบบสำเร็จ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-26T02:14:23.978Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 289,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "details": "ออกจากระบบ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-26T02:36:01.955Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 290,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "เข้าสู่ระบบสำเร็จ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-26T02:36:15.720Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 291,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "ออกจากระบบ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-26T02:38:43.568Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 292,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "details": "เข้าสู่ระบบสำเร็จ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-26T02:38:49.243Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 293,
+    "fields": {
+        "user": 5,
+        "action": "LOGIN",
+        "details": "ออกจากระบบ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-26T02:58:11.514Z"
+    }
+},
+{
+    "model": "booking.auditlog",
+    "pk": 294,
+    "fields": {
+        "user": 1,
+        "action": "LOGIN",
+        "details": "เข้าสู่ระบบสำเร็จ",
+        "ip_address": "127.0.0.1",
+        "timestamp": "2025-12-26T02:58:18.885Z"
+    }
+}
+]

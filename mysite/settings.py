@@ -91,16 +91,23 @@ WSGI_APPLICATION = 'mysite.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'mssql',
-        'NAME': 'Test_DB',
-        'HOST': 'localhost\\SQLEXPRESS',
+        'NAME': 'teghmeet_room',         # ชื่อ Database
+        'USER': 'sa',                    # User
+        'PASSWORD': 'liaMilleMig#2020',  # Password
+        'HOST': '192.168.2.254',         # IP Server
         'PORT': '',
         'OPTIONS': {
             'driver': 'ODBC Driver 17 for SQL Server',
-            'extra_params': 'Trusted_Connection=yes;TrustServerCertificate=yes',
+            'extra_params': 'TrustServerCertificate=yes',
         },
     }
 }
-
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [

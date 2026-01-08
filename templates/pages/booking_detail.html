@@ -1,108 +1,166 @@
 {% extends 'base.html' %}
+{% load static %}
+
 {% block title %}รายละเอียดการจอง - {{ booking.title }}{% endblock %}
 
 {% block content %}
-<div class="container py-4">
+<div class="container py-5">
     <div class="row justify-content-center">
         <div class="col-lg-8">
             
-            <a href="{% url 'history' %}" class="btn btn-outline-secondary mb-3 btn-sm">
-                <i class="bi bi-arrow-left"></i> กลับไปหน้าประวัติ
-            </a>
+            <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+                
+                <div class="card-header bg-primary text-white text-center py-5 position-relative border-0">
+                    <a href="javascript:history.back()" class="position-absolute top-0 end-0 m-3 btn btn-outline-light rounded-circle d-flex align-items-center justify-content-center border-0 bg-white bg-opacity-10" style="width: 42px; height: 42px;" title="ย้อนกลับ"><i class="bi bi-x-lg fs-5"></i></a>
+                    
+                    <div class="mb-4">
+                        {% if booking.status == 'APPROVED' %}
+                            <span class="badge bg-white text-success rounded-pill px-4 py-2 fs-5 shadow">
+                                <i class="bi bi-check-circle-fill me-2"></i>อนุมัติแล้ว
+                            </span>
+                        {% elif booking.status == 'PENDING' %}
+                            <span class="badge bg-white text-warning rounded-pill px-4 py-2 fs-5 shadow">
+                                <i class="bi bi-hourglass-split me-2"></i>รออนุมัติ
+                            </span>
+                        {% elif booking.status == 'REJECTED' %}
+                            <span class="badge bg-white text-danger rounded-pill px-4 py-2 fs-5 shadow">
+                                <i class="bi bi-x-circle-fill me-2"></i>ไม่อนุมัติ
+                            </span>
+                        {% elif booking.status == 'CANCELLED' %}
+                            <span class="badge bg-white text-secondary rounded-pill px-5 py-3 fs-4 shadow-lg border border-2 border-white">
+                                <i class="bi bi-slash-circle-fill me-2"></i>ยกเลิก
+                            </span>
+                        {% endif %}
+                    </div>
 
-            <div class="card shadow-sm border-0">
-                <div class="card-header bg-primary text-white py-3">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0 fw-bold"><i class="bi bi-calendar-event me-2"></i> {{ booking.title }}</h5>
-                        <span class="badge bg-light text-primary fs-6">{{ booking.get_status_display }}</span>
+                    <h1 class="fw-bold mb-3 display-6">{{ booking.title }}</h1> 
+                    
+                    <div class="d-inline-block bg-white text-primary rounded-pill px-4 py-2 fw-bold shadow-sm fs-5">
+                        <i class="bi bi-calendar-event me-2"></i> {{ booking.start_time|date:"d M Y" }} 
+                        <span class="mx-2">|</span> 
+                        {{ booking.start_time|date:"H:i" }} - {{ booking.end_time|date:"H:i" }} น.
                     </div>
                 </div>
 
-                <div class="card-body p-4">
-                    <div class="row g-4 mb-4">
+                <div class="card-body p-4 p-md-5 bg-light">
+                    
+                    <div class="row g-4">
+                        
                         <div class="col-md-6">
-                            <label class="text-muted small">ห้องประชุม</label>
-                            <div class="fw-bold fs-5 text-primary">{{ booking.room.name }}</div>
-                            <small class="text-muted"><i class="bi bi-building"></i> {{ booking.room.building }} (ชั้น {{ booking.room.floor }})</small>
+                            <label class="small text-muted fw-bold mb-1">ประธานในที่ประชุม</label>
+                            <div class="fw-bold text-dark fs-5">{{ booking.chairman|default:"-" }}</div>
                         </div>
                         <div class="col-md-6">
-                            <label class="text-muted small">วันและเวลา</label>
-                            <div class="fw-bold fs-5">{{ booking.start_time|date:"d M Y" }}</div>
-                            <div class="text-dark">
-                                <i class="bi bi-clock"></i> {{ booking.start_time|date:"H:i" }} - {{ booking.end_time|date:"H:i" }}
+                            <label class="small text-muted fw-bold mb-1">แผนก/หน่วยงาน</label>
+                            <div class="fw-bold text-dark fs-5">{{ booking.department|default:"-" }}</div>
+                        </div>
+
+                        <div class="col-12 border-bottom pb-4 mb-2">
+                            <label class="small text-muted fw-bold mb-1">จำนวนผู้เข้าประชุม</label>
+                            <div class="fw-bold text-dark fs-4">{{ booking.participant_count }} ท่าน</div>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="small text-muted fw-bold mb-1">รูปแบบการจัดห้อง / ไฟล์แนบ</label>
+                            <div class="fw-bold text-dark fs-5 mb-1">
+                                {% if booking.room_layout %}
+                                    {{ booking.get_room_layout_display }}
+                                {% else %}
+                                    -
+                                {% endif %}
                             </div>
-                        </div>
-                    </div>
-
-                    <hr class="opacity-10">
-
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="text-muted small d-block">ผู้จอง</label>
-                            <span class="fw-bold"><i class="bi bi-person-circle"></i> {{ booking.user.get_full_name|default:booking.user.username }}</span>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="text-muted small d-block">แผนก</label>
-                            <span>{{ booking.department|default:"-" }}</span>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="text-muted small d-block">จำนวนผู้เข้าประชุม</label>
-                            <span><i class="bi bi-people"></i> {{ booking.participant_count }} คน</span>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="text-muted small d-block">ประธานในที่ประชุม</label>
-                            <span>{{ booking.chairman|default:"-" }}</span>
-                        </div>
-                    </div>
-
-                    <hr class="opacity-10">
-
-                    <div class="mb-3">
-                        <label class="text-muted small d-block">อุปกรณ์ที่ขอเพิ่ม</label>
-                        {% for equip in booking.equipments.all %}
-                            <span class="badge bg-info text-dark me-1"><i class="bi bi-tools"></i> {{ equip.name }}</span>
-                        {% empty %}
-                            <span class="text-muted">- ไม่มี -</span>
-                        {% endfor %}
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="text-muted small d-block">รายละเอียดเพิ่มเติม</label>
-                        <p class="mb-0 bg-light p-3 rounded text-secondary">{{ booking.description|default:"-"|linebreaks }}</p>
-                    </div>
-
-                    {% if booking.room_layout %}
-                    <div class="alert alert-light border d-flex align-items-center">
-                        <i class="bi bi-grid-fill fs-3 me-3 text-secondary"></i>
-                        <div>
-                            <strong>รูปแบบการจัดห้อง:</strong> {{ booking.get_room_layout_display }}
-                            {% if booking.room_layout_attachment %}
-                                <a href="{{ booking.room_layout_attachment.url }}" target="_blank" class="d-block small text-decoration-none mt-1">
-                                    <i class="bi bi-paperclip"></i> ดูไฟล์แนบ
-                                </a>
+                            
+                            {% if booking.room_layout == 'other' and booking.room_layout_attachment %}
+                                <div class="mt-2">
+                                    <a href="{{ booking.room_layout_attachment.url }}" target="_blank" class="btn btn-outline-primary rounded-pill btn-sm px-3">
+                                        <i class="bi bi-paperclip me-1"></i> ดูไฟล์แนบผังห้อง
+                                    </a>
+                                </div>
                             {% endif %}
                         </div>
+
+                        <div class="col-12 border-bottom pb-4 mb-2">
+                            <label class="small text-muted fw-bold mb-1">ไฟล์นำเสนอ</label>
+                            <div class="mt-1">
+                                {% if booking.presentation_file %}
+                                    <a href="{{ booking.presentation_file.url }}" target="_blank" class="btn btn-outline-danger rounded-pill btn-sm px-3">
+                                        <i class="bi bi-file-earmark-slides me-1"></i> ดูไฟล์นำเสนอ
+                                    </a>
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="col-12 border-bottom pb-4 mb-2">
+                            <label class="small text-muted fw-bold mb-2">อุปกรณ์ที่ต้องการ</label>
+                            <div class="d-flex flex-wrap gap-2">
+                                {% for equipment in booking.equipments.all %}
+                                    <span class="badge bg-white border text-dark fw-normal py-2 px-3 rounded-pill fs-6">
+                                        <i class="bi bi-check-circle-fill text-success me-1"></i> {{ equipment.name }}
+                                    </span>
+                                {% empty %}
+                                    <span class="text-muted">- ไม่มีการขออุปกรณ์ -</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="small text-muted fw-bold mb-2">รายละเอียดเพิ่มเติม</label>
+                            <div class="p-4 bg-white border rounded-3 text-secondary fs-6">
+                                {{ booking.description|default:"-"|linebreaks }}
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="small text-muted fw-bold mb-1">ความต้องการเพิ่มเติม</label>
+                            <div class="fw-bold text-dark">{{ booking.additional_requests|default:"-" }}</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="small text-muted fw-bold mb-1">หมายเหตุ</label>
+                            <div class="fw-bold text-dark">{{ booking.additional_notes|default:"-" }}</div>
+                        </div>
+
+                    </div>
+
+                    {% if can_edit_or_cancel %}
+                    <div class="d-flex justify-content-center gap-3 mt-5 pt-3 border-top">
+                        <a href="{% url 'edit_booking' booking.id %}" class="btn btn-warning px-5 py-2 rounded-pill fw-bold shadow-sm">
+                            <i class="bi bi-pencil-fill me-2"></i> แก้ไขข้อมูล
+                        </a>
+                        <button class="btn btn-danger px-5 py-2 rounded-pill fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                            <i class="bi bi-trash-fill me-2"></i> ยกเลิกการจอง
+                        </button>
                     </div>
                     {% endif %}
 
                 </div>
-
-                {% if can_edit_or_cancel %}
-                <div class="card-footer bg-white p-3 d-flex justify-content-end gap-2">
-                    <a href="{% url 'edit_booking' booking.id %}" class="btn btn-warning">
-                        <i class="bi bi-pencil-square"></i> แก้ไข
-                    </a>
-                    
-                    <form action="{% url 'delete_booking' booking.id %}" method="post" onsubmit="return confirm('ยืนยันที่จะยกเลิกการจองนี้?');">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-danger">
-                            <i class="bi bi-trash"></i> ยกเลิกการจอง
-                        </button>
-                    </form>
-                </div>
-                {% endif %}
             </div>
         </div>
     </div>
 </div>
+
+{% if can_edit_or_cancel %}
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title fw-bold">ยืนยันการยกเลิก</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4 text-center">
+                <p>คุณต้องการยกเลิกการจอง <strong>{{ booking.title }}</strong> ใช่หรือไม่?</p>
+            </div>
+            <div class="modal-footer bg-light border-0 justify-content-center">
+                <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">ไม่</button>
+                <form action="{% url 'delete_booking' booking.id %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger rounded-pill px-4">ยืนยัน</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 {% endblock %}

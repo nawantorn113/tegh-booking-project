@@ -59,7 +59,7 @@ class Booking(models.Model):
         ('theatre', 'แบบเธียร์เตอร์ (Theatre)'),
         ('classroom', 'แบบห้องเรียน (Classroom)'),
         ('u_shape', 'แบบตัวยู (U-Shape)'),
-        ('boardroom', 'แบบห้องประชุม (Boardroom)'),
+        ('boardroom', 'แบบห้องประชุม (Conference)'),
         ('banquet', 'แบบจัดเลี้ยง (Banquet)'),
         # [เพิ่ม] ตัวเลือกนี้เข้าไปแล้วครับ
         ('banquet_rounds', 'แบบจัดเลี้ยงโต๊ะกลม (Banquet Rounds)'),

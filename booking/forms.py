@@ -101,7 +101,7 @@ class BookingForm(forms.ModelForm):
             'additional_notes': 'หมายเหตุ',
             'room_layout': 'รูปแบบการจัดห้อง',
             'room_layout_attachment': 'ไฟล์แนบผังห้อง (ถ้ามี)',
-            'presentation_file': 'ไฟล์นำเสนอ (Presentation)',
+            'presentation_file': 'ไฟล์นำเสนอ (สูงสุด 20 MB)',
             'equipments': 'อุปกรณ์ที่ต้องการ',
             'start_time': 'เวลาเริ่ม',
             'end_time': 'เวลาสิ้นสุด',
@@ -215,7 +215,7 @@ class CustomUserCreationForm(forms.ModelForm):
     )
     department = forms.CharField(
         label="แผนก / หน่วยงาน",
-        required=False,
+        required=True,
         widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'เช่น ฝ่ายไอที, ฝ่ายบัญชี'})
     )
     email = forms.EmailField(
@@ -314,7 +314,7 @@ class CustomUserEditForm(forms.ModelForm):
     )
     department = forms.CharField(
         label="แผนก / หน่วยงาน",
-        required=False,
+        required=True,
         widget=forms.TextInput(attrs={'class': 'form-control'})
     )
     email = forms.EmailField(

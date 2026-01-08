@@ -16,7 +16,7 @@
             <form method="get" class="row g-3 align-items-end">
                 <div class="col-md-3">
                     <label class="form-label fw-bold small text-muted">วันที่</label>
-                    <input type="date" name="date" class="form-control" value="{{ selected_date }}">
+                    <input type="date" name="date" class="form-control" value="{{ selected_date|default:'' }}">
                 </div>
                 <div class="col-md-3">
                     <label class="form-label fw-bold small text-muted">ห้องประชุม</label>
@@ -55,7 +55,7 @@
         <div class="card-body p-0">
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
-                    <thead class="bg-light">
+                    <thead class="bg-light text-secondary">
                         <tr>
                             <th class="py-3 ps-4" style="width: 25%;">ห้อง</th>
                             <th class="py-3" style="width: 25%;">หัวข้อ</th>
@@ -84,20 +84,33 @@
                                     {{ b.start_time|date:"H:i" }} - {{ b.end_time|date:"H:i" }}
                                 </small>
                             </td>
+                            
                             <td class="text-center">
-                                {% if b.status == 'APPROVED' %}
-                                    <span class="badge rounded-pill bg-success"><i class="bi bi-check-circle me-1"></i>ใช้งานแล้ว</span>
-                                {% elif b.status == 'PENDING' %}
+                                {% if b.status == 'PENDING' %}
                                     <span class="badge rounded-pill bg-warning text-dark"><i class="bi bi-hourglass-split me-1"></i>รออนุมัติ</span>
+                                {% elif b.status == 'APPROVED' %}
+                                    {# --- Logic เช็คเวลา --- #}
+                                    {% if b.end_time < current_time %}
+                                        <span class="badge rounded-pill bg-secondary"><i class="bi bi-check-circle-fill me-1"></i>ใช้งานแล้ว</span>
+                                    {% elif b.start_time <= current_time and b.end_time >= current_time %}
+                                        <span class="badge rounded-pill bg-primary">
+                                            <span class="spinner-grow spinner-grow-sm me-1" style="width: 0.5rem; height: 0.5rem;" role="status"></span>
+                                            กำลังใช้งาน
+                                        </span>
+                                    {% else %}
+                                        <span class="badge rounded-pill bg-success"><i class="bi bi-calendar-check me-1"></i>อนุมัติแล้ว</span>
+                                    {% endif %}
+                                    {# --------------------- #}
                                 {% elif b.status == 'REJECTED' %}
                                     <span class="badge rounded-pill bg-danger"><i class="bi bi-x-circle me-1"></i>ไม่อนุมัติ</span>
                                 {% else %}
-                                    <span class="badge rounded-pill bg-secondary"><i class="bi bi-trash me-1"></i>ยกเลิก</span>
+                                    <span class="badge rounded-pill bg-orange text-white" style="background-color: #fd7e14;"><i class="bi bi-slash-circle me-1"></i>ยกเลิก</span>
                                 {% endif %}
                             </td>
+
                             <td>
-                                <div class="fw-bold text-dark">{{ b.user.get_full_name|default:b.user.username }}</div>
-                                <small class="text-muted">{{ b.department|default:"-" }}</small>
+                                <div class="fw-bold text-dark small">{{ b.user.get_full_name|default:b.user.username }}</div>
+                                <small class="text-muted text-uppercase">{{ b.department|default:"-" }}</small>
                             </td>
                             
                             <td class="text-end pe-4">
@@ -108,49 +121,55 @@
                                         <i class="bi bi-info-circle"></i>
                                     </a>
 
-                                    {% if b.end_time > current_time and b.status != 'CANCELLED' and b.status != 'REJECTED' %}
+                                    {% if b.end_time >= current_time and b.status != 'CANCELLED' and b.status != 'REJECTED' %}
                                         
-                                        <a href="{% url 'edit_booking' b.id %}" class="btn btn-sm btn-outline-warning rounded-circle" 
-                                           title="แก้ไข" style="width: 32px; height: 32px; padding: 0; line-height: 30px;">
-                                            <i class="bi bi-pencil-fill" style="font-size: 0.8rem;"></i>
-                                        </a>
+                                        {% if b.user == request.user or is_admin_user %}
+                                            
+                                            <a href="{% url 'edit_booking' b.id %}" class="btn btn-sm btn-outline-warning rounded-circle" 
+                                               title="แก้ไข" style="width: 32px; height: 32px; padding: 0; line-height: 30px;">
+                                                <i class="bi bi-pencil-fill" style="font-size: 0.8rem;"></i>
+                                            </a>
 
-                                        <button type="button" class="btn btn-sm btn-outline-danger rounded-circle" 
-                                                data-bs-toggle="modal" data-bs-target="#deleteModal{{ b.id }}" 
-                                                title="ยกเลิก" style="width: 32px; height: 32px; padding: 0; line-height: 30px;">
-                                            <i class="bi bi-x-lg"></i>
-                                        </button>
+                                            <button type="button" class="btn btn-sm btn-outline-danger rounded-circle" 
+                                                    data-bs-toggle="modal" data-bs-target="#deleteModal{{ b.id }}" 
+                                                    title="ยกเลิก" style="width: 32px; height: 32px; padding: 0; line-height: 30px;">
+                                                <i class="bi bi-x-lg"></i>
+                                            </button>
 
-                                        <div class="modal fade" id="deleteModal{{ b.id }}" tabindex="-1" aria-hidden="true">
-                                            <div class="modal-dialog modal-dialog-centered">
-                                                <div class="modal-content text-start border-0 shadow">
-                                                    <div class="modal-header bg-danger text-white">
-                                                        <h5 class="modal-title fw-bold"><i class="bi bi-exclamation-triangle-fill me-2"></i>ยืนยันการยกเลิก</h5>
-                                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                                                    </div>
-                                                    <div class="modal-body p-4">
-                                                        <p class="mb-0">คุณต้องการยกเลิกการจองห้อง <strong>{{ b.room.name }}</strong> ใช่หรือไม่?</p>
-                                                        <small class="text-muted">การกระทำนี้ไม่สามารถย้อนกลับได้</small>
-                                                    </div>
-                                                    <div class="modal-footer bg-light border-0">
-                                                        <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">ปิด</button>
-                                                        <form action="{% url 'delete_booking' b.id %}" method="post" style="display:inline;">
-                                                            {% csrf_token %}
-                                                            <button type="submit" class="btn btn-danger rounded-pill px-4">ยืนยันยกเลิก</button>
-                                                        </form>
+                                            <div class="modal fade" id="deleteModal{{ b.id }}" tabindex="-1" aria-hidden="true">
+                                                <div class="modal-dialog modal-dialog-centered">
+                                                    <div class="modal-content text-start border-0 shadow">
+                                                        <div class="modal-header bg-danger text-white border-0">
+                                                            <h5 class="modal-title fw-bold"><i class="bi bi-exclamation-triangle-fill me-2"></i>ยืนยันการยกเลิก</h5>
+                                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                                        </div>
+                                                        <div class="modal-body p-4">
+                                                            <p class="mb-2">คุณต้องการยกเลิกการจองห้อง <strong>{{ b.room.name }}</strong> ใช่หรือไม่?</p>
+                                                            <div class="d-flex align-items-center text-muted small bg-light p-2 rounded">
+                                                                <i class="bi bi-clock me-2"></i> {{ b.start_time|date:"d M Y, H:i" }}
+                                                            </div>
+                                                        </div>
+                                                        <div class="modal-footer bg-light border-0">
+                                                            <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">ปิด</button>
+                                                            <form action="{% url 'delete_booking' b.id %}" method="post" style="display:inline;">
+                                                                {% csrf_token %}
+                                                                <button type="submit" class="btn btn-danger rounded-pill px-4">ยืนยันยกเลิก</button>
+                                                            </form>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
-                                        </div>
 
-                                    {% endif %} </div>
+                                        {% endif %}
+                                    {% endif %}
+                                    </div>
                             </td>
                         </tr>
                         {% empty %}
                         <tr>
                             <td colspan="6" class="text-center py-5 text-muted">
-                                <i class="bi bi-calendar-x fs-1 d-block mb-2 opacity-50"></i>
-                                ไม่พบประวัติการจอง
+                                <i class="bi bi-inbox fs-1 d-block mb-2 opacity-25"></i>
+                                <span class="fw-light">ไม่พบประวัติการจองตามเงื่อนไข</span>
                             </td>
                         </tr>
                         {% endfor %}
