@@ -18,6 +18,8 @@ class Room(models.Model):
     maintenance_start = models.DateTimeField(null=True, blank=True)
     maintenance_end = models.DateTimeField(null=True, blank=True)
     
+    status_note = models.CharField(max_length=255, blank=True, null=True, verbose_name="หมายเหตุสถานะ")
+    
     description = models.TextField(blank=True, null=True)
     approver = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='rooms_to_approve')
     is_active = models.BooleanField(default=True)
@@ -38,8 +40,6 @@ class Room(models.Model):
 class Equipment(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True, null=True)
-    
-    # สถานะการใช้งาน (True=ปกติ, False=เสีย/ซ่อม)
     is_active = models.BooleanField(default=True, verbose_name="สถานะพร้อมใช้งาน")
     status_note = models.CharField(max_length=255, blank=True, null=True, verbose_name="หมายเหตุสถานะ")
     
@@ -55,13 +55,18 @@ class Booking(models.Model):
         ('CANCELLED', 'ยกเลิก'),
     ]
     
+    # [เพิ่มใหม่] ประเภทการจอง
+    BOOKING_TYPE_CHOICES = [
+        ('general', 'ประชุมทั่วไป'),
+        ('cleaning', 'แม่บ้านทำความสะอาด'),
+    ]
+    
     LAYOUT_CHOICES = [
         ('theatre', 'แบบเธียร์เตอร์ (Theatre)'),
         ('classroom', 'แบบห้องเรียน (Classroom)'),
         ('u_shape', 'แบบตัวยู (U-Shape)'),
         ('boardroom', 'แบบห้องประชุม (Conference)'),
         ('banquet', 'แบบจัดเลี้ยง (Banquet)'),
-        # [เพิ่ม] ตัวเลือกนี้เข้าไปแล้วครับ
         ('banquet_rounds', 'แบบจัดเลี้ยงโต๊ะกลม (Banquet Rounds)'),
         ('other', 'อื่นๆ (ระบุในไฟล์แนบ)'),
     ]
@@ -71,6 +76,14 @@ class Booking(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
+    
+    # [เพิ่มใหม่] Field เก็บประเภทการจอง
+    booking_type = models.CharField(
+        max_length=20, 
+        choices=BOOKING_TYPE_CHOICES, 
+        default='general', 
+        verbose_name="ประเภทการจอง"
+    )
     
     participant_count = models.IntegerField(default=1)
     department = models.CharField(max_length=100, blank=True, null=True)
@@ -82,7 +95,9 @@ class Booking(models.Model):
     
     room_layout = models.CharField(max_length=50, choices=LAYOUT_CHOICES, default='theatre', blank=True)
     room_layout_attachment = models.FileField(upload_to='layouts/', blank=True, null=True)
+    
     presentation_file = models.FileField(upload_to='presentations/', blank=True, null=True)
+    presentation_link = models.URLField(max_length=500, blank=True, null=True, verbose_name="ลิงก์เอกสารประกอบ")
     
     equipments = models.ManyToManyField(Equipment, blank=True)
     

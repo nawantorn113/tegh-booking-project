@@ -80,15 +80,25 @@
                         </div>
 
                         <div class="col-12 border-bottom pb-4 mb-2">
-                            <label class="small text-muted fw-bold mb-1">ไฟล์นำเสนอ</label>
-                            <div class="mt-1">
+                            <label class="small text-muted fw-bold mb-1">ไฟล์นำเสนอ / ลิงก์เอกสาร</label>
+                            <div class="mt-1 d-flex gap-2 flex-wrap align-items-center">
+                                
                                 {% if booking.presentation_file %}
-                                    <a href="{{ booking.presentation_file.url }}" target="_blank" class="btn btn-outline-danger rounded-pill btn-sm px-3">
-                                        <i class="bi bi-file-earmark-slides me-1"></i> ดูไฟล์นำเสนอ
+                                    <a href="{{ booking.presentation_file.url }}" target="_blank" class="btn btn-outline-danger rounded-pill btn-sm px-3 shadow-sm">
+                                        <i class="bi bi-file-earmark-slides me-1"></i> ดูไฟล์แนบ (PDF/PPTX)
                                     </a>
-                                {% else %}
+                                {% endif %}
+
+                                {% if booking.presentation_link %}
+                                    <a href="{{ booking.presentation_link }}" target="_blank" class="btn btn-primary rounded-pill btn-sm px-3 fw-bold shadow-sm" title="{{ booking.presentation_link }}">
+                                        <i class="bi bi-link-45deg me-1"></i> เปิดลิงก์เอกสาร
+                                    </a>
+                                {% endif %}
+
+                                {% if not booking.presentation_file and not booking.presentation_link %}
                                     <span class="text-muted">-</span>
                                 {% endif %}
+                                
                             </div>
                         </div>
 

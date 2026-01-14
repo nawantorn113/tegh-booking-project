@@ -27,7 +27,7 @@
                         {% csrf_token %}
                         
                         {% for field in form %}
-                            {% if "ปิดปรับปรุง" not in field.label %}
+                            {% if "ปิดปรับปรุง" not in field.label and field.name != 'is_cleaning' and field.name != 'cleaning_start' and field.name != 'cleaning_end' %}
                                 
                                 {% if field.name == 'image' or field.name == 'room_image' %}
                                     <div class="mb-3">
@@ -66,6 +66,31 @@
                             {% endfor %}
                         </div>
 
+                        <div class="card border-info bg-info bg-opacity-10 mt-3">
+                            <div class="card-body py-3">
+                                <h6 class="fw-bold text-primary mb-2"><i class="bi bi-stars"></i> ทำความสะอาด</h6>
+                                
+                                <div class="form-check form-switch">
+                                    {{ form.is_cleaning }}
+                                    <label class="form-check-label fw-bold text-dark" for="cleaningCheck">
+                                        ทำความสะอาด 
+                                    </label>
+                                </div>
+                                
+                                <div id="cleaningInputs" style="display: none;" class="mt-3 ps-3 border-start border-primary border-3">
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            {{ form.cleaning_start|as_crispy_field }}
+                                        </div>
+                                        <div class="col-md-6">
+                                            {{ form.cleaning_end|as_crispy_field }}
+                                        </div>
+                                    </div>
+                                    <small class="text-muted"><i class="bi bi-info-circle"></i> ระบบตั้งเวลาให้อัตโนมัติ (30 นาที)</small>
+                                </div>
+                            </div>
+                        </div>
+
                         <hr class="my-4 text-muted opacity-25">
 
                         <div class="d-flex justify-content-end gap-2">
@@ -86,21 +111,51 @@
 {% block extra_scripts %}
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script>
+    // 1. Script สำหรับเมนูทำความสะอาด (Auto Date)
+    function toggleCleaningInputs() {
+        var checkbox = document.getElementById('cleaningCheck'); // ID จาก forms.py widget attrs
+        var inputsDiv = document.getElementById('cleaningInputs');
+        
+        if (checkbox && checkbox.checked) {
+            inputsDiv.style.display = 'block';
+            
+            // Auto-fill เวลาถ้ายังว่างอยู่
+            var startInput = document.getElementById('cleanStart');
+            var endInput = document.getElementById('cleanEnd');
+            
+            if (startInput && !startInput.value) {
+                let now = new Date();
+                now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+                startInput.value = now.toISOString().slice(0,16);
+                
+                now.setMinutes(now.getMinutes() + 30);
+                if (endInput) endInput.value = now.toISOString().slice(0,16);
+            }
+        } else {
+            if(inputsDiv) inputsDiv.style.display = 'none';
+        }
+    }
+
+    // 2. Script เดิมของคุณ (jQuery สำหรับปิดปรับปรุง)
     $(document).ready(function() {
-        // Script ซ่อน/แสดง วันที่ปิดปรับปรุง
+        // --- ส่วน Cleaning ---
+        toggleCleaningInputs(); // เรียกตอนโหลด
+        $('#cleaningCheck').on('change', function() { toggleCleaningInputs(); });
+
+        // --- ส่วน Maintenance (ปิดปรับปรุง) ---
         var $checkboxLabel = $("label:contains('เปิดใช้งานโหมดปิดปรับปรุง')");
         var checkboxId = $checkboxLabel.attr('for'); 
         var $checkbox = $('#' + checkboxId);
 
-        if ($checkbox.length === 0) { $checkbox = $('input[type="checkbox"]').first(); }
+        if ($checkbox.length === 0) { $checkbox = $('input[type="checkbox"]').not('#cleaningCheck').first(); } // กันไปหยิบ cleaningCheck
 
         var $labelStart = $("label:contains('เริ่มปิดปรับปรุง')");
         var $labelEnd = $("label:contains('สิ้นสุดปิดปรับปรุง')");
-        var $dateContainers = $labelStart.add($labelEnd).closest('.mb-3'); // แก้เป็น .mb-3 ให้ตรงกับ crispy forms default
+        var $dateContainers = $labelStart.add($labelEnd).closest('.mb-3'); 
         
-        // ถ้าหา label ไม่เจอ ให้หา input type datetime-local แทน
         if ($dateContainers.length === 0) {
-             $dateContainers = $('input[type="datetime-local"]').closest('.mb-3');
+             // หา input date ที่ไม่ใช่ cleaning inputs
+             $dateContainers = $('input[type="datetime-local"]').not('#cleanStart, #cleanEnd').closest('.mb-3');
         }
 
         function toggleDates() {

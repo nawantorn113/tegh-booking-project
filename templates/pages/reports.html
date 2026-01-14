@@ -39,9 +39,9 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <p class="text-muted small mb-1">การจองวันนี้ (อนุมัติแล้ว)</p>
+                            <p class="text-muted small mb-1">การจอง (ในช่วงเวลา)</p>
                             <h3 class="fw-bold text-dark mb-0">{{ bookings_today }}</h3>
-                            <small class="text-muted">รายการ</small>
+                            <small class="text-muted">รายการ (อนุมัติแล้ว)</small>
                         </div>
                         <div class="bg-success bg-opacity-10 text-success p-3 rounded-circle">
                             <i class="bi bi-calendar-check-fill fs-4"></i>
@@ -56,7 +56,7 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <p class="text-muted small mb-1">รออนุมัติ</p>
+                            <p class="text-muted small mb-1">รออนุมัติ (ทั้งหมด)</p>
                             <h3 class="fw-bold text-dark mb-0">{{ pending_bookings }}</h3>
                             <small class="text-muted">รายการ</small>
                         </div>
@@ -90,13 +90,15 @@
         <div class="card-body py-3">
             <form method="get" class="row g-3 align-items-end">
                 <div class="col-md-3">
-                    <label class="small fw-bold text-muted mb-1">ช่วงเวลา</label>
-                    <select name="period" class="form-select border-0 shadow-sm">
-                        <option value="monthly" {% if current_period == 'monthly' %}selected{% endif %}>รายเดือน (30 วันล่าสุด)</option>
-                        <option value="weekly" {% if current_period == 'weekly' %}selected{% endif %}>รายสัปดาห์ (7 วันล่าสุด)</option>
-                        <option value="daily" {% if current_period == 'daily' %}selected{% endif %}>รายวัน (วันนี้)</option>
-                    </select>
+                    <label class="small fw-bold text-muted mb-1">ตั้งแต่วันที่</label>
+                    <input type="date" name="start_date" class="form-control border-0 shadow-sm" value="{{ start_date_val }}">
                 </div>
+                
+                <div class="col-md-3">
+                    <label class="small fw-bold text-muted mb-1">ถึงวันที่</label>
+                    <input type="date" name="end_date" class="form-control border-0 shadow-sm" value="{{ end_date_val }}">
+                </div>
+
                 <div class="col-md-3">
                     <label class="small fw-bold text-muted mb-1">แผนก</label>
                     <select name="department" class="form-select border-0 shadow-sm">
@@ -106,23 +108,32 @@
                         {% endfor %}
                     </select>
                 </div>
+                
                 <div class="col-md-3">
-                    <button type="submit" class="btn btn-primary w-100 rounded-pill shadow-sm fw-bold">
-                        <i class="bi bi-funnel-fill me-2"></i>กรองข้อมูล
-                    </button>
-                </div>
-                <div class="col-md-3">
-                    <div class="dropdown w-100">
-                        <button class="btn btn-secondary w-100 rounded-pill shadow-sm dropdown-toggle fw-bold" type="button" data-bs-toggle="dropdown">
-                            <i class="bi bi-file-earmark-arrow-down-fill me-2"></i>Export รายงาน
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary w-100 rounded-pill shadow-sm fw-bold">
+                            <i class="bi bi-search me-1"></i>ค้นหา
                         </button>
-                        <ul class="dropdown-menu border-0 shadow w-100">
-                            <li><a class="dropdown-item py-2" href="{% url 'export_reports_excel' %}?period={{ current_period }}&department={{ current_department }}"><i class="bi bi-file-earmark-excel text-success me-2"></i>Excel (CSV)</a></li>
-                            <li><a class="dropdown-item py-2" href="{% url 'export_reports_pdf' %}?period={{ current_period }}&department={{ current_department }}"><i class="bi bi-file-earmark-pdf text-danger me-2"></i>PDF File</a></li>
-                        </ul>
+                        
+                        <div class="dropdown">
+                            <button class="btn btn-secondary rounded-pill shadow-sm" type="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-download"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end border-0 shadow">
+                                <li><button type="submit" formaction="{% url 'export_reports_excel' %}" class="dropdown-item py-2"><i class="bi bi-file-earmark-excel text-success me-2"></i>Excel (CSV)</button></li>
+                                <li><button type="submit" formaction="{% url 'export_reports_pdf' %}" class="dropdown-item py-2"><i class="bi bi-file-earmark-pdf text-danger me-2"></i>PDF File</button></li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
             </form>
+            
+            <div class="mt-3 pt-2 border-top d-flex align-items-center gap-2">
+                <small class="text-muted fw-bold">เลือกช่วงเวลาด่วน:</small>
+                <a href="?period=daily" class="btn btn-sm rounded-pill {% if current_period == 'daily' %}btn-primary{% else %}btn-white border bg-white{% endif %}">วันนี้</a>
+                <a href="?period=weekly" class="btn btn-sm rounded-pill {% if current_period == 'weekly' %}btn-primary{% else %}btn-white border bg-white{% endif %}">7 วันล่าสุด</a>
+                <a href="?period=monthly" class="btn btn-sm rounded-pill {% if current_period == 'monthly' %}btn-primary{% else %}btn-white border bg-white{% endif %}">30 วันล่าสุด</a>
+            </div>
         </div>
     </div>
 
@@ -130,7 +141,8 @@
         <div class="col-md-6">
             <div class="card border-0 shadow-sm rounded-4 h-100">
                 <div class="card-header bg-white border-0 py-3">
-                    <h5 class="fw-bold text-primary mb-0"><i class="bi bi-pie-chart-fill me-2"></i>การใช้งานห้อง ({{ report_title }})</h5>
+                    <h5 class="fw-bold text-primary mb-0"><i class="bi bi-pie-chart-fill me-2"></i>การใช้งานห้อง</h5>
+                    <small class="text-muted">{{ report_title }}</small>
                 </div>
                 <div class="card-body d-flex align-items-center justify-content-center">
                     <div style="width: 100%; max-width: 350px;">
@@ -143,7 +155,8 @@
         <div class="col-md-6">
             <div class="card border-0 shadow-sm rounded-4 h-100">
                 <div class="card-header bg-white border-0 py-3">
-                    <h5 class="fw-bold text-info mb-0"><i class="bi bi-bar-chart-line-fill me-2"></i>การใช้งานตามแผนก ({{ report_title }})</h5>
+                    <h5 class="fw-bold text-info mb-0"><i class="bi bi-bar-chart-line-fill me-2"></i>การใช้งานตามแผนก</h5>
+                    <small class="text-muted">{{ report_title }}</small>
                 </div>
                 <div class="card-body">
                     <canvas id="deptChart" height="200"></canvas>
@@ -157,12 +170,13 @@
 {% block extra_scripts %}
 <script>
     document.addEventListener("DOMContentLoaded", function() {
+        // รับค่า JSON จาก Django
         const roomLabels = {{ room_usage_labels|safe }};
         const roomData = {{ room_usage_data|safe }};
         const deptLabels = {{ dept_usage_labels|safe }};
         const deptData = {{ dept_usage_data|safe }};
 
-        // --- 1. Pie Chart ---
+        // --- 1. Pie Chart (ห้องประชุม) ---
         const ctxRoom = document.getElementById('roomChart').getContext('2d');
         const hasRoomData = roomData.length > 0;
         
@@ -176,19 +190,33 @@
                         ? ['#0d6efd', '#6610f2', '#6f42c1', '#d63384', '#dc3545', '#fd7e14', '#ffc107', '#198754', '#20c997', '#0dcaf0'] 
                         : ['#e9ecef'],
                     borderWidth: 2,
-                    borderColor: '#ffffff'
+                    borderColor: '#ffffff',
+                    hoverOffset: 4
                 }]
             },
             options: {
                 responsive: true,
+                maintainAspectRatio: false,
                 plugins: {
                     legend: { position: 'bottom' },
-                    tooltip: { enabled: hasRoomData }
+                    tooltip: { 
+                        enabled: hasRoomData,
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.label || '';
+                                if (label) label += ': ';
+                                let value = context.raw || 0;
+                                let total = context.chart._metasets[context.datasetIndex].total;
+                                let percentage = Math.round((value / total) * 100) + '%';
+                                return label + value + ' ครั้ง (' + percentage + ')';
+                            }
+                        }
+                    }
                 }
             }
         });
 
-        // --- 2. Bar Chart ---
+        // --- 2. Bar Chart (แผนก) ---
         const ctxDept = document.getElementById('deptChart').getContext('2d');
         const hasDeptData = deptData.length > 0;
 
@@ -206,10 +234,12 @@
             },
             options: {
                 responsive: true,
+                maintainAspectRatio: false,
                 scales: {
                     y: { 
                         beginAtZero: true, 
-                        ticks: { stepSize: 1 } 
+                        ticks: { stepSize: 1 },
+                        grid: { borderDash: [2, 2] }
                     },
                     x: { grid: { display: false } }
                 },

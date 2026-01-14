@@ -1,91 +1,29 @@
 {% extends 'base.html' %}
 {% load static %}
+
 {% block title %}Dashboard{% endblock %}
 
 {% block extra_head %}
 <style>
-    /* --- Search Bar Styling --- */
-    .search-input-container {
-        max-width: 600px;
-        margin: 0 auto;
-    }
-    .search-input-group {
-        border: 1px solid #ced4da;
-        border-radius: 50px;
-        padding: 4px;
-        background-color: #fff;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-        transition: all 0.3s ease;
-    }
-    .search-input-group:focus-within {
-        border-color: #0d6efd;
-        box-shadow: 0 4px 15px rgba(13, 110, 253, 0.15);
-    }
-    .search-input-group .form-control {
-        border: none;
-        box-shadow: none;
-        padding-left: 15px;
-    }
-    .search-input-group .btn-search {
-        border-radius: 50px;
-        padding-left: 25px;
-        padding-right: 25px;
-        font-weight: 600;
-        background-color: #0d6efd;
-        border-color: #0d6efd;
-        color: white;
-    }
+    /* ... (Keep your existing styles) ... */
+    .search-input-container { max-width: 600px; margin: 0 auto; }
+    .search-input-group { border: 1px solid #ced4da; border-radius: 50px; padding: 4px; background-color: #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.05); transition: all 0.3s ease; }
+    .search-input-group:focus-within { border-color: #0d6efd; box-shadow: 0 4px 15px rgba(13, 110, 253, 0.15); }
+    .search-input-group .form-control { border: none; box-shadow: none; padding-left: 15px; }
+    .search-input-group .btn-search { border-radius: 50px; padding-left: 25px; padding-right: 25px; font-weight: 600; background-color: #0d6efd; border-color: #0d6efd; color: white; }
     .search-input-group .btn-search:hover { background-color: #0b5ed7; }
-
-    /* --- Card Styling (KPI) --- */
-    .kpi-card {
-        border: 1px solid #dee2e6;
-        border-radius: 12px;
-        background: #fff;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-        transition: box-shadow 0.2s; 
-    }
-    .kpi-card:hover { 
-        box-shadow: 0 5px 15px rgba(0,0,0,0.08); 
-    }
+    .kpi-card { border: 1px solid #dee2e6; border-radius: 12px; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.02); transition: box-shadow 0.2s; }
+    .kpi-card:hover { box-shadow: 0 5px 15px rgba(0,0,0,0.08); }
     .kpi-icon { font-size: 2.5rem; opacity: 0.15; }
-
     .border-l-primary { border-left: 5px solid #0d6efd; }
     .border-l-success { border-left: 5px solid #198754; }
     .border-l-warning { border-left: 5px solid #ffc107; }
     .border-l-info { border-left: 5px solid #0dcaf0; }
-
-    /* --- Room Cards --- */
-    .room-card-hover {
-        border: 1px solid #dee2e6;
-        border-radius: 12px;
-        background: #fff;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.03);
-        transition: border-color 0.2s, box-shadow 0.2s; 
-        overflow: hidden;
-    }
-    .room-card-hover:hover {
-        box-shadow: 0 10px 20px rgba(0,0,0,0.08);
-        border-color: #0d6efd;
-    }
-    
-    .room-img-wrapper {
-        height: 150px;
-        overflow: hidden;
-        background-color: #f8f9fa;
-        position: relative;
-        border-bottom: 1px solid #eee;
-    }
+    .room-card-hover { border: 1px solid #dee2e6; border-radius: 12px; background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.03); transition: border-color 0.2s, box-shadow 0.2s; overflow: hidden; }
+    .room-card-hover:hover { box-shadow: 0 10px 20px rgba(0,0,0,0.08); border-color: #0d6efd; }
+    .room-img-wrapper { height: 150px; overflow: hidden; background-color: #f8f9fa; position: relative; border-bottom: 1px solid #eee; }
     .room-img-top { width: 100%; height: 100%; object-fit: cover; }
-
-    /* --- Building Divider --- */
-    .building-divider {
-        border: 0; 
-        border-top: 3px dashed #a0a0a0; 
-        margin-top: 3.5rem;
-        margin-bottom: 2.5rem;
-        opacity: 1; 
-    }
+    .building-divider { border: 0; border-top: 3px dashed #a0a0a0; margin-top: 3.5rem; margin-bottom: 2.5rem; opacity: 1; }
 </style>
 {% endblock %}
 
@@ -197,12 +135,18 @@
                         {% endif %}
                         
                         <div class="position-absolute top-0 end-0 m-2">
-                            {% if room.is_maintenance %}
+                            {% if room.is_under_maintenance %}
                                <span class="badge rounded-pill bg-secondary shadow-sm">ปิดปรับปรุง</span>
-                            {% elif room.status == 'ว่าง' %}
-                                <span class="badge rounded-pill bg-success shadow-sm">ว่าง</span>
-                            {% else %}
+                            
+                            {% elif room.current_booking_info.booking_type == 'cleaning' %}
+                                <span class="badge rounded-pill bg-info text-dark shadow-sm">
+                                    <i class="bi bi-stars"></i> กำลังทำความสะอาด
+                                </span>
+
+                            {% elif room.current_booking_info %}
                                 <span class="badge rounded-pill bg-danger shadow-sm">ไม่ว่าง</span>
+                            {% else %}
+                                <span class="badge rounded-pill bg-success shadow-sm">ว่าง</span>
                             {% endif %}
                         </div>
                     </div>
@@ -211,7 +155,15 @@
                         <h6 class="card-title fw-bold text-dark mb-1 text-truncate" title="{{ room.name }}">
                             {{ room.name }}
                         </h6>
-                        <p class="text-muted small mb-2"><i class="bi bi-layers"></i> ชั้น {{ room.floor|default:"-" }}</p>
+
+                        {% if room.status_note %}
+                            <div class="alert alert-warning py-1 px-2 mb-2 d-flex align-items-center shadow-sm" style="font-size: 0.8rem;">
+                                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                <span class="text-truncate fw-bold">{{ room.status_note }}</span>
+                            </div>
+                        {% else %}
+                            <p class="text-muted small mb-2"><i class="bi bi-layers"></i> ชั้น {{ room.floor|default:"-" }}</p>
+                        {% endif %}
                         
                         <div class="bg-light p-2 rounded mb-3 border">
                             <div class="d-flex align-items-center mb-1 border-bottom pb-1">
@@ -227,10 +179,11 @@
                         </div>
 
                         <div class="mt-auto pt-2 border-top">
-                            {% if room.is_maintenance %}
+                            {% if room.is_under_maintenance %}
                                 <button class="btn btn-sm btn-outline-secondary w-100 rounded-pill" disabled>
                                     <i class="bi bi-cone-striped"></i> ปิดปรับปรุง
                                 </button>
+
                             {% elif room.current_booking_info %}
                                 <div class="bg-light bg-opacity-50 p-2 rounded mb-2 border text-start" style="font-size: 0.8rem;">
                                     <div class="d-flex align-items-center mb-1 text-truncate" title="ผู้จอง">
@@ -268,7 +221,7 @@
             {% endfor %}
         </div>
     </div>
-{% empty %}
+    {% empty %}
     <div class="alert alert-light text-center py-5 border shadow-sm rounded-4">
         <i class="bi bi-inbox fs-1 text-muted opacity-50 mb-3 d-block"></i>
         <h5 class="text-muted">ไม่พบข้อมูลห้องประชุม</h5>

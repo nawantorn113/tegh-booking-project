@@ -14,49 +14,23 @@
     <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
 
     <style>
-        /* --- General --- */
         .fc { font-family: 'Kanit', sans-serif; }
         .fc-event { border: none !important; box-shadow: 0 1px 2px rgba(0,0,0,0.1); cursor: pointer; padding: 2px 5px; border-radius: 3px; }
-        
-        /* รายการในอดีต (สีเทาเข้ม) */
-        .fc-event.status-past { 
-            background-color: #6c757d !important; 
-            border-left: 3px solid #495057 !important; 
-            opacity: 1 !important; 
-        }
-
-        /* Custom Colors [บังคับสีด้วย !important] */
+        .fc-event.status-past { background-color: #6c757d !important; border-left: 3px solid #495057 !important; opacity: 1 !important; }
         .bg-orange { background-color: #fd7e14 !important; color: white !important; }
         .bg-danger { background-color: #dc3545 !important; color: white !important; }
         .bg-primary { background-color: #0d6efd !important; color: white !important; }
-        
         .custom-event-content { padding: 2px; overflow: hidden; line-height: 1.2; }
-
-        /* --- List View Fix --- */
-        .fc-list .custom-event-content,
-        .fc-list .custom-event-content .text-white,
-        .fc-list .custom-event-content .text-dark {
-            color: #212529 !important;
-            text-shadow: none !important;
-        }
+        .fc-list .custom-event-content, .fc-list .custom-event-content .text-white, .fc-list .custom-event-content .text-dark { color: #212529 !important; text-shadow: none !important; }
         .fc-list-event:hover td { background-color: transparent !important; }
         .fc-list-event:hover { transform: none !important; box-shadow: none !important; }
-
-        /* Select2 Fixes */
         .select2-container { width: 100% !important; text-align: left !important; z-index: 99999 !important; }
-        .select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__rendered {
-            display: flex !important; flex-direction: row !important; justify-content: flex-start !important;
-            flex-wrap: wrap !important; text-align: left !important; padding-left: 0 !important;
-        }
-        
-        /* Layout Card Selection */
+        .select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__rendered { display: flex !important; flex-direction: row !important; justify-content: flex-start !important; flex-wrap: wrap !important; text-align: left !important; padding-left: 0 !important; }
         .layout-card-label { cursor: pointer; width: 100%; height: 100%; display: block; position: relative; }
         .layout-card-label input[type="radio"] { position: absolute; top: 15px; left: 15px; z-index: 10; cursor: pointer; transform: scale(1.2); }
         .layout-card { border: 1px solid #dee2e6; background: #fff; border-radius: 8px; transition: border-color 0.2s; height: 100%; }
         .layout-card:hover { border-color: #adb5bd; background-color: #f8f9fa; }
-        .layout-card-label input[type="radio"]:checked + .layout-card {
-            border-color: #0d6efd !important; background-color: #fff !important; box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.1);
-        }
+        .layout-card-label input[type="radio"]:checked + .layout-card { border-color: #0d6efd !important; background-color: #fff !important; box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.1); }
         .check-icon { display: none !important; }
         .cursor-pointer { cursor: pointer; transition: opacity 0.2s; }
         .cursor-pointer:hover { opacity: 0.9; }
@@ -184,6 +158,9 @@
 <div id="bookingFormContainer" class="d-none">
     <form id="hiddenBookingForm" action="{% url 'room_calendar' room.id %}" method="post" enctype="multipart/form-data">
         {% csrf_token %}
+        
+        <input type="hidden" name="room" value="{{ room.id }}">
+        
         {% if room.name == 'ห้องประชุมใหญ่' %}
             <div class="mb-4">
                 <label class="form-label fw-bold"><i class="bi bi-grid-fill text-primary"></i> รูปแบบการจัดห้อง</label>
@@ -214,14 +191,29 @@
             </div>
         {% else %} <input type="hidden" name="room_layout" value="theatre"> {% endif %}
         
-        {% for field in form %}
-            {% if field.name != 'room_layout' and field.name != 'room_layout_attachment' and field.name != 'recurrence_end_date' %}
-                {% if field.name == 'recurrence' %}
-                    <div class="mb-2">{{ field|as_crispy_field }}</div>
-                    <div class="mb-2 d-none" id="recurrenceDateContainer">{{ form.recurrence_end_date|as_crispy_field }}</div>
-                {% else %}<div class="mb-2">{{ field|as_crispy_field }}</div>{% endif %}
-            {% endif %}
-        {% endfor %}
+        <div class="row">
+            <div class="col-md-6 mb-2"> {{ form.title|as_crispy_field }} </div>
+            <div class="col-md-6 mb-2"> {{ form.participant_count|as_crispy_field }} </div>
+            <div class="col-md-6 mb-2"> {{ form.start_time|as_crispy_field }} </div>
+            <div class="col-md-6 mb-2"> {{ form.end_time|as_crispy_field }} </div>
+            <div class="col-md-6 mb-2"> {{ form.chairman|as_crispy_field }} </div>
+            <div class="col-md-6 mb-2"> {{ form.department|as_crispy_field }} </div>
+            <div class="col-12 mb-2"> {{ form.equipments|as_crispy_field }} </div>
+            
+            <div class="col-12"><hr class="my-2 text-muted"></div>
+            
+            <div class="col-md-6 mb-2"> {{ form.presentation_file|as_crispy_field }} </div>
+            <div class="col-md-6 mb-2"> {{ form.presentation_link|as_crispy_field }} </div>
+            
+            <div class="col-12"><hr class="my-2 text-muted"></div>
+
+            <div class="col-12 mb-2"> {{ form.description|as_crispy_field }} </div>
+            <div class="col-md-6 mb-2"> {{ form.additional_requests|as_crispy_field }} </div>
+            <div class="col-md-6 mb-2"> {{ form.additional_notes|as_crispy_field }} </div>
+            
+            <div class="col-12 mb-2"> {{ form.recurrence|as_crispy_field }} </div>
+            <div class="col-12 mb-2 d-none" id="recurrenceDateContainer"> {{ form.recurrence_end_date|as_crispy_field }} </div>
+        </div>
     </form>
 </div>
 
@@ -237,7 +229,13 @@
     const ROOM_CAPACITY = parseInt("{{ room.capacity|default:0 }}");
     const CSRF_TOKEN = '{{ csrf_token }}'; 
     const API_UPDATE_URL = "{% url 'update_booking_time_api' %}";
-    const API_PENDING_COUNT_URL = "{% url 'api_pending_count' %}";
+    
+    // ดึง Error จาก Server (ถ้ามี)
+    {% if form.errors %}
+        const SERVER_ERRORS = {{ form.errors.as_json|safe }};
+    {% else %}
+        const SERVER_ERRORS = null;
+    {% endif %}
 
     function showImage(src) { document.getElementById('expandedImage').src = src; new bootstrap.Modal(document.getElementById('imageModal')).show(); }
     function getLocalISOString(date) { const offset = date.getTimezoneOffset() * 60000; return new Date(date.getTime() - offset).toISOString().slice(0, 16); }
@@ -249,7 +247,7 @@
         let selectedValue = "";
         layoutRadios.forEach(radio => { if (radio.checked) selectedValue = radio.value; });
         if (selectedValue === 'other') { attachmentDiv.classList.remove('d-none'); } 
-        else { attachmentDiv.classList.add('d-none'); document.getElementById('id_room_layout_attachment').value = ''; }
+        else { attachmentDiv.classList.add('d-none'); }
     }
 
     function toggleRecurrenceDate() {
@@ -266,12 +264,23 @@
         const form = document.getElementById('hiddenBookingForm');
         const modalBody = document.getElementById('modalBookingBody');
         if(!modalBody.contains(form)) { modalBody.appendChild(form); form.classList.remove('d-none'); }
-        form.reset(); form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+        
+        // ถ้าไม่มี Error ค่อยรีเซ็ต (ถ้ามี Error ให้คงค่าเดิมไว้ดู)
+        if (!SERVER_ERRORS) {
+            const modalEl = document.getElementById('bookingModal');
+            if (!modalEl.classList.contains('show')) {
+                form.reset();
+                form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+                $('#id_equipments').val(null).trigger('change');
+            }
+        }
+
         toggleAttachmentField(); toggleRecurrenceDate();
+        
         if(startStr && endStr) {
             document.getElementById('id_start_time').value = startStr.substring(0, 16);
             document.getElementById('id_end_time').value = endStr.substring(0, 16);
-        } else {
+        } else if (!SERVER_ERRORS && !document.getElementById('id_start_time').value) {
             let now = new Date(); let next = new Date(now.getTime() + 60*60000); 
             document.getElementById('id_start_time').value = getLocalISOString(now);
             document.getElementById('id_end_time').value = getLocalISOString(next);
@@ -293,7 +302,6 @@
     }
 
     document.addEventListener('DOMContentLoaded', function() {
-        // [แก้บั๊ก] เคลียร์ Modal ที่ค้างอยู่ (Back/Forward Cache)
         document.querySelectorAll('.modal').forEach(modalEl => {
             const modal = bootstrap.Modal.getInstance(modalEl);
             if (modal) modal.hide();
@@ -303,7 +311,30 @@
         document.body.classList.remove('modal-open');
         document.body.style.overflow = '';
         document.body.style.paddingRight = '';
-        // -----------------------------------------------------
+
+        // ถ้ามี Error จาก Server ให้แสดง Alert และเปิด Modal
+        if (SERVER_ERRORS) {
+            console.log("Validation Errors:", SERVER_ERRORS);
+            let errorMsg = "";
+            for (const [field, errors] of Object.entries(SERVER_ERRORS)) {
+                let fieldName = field;
+                if(field === 'start_time') fieldName = 'เวลาเริ่ม';
+                if(field === 'end_time') fieldName = 'เวลาสิ้นสุด';
+                if(field === 'title') fieldName = 'หัวข้อ';
+                if(field === 'presentation_link') fieldName = 'ลิงก์เอกสาร';
+                if(field === 'room') fieldName = 'ห้องประชุม';
+                
+                errors.forEach(err => { errorMsg += `• ${fieldName}: ${err.message}\n`; });
+            }
+            Swal.fire({
+                icon: 'error',
+                title: 'บันทึกไม่สำเร็จ',
+                text: 'กรุณาตรวจสอบ:\n' + errorMsg,
+                confirmButtonText: 'แก้ไขข้อมูล'
+            }).then(() => {
+                openBookingModal(); 
+            });
+        }
 
         const layoutRadios = document.querySelectorAll('input[name="room_layout"]');
         layoutRadios.forEach(radio => { radio.addEventListener('change', toggleAttachmentField); });
@@ -313,7 +344,6 @@
         var modalEl = document.getElementById('bookingModal');
         modalEl.addEventListener('shown.bs.modal', function () {
             $('.django-select2').select2({ theme: 'bootstrap-5', dropdownParent: $('#bookingModal'), width: '100%' });
-            $('#id_equipments').val(null).trigger('change');
         });
 
         var calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
@@ -331,18 +361,14 @@
                 return { html: `<div class="custom-event-content lh-sm" style="font-size: 0.8rem;"><div class="fw-bold ${colorClass} mb-1">${timeText}</div><div class="fw-bold text-truncate ${colorClass}">${arg.event.title}</div></div>`};
             },
             
-            // [จุดสำคัญ] กำหนดสีตามเงื่อนไข (แดง/ส้ม สำคัญกว่าเวลา)
             eventClassNames: function(arg) {
                 let s = arg.event.extendedProps.status;
                 let now = new Date();
                 let end = arg.event.end || arg.event.start;
-
                 if (s === 'CANCELLED') return ['bg-danger', 'border-0']; 
                 if (s === 'REJECTED') return ['bg-orange', 'border-0']; 
                 if (end < now) return ['bg-secondary', 'border-0']; 
-                
                 if (s === 'PENDING') return ['bg-warning', 'text-dark', 'border-0'];
-                
                 if (s === 'APPROVED') {
                     if (arg.event.start <= now && now <= end) return ['bg-primary', 'border-0'];
                     return ['bg-success', 'border-0'];
@@ -356,7 +382,7 @@
                 let start = info.allDay ? info.startStr + 'T08:00' : info.startStr.substring(0, 16);
                 let end = info.allDay ? info.startStr + 'T09:00' : info.endStr.substring(0, 16);
                 document.getElementById('id_start_time').value = start; document.getElementById('id_end_time').value = end;
-                openBookingModal();
+                openBookingModal(start, end);
             },
             eventClick: function(info) {
                 if (info.jsEvent.detail > 1) return; info.jsEvent.preventDefault();
@@ -377,7 +403,6 @@
                 
                 document.getElementById('detailModalStatus').innerHTML = `<span class="badge ${bg}">${st}</span>`;
                 
-                // [แก้บั๊ก] สั่งปิด Modal ก่อนเปลี่ยนหน้า
                 const detailLink = document.getElementById('modalDetailLink');
                 detailLink.href = `/booking/${info.event.id}/detail/`;
                 detailLink.onclick = function() {
@@ -388,32 +413,30 @@
 
                 new bootstrap.Modal(document.getElementById('eventDetailModal')).show();
             },
-            
             eventDidMount: function(info) {
                 var now = new Date(); var end = info.event.end || info.event.start;
                 var status = info.event.extendedProps.status;
-                if (end < now || status === 'CANCELLED' || status === 'REJECTED') { 
-                    info.event.setProp('editable', false); 
-                }
-                // ใส่สีเทาเฉพาะถ้าไม่ใช่ Cancelled/Rejected
-                if (end < now && status !== 'CANCELLED' && status !== 'REJECTED') { 
-                    info.el.classList.add('status-past'); 
-                }
+                if (end < now || status === 'CANCELLED' || status === 'REJECTED') { info.event.setProp('editable', false); }
+                if (end < now && status !== 'CANCELLED' && status !== 'REJECTED') { info.el.classList.add('status-past'); }
             }
         });
         calendar.render();
 
         document.getElementById('submitBookingBtn').addEventListener('click', function() {
+            const form = document.getElementById('hiddenBookingForm');
+            if (!form.checkValidity()) {
+                form.reportValidity(); 
+                return; 
+            }
             const start = new Date(document.getElementById('id_start_time').value);
             const now = new Date();
             if (start < now) { Swal.fire({ icon: 'error', title: 'จองย้อนหลังไม่ได้' }); return; }
-            if (start < new Date(now.getTime() + 30*60000)) { Swal.fire({ icon: 'warning', title: 'ต้องจองล่วงหน้า 30 นาที' }); return; }
             
             const count = parseInt(document.getElementById('id_participant_count').value || 0);
             if (ROOM_CAPACITY > 0 && count > ROOM_CAPACITY) { Swal.fire({ icon: 'warning', title: 'เกินความจุห้อง!' }); return; }
             
             this.disabled = true; this.innerHTML = 'กำลังบันทึก...';
-            document.getElementById('hiddenBookingForm').submit();
+            form.submit();
         });
     });
     </script>

@@ -1,251 +1,216 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 {% load static %}
 
-{% block title %}ปฏิทินรวมทุกห้อง{% endblock %}
-
-{% block extra_head %}
-    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js'></script>
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-
-    <style>
-        .fc { font-family: 'Kanit', sans-serif; }
-        
-        /* [ตั้งค่า] ให้คลิกได้ แต่ "ห้ามเด้ง/ห้ามขยาย" (ตามที่ขอ) */
-        .fc-event { 
-            cursor: pointer !important;       /* เป็นรูปมือ (สื่อว่ากดดูได้) */
-            border: none !important; 
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
-            border-radius: 6px; 
-            
-            /* ปิด Animation การขยายตัวทั้งหมด */
-            transition: none !important; 
-            transform: none !important;
-        }
-
-        /* ตอนเอาเมาส์ชี้ */
-        .fc-event:hover { 
-            /* ย้ำอีกทีว่าห้ามขยาย */
-            transform: none !important; 
-            /* แค่เพิ่มเงาจางๆ นิดเดียวพอ */
-            box-shadow: 0 4px 8px rgba(0,0,0,0.15) !important; 
-            z-index: 5; 
-        }
-        
-        .custom-event-content { padding: 4px 8px; overflow: hidden; font-size: 0.85rem; line-height: 1.4; color: #ffffff !important; }
-        .event-time { font-weight: bold; font-size: 0.85rem; color: #ffffff !important; margin-bottom: 2px; display: block; text-shadow: 0 1px 2px rgba(0,0,0,0.1); }
-        .event-title { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #ffffff !important; }
-        .event-info { font-size: 0.75rem; opacity: 0.95; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #ffffff !important; }
-
-        .fc-list .custom-event-content, .fc-list .event-time, .fc-list .event-title, .fc-list .event-info {
-            color: #212529 !important; text-shadow: none !important;
-        }
-        .fc-list-event:hover td { background-color: transparent !important; }
-        .fc-list-event:hover { transform: none !important; box-shadow: none !important; }
-
-        .bg-orange { background-color: #fd7e14 !important; color: white !important; }
-        .bg-danger { background-color: #dc3545 !important; color: white !important; }
-        .bg-primary { background-color: #0d6efd !important; color: white !important; }
-
-        .fc-event.status-past { background-color: #6c757d !important; border-left: 3px solid #495057 !important; opacity: 1 !important; }
-    </style>
-{% endblock %}
+{% block title %}ปฏิทินการจองห้องประชุม{% endblock %}
 
 {% block content %}
-<div class="container py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h3 class="fw-bold text-primary mb-0"><i class="bi bi-calendar3-range me-2"></i>ปฏิทินรวมทุกห้อง</h3>
-            <p class="text-muted small mb-0">ดูตารางการใช้ห้องประชุมทั้งหมดในบริษัท</p>
-        </div>
-        <div class="d-flex gap-2">
-            <select id="roomFilter" class="form-select form-select-sm shadow-sm" style="width: 200px;">
-                <option value="">แสดงทุกห้อง</option>
-                {% for r in all_rooms %}
-                    <option value="{{ r.id }}">{{ r.name }}</option>
-                {% endfor %}
-            </select>
-        </div>
-    </div>
+<div class="container-fluid p-0 p-md-3">
+    <div class="card shadow-sm border-0 rounded-0 rounded-md-3">
+        
+        <div class="card-header bg-white py-3">
+            <div class="row align-items-center gy-2"> <div class="col-12 col-md-6 d-flex align-items-center gap-2">
+                    <h5 class="mb-0 text-primary fw-bold">
+                        <i class="bi bi-calendar-check-fill"></i> 
+                        <span class="d-none d-sm-inline">ปฏิทินรวม</span>
+                        <span class="d-inline d-sm-none">ตารางจอง</span>
+                    </h5>
+                    <span class="badge bg-success d-none d-sm-inline">อนุมัติ</span>
+                    <span class="badge bg-warning text-dark d-none d-sm-inline">รออนุมัติ</span>
+                </div>
 
-    <div class="card border-0 shadow-sm rounded-4 mb-3">
-        <div class="card-body py-3 px-4">
-            <small class="text-muted fw-bold d-block mb-2">สถานะการจอง:</small>
-            <div class="d-flex gap-2 align-items-center small flex-wrap">
-                <span class="badge bg-primary fw-normal px-2 py-1"><i class="bi bi-broadcast me-1"></i>กำลังใช้งาน</span>
-                <span class="badge bg-success fw-normal px-2 py-1"><i class="bi bi-check-circle-fill me-1"></i>อนุมัติแล้ว</span>
-                <span class="badge bg-warning text-dark fw-normal px-2 py-1"><i class="bi bi-hourglass-split me-1"></i>รออนุมัติ</span>
-                <span class="badge bg-orange fw-normal px-2 py-1"><i class="bi bi-x-circle-fill me-1"></i>ไม่อนุมัติ</span>
-                <span class="badge bg-danger fw-normal px-2 py-1"><i class="bi bi-slash-circle-fill me-1"></i>ยกเลิก</span>
-                <span class="badge bg-secondary fw-normal px-2 py-1"><i class="bi bi-clock-history me-1"></i>ใช้งานแล้ว</span>
+                <div class="col-12 col-md-6 d-flex gap-2 justify-content-md-end">
+                    <select id="roomFilter" class="form-select form-select-sm" style="max-width: 100%;">
+                        <option value="">แสดงทุกห้อง</option>
+                        {% for room in all_rooms %}
+                        <option value="{{ room.id }}">{{ room.name }}</option>
+                        {% endfor %}
+                    </select>
+                    
+                    {% if user.is_authenticated %}
+                    <a href="{% url 'dashboard' %}" class="btn btn-primary btn-sm text-nowrap">
+                        <i class="bi bi-plus-lg"></i> <span class="d-none d-sm-inline">จองห้อง</span>
+                    </a>
+                    {% endif %}
+                </div>
             </div>
         </div>
-    </div>
-
-    <div class="card border-0 shadow-sm rounded-4">
-        <div class="card-body p-4">
+        
+        <div class="card-body p-0 p-md-3">
             <div id="calendar"></div>
         </div>
     </div>
 </div>
 
-<div class="modal fade" id="eventDetailModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow rounded-4 overflow-hidden">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title fw-bold"><i class="bi bi-info-circle me-2"></i>รายละเอียดการจอง</h5>
+<div class="modal fade" id="eventModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm"> 
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-primary text-white py-2">
+                <h6 class="modal-title fw-bold">รายละเอียด</h6>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body p-4">
-                <h4 id="modalTitle" class="fw-bold text-dark mb-3"></h4>
-                <div class="row g-3">
-                    <div class="col-12">
-                        <div class="d-flex align-items-start">
-                            <div class="bg-light rounded-circle p-2 me-3 text-primary"><i class="bi bi-clock fs-5"></i></div>
-                            <div><small class="text-muted fw-bold text-uppercase">วันและเวลา</small><div id="modalTime" class="fs-6 text-dark fw-bold"></div></div>
-                        </div>
+            <div class="modal-body">
+                <h6 id="modalEventTitle" class="text-primary fw-bold mb-3">-</h6>
+                
+                <div class="d-flex flex-column gap-2 text-sm">
+                    <div>
+                        <small class="text-muted">📅 เวลา:</small>
+                        <div id="modalEventTime" class="fw-bold text-dark">-</div>
                     </div>
-                    <div class="col-12">
-                        <div class="d-flex align-items-start">
-                            <div class="bg-light rounded-circle p-2 me-3 text-danger"><i class="bi bi-geo-alt fs-5"></i></div>
-                            <div><small class="text-muted fw-bold text-uppercase">ห้องประชุม</small><div id="modalRoom" class="fs-6 text-dark"></div></div>
-                        </div>
+                    <div>
+                        <small class="text-muted">🚪 ห้อง:</small>
+                        <div id="modalEventRoom" class="text-dark">-</div>
                     </div>
-                    <div class="col-12">
-                        <div class="d-flex align-items-start">
-                            <div class="bg-light rounded-circle p-2 me-3 text-success"><i class="bi bi-person fs-5"></i></div>
-                            <div><small class="text-muted fw-bold text-uppercase">ผู้จอง</small><div id="modalUser" class="fs-6 text-dark"></div></div>
-                        </div>
-                    </div>
-                    <div class="col-12">
-                        <div class="d-flex align-items-start">
-                            <div class="bg-light rounded-circle p-2 me-3 text-warning"><i class="bi bi-flag fs-5"></i></div>
-                            <div><small class="text-muted fw-bold text-uppercase">สถานะ</small><div id="modalStatus" class="mt-1"></div></div>
-                        </div>
+                    <div>
+                        <small class="text-muted">👤 ผู้จอง:</small>
+                        <div id="modalEventUser" class="text-dark">-</div>
                     </div>
                 </div>
-            </div>
-            <div class="modal-footer bg-light border-0 p-3">
-                <a href="#" id="modalDetailLink" class="btn btn-outline-primary w-100 rounded-pill">
+                
+                <div class="d-grid mt-3">
+                    <a href="#" id="modalDetailLink" class="btn btn-outline-primary btn-sm">
+                        ดูรายละเอียด
                     </a>
+                </div>
             </div>
         </div>
     </div>
 </div>
-
 {% endblock %}
 
-{% block extra_scripts %}
+{% block extra_css %}
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+
+<style>
+    /* CSS พื้นฐาน */
+    #calendar {
+        font-family: 'Sarabun', sans-serif;
+        min-height: 85vh; 
+    }
+
+    /* --- 📱 MOBILE FIX : บังคับจัดระเบียบใหม่ --- */
+    @media (max-width: 768px) {
+        
+        /* 1. บังคับให้ Toolbar เรียงลงมาแนวตั้ง (Column) */
+        .fc-header-toolbar {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 10px !important;
+            align-items: stretch !important; /* ยืดเต็มความกว้าง */
+        }
+
+        /* 2. จัดปุ่มแต่ละก้อนให้อยู่ตรงกลาง และเต็มบรรทัด */
+        .fc-toolbar-chunk {
+            display: flex !important;
+            justify-content: space-between !important; /* แยกซ้ายขวา */
+            width: 100% !important; 
+        }
+
+        /* 3. ปรับขนาดชื่อเดือน */
+        .fc-toolbar-title {
+            font-size: 1.25rem !important;
+        }
+
+        /* 4. ซ่อนปุ่ม Today ในมือถือ */
+        .fc-today-button {
+            display: none !important;
+        }
+
+        /* 5. ปรับ List View ให้ดูง่าย */
+        .fc-list-event-title {
+            font-weight: 600 !important;
+        }
+        .fc-list-day-cushion {
+            background-color: #f8f9fa !important;
+            position: sticky;
+            top: 0;
+            z-index: 5;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        
-        document.querySelectorAll('.modal').forEach(modalEl => {
-            const modal = bootstrap.Modal.getInstance(modalEl);
-            if (modal) modal.hide();
-        });
-        const backdrops = document.querySelectorAll('.modal-backdrop');
-        backdrops.forEach(backdrop => backdrop.remove());
-        document.body.classList.remove('modal-open');
-        document.body.style.overflow = '';
-        document.body.style.paddingRight = '';
-
         var calendarEl = document.getElementById('calendar');
-        var roomFilter = document.getElementById('roomFilter');
-
-        function formatTimeOnly(date) { return date.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', hour12: false }); }
-        function formatFullDateTime(date) { return date.toLocaleString('th-TH', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false }); }
+        var eventModal = new bootstrap.Modal(document.getElementById('eventModal'));
+        
+        function isMobile() {
+            return window.innerWidth < 768;
+        }
 
         var calendar = new FullCalendar.Calendar(calendarEl, {
-            locale: 'th', initialView: 'dayGridMonth',
-            headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,listWeek' },
-            buttonText: { today: 'วันนี้', month: 'เดือน', week: 'สัปดาห์', list: 'รายการ' },
-            events: "{% url 'bookings_api' %}", 
-            eventTimeFormat: { hour: '2-digit', minute: '2-digit', hour12: false },
+            locale: 'th',
+            timeZone: 'Asia/Bangkok',
+            themeSystem: 'bootstrap5',
             
-            eventContent: function(arg) {
-                let timeText = formatTimeOnly(arg.event.start);
-                if(arg.event.end) timeText += " - " + formatTimeOnly(arg.event.end);
-                return { html: `<div class="custom-event-content"><div class="event-time"><i class="bi bi-clock"></i> ${timeText}</div><div class="event-title">${arg.event.title}</div><div class="event-info"><i class="bi bi-person-fill"></i> ${arg.event.extendedProps.user || '-'} | <i class="bi bi-geo-alt-fill"></i> ${arg.event.extendedProps.room || ''}</div></div>`};
+            // ======================================================
+            // [สำคัญ] ถ้าเป็นมือถือ บังคับเป็น List View ทันที
+            // ======================================================
+            initialView: isMobile() ? 'listMonth' : 'dayGridMonth',
+            
+            height: 'auto',
+            
+            // ตั้งค่าปุ่มกด
+            headerToolbar: {
+                // มือถือ: ซ่อน Today, ปุ่มเลื่อนเดือนกับชื่อเดือนจะถูก CSS บังคับจัดเรียงใหม่เอง
+                left: isMobile() ? 'prev,next' : 'prev,next today',
+                center: 'title',
+                right: isMobile() ? 'listMonth' : 'dayGridMonth,timeGridWeek,listWeek'
+            },
+            
+            buttonText: {
+                today: 'วันนี้',
+                month: 'เดือน',
+                week: 'สัปดาห์',
+                day: 'วัน',
+                list: 'รายการ',
+                listMonth: 'รายการจอง'
+            },
+            
+            views: {
+                listMonth: { buttonText: 'รายการเดือนนี้' }
             },
 
-            eventClassNames: function(arg) {
-                let s = arg.event.extendedProps.status;
-                let now = new Date();
-                let end = arg.event.end || arg.event.start;
-
-                if (s === 'CANCELLED') return ['bg-danger', 'border-0'];
-                if (s === 'REJECTED') return ['bg-orange', 'border-0'];
-                if (end < now) return ['bg-secondary', 'border-0'];
-                if (s === 'PENDING') return ['bg-warning', 'text-dark', 'border-0'];
-                if (s === 'APPROVED') {
-                    if (arg.event.start <= now && now <= end) return ['bg-primary', 'border-0'];
-                    return ['bg-success', 'border-0'];
-                }
-                return ['bg-secondary'];
-            },
-
+            events: '/api/bookings_api/', 
+            
             eventClick: function(info) {
-                info.jsEvent.preventDefault(); 
+                document.getElementById('modalEventTitle').innerText = info.event.title;
+                document.getElementById('modalEventTime').innerText = 
+                    info.event.start.toLocaleTimeString('th-TH', {hour: '2-digit', minute:'2-digit'}) + ' - ' +
+                    (info.event.end ? info.event.end.toLocaleTimeString('th-TH', {hour: '2-digit', minute:'2-digit'}) : '');
                 
-                // 1. ดึงข้อมูลมาแสดงใน Modal (ทำได้ทุกคน ทั้ง Login และ ไม่ Login)
-                const props = info.event.extendedProps;
-                let timeStr = formatFullDateTime(info.event.start);
-                if (info.event.end) timeStr += " - " + formatTimeOnly(info.event.end);
-
-                document.getElementById('modalTitle').innerText = info.event.title;
-                document.getElementById('modalTime').innerText = timeStr;
-                document.getElementById('modalRoom').innerText = props.room;
-                document.getElementById('modalUser').innerText = props.user;
+                document.getElementById('modalEventRoom').innerText = info.event.extendedProps.room || '-';
+                document.getElementById('modalEventUser').innerText = info.event.extendedProps.user || '-';
                 
-                let sk = props.status; let st = sk; let bg = 'bg-secondary';
-                if (sk === 'APPROVED') { st = 'อนุมัติแล้ว'; bg = 'bg-success'; }
-                else if (sk === 'PENDING') { st = 'รออนุมัติ'; bg = 'bg-warning text-dark'; }
-                else if (sk === 'REJECTED') { st = 'ไม่อนุมัติ'; bg = 'bg-orange'; }
-                else if (sk === 'CANCELLED') { st = 'ยกเลิกแล้ว'; bg = 'bg-danger'; }
+                var detailBtn = document.getElementById('modalDetailLink');
+                detailBtn.href = '/booking/' + info.event.id + '/detail/';
                 
-                document.getElementById('modalStatus').innerHTML = `<span class="badge ${bg}">${st}</span>`;
-                
-                // 2. [ส่วนสำคัญ] จัดการปุ่ม "ดูรายละเอียดเพิ่มเติม"
-                const detailLink = document.getElementById('modalDetailLink');
-                const eventDetailUrl = `/booking/${info.event.id}/detail/`;
-
-                {% if is_public_view %}
-                    // กรณี: คนนอก (ยังไม่ Login) -> ปุ่มนี้จะพาไปหน้า Login
-                    detailLink.href = "{% url 'login' %}?next=" + encodeURIComponent(eventDetailUrl);
-                    detailLink.innerHTML = '<i class="bi bi-box-arrow-in-right me-2"></i>เข้าสู่ระบบเพื่อดูเพิ่มเติม';
-                    detailLink.className = "btn btn-primary w-100 rounded-pill"; // เปลี่ยนสีปุ่มให้เด่น
-                {% else %}
-                    // กรณี: Login แล้ว -> ไปหน้า Detail ปกติ
-                    detailLink.href = eventDetailUrl;
-                    detailLink.innerHTML = '<i class="bi bi-box-arrow-up-right me-2"></i>ดูรายละเอียดเพิ่มเติม';
-                    detailLink.className = "btn btn-outline-primary w-100 rounded-pill";
-                {% endif %}
-
-                // สั่งปิด Modal เมื่อกดปุ่ม (ไม่ว่าจะไป Login หรือไป Detail)
-                detailLink.onclick = function() {
-                    const modalEl = document.getElementById('eventDetailModal');
-                    const modal = bootstrap.Modal.getInstance(modalEl);
-                    if (modal) modal.hide();
-                };
-
-                new bootstrap.Modal(document.getElementById('eventDetailModal')).show();
+                eventModal.show();
             },
-            
-            eventDidMount: function(info) {
-                var now = new Date(); var end = info.event.end || info.event.start;
-                var status = info.event.extendedProps.status;
-                if (end < now && status !== 'CANCELLED' && status !== 'REJECTED') { 
-                    info.el.classList.add('status-past'); 
+
+            // Auto Resize: บังคับเปลี่ยน View เมื่อย่อขยายจอ
+            windowResize: function(view) {
+                if (window.innerWidth < 768) {
+                    calendar.changeView('listMonth');
+                } else {
+                    calendar.changeView('dayGridMonth');
                 }
             }
         });
 
         calendar.render();
 
-        roomFilter.addEventListener('change', function() {
-            let url = "{% url 'bookings_api' %}";
-            if(this.value) url += `?room_id=${this.value}`;
-            calendar.removeAllEventSources();
-            calendar.addEventSource(url);
+        // ตัวกรองห้อง
+        document.getElementById('roomFilter').addEventListener('change', function() {
+            var roomId = this.value;
+            var newSource = {
+                url: '/api/bookings_api/',
+                extraParams: roomId ? { room_id: roomId } : {}
+            };
+            var oldSource = calendar.getEventSources()[0];
+            oldSource.remove();
+            calendar.addEventSource(newSource);
         });
     });
 </script>
