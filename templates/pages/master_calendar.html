@@ -1,25 +1,80 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}ปฏิทินการจองห้องประชุม{% endblock %}
+{% block title %}ปฏิทินรวมทุกห้อง{% endblock %}
+
+{% block extra_head %}
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js'></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+    <style>
+        #calendar {
+            font-family: 'Sarabun', sans-serif;
+            min-height: 85vh; 
+        }
+
+        /* --- 1. ชุดสีสถานะ --- */
+        .bg-active { background-color: #0d6efd !important; color: white !important; border-left: 5px solid #0a58ca !important; }
+        .bg-approved { background-color: #198754 !important; color: white !important; border-left: 5px solid #0f5132 !important; }
+        .bg-pending { background-color: #ffc107 !important; color: #212529 !important; border-left: 5px solid #cc9a06 !important; }
+        .bg-rejected { background-color: #fd7e14 !important; color: white !important; border-left: 5px solid #e36a09 !important; }
+        .bg-cancelled { background-color: #dc3545 !important; color: white !important; border-left: 5px solid #b02a37 !important; }
+        .bg-past { background-color: #6c757d !important; color: white !important; opacity: 0.8; }
+        .bg-maintenance { background-color: #212529 !important; color: white !important; }
+        .bg-cleaning { background-color: #0dcaf0 !important; color: white !important; border-left: 5px solid #0aa2c0 !important; }
+
+        /* --- 2. แต่งกล่อง Event ในปฏิทิน --- */
+        .custom-event-content {
+            padding: 4px 6px;
+            line-height: 1.3;
+            font-size: 0.8rem;
+            overflow: hidden;
+        }
+        .fc-event { 
+            border: none !important; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.15); 
+            cursor: pointer; 
+            border-radius: 4px; 
+            margin-bottom: 2px;
+        }
+
+        @media (max-width: 768px) {
+            .fc-header-toolbar { display: flex !important; flex-direction: column !important; gap: 10px !important; }
+            .fc-toolbar-chunk { display: flex !important; justify-content: space-between !important; width: 100% !important; }
+            .fc-toolbar-title { font-size: 1.25rem !important; }
+            .fc-today-button { display: none !important; }
+        }
+    </style>
+{% endblock %}
 
 {% block content %}
-<div class="container-fluid p-0 p-md-3">
-    <div class="card shadow-sm border-0 rounded-0 rounded-md-3">
-        
-        <div class="card-header bg-white py-3">
-            <div class="row align-items-center gy-2"> <div class="col-12 col-md-6 d-flex align-items-center gap-2">
-                    <h5 class="mb-0 text-primary fw-bold">
-                        <i class="bi bi-calendar-check-fill"></i> 
-                        <span class="d-none d-sm-inline">ปฏิทินรวม</span>
-                        <span class="d-inline d-sm-none">ตารางจอง</span>
-                    </h5>
-                    <span class="badge bg-success d-none d-sm-inline">อนุมัติ</span>
-                    <span class="badge bg-warning text-dark d-none d-sm-inline">รออนุมัติ</span>
+<div class="container p-0 p-md-3">
+    
+    <div class="card shadow-sm border-0 rounded-3 mb-3">
+        <div class="card-body py-3 px-4">
+            <div class="row align-items-center gy-3">
+                
+                <div class="col-12 col-lg-8">
+                    <div class="d-flex align-items-center mb-2">
+                        <h4 class="mb-0 text-primary fw-bold">
+                            <i class="bi bi-calendar-check-fill me-2"></i>ปฏิทินรวม
+                        </h4>
+                    </div>
+                    
+                    <div class="d-flex flex-wrap align-items-center gap-2">
+                        <small class="text-muted fw-bold">สถานะการใช้งาน:</small>
+                        <span class="badge bg-active">กำลังใช้งาน</span>
+                        <span class="badge bg-approved">อนุมัติแล้ว</span>
+                        <span class="badge bg-pending">รออนุมัติ</span>
+                        <span class="badge bg-cleaning text-dark">ทำความสะอาด</span>
+                        <span class="badge bg-rejected">ไม่อนุมัติ</span>
+                        <span class="badge bg-cancelled">ยกเลิก</span>
+                        <span class="badge bg-past">ใช้งานแล้ว</span>
+                    </div>
                 </div>
 
-                <div class="col-12 col-md-6 d-flex gap-2 justify-content-md-end">
-                    <select id="roomFilter" class="form-select form-select-sm" style="max-width: 100%;">
+                <div class="col-12 col-lg-4 d-flex gap-2 justify-content-lg-end align-items-center">
+                    <select id="roomFilter" class="form-select" style="max-width: 200px;">
                         <option value="">แสดงทุกห้อง</option>
                         {% for room in all_rooms %}
                         <option value="{{ room.id }}">{{ room.name }}</option>
@@ -27,18 +82,21 @@
                     </select>
                     
                     {% if user.is_authenticated %}
-                    <a href="{% url 'dashboard' %}" class="btn btn-primary btn-sm text-nowrap">
-                        <i class="bi bi-plus-lg"></i> <span class="d-none d-sm-inline">จองห้อง</span>
+                    <a href="{% url 'dashboard' %}" class="btn btn-primary text-nowrap px-3">
+                        <i class="bi bi-plus-lg"></i> จองห้อง
                     </a>
                     {% endif %}
                 </div>
             </div>
         </div>
-        
-        <div class="card-body p-0 p-md-3">
+    </div>
+
+    <div class="card shadow-sm border-0 rounded-3">
+        <div class="card-body p-3 p-md-4">
             <div id="calendar"></div>
         </div>
     </div>
+
 </div>
 
 <div class="modal fade" id="eventModal" tabindex="-1" aria-hidden="true">
@@ -50,26 +108,13 @@
             </div>
             <div class="modal-body">
                 <h6 id="modalEventTitle" class="text-primary fw-bold mb-3">-</h6>
-                
                 <div class="d-flex flex-column gap-2 text-sm">
-                    <div>
-                        <small class="text-muted">📅 เวลา:</small>
-                        <div id="modalEventTime" class="fw-bold text-dark">-</div>
-                    </div>
-                    <div>
-                        <small class="text-muted">🚪 ห้อง:</small>
-                        <div id="modalEventRoom" class="text-dark">-</div>
-                    </div>
-                    <div>
-                        <small class="text-muted">👤 ผู้จอง:</small>
-                        <div id="modalEventUser" class="text-dark">-</div>
-                    </div>
+                    <div><small class="text-muted">📅 เวลา:</small><div id="modalEventTime" class="fw-bold text-dark">-</div></div>
+                    <div><small class="text-muted">🚪 ห้อง:</small><div id="modalEventRoom" class="text-dark">-</div></div>
+                    <div><small class="text-muted">👤 ผู้จอง:</small><div id="modalEventUser" class="text-dark">-</div></div>
                 </div>
-                
                 <div class="d-grid mt-3">
-                    <a href="#" id="modalDetailLink" class="btn btn-outline-primary btn-sm">
-                        ดูรายละเอียด
-                    </a>
+                    <a href="#" id="modalDetailLink" class="btn btn-outline-primary btn-sm">ดูรายละเอียด</a>
                 </div>
             </div>
         </div>
@@ -77,104 +122,85 @@
 </div>
 {% endblock %}
 
-{% block extra_css %}
-<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
-
-<style>
-    /* CSS พื้นฐาน */
-    #calendar {
-        font-family: 'Sarabun', sans-serif;
-        min-height: 85vh; 
-    }
-
-    /* --- 📱 MOBILE FIX : บังคับจัดระเบียบใหม่ --- */
-    @media (max-width: 768px) {
-        
-        /* 1. บังคับให้ Toolbar เรียงลงมาแนวตั้ง (Column) */
-        .fc-header-toolbar {
-            display: flex !important;
-            flex-direction: column !important;
-            gap: 10px !important;
-            align-items: stretch !important; /* ยืดเต็มความกว้าง */
-        }
-
-        /* 2. จัดปุ่มแต่ละก้อนให้อยู่ตรงกลาง และเต็มบรรทัด */
-        .fc-toolbar-chunk {
-            display: flex !important;
-            justify-content: space-between !important; /* แยกซ้ายขวา */
-            width: 100% !important; 
-        }
-
-        /* 3. ปรับขนาดชื่อเดือน */
-        .fc-toolbar-title {
-            font-size: 1.25rem !important;
-        }
-
-        /* 4. ซ่อนปุ่ม Today ในมือถือ */
-        .fc-today-button {
-            display: none !important;
-        }
-
-        /* 5. ปรับ List View ให้ดูง่าย */
-        .fc-list-event-title {
-            font-weight: 600 !important;
-        }
-        .fc-list-day-cushion {
-            background-color: #f8f9fa !important;
-            position: sticky;
-            top: 0;
-            z-index: 5;
-        }
-    }
-</style>
-{% endblock %}
-
-{% block extra_js %}
+{% block extra_scripts %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         var calendarEl = document.getElementById('calendar');
         var eventModal = new bootstrap.Modal(document.getElementById('eventModal'));
         
-        function isMobile() {
-            return window.innerWidth < 768;
-        }
+        function isMobile() { return window.innerWidth < 768; }
 
         var calendar = new FullCalendar.Calendar(calendarEl, {
             locale: 'th',
             timeZone: 'Asia/Bangkok',
             themeSystem: 'bootstrap5',
-            
-            // ======================================================
-            // [สำคัญ] ถ้าเป็นมือถือ บังคับเป็น List View ทันที
-            // ======================================================
             initialView: isMobile() ? 'listMonth' : 'dayGridMonth',
-            
             height: 'auto',
             
-            // ตั้งค่าปุ่มกด
             headerToolbar: {
-                // มือถือ: ซ่อน Today, ปุ่มเลื่อนเดือนกับชื่อเดือนจะถูก CSS บังคับจัดเรียงใหม่เอง
                 left: isMobile() ? 'prev,next' : 'prev,next today',
                 center: 'title',
                 right: isMobile() ? 'listMonth' : 'dayGridMonth,timeGridWeek,listWeek'
             },
             
             buttonText: {
-                today: 'วันนี้',
-                month: 'เดือน',
-                week: 'สัปดาห์',
-                day: 'วัน',
-                list: 'รายการ',
-                listMonth: 'รายการจอง'
+                today: 'วันนี้', month: 'เดือน', week: 'สัปดาห์', day: 'วัน', list: 'รายการ', listMonth: 'รายการจอง'
             },
+            views: { listMonth: { buttonText: 'รายการเดือนนี้' } },
+
+            events: "{% url 'bookings_api' %}", 
             
-            views: {
-                listMonth: { buttonText: 'รายการเดือนนี้' }
+            // Layout กล่อง Event (ชื่อห้องตัวหนา บรรทัดแรก)
+            eventContent: function(arg) {
+                let timeText = arg.event.start.toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'});
+                if(arg.event.end) timeText += ' - ' + arg.event.end.toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'});
+                
+                let roomName = arg.event.extendedProps.room || '-';
+                let userName = arg.event.extendedProps.user || '-';
+                let title = arg.event.title;
+                let status = arg.event.extendedProps.status;
+
+                let badgeClass = 'bg-secondary';
+                if(status === 'PENDING') badgeClass = 'bg-pending';
+                else if(status === 'APPROVED') badgeClass = 'bg-approved';
+                else if(status === 'REJECTED') badgeClass = 'bg-rejected';
+                else if(status === 'CANCELLED') badgeClass = 'bg-cancelled';
+                else if(status === 'CLEANING') badgeClass = 'bg-cleaning';
+
+                return { html: `
+                    <div class="custom-event-content">
+                        <div class="fw-bold text-truncate mb-1" style="font-size: 0.85rem; border-bottom: 1px solid rgba(255,255,255,0.3); padding-bottom: 2px;">
+                            <i class="bi bi-door-open-fill"></i> ${roomName}
+                        </div>
+                        <div class="fw-bold text-truncate mb-1" style="font-size: 0.9rem;">${title}</div>
+                        <div class="mb-1"><i class="bi bi-clock"></i> ${timeText}</div>
+                        <div class="small opacity-75 text-truncate"><i class="bi bi-person-fill"></i> ${userName}</div>
+                    </div>
+                `};
             },
 
-            events: '/api/bookings_api/', 
+            // Logic สี
+            eventClassNames: function(arg) {
+                let s = arg.event.extendedProps.status;
+                let now = new Date();
+                let end = arg.event.end || arg.event.start;
+                
+                if (arg.event.id.toString().startsWith('maint_')) return ['bg-maintenance'];
+                if (s === 'CLEANING') return ['bg-cleaning']; 
+                if (s === 'CANCELLED') return ['bg-cancelled']; 
+                if (s === 'REJECTED') return ['bg-rejected']; 
+                if (end < now) return ['bg-past']; 
+                if (s === 'PENDING') return ['bg-pending'];
+                
+                if (s === 'APPROVED') {
+                    if (arg.event.start <= now && now <= end) return ['bg-active']; 
+                    return ['bg-approved']; 
+                }
+                return ['bg-secondary'];
+            },
             
             eventClick: function(info) {
+                if (info.event.id.toString().startsWith('maint_')) return;
                 document.getElementById('modalEventTitle').innerText = info.event.title;
                 document.getElementById('modalEventTime').innerText = 
                     info.event.start.toLocaleTimeString('th-TH', {hour: '2-digit', minute:'2-digit'}) + ' - ' +
@@ -182,30 +208,22 @@
                 
                 document.getElementById('modalEventRoom').innerText = info.event.extendedProps.room || '-';
                 document.getElementById('modalEventUser').innerText = info.event.extendedProps.user || '-';
-                
-                var detailBtn = document.getElementById('modalDetailLink');
-                detailBtn.href = '/booking/' + info.event.id + '/detail/';
-                
+                document.getElementById('modalDetailLink').href = '/booking/' + info.event.id + '/detail/';
                 eventModal.show();
             },
 
-            // Auto Resize: บังคับเปลี่ยน View เมื่อย่อขยายจอ
             windowResize: function(view) {
-                if (window.innerWidth < 768) {
-                    calendar.changeView('listMonth');
-                } else {
-                    calendar.changeView('dayGridMonth');
-                }
+                if (window.innerWidth < 768) calendar.changeView('listMonth');
+                else calendar.changeView('dayGridMonth');
             }
         });
 
         calendar.render();
 
-        // ตัวกรองห้อง
         document.getElementById('roomFilter').addEventListener('change', function() {
             var roomId = this.value;
             var newSource = {
-                url: '/api/bookings_api/',
+                url: "{% url 'bookings_api' %}", 
                 extraParams: roomId ? { room_id: roomId } : {}
             };
             var oldSource = calendar.getEventSources()[0];

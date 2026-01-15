@@ -272,8 +272,8 @@
                 }, 400);
             }
 
-            // Send AJAX Request (URL Corrected)
-            fetch(`/booking/${bookingId}/read/`, {
+            // [แก้ไขแล้ว] ส่ง AJAX Request ไปยัง URL ที่ถูกต้อง ตาม urls.py
+            fetch(`/api/notification/read/${bookingId}/`, {
                 method: 'POST',
                 headers: {
                     'X-CSRFToken': '{{ csrf_token }}',
@@ -282,6 +282,7 @@
                 body: JSON.stringify({})
             }).then(res => {
                 if(!res.ok) console.error("Mark read failed");
+                else console.log("Mark read success");
             }).catch(err => console.error(err));
         }
 
@@ -304,9 +305,9 @@
                     
                     // Show empty message if list is empty
                     const remainingItems = list.querySelectorAll('li[id^="notif-"]').length;
-                    if (remainingItems === 0) {
+                    if (remainingItems <= 1) { // ถ้าเหลือ 1 (คืออันที่กำลังจะลบ) ให้แสดงข้อความว่าง
                         list.innerHTML = `
-                            <li class="text-center py-4 text-muted">
+                            <li class="text-center py-4 text-muted" id="emptyMessage">
                                 <i class="bi bi-bell-slash fs-1 d-block mb-2 opacity-25"></i>
                                 <small>ไม่มีการแจ้งเตือนใหม่</small>
                             </li>
@@ -317,41 +318,42 @@
             }
         }
     </script>
+    
     <div class="modal fade" id="loginModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
-            <div class="modal-header bg-primary text-white border-0 py-3">
-                <h5 class="modal-title fw-bold"><i class="bi bi-person-circle me-2"></i>เข้าสู่ระบบ</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body p-4 bg-light">
-                <form method="post" action="{% url 'login' %}">
-                    {% csrf_token %}
-                    <input type="hidden" name="next" value="{{ request.path }}">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="modal-header bg-primary text-white border-0 py-3">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-person-circle me-2"></i>เข้าสู่ระบบ</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4 bg-light">
+                    <form method="post" action="{% url 'login' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{{ request.path }}">
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-muted">ชื่อผู้ใช้</label>
+                            <input type="text" name="username" class="form-control rounded-pill" placeholder="Username" required autofocus>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label fw-bold text-muted">รหัสผ่าน</label>
+                            <input type="password" name="password" class="form-control rounded-pill" placeholder="Password" required>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary w-100 rounded-pill fw-bold py-2 shadow-sm">
+                            เข้าสู่ระบบ <i class="bi bi-arrow-right ms-2"></i>
+                        </button>
+                    </form>
                     
-                    <div class="mb-3">
-                        <label class="form-label fw-bold text-muted">ชื่อผู้ใช้</label>
-                        <input type="text" name="username" class="form-control rounded-pill" placeholder="Username" required autofocus>
+                    <div class="text-center mt-3">
+                        <a href="{% url 'outlook_login' %}" class="btn btn-outline-dark w-100 rounded-pill">
+                            <i class="bi bi-microsoft me-2"></i> Login with Outlook
+                        </a>
                     </div>
-                    <div class="mb-4">
-                        <label class="form-label fw-bold text-muted">รหัสผ่าน</label>
-                        <input type="password" name="password" class="form-control rounded-pill" placeholder="Password" required>
-                    </div>
-                    
-                    <button type="submit" class="btn btn-primary w-100 rounded-pill fw-bold py-2 shadow-sm">
-                        เข้าสู่ระบบ <i class="bi bi-arrow-right ms-2"></i>
-                    </button>
-                </form>
-                
-                <div class="text-center mt-3">
-                    <a href="{% url 'outlook_login' %}" class="btn btn-outline-dark w-100 rounded-pill">
-                        <i class="bi bi-microsoft me-2"></i> Login with Outlook
-                    </a>
                 </div>
             </div>
         </div>
     </div>
-</div>
     
     {% block extra_scripts %}{% endblock %}
 </body>

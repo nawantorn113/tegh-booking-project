@@ -17,9 +17,13 @@
         .fc { font-family: 'Kanit', sans-serif; }
         .fc-event { border: none !important; box-shadow: 0 1px 2px rgba(0,0,0,0.1); cursor: pointer; padding: 2px 5px; border-radius: 3px; }
         .fc-event.status-past { background-color: #6c757d !important; border-left: 3px solid #495057 !important; opacity: 1 !important; }
+        
+        /* เพิ่มสีต่างๆ */
         .bg-orange { background-color: #fd7e14 !important; color: white !important; }
         .bg-danger { background-color: #dc3545 !important; color: white !important; }
         .bg-primary { background-color: #0d6efd !important; color: white !important; }
+        .bg-info { background-color: #0dcaf0 !important; color: white !important; } /* สีทำความสะอาด */
+
         .custom-event-content { padding: 2px; overflow: hidden; line-height: 1.2; }
         .fc-list .custom-event-content, .fc-list .custom-event-content .text-white, .fc-list .custom-event-content .text-dark { color: #212529 !important; text-shadow: none !important; }
         .fc-list-event:hover td { background-color: transparent !important; }
@@ -68,7 +72,7 @@
                             <span class="badge bg-primary fw-normal px-2 py-1"><i class="bi bi-broadcast me-1"></i>กำลังใช้งาน</span>
                             <span class="badge bg-success fw-normal px-2 py-1"><i class="bi bi-check-circle-fill me-1"></i>อนุมัติแล้ว</span>
                             <span class="badge bg-warning text-dark fw-normal px-2 py-1"><i class="bi bi-hourglass-split me-1"></i>รออนุมัติ</span>
-                            <span class="badge bg-orange fw-normal px-2 py-1"><i class="bi bi-x-circle-fill me-1"></i>ไม่อนุมัติ</span>
+                            <span class="badge bg-info text-dark fw-normal px-2 py-1"><i class="bi bi-stars me-1"></i>ทำความสะอาด</span> <span class="badge bg-orange fw-normal px-2 py-1"><i class="bi bi-x-circle-fill me-1"></i>ไม่อนุมัติ</span>
                             <span class="badge bg-danger fw-normal px-2 py-1"><i class="bi bi-slash-circle-fill me-1"></i>ยกเลิก</span>
                             <span class="badge bg-secondary fw-normal px-2 py-1"><i class="bi bi-clock-history me-1"></i>ใช้งานแล้ว</span>
                             
@@ -366,7 +370,8 @@
                 let now = new Date();
                 let end = arg.event.end || arg.event.start;
                 if (s === 'CANCELLED') return ['bg-danger', 'border-0']; 
-                if (s === 'REJECTED') return ['bg-orange', 'border-0']; 
+                if (s === 'REJECTED') return ['bg-orange', 'border-0'];
+                if (s === 'CLEANING') return ['bg-info', 'border-0']; // เพิ่มเงื่อนไขสีทำความสะอาด
                 if (end < now) return ['bg-secondary', 'border-0']; 
                 if (s === 'PENDING') return ['bg-warning', 'text-dark', 'border-0'];
                 if (s === 'APPROVED') {
@@ -400,6 +405,7 @@
                 else if (sk === 'PENDING') { st = 'รออนุมัติ'; bg = 'bg-warning text-dark'; }
                 else if (sk === 'REJECTED') { st = 'ไม่อนุมัติ'; bg = 'bg-orange'; } 
                 else if (sk === 'CANCELLED') { st = 'ยกเลิกแล้ว'; bg = 'bg-danger'; }
+                else if (sk === 'CLEANING') { st = 'ทำความสะอาด'; bg = 'bg-info'; } // เพิ่มเงื่อนไขการแสดงผลใน Modal
                 
                 document.getElementById('detailModalStatus').innerHTML = `<span class="badge ${bg}">${st}</span>`;
                 
