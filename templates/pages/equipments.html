@@ -1,74 +1,101 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}จัดการอุปกรณ์{% endblock %}
+{% block title %}จัดการอุปกรณ์ - {{ block.super }}{% endblock %}
 
 {% block content %}
 <div class="container py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+    <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h4 class="fw-bold text-dark mb-0">จัดการอุปกรณ์</h4>
-            <span class="text-muted small">รายการอุปกรณ์ทั้งหมด {{ equipments.count }} รายการ</span>
+            <h3 class="fw-bold text-dark mb-1">
+                <i class="bi bi-tools me-2 text-primary"></i>รายชื่ออุปกรณ์
+            </h3>
+            <p class="text-muted small mb-0">จัดการ เพิ่ม ลบ แก้ไข ข้อมูลอุปกรณ์ภายในห้องประชุม</p>
         </div>
-        <a href="{% url 'add_equipment' %}" class="btn btn-primary px-4 rounded-3 shadow-sm">
-            <i class="bi bi-plus-lg me-1"></i> เพิ่มข้อมูล
+        <a href="{% url 'add_equipment' %}" class="btn btn-tegh-primary shadow-sm">
+            <i class="bi bi-plus-lg me-1"></i> เพิ่มอุปกรณ์ใหม่
         </a>
     </div>
 
-    <div class="card border border-light shadow-sm rounded-3">
+    <div class="card tegh-card overflow-hidden">
         <div class="card-body p-0">
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
-                    <thead class="bg-light">
+                    <thead class="bg-light text-secondary">
                         <tr>
-                            <th class="ps-4 py-3 fw-bold text-secondary" style="width: 50px;">#</th>
-                            <th class="py-3 fw-bold text-secondary" style="width: 30%;">ชื่ออุปกรณ์</th>
-                            <th class="py-3 fw-bold text-secondary">รายละเอียด</th>
-                            <th class="text-end pe-4 py-3 fw-bold text-secondary" style="width: 120px;">จัดการ</th>
+                            <th class="ps-4 py-3" style="width: 30%;">ชื่ออุปกรณ์</th>
+                            <th style="width: 40%;">รายละเอียด / หมายเหตุ</th>
+                            <th style="width: 15%;">สถานะ</th>
+                            <th class="text-end pe-4" style="width: 15%;">จัดการ</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for item in equipments %}
+                        {% for equipment in equipments %}
                         <tr>
-                            <td class="ps-4 text-muted">{{ forloop.counter }}</td>
-                            <td class="fw-bold text-dark">{{ item.name }}</td>
-                            <td class="text-secondary small">
-                                {{ item.description|default:"-" }}
+                            <td class="ps-4 fw-bold text-primary">
+                                <i class="bi bi-plug-fill me-2 opacity-50"></i>{{ equipment.name }}
                             </td>
+                            
+                            <td>
+                                <div class="text-muted small mb-1">{{ equipment.description|default:"-"|truncatechars:50 }}</div>
+                                {% if equipment.status_note %}
+                                    <span class="text-warning small"><i class="bi bi-exclamation-triangle me-1"></i>{{ equipment.status_note }}</span>
+                                {% endif %}
+                            </td>
+                            
+                            <td>
+                                {% if equipment.is_active %}
+                                    <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3">
+                                        <i class="bi bi-check-circle me-1"></i> พร้อมใช้งาน
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-secondary bg-opacity-10 text-secondary rounded-pill px-3">
+                                        <i class="bi bi-slash-circle me-1"></i> ปิดใช้งาน
+                                    </span>
+                                {% endif %}
+                            </td>
+                            
                             <td class="text-end pe-4">
-                                <a href="{% url 'edit_equipment' item.id %}" class="btn btn-sm btn-outline-secondary border-0" title="แก้ไข">
-                                    <i class="bi bi-pencil-square"></i>
-                                </a>
-                                <button class="btn btn-sm btn-outline-danger border-0 ms-1" 
-                                        data-bs-toggle="modal" 
-                                        data-bs-target="#deleteModal{{ item.id }}"
-                                        title="ลบ">
-                                    <i class="bi bi-trash"></i>
-                                </button>
+                                <div class="btn-group">
+                                    <a href="{% url 'edit_equipment' equipment.id %}" class="btn btn-sm btn-outline-warning" title="แก้ไข">
+                                        <i class="bi bi-pencil-fill"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-sm btn-outline-danger" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#deleteEquipModal-{{ equipment.id }}" 
+                                            title="ลบ">
+                                        <i class="bi bi-trash-fill"></i>
+                                    </button>
+                                </div>
                             </td>
                         </tr>
 
-                        <div class="modal fade" id="deleteModal{{ item.id }}" tabindex="-1" aria-hidden="true">
-                            <div class="modal-dialog modal-dialog-centered modal-sm">
-                                <div class="modal-content border-0 shadow">
-                                    <div class="modal-body text-center pt-4 pb-4">
-                                        <h6 class="fw-bold mb-3">ต้องการลบข้อมูลนี้?</h6>
-                                        <p class="text-muted small mb-4">"{{ item.name }}"</p>
-                                        <div class="d-flex justify-content-center gap-2">
-                                            <button type="button" class="btn btn-light btn-sm px-3" data-bs-dismiss="modal">ยกเลิก</button>
-                                            <form action="{% url 'delete_equipment' item.id %}" method="post">
+                        <div class="modal fade" id="deleteEquipModal-{{ equipment.id }}" tabindex="-1">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content rounded-4 border-0 shadow">
+                                    <div class="modal-body p-4 text-center">
+                                        <div class="mb-3 text-danger opacity-75">
+                                            <i class="bi bi-exclamation-triangle-fill fs-1"></i>
+                                        </div>
+                                        <h5 class="fw-bold mb-2">ยืนยันการลบ?</h5>
+                                        <p class="text-muted">คุณต้องการลบอุปกรณ์ "<span class="fw-bold text-dark">{{ equipment.name }}</span>" ใช่หรือไม่?</p>
+                                        <div class="d-flex justify-content-center gap-2 mt-4">
+                                            <form action="{% url 'delete_equipment' equipment.id %}" method="post">
                                                 {% csrf_token %}
-                                                <button type="submit" class="btn btn-danger btn-sm px-3">ลบ</button>
+                                                <button type="button" class="btn btn-light rounded-pill px-4 me-2" data-bs-dismiss="modal">ยกเลิก</button>
+                                                <button type="submit" class="btn btn-danger rounded-pill px-4">ยืนยันลบ</button>
                                             </form>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
+
                         {% empty %}
                         <tr>
-                            <td colspan="4" class="text-center py-5 text-muted small">
-                                ไม่พบข้อมูลอุปกรณ์
+                            <td colspan="4" class="text-center text-muted py-5">
+                                <i class="bi bi-box-seam fs-1 opacity-25 d-block mb-2"></i>
+                                ยังไม่มีข้อมูลอุปกรณ์
                             </td>
                         </tr>
                         {% endfor %}
