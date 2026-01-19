@@ -3,6 +3,7 @@ import re
 from django import forms
 from django.contrib.auth.models import User, Group
 from django.core.exceptions import ValidationError
+from django.core.validators import RegexValidator
 from django.db.models import Q
 from django.utils import timezone
 from django.utils.safestring import mark_safe 
@@ -117,9 +118,6 @@ class BookingForm(forms.ModelForm):
         self.fields['start_time'].input_formats = ['%Y-%m-%dT%H:%M']
         self.fields['end_time'].input_formats = ['%Y-%m-%dT%H:%M']
 
-        # ==========================================================
-        # [แก้ไขแล้ว] เปลี่ยนจาก 'internal' เป็น 'general' ให้ตรงกับ Database
-        # ==========================================================
         self.fields['booking_type'].required = False  
         self.fields['booking_type'].initial = 'general'  
         self.fields['booking_type'].widget = forms.HiddenInput() 
@@ -129,7 +127,6 @@ class BookingForm(forms.ModelForm):
         start = cleaned_data.get('start_time')
         end = cleaned_data.get('end_time')
         
-        # [แก้ไขแล้ว] เปลี่ยนจาก 'internal' เป็น 'general'
         if not cleaned_data.get('booking_type'):
             cleaned_data['booking_type'] = 'general'
 
@@ -273,6 +270,28 @@ class EquipmentForm(forms.ModelForm):
 
 # --- 5. Custom User Forms ---
 class CustomUserCreationForm(forms.ModelForm):
+    # -----------------------------------------------------------
+    # [UPDATED] Validator: ห้ามใช้ . ให้ใช้ _ แทน
+    # -----------------------------------------------------------
+    username_validator = RegexValidator(
+        regex=r'^[a-zA-Z0-9@_]+$', 
+        message='ชื่อผู้ใช้ต้องประกอบด้วยตัวอักษรภาษาอังกฤษ ตัวเลข เครื่องหมาย @ หรือ _ (ขีดล่าง) เท่านั้น (ห้ามใช้ . - +)',
+        code='invalid_username'
+    )
+
+    username = forms.CharField(
+        label="Username",
+        max_length=20, # [UPDATED] จำกัดความยาว 20 ตัวอักษร
+        required=True,
+        # [UPDATED] คำอธิบายภาษาไทย
+        help_text="จำเป็นต้องระบุ ความยาวไม่เกิน 20 ตัวอักษร ใช้ได้เฉพาะตัวอักษรภาษาอังกฤษ ตัวเลข และเครื่องหมาย @ หรือ _ เท่านั้น",
+        validators=[username_validator],
+        widget=forms.TextInput(attrs={
+            'class': 'form-control', 
+            'placeholder': 'Enter username'
+        })
+    )
+    
     first_name = forms.CharField(label="ชื่อจริง", required=True, widget=forms.TextInput(attrs={'class': 'form-control'}))
     last_name = forms.CharField(label="นามสกุล", required=True, widget=forms.TextInput(attrs={'class': 'form-control'}))
     department = forms.CharField(label="แผนก / หน่วยงาน", required=True, widget=forms.TextInput(attrs={'class': 'form-control'}))
