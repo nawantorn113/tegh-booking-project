@@ -1,171 +1,190 @@
 {% extends 'base.html' %}
 {% load static %}
 {% load crispy_forms_tags %}
-
-{% block title %}{{ title }} - TEGH Booking{% endblock %}
+{% load widget_tweaks %} {% block title %}จัดการข้อมูลห้องประชุม{% endblock %}
 
 {% block content %}
-<div class="container-fluid py-4">
+<div class="container py-4">
     <div class="row justify-content-center">
         <div class="col-lg-8">
-            
-            <div class="card shadow-sm border-0 rounded-4">
-                <div class="card-header bg-white border-0 pt-4 px-4 pb-0">
-                    <div class="d-flex align-items-center">
-                        <div class="bg-primary bg-opacity-10 p-3 rounded-circle me-3 text-primary">
-                            <i class="bi bi-pencil-square fs-4"></i>
-                        </div>
-                        <div>
-                            <h4 class="card-title fw-bold mb-1">{{ title }}</h4>
-                            <p class="text-muted small mb-0">จัดการข้อมูลห้องประชุม</p>
-                        </div>
-                    </div>
+            <div class="card shadow border-0 rounded-4">
+                <div class="card-header bg-primary text-white py-3 rounded-top-4">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="bi bi-door-open-fill me-2"></i> 
+                        {% if form.instance.pk %}แก้ไขข้อมูลห้องประชุม{% else %}เพิ่มห้องประชุมใหม่{% endif %}
+                    </h5>
                 </div>
-
-                <div class="card-body p-4">
-                    <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+                
+                <div class="card-body p-4 bg-white">
+                    <form method="post" enctype="multipart/form-data">
                         {% csrf_token %}
-                        
-                        {% for field in form %}
-                            {% if "ปิดปรับปรุง" not in field.label and field.name != 'is_cleaning' and field.name != 'cleaning_start' and field.name != 'cleaning_end' %}
-                                
-                                {% if field.name == 'image' or field.name == 'room_image' %}
-                                    <div class="mb-3">
-                                        {% if form.instance.pk %}
-                                            <div class="mb-2">
-                                                <label class="form-label d-block text-muted small">รูปภาพปัจจุบัน:</label>
-                                                {% if field.value %}
-                                                    <div class="position-relative d-inline-block">
-                                                        <img src="{{ field.value.url }}" 
-                                                             alt="Room Image" 
-                                                             class="img-fluid rounded shadow-sm border"
-                                                             style="max-height: 200px; max-width: 100%; object-fit: contain;">
-                                                    </div>
-                                                {% else %}
-                                                    <span class="text-muted fst-italic small">- ไม่มีรูปภาพ -</span>
-                                                {% endif %}
-                                            </div>
-                                        {% endif %}
 
-                                        {{ field|as_crispy_field }}
-                                    </div>
-                                
-                                {% else %}
-                                    {{ field|as_crispy_field }}
-                                {% endif %}
-
-                            {% endif %}
-                        {% endfor %}
-
-                        <div class="mt-4 pt-3 border-top">
-                            <h6 class="fw-bold mb-3 text-muted">สถานะห้องประชุม</h6>
-                            {% for field in form %}
-                                {% if "ปิดปรับปรุง" in field.label %}
-                                    {{ field|as_crispy_field }}
-                                {% endif %}
-                            {% endfor %}
+                        <h6 class="fw-bold text-primary mb-3 border-bottom pb-2">
+                            <i class="bi bi-info-circle"></i> ข้อมูลทั่วไป
+                        </h6>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-12">
+                                {{ form.name|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.building|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.floor|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.capacity|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.location|as_crispy_field }}
+                            </div>
+                            <div class="col-12">
+                                {{ form.equipment_in_room|as_crispy_field }}
+                            </div>
+                            <div class="col-12">
+                                {{ form.image|as_crispy_field }}
+                            </div>
                         </div>
 
-                        <div class="card border-info bg-info bg-opacity-10 mt-3">
-                            <div class="card-body py-3">
-                                <h6 class="fw-bold text-primary mb-2"><i class="bi bi-stars"></i> ทำความสะอาด</h6>
+                        <div class="card border-danger mb-3">
+                            <div class="card-header bg-danger text-white fw-bold">
+                                <i class="bi bi-exclamation-triangle-fill me-2"></i> สถานะการใช้งาน / แจ้งซ่อม
+                            </div>
+                            <div class="card-body" style="background-color: #fff5f5;"> 
                                 
-                                <div class="form-check form-switch">
-                                    {{ form.is_cleaning }}
-                                    <label class="form-check-label fw-bold text-dark" for="cleaningCheck">
-                                        ทำความสะอาด 
+                                <div class="form-check form-switch mb-3 custom-switch-lg">
+                                    {% render_field form.is_maintenance class="form-check-input" id="maintenanceToggle" role="switch" %}
+                                    <label class="form-check-label fw-bold text-danger ms-2" for="maintenanceToggle">
+                                        เปิดโหมด "ปิดปรับปรุง" (ห้ามจอง)
                                     </label>
                                 </div>
-                                
-                                <div id="cleaningInputs" style="display: none;" class="mt-3 ps-3 border-start border-primary border-3">
+
+                                <div id="maintenance-dates-section" class="bg-white p-3 rounded border border-danger mb-3 shadow-sm d-none">
+                                    <h6 class="fw-bold text-secondary mb-2 border-bottom pb-2">
+                                        <i class="bi bi-calendar-range text-danger"></i> ระบุช่วงเวลาปิดปรับปรุง
+                                    </h6>
                                     <div class="row g-3">
                                         <div class="col-md-6">
-                                            {{ form.cleaning_start|as_crispy_field }}
+                                            <label class="form-label small text-muted">เริ่มปิดปรับปรุง</label>
+                                            {% render_field form.maintenance_start class="form-control" type="datetime-local" %}
                                         </div>
                                         <div class="col-md-6">
-                                            {{ form.cleaning_end|as_crispy_field }}
+                                            <label class="form-label small text-muted">สิ้นสุดการปิดปรับปรุง</label>
+                                            {% render_field form.maintenance_end class="form-control" type="datetime-local" %}
                                         </div>
                                     </div>
-                                    <small class="text-muted"><i class="bi bi-info-circle"></i> ระบบตั้งเวลาให้อัตโนมัติ (30 นาที)</small>
+                                    <div class="mt-2">
+                                        <small class="text-muted"><i class="bi bi-info-circle"></i> หากไม่ระบุวันที่ ระบบจะถือว่าปิดปรับปรุงอย่างไม่มีกำหนด</small>
+                                    </div>
+                                </div>
+
+                                <hr class="text-danger opacity-25">
+
+                                <div class="mb-2">
+                                    <label class="form-label fw-bold text-dark mb-2">ระบุอาการเสีย (กดปุ่มเพื่อเพิ่มข้อความ):</label>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        <button type="button" class="btn btn-white border border-danger text-danger btn-sm rounded-pill quick-tag shadow-sm" data-text="ทีวีใช้งานไม่ได้">
+                                            <i class="bi bi-tv"></i> ทีวีเสีย
+                                        </button>
+                                        <button type="button" class="btn btn-white border border-danger text-danger btn-sm rounded-pill quick-tag shadow-sm" data-text="แอร์ไม่เย็น">
+                                            <i class="bi bi-snow"></i> แอร์ไม่เย็น
+                                        </button>
+                                        <button type="button" class="btn btn-white border border-danger text-danger btn-sm rounded-pill quick-tag shadow-sm" data-text="โปรเจคเตอร์ไม่ติด">
+                                            <i class="bi bi-projector"></i> โปรเจคเตอร์พัง
+                                        </button>
+                                        <button type="button" class="btn btn-white border border-danger text-danger btn-sm rounded-pill quick-tag shadow-sm" data-text="ไมโครโฟนเสียงไม่ออก">
+                                            <i class="bi bi-mic-mute"></i> ไมค์เสีย
+                                        </button>
+                                        <button type="button" class="btn btn-white border border-danger text-danger btn-sm rounded-pill quick-tag shadow-sm" data-text="สาย HDMI หาย/เสีย">
+                                            <i class="bi bi-usb-plug"></i> สาย HDMI
+                                        </button>
+                                        <button type="button" class="btn btn-light border text-muted btn-sm rounded-pill quick-tag" data-text="clear">
+                                            <i class="bi bi-eraser"></i> ล้างค่า
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="bg-white p-2 rounded border">
+                                    {{ form.status_note|as_crispy_field }}
                                 </div>
                             </div>
                         </div>
 
-                        <hr class="my-4 text-muted opacity-25">
-
-                        <div class="d-flex justify-content-end gap-2">
-                            <a href="{% url 'rooms' %}" class="btn btn-light px-4 rounded-pill">ยกเลิก</a>
-                            <button type="submit" class="btn btn-primary px-4 rounded-pill shadow-sm">
-                                <i class="bi bi-save me-1"></i> บันทึกข้อมูล
+                        <div class="d-flex gap-2 mt-4 justify-content-end">
+                            <a href="{% url 'rooms' %}" class="btn btn-secondary rounded-pill px-4">ยกเลิก</a>
+                            <button type="submit" class="btn btn-success rounded-pill px-4 shadow-sm">
+                                <i class="bi bi-check-circle-fill me-1"></i> บันทึกข้อมูล
                             </button>
                         </div>
                     </form>
                 </div>
             </div>
-
         </div>
     </div>
 </div>
+
+<style>
+    .quick-tag:active { transform: scale(0.95); }
+    .quick-tag:hover { background-color: #ffecec !important; }
+    /* ขยายขนาด Switch */
+    .custom-switch-lg .form-check-input {
+        width: 3em; height: 1.5em; cursor: pointer;
+    }
+    .custom-switch-lg .form-check-label {
+        padding-top: 2px; cursor: pointer;
+    }
+</style>
 {% endblock %}
 
 {% block extra_scripts %}
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script>
-    // 1. Script สำหรับเมนูทำความสะอาด (Auto Date)
-    function toggleCleaningInputs() {
-        var checkbox = document.getElementById('cleaningCheck'); // ID จาก forms.py widget attrs
-        var inputsDiv = document.getElementById('cleaningInputs');
-        
-        if (checkbox && checkbox.checked) {
-            inputsDiv.style.display = 'block';
-            
-            // Auto-fill เวลาถ้ายังว่างอยู่
-            var startInput = document.getElementById('cleanStart');
-            var endInput = document.getElementById('cleanEnd');
-            
-            if (startInput && !startInput.value) {
-                let now = new Date();
-                now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-                startInput.value = now.toISOString().slice(0,16);
-                
-                now.setMinutes(now.getMinutes() + 30);
-                if (endInput) endInput.value = now.toISOString().slice(0,16);
-            }
-        } else {
-            if(inputsDiv) inputsDiv.style.display = 'none';
-        }
-    }
-
-    // 2. Script เดิมของคุณ (jQuery สำหรับปิดปรับปรุง)
-    $(document).ready(function() {
-        // --- ส่วน Cleaning ---
-        toggleCleaningInputs(); // เรียกตอนโหลด
-        $('#cleaningCheck').on('change', function() { toggleCleaningInputs(); });
-
-        // --- ส่วน Maintenance (ปิดปรับปรุง) ---
-        var $checkboxLabel = $("label:contains('เปิดใช้งานโหมดปิดปรับปรุง')");
-        var checkboxId = $checkboxLabel.attr('for'); 
-        var $checkbox = $('#' + checkboxId);
-
-        if ($checkbox.length === 0) { $checkbox = $('input[type="checkbox"]').not('#cleaningCheck').first(); } // กันไปหยิบ cleaningCheck
-
-        var $labelStart = $("label:contains('เริ่มปิดปรับปรุง')");
-        var $labelEnd = $("label:contains('สิ้นสุดปิดปรับปรุง')");
-        var $dateContainers = $labelStart.add($labelEnd).closest('.mb-3'); 
-        
-        if ($dateContainers.length === 0) {
-             // หา input date ที่ไม่ใช่ cleaning inputs
-             $dateContainers = $('input[type="datetime-local"]').not('#cleanStart, #cleanEnd').closest('.mb-3');
-        }
+    document.addEventListener('DOMContentLoaded', function() {
+        // --- 1. จัดการ Show/Hide วันที่ปิดปรับปรุง ---
+        // ใช้ ID ที่เรากำหนดเอง (maintenanceToggle) ชัวร์กว่า
+        const maintenanceSwitch = document.getElementById('maintenanceToggle');
+        const maintenanceDates = document.getElementById('maintenance-dates-section');
 
         function toggleDates() {
-            if ($checkbox.is(':checked')) { $dateContainers.slideDown(); } 
-            else { $dateContainers.slideUp(); }
+            if (maintenanceSwitch && maintenanceDates) {
+                if (maintenanceSwitch.checked) {
+                    maintenanceDates.classList.remove('d-none');
+                    // Focus ไปที่ช่องวันที่เริ่ม เพื่อให้รู้ว่าต้องกรอก
+                    const startInput = maintenanceDates.querySelector('input[type="datetime-local"]');
+                    if(startInput && !startInput.value) startInput.focus();
+                } else {
+                    maintenanceDates.classList.add('d-none');
+                }
+            }
         }
 
-        if ($checkbox.length > 0) {
-            if (!$checkbox.is(':checked')) { $dateContainers.hide(); }
-            $checkbox.on('change', function() { toggleDates(); });
+        if (maintenanceSwitch) {
+            // เรียกใช้ครั้งแรกตอนโหลดหน้า
+            toggleDates();
+            // ดักจับเหตุการณ์การเปลี่ยนค่า
+            maintenanceSwitch.addEventListener('change', toggleDates);
+        }
+
+        // --- 2. จัดการ Quick Tags ---
+        const inputField = document.getElementById('id_status_note');
+        if (inputField) {
+            document.querySelectorAll('.quick-tag').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault(); // ป้องกันปุ่ม submit form
+                    const text = this.getAttribute('data-text');
+                    
+                    if (text === "clear") {
+                        inputField.value = "";
+                    } else {
+                        if (inputField.value.includes(text)) return;
+                        if (inputField.value.trim() !== "") {
+                            inputField.value += ", " + text;
+                        } else {
+                            inputField.value = text;
+                        }
+                    }
+                    inputField.focus();
+                });
+            });
         }
     });
 </script>
