@@ -2,90 +2,146 @@
 {% load static %}
 
 {% block title %}ประวัติการใช้งาน (Audit Log){% endblock %}
-{% block page_title %}ประวัติการใช้งานระบบ (Audit Log){% endblock %}
 
 {% block content %}
-<div class="container-fluid py-4">
+<div class="container py-4">
 
-    <div class="content-card shadow-sm border p-3 p-md-4">
-        <h5 class="mb-3">ประวัติการใช้งานทั้งหมด</h5>
-        
-        <div class="table-responsive">
-            <table class="table table-hover mb-0 align-middle">
-                <thead class="table-light">
-                    <tr>
-                        <th scope="col" class="ps-3">เวลา</th>
-                        <th scope="col">ผู้ใช้งาน (User)</th>
-                        <th scope="col">การกระทำ (Action)</th>
-                        <th scope="col">IP Address</th>
-                        <th scope="col">รายละเอียด</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    
-                    {% for log in page_obj %}
-                    <tr>
-                        <td class="ps-3">{{ log.timestamp|date:"d M Y, H:i:s" }}</td>
-                        <td>
-                            {% if log.user %}
-                                {{ log.user.username }}
-                            {% else %}
-                                <span class="text-muted small">(N/A)</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            <span class="badge 
-                                {% if log.action == 'LOGIN' %}bg-primary
-                                {% elif log.action == 'BOOKING_CREATED' %}bg-success
-                                {% elif log.action == 'BOOKING_EDITED' %}bg-info
-                                {% elif log.action == 'BOOKING_APPROVED' %}bg-success
-                                {% elif log.action == 'BOOKING_REJECTED' %}bg-warning text-dark
-                                {% elif log.action == 'BOOKING_CANCELLED' %}bg-danger
-                                {% else %}bg-secondary{% endif %}">
-                                {{ log.get_action_display }}
-                            </span>
-                        </td>
-                        <td>{{ log.ip_address|default:"-" }}</td>
-                        <td>{{ log.details|default:"-" }}</td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="5" class="text-center text-muted py-5">
-                            <i class="bi bi-collection fs-2 d-block mb-2"></i>
-                            ยังไม่มีประวัติการใช้งานในระบบ
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+    <div class="d-flex align-items-center mb-4">
+        <div class="bg-primary bg-opacity-10 p-3 rounded-4 me-3 text-primary">
+            <i class="bi bi-clock-history fs-3"></i>
         </div>
+        <div>
+            <h4 class="fw-bold text-dark mb-1">ประวัติการใช้งานระบบ</h4>
+            <p class="text-muted small mb-0">รายการบันทึกกิจกรรม (Audit Log) ทั้งหมดในระบบ</p>
+        </div>
+    </div>
 
-        {% if page_obj.has_other_pages %}
-            <nav aria-label="Page navigation" class="mt-4">
-                <ul class="pagination justify-content-center">
-                    {% if page_obj.has_previous %}
-                        <li class="page-item"><a class="page-link" href="?page=1">&laquo; แรกสุด</a></li>
-                        <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">ก่อนหน้า</a></li>
-                    {% else %}
-                        <li class="page-item disabled"><span class="page-link">&laquo; แรกสุด</span></li>
-                        <li class="page-item disabled"><span class="page-link">ก่อนหน้า</span></li>
-                    {% endif %}
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0 align-middle">
+                    <thead class="bg-light text-secondary small text-uppercase">
+                        <tr>
+                            <th scope="col" class="ps-4 py-3" style="width: 20%;">เวลา</th>
+                            <th scope="col" style="width: 20%;">ผู้ใช้งาน (User)</th>
+                            <th scope="col" style="width: 15%;">การกระทำ (Action)</th>
+                            <th scope="col" style="width: 15%;">IP Address</th>
+                            <th scope="col" style="width: 30%;">รายละเอียด</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in page_obj %}
+                        <tr>
+                            <td class="ps-4">
+                                <div class="fw-bold text-dark">{{ log.timestamp|date:"d M Y" }}</div>
+                                <div class="small text-muted">{{ log.timestamp|date:"H:i:s" }}</div>
+                            </td>
+                            
+                            <td>
+                                {% if log.user %}
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-secondary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 30px; height: 30px;">
+                                            <i class="bi bi-person-fill text-secondary"></i>
+                                        </div>
+                                        <span class="fw-bold text-dark">{{ log.user.username }}</span>
+                                    </div>
+                                {% else %}
+                                    <span class="text-muted small fst-italic">(N/A)</span>
+                                {% endif %}
+                            </td>
 
-                    <li class="page-item active" aria-current="page">
-                        <span class="page-link">หน้า {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
-                    </li>
+                            <td>
+                                {% if log.action == 'LOGIN' %}
+                                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-10 rounded-pill px-3">
+                                        <i class="bi bi-box-arrow-in-right me-1"></i> Login
+                                    </span>
+                                {% elif log.action == 'BOOKING_CREATED' %}
+                                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-10 rounded-pill px-3">
+                                        <i class="bi bi-plus-circle me-1"></i> สร้างใหม่
+                                    </span>
+                                {% elif log.action == 'BOOKING_EDITED' %}
+                                    <span class="badge bg-info bg-opacity-10 text-info-emphasis border border-info border-opacity-10 rounded-pill px-3">
+                                        <i class="bi bi-pencil me-1"></i> แก้ไข
+                                    </span>
+                                {% elif log.action == 'BOOKING_APPROVED' %}
+                                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-10 rounded-pill px-3">
+                                        <i class="bi bi-check-circle me-1"></i> อนุมัติ
+                                    </span>
+                                {% elif log.action == 'BOOKING_REJECTED' %}
+                                    <span class="badge bg-warning bg-opacity-10 text-warning-emphasis border border-warning border-opacity-10 rounded-pill px-3">
+                                        <i class="bi bi-x-circle me-1"></i> ไม่อนุมัติ
+                                    </span>
+                                {% elif log.action == 'BOOKING_CANCELLED' %}
+                                    <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-10 rounded-pill px-3">
+                                        <i class="bi bi-slash-circle me-1"></i> ยกเลิก
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-10 rounded-pill px-3">
+                                        {{ log.get_action_display }}
+                                    </span>
+                                {% endif %}
+                            </td>
 
-                    {% if page_obj.has_next %}
-                        <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">ถัดไป</a></li>
-                        <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">สุดท้าย &raquo;</a></li>
-                    {% else %}
-                        <li class="page-item disabled"><span class="page-link">ถัดไป</span></li>
-                        <li class="page-item disabled"><span class="page-link">สุดท้าย &raquo;</span></li>
-                    {% endif %}
-                </ul>
-            </nav>
-        {% endif %}
+                            <td>
+                                <span class="font-monospace text-muted bg-light px-2 py-1 rounded small">
+                                    {{ log.ip_address|default:"-" }}
+                                </span>
+                            </td>
 
+                            <td class="text-muted small text-break">{{ log.details|default:"-"|truncatechars:80 }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted py-5">
+                                <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                                    <i class="bi bi-clock-history fs-3 opacity-50"></i>
+                                </div>
+                                <p class="mb-0">ยังไม่มีประวัติการใช้งานในระบบ</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            {% if page_obj.has_other_pages %}
+            <div class="card-footer bg-white border-top py-3">
+                <nav aria-label="Page navigation">
+                    <ul class="pagination justify-content-center mb-0">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link rounded-start-pill border-0 bg-light text-dark mx-1" href="?page=1">&laquo; แรกสุด</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link border-0 bg-light text-dark mx-1" href="?page={{ page_obj.previous_page_number }}">ก่อนหน้า</a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled"><span class="page-link rounded-start-pill border-0 bg-light text-muted mx-1">&laquo; แรกสุด</span></li>
+                            <li class="page-item disabled"><span class="page-link border-0 bg-light text-muted mx-1">ก่อนหน้า</span></li>
+                        {% endif %}
+
+                        <li class="page-item disabled">
+                            <span class="page-link border-0 bg-primary text-white rounded px-3 mx-1 fw-bold">
+                                {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+                            </span>
+                        </li>
+
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link border-0 bg-light text-dark mx-1" href="?page={{ page_obj.next_page_number }}">ถัดไป</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link rounded-end-pill border-0 bg-light text-dark mx-1" href="?page={{ page_obj.paginator.num_pages }}">สุดท้าย &raquo;</a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled"><span class="page-link border-0 bg-light text-muted mx-1">ถัดไป</span></li>
+                            <li class="page-item disabled"><span class="page-link rounded-end-pill border-0 bg-light text-muted mx-1">สุดท้าย &raquo;</span></li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+            {% endif %}
+        </div>
     </div>
 </div>
 {% endblock %}
