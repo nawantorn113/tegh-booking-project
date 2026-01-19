@@ -4,59 +4,107 @@
 {% block title %}จัดการห้องประชุม - {{ block.super }}{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-end align-items-center mb-4">
-    <a href="{% url 'add_room' %}" class="btn btn-primary">
-        <i class="bi bi-plus-circle-fill me-1"></i> เพิ่มห้องใหม่
-    </a>
-</div>
-<div class="card shadow-sm">
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-hover mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th>ชื่อห้อง</th>
-                        <th>สถานที่</th>
-                        <th>ความจุ (คน)</th>
-                        <th class="text-end">จัดการ</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for room in rooms %}
-                    <tr>
-                        <td>{{ room.name }}</td>
-                        <td>{{ room.location }}</td>
-                        <td>{{ room.capacity }}</td>
-                        <td class="text-end">
-                            <a href="{% url 'edit_room' room.id %}" class="btn btn-sm btn-warning"><i class="bi bi-pencil-fill"></i></a>
-                            <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteRoomModal-{{ room.id }}"><i class="bi bi-trash-fill"></i></button>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr><td colspan="4" class="text-center text-muted py-4">ยังไม่มีห้องประชุมในระบบ</td></tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold text-dark mb-1">
+                <i class="bi bi-table me-2 text-primary"></i>รายชื่อห้องประชุม
+            </h3>
+            <p class="text-muted small mb-0">จัดการ เพิ่ม ลบ แก้ไข ข้อมูลห้องประชุมทั้งหมด</p>
         </div>
+        <a href="{% url 'add_room' %}" class="btn btn-tegh-primary shadow-sm">
+            <i class="bi bi-plus-lg me-1"></i> เพิ่มห้องใหม่
+        </a>
     </div>
-</div>
 
-{% for room in rooms %}
-<div class="modal fade" id="deleteRoomModal-{{ room.id }}" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header"><h5 class="modal-title">ยืนยันการลบ</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-            <div class="modal-body"><p>คุณแน่ใจหรือไม่ว่าต้องการลบห้อง "{{ room.name }}"?</p></div>
-            <div class="modal-footer">
-                <form action="{% url 'delete_room' room.id %}" method="post">
-                    {% csrf_token %}
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
-                    <button type="submit" class="btn btn-danger">ยืนยัน</button>
-                </form>
+    <div class="card tegh-card overflow-hidden">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light text-secondary">
+                        <tr>
+                            <th class="ps-4 py-3" style="width: 35%;">ชื่อห้อง</th>
+                            <th style="width: 25%;">สถานที่</th>
+                            <th style="width: 15%;">ความจุ</th>
+                            <th style="width: 15%;">สถานะ</th>
+                            <th class="text-end pe-4" style="width: 10%;">จัดการ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for room in rooms %}
+                        <tr>
+                            <td class="ps-4 fw-bold text-primary">
+                                {{ room.name }}
+                            </td>
+                            
+                            <td class="text-muted">{{ room.location|default:"-" }}</td>
+                            
+                            <td>
+                                <span class="badge bg-light text-dark border rounded-pill px-3">
+                                    <i class="bi bi-people me-1"></i> {{ room.capacity }}
+                                </span>
+                            </td>
+                            
+                            <td>
+                                {% if room.is_maintenance %}
+                                    <span class="badge bg-danger bg-opacity-10 text-danger rounded-pill">
+                                        <i class="bi bi-cone-striped me-1"></i> ปิดปรับปรุง
+                                    </span>
+                                {% elif not room.is_active %}
+                                    <span class="badge bg-secondary bg-opacity-10 text-secondary rounded-pill">ปิดใช้งาน</span>
+                                {% else %}
+                                    <span class="badge bg-success bg-opacity-10 text-success rounded-pill">พร้อมใช้</span>
+                                {% endif %}
+                            </td>
+                            
+                            <td class="text-end pe-4">
+                                <div class="btn-group">
+                                    <a href="{% url 'edit_room' room.id %}" class="btn btn-sm btn-outline-warning" title="แก้ไข">
+                                        <i class="bi bi-pencil-fill"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-sm btn-outline-danger" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#deleteRoomModal-{{ room.id }}" 
+                                            title="ลบ">
+                                        <i class="bi bi-trash-fill"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <div class="modal fade" id="deleteRoomModal-{{ room.id }}" tabindex="-1">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content rounded-4 border-0 shadow">
+                                    <div class="modal-body p-4 text-center">
+                                        <div class="mb-3 text-danger opacity-75">
+                                            <i class="bi bi-exclamation-circle-fill fs-1"></i>
+                                        </div>
+                                        <h5 class="fw-bold mb-2">ยืนยันการลบ?</h5>
+                                        <p class="text-muted">คุณต้องการลบห้อง "<span class="fw-bold text-dark">{{ room.name }}</span>" ใช่หรือไม่?</p>
+                                        <div class="d-flex justify-content-center gap-2 mt-4">
+                                            <form action="{% url 'delete_room' room.id %}" method="post">
+                                                {% csrf_token %}
+                                                <button type="button" class="btn btn-light rounded-pill px-4 me-2" data-bs-dismiss="modal">ยกเลิก</button>
+                                                <button type="submit" class="btn btn-danger rounded-pill px-4">ยืนยันลบ</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted py-5">
+                                <i class="bi bi-inbox fs-1 opacity-25 d-block mb-2"></i>
+                                ยังไม่มีห้องประชุมในระบบ
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
 </div>
-{% endfor %}
-
 {% endblock %}

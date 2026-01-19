@@ -5,7 +5,7 @@ import uuid
 from datetime import datetime, timedelta, time
 from collections import defaultdict
 from dateutil.relativedelta import relativedelta
-from dateutil import parser 
+from dateutil import parser
 
 from thefuzz import process
 import dateparser
