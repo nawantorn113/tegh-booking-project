@@ -128,21 +128,28 @@ def get_base_context(request):
 
     pending_count = 0
     pending_notifications = []
-    recent_cancellations = []
-
+    
     if request.user.is_authenticated:
         if is_admin(request.user):
-            qs = Booking.objects.filter(status='PENDING', is_user_seen=False).select_related('room', 'user').order_by('-created_at')
-            pending_notifications = qs[:10]
+            # [แก้ไข] รวม PENDING และ CANCELLED ไว้ใน Query เดียวกัน เพื่อแสดงใน Notification List
+            # จะได้เห็นรายการยกเลิกเด้งขึ้นมาด้วย (เรียงตามเวลาแก้ไขล่าสุด updated_at)
+            qs = Booking.objects.filter(
+                Q(status='PENDING') | Q(status='CANCELLED'), 
+                is_user_seen=False
+            ).select_related('room', 'user').order_by('-updated_at')
+            
+            pending_notifications = qs[:15]
             pending_count = qs.count()
-
-            cancellations_qs = Booking.objects.filter(status='CANCELLED', is_user_seen=False, updated_at__gte=timezone.now() - timedelta(days=1)).select_related('room', 'user').order_by('-updated_at')
-            recent_cancellations = cancellations_qs[:10]
-            pending_count += cancellations_qs.count()
+            
+            # ตัวแปรนี้อาจไม่ได้ใช้แล้ว แต่คงไว้กัน Error ใน Template เก่า
+            recent_cancellations = [] 
         else:
             qs = Booking.objects.filter(user=request.user, is_user_seen=False).exclude(status='PENDING').select_related('room').order_by('-updated_at')
             pending_count = qs.count()
             pending_notifications = qs
+            recent_cancellations = []
+    else:
+        recent_cancellations = []
 
     return {
         'menu_items': menu_items,
@@ -162,9 +169,6 @@ def send_booking_notification(booking, template_name, subject_prefix):
 
     note_text = booking.additional_requests if booking.additional_requests else "-"
     
-    # ==========================================================
-    # [แก้ไข] แปลงเวลาเป็น Local Time (เวลาไทย) ก่อนส่งข้อความ
-    # ==========================================================
     local_start = timezone.localtime(booking.start_time)
     local_end = timezone.localtime(booking.end_time)
     
@@ -204,7 +208,13 @@ def send_booking_notification(booking, template_name, subject_prefix):
                 line_targets.add(booking.user.profile.line_user_id)
         except: pass
         
-        admins = User.objects.filter(is_superuser=True)
+        # [แก้ไข] เปลี่ยนเงื่อนไขการหา Admin ให้ครอบคลุม (Superuser, Staff, Group Admin)
+        admins = User.objects.filter(
+            Q(is_superuser=True) | 
+            Q(is_staff=True) | 
+            Q(groups__name='Admin')
+        ).distinct()
+
         for admin in admins:
             try:
                 if hasattr(admin, 'profile') and admin.profile.line_user_id:
@@ -1206,3 +1216,18 @@ def export_reports_pdf(request):
 
 @csrf_exempt
 def teams_action_receiver(request): return HttpResponse(status=200)
+
+@login_required
+@require_POST
+def mark_all_notifications_read(request):
+    try:
+        if is_admin(request.user):
+            Booking.objects.filter(
+                Q(status='PENDING') | Q(status='CANCELLED'),
+                is_user_seen=False
+            ).update(is_user_seen=True)
+        else:
+            Booking.objects.filter(user=request.user, is_user_seen=False).update(is_user_seen=True)
+        return JsonResponse({'status': 'success'})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)

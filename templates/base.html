@@ -17,11 +17,8 @@
         /* --- 1. การตั้งค่าพื้นฐาน (Global) --- */
         body {
             font-family: 'Sarabun', sans-serif;
-            
-            /* [THEME] พื้นหลังสีเทาอ่อน สบายตา (Professional Grey) */
             background-color: #f1f6ff;
-            background-image: none; /* ไม่มีลายรบกวน */
-            
+            background-image: none;
             overflow-x: hidden;
             min-height: 100vh;
             display: flex;
@@ -31,15 +28,10 @@
         /* --- 2. การ์ดมาตรฐาน (TEGH Card) --- */
         .tegh-card {
             border: none !important;
-            /* ลดความโค้งลงนิดหน่อย ให้ดูเป็นทางการขึ้น */
             border-radius: 12px !important; 
             background-color: white !important;
-            
-            /* เงาบางๆ นุ่มนวล ไม่แย่งซีนเนื้อหา */
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05) !important;
-            /* เส้นขอบจางๆ เพื่อตัดกับพื้นหลัง */
             border: 1px solid #eaeff4 !important;
-            
             transition: transform 0.2s ease, box-shadow 0.2s ease;
             overflow: hidden;
         }
@@ -49,7 +41,6 @@
             box-shadow: 0 5px 15px rgba(0,0,0,0.08) !important;
         }
 
-        /* หัวการ์ดมาตรฐาน */
         .tegh-card-header {
             background: linear-gradient(90deg, #0d6efd 0%, #004385 100%);
             color: white;
@@ -60,7 +51,6 @@
             border-top-right-radius: 12px !important;
         }
         
-        /* หัวการ์ดแบบขาวคลีน (Alternative) */
         .tegh-card-header-clean {
             background-color: white;
             color: #333;
@@ -207,9 +197,10 @@
                     <li class="nav-item dropdown me-2">
                         <a class="nav-link position-relative text-white" href="#" id="notificationDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="bi bi-bell-fill fs-5"></i>
-                            {% if pending_count > 0 %}
+                            
+                            {% if pending_notifications %}
                             <span class="badge rounded-pill bg-danger badge-notify" id="notificationBadge">
-                                {{ pending_count }}
+                                {{ pending_notifications|length }}
                             </span>
                             {% endif %}
                         </a>
@@ -217,58 +208,62 @@
                         <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="notificationDropdown" style="width: 350px; max-height: 400px; overflow-y: auto;">
                             <li class="dropdown-header fw-bold bg-light border-bottom d-flex justify-content-between align-items-center sticky-top">
                                 <span>การแจ้งเตือน</span>
-                                {% if pending_count > 0 %}
-                                <span class="badge bg-primary rounded-pill" id="notificationCountInline">{{ pending_count }}</span>
+                                {% if pending_notifications %}
+                                <a href="#" onclick="markAllAsRead(event)" class="text-decoration-none small text-primary fw-normal">
+                                    <i class="bi bi-check-all"></i> อ่านทั้งหมด
+                                </a>
                                 {% endif %}
                             </li>
                             
                             <div id="notificationList">
-                            {% if pending_notifications %}
-                                {% for item in pending_notifications %}
-                                <li class="position-relative border-bottom" id="notif-{{ item.id }}">
-                                    <a class="dropdown-item d-flex align-items-start p-2 pe-5" 
-                                       href="{% if item.status == 'PENDING' %}{% url 'approvals' %}{% else %}{% url 'history' %}{% endif %}">
-                                        
-                                        <div class="me-3 mt-1">
-                                            {% if item.status == 'PENDING' %}
-                                                <div class="bg-warning bg-opacity-25 text-warning rounded-circle p-2"><i class="bi bi-hourglass-split"></i></div>
-                                            {% elif item.status == 'APPROVED' %}
-                                                <div class="bg-success bg-opacity-25 text-success rounded-circle p-2"><i class="bi bi-check-lg"></i></div>
-                                            {% elif item.status == 'REJECTED' or item.status == 'CANCELLED' %}
-                                                <div class="bg-danger bg-opacity-25 text-danger rounded-circle p-2"><i class="bi bi-x-lg"></i></div>
-                                            {% else %}
-                                                <div class="bg-primary bg-opacity-25 text-primary rounded-circle p-2"><i class="bi bi-info-lg"></i></div>
-                                            {% endif %}
-                                        </div>
-                                        
-                                        <div class="w-100">
-                                            <div class="d-flex justify-content-between">
-                                                <strong class="text-truncate small text-dark" style="max-width: 140px;">{{ item.title }}</strong>
-                                                <small class="text-muted" style="font-size: 0.7rem;">{{ item.updated_at|date:"d/m H:i" }}</small>
+                                
+                                {% if pending_notifications %}
+                                    {% for item in pending_notifications %}
+                                    <li class="position-relative border-bottom" id="notif-{{ item.id }}">
+                                        <a class="dropdown-item d-flex align-items-start p-2 pe-5" 
+                                           href="{% if item.status == 'PENDING' %}{% url 'approvals' %}{% else %}{% url 'history' %}{% endif %}">
+                                            
+                                            <div class="me-3 mt-1">
+                                                {% if item.status == 'PENDING' %}
+                                                    <div class="bg-warning bg-opacity-25 text-warning rounded-circle p-2"><i class="bi bi-hourglass-split"></i></div>
+                                                {% elif item.status == 'APPROVED' %}
+                                                    <div class="bg-success bg-opacity-25 text-success rounded-circle p-2"><i class="bi bi-check-lg"></i></div>
+                                                {% elif item.status == 'REJECTED' or item.status == 'CANCELLED' %}
+                                                    <div class="bg-danger bg-opacity-25 text-danger rounded-circle p-2"><i class="bi bi-x-lg"></i></div>
+                                                {% else %}
+                                                    <div class="bg-primary bg-opacity-25 text-primary rounded-circle p-2"><i class="bi bi-info-lg"></i></div>
+                                                {% endif %}
                                             </div>
-                                            <div class="small text-muted text-truncate" style="max-width: 180px;">ห้อง: {{ item.room.name }}</div>
-                                            <div class="small mt-1">
-                                                <span class="badge {% if item.status == 'PENDING' %}bg-warning text-dark{% elif item.status == 'APPROVED' %}bg-success{% else %}bg-secondary{% endif %}">
-                                                    {{ item.get_status_display }}
-                                                </span>
+                                            
+                                            <div class="w-100">
+                                                <div class="d-flex justify-content-between">
+                                                    <strong class="text-truncate small text-dark" style="max-width: 140px;">{{ item.title }}</strong>
+                                                    <small class="text-muted" style="font-size: 0.7rem;">{{ item.updated_at|date:"d/m H:i" }}</small>
+                                                </div>
+                                                <div class="small text-muted text-truncate" style="max-width: 180px;">ห้อง: {{ item.room.name }}</div>
+                                                <div class="small mt-1">
+                                                    <span class="badge {% if item.status == 'PENDING' %}bg-warning text-dark{% elif item.status == 'APPROVED' %}bg-success{% elif item.status == 'CANCELLED' %}bg-danger{% else %}bg-secondary{% endif %}">
+                                                        {{ item.get_status_display }}
+                                                    </span>
+                                                </div>
                                             </div>
-                                        </div>
-                                    </a>
+                                        </a>
 
-                                    <button class="btn btn-sm btn-mark-read position-absolute top-0 end-0 m-2 rounded-circle border-0" 
-                                            onclick="markAsRead(event, {{ item.id }})" 
-                                            title="รับทราบ / ลบออก">
-                                        <i class="bi bi-check-circle fs-5"></i>
-                                    </button>
-                                </li>
-                                {% endfor %}
-                                <li><a class="dropdown-item text-center small text-primary fw-bold py-2 bg-light" href="{% url 'history' %}">ดูประวัติทั้งหมด</a></li>
-                            {% else %}
-                                <li class="text-center py-4 text-muted" id="emptyMessage">
-                                    <i class="bi bi-bell-slash fs-1 d-block mb-2 opacity-25"></i>
-                                    <small>ไม่มีการแจ้งเตือนใหม่</small>
-                                </li>
-                            {% endif %}
+                                        <button class="btn btn-sm btn-mark-read position-absolute top-0 end-0 m-2 rounded-circle border-0" 
+                                                onclick="markAsRead(event, {{ item.id }})" 
+                                                title="รับทราบ / ลบออก">
+                                            <i class="bi bi-check-circle fs-5"></i>
+                                        </button>
+                                    </li>
+                                    {% endfor %}
+                                    <li><a class="dropdown-item text-center small text-primary fw-bold py-2 bg-light" href="{% url 'history' %}">ดูประวัติทั้งหมด</a></li>
+                                
+                                {% else %}
+                                    <li class="text-center py-4 text-muted" id="emptyMessage">
+                                        <i class="bi bi-bell-slash fs-1 d-block mb-2 opacity-25"></i>
+                                        <small>ไม่มีการแจ้งเตือนใหม่</small>
+                                    </li>
+                                {% endif %}
                             </div>
                         </ul>
                     </li>
@@ -341,7 +336,7 @@
             {% endif %}
         });
 
-        // Mark Notification as Read Function
+        // Mark Single Notification as Read
         function markAsRead(event, bookingId) {
             event.preventDefault();
             event.stopPropagation(); // Stop dropdown from closing
@@ -358,7 +353,7 @@
                 }, 400);
             }
 
-            // [API] ยิง request ไปยัง URL ที่ถูกต้อง (/api/notification/read/...)
+            // [API] ยิง request ไปยัง URL
             fetch(`/api/notification/read/${bookingId}/`, {
                 method: 'POST',
                 headers: {
@@ -368,14 +363,46 @@
                 body: JSON.stringify({})
             }).then(res => {
                 if(!res.ok) console.error("Mark read failed");
-                else console.log("Mark read success");
             }).catch(err => console.error(err));
         }
 
-        // Update Badge Count Function
+        // [ฟังก์ชันใหม่] Mark All as Read
+        function markAllAsRead(event) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            fetch('/api/notification/read-all/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({})
+            }).then(res => {
+                if(res.ok) {
+                    // ลบตัวเลข Badge
+                    const badge = document.getElementById('notificationBadge');
+                    if (badge) badge.remove();
+
+                    // เคลียร์รายการในกล่อง
+                    const list = document.getElementById('notificationList');
+                    list.innerHTML = `
+                        <li class="text-center py-4 text-muted" id="emptyMessage">
+                            <i class="bi bi-bell-slash fs-1 d-block mb-2 opacity-25"></i>
+                            <small>ไม่มีการแจ้งเตือนใหม่</small>
+                        </li>
+                        <li><a class="dropdown-item text-center small text-primary fw-bold py-2 bg-light" href="{% url 'history' %}">ดูประวัติทั้งหมด</a></li>
+                    `;
+                    
+                    // ซ่อนปุ่มอ่านทั้งหมด
+                    if (event.target) event.target.style.display = 'none';
+                }
+            }).catch(err => console.error(err));
+        }
+
+        // Update Badge Count Helper
         function updateBadgeCount() {
             const badge = document.getElementById('notificationBadge');
-            const inlineBadge = document.getElementById('notificationCountInline');
             const list = document.getElementById('notificationList');
             
             if (badge) {
@@ -383,13 +410,8 @@
                 if (!isNaN(count) && count > 1) {
                     count--;
                     badge.innerText = count;
-                    if(inlineBadge) inlineBadge.innerText = count;
                 } else {
-                    // Remove badge if 0
                     badge.remove();
-                    if(inlineBadge) inlineBadge.remove();
-                    
-                    // Show empty message if list is empty
                     const remainingItems = list.querySelectorAll('li[id^="notif-"]').length;
                     if (remainingItems === 0) {
                         list.innerHTML = `
@@ -397,7 +419,6 @@
                                 <i class="bi bi-bell-slash fs-1 d-block mb-2 opacity-25"></i>
                                 <small>ไม่มีการแจ้งเตือนใหม่</small>
                             </li>
-                            <li><a class="dropdown-item text-center small text-primary fw-bold py-2 bg-light" href="{% url 'history' %}">ดูประวัติทั้งหมด</a></li>
                         `;
                     }
                 }

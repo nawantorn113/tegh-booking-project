@@ -1,15 +1,33 @@
+import os
+import uuid  # <--- ส่วนที่ 1: เพิ่ม import
 from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils import timezone
 
+# --- ส่วนที่ 2: เพิ่มฟังก์ชันเปลี่ยนชื่อไฟล์อัตโนมัติ ---
+def rename_file(instance, filename):
+    ext = filename.split('.')[-1]
+    filename = "%s.%s" % (uuid.uuid4(), ext)
+    return os.path.join('uploads/', filename)
+
+def rename_room_image(instance, filename):
+    ext = filename.split('.')[-1]
+    filename = "%s.%s" % (uuid.uuid4(), ext)
+    return os.path.join('room_images/', filename)
+# ----------------------------------------------------
+
 # 1. Room Model
 class Room(models.Model):
     name = models.CharField(max_length=100)
     capacity = models.IntegerField(default=10)
     equipment_in_room = models.TextField(blank=True, null=True)
-    image = models.ImageField(upload_to='room_images/', blank=True, null=True)
+    
+    # --- ส่วนที่ 3: แก้ไขการเก็บรูปภาพให้ใช้ฟังก์ชันเปลี่ยนชื่อ ---
+    image = models.ImageField(upload_to=rename_room_image, blank=True, null=True)
+    # -------------------------------------------------------
+
     location = models.CharField(max_length=200, blank=True, null=True)
     floor = models.CharField(max_length=50, blank=True, null=True)
     building = models.CharField(max_length=100, blank=True, null=True)
@@ -55,7 +73,6 @@ class Booking(models.Model):
         ('CANCELLED', 'ยกเลิก'),
     ]
     
-    # [เพิ่มใหม่] ประเภทการจอง
     BOOKING_TYPE_CHOICES = [
         ('general', 'ประชุมทั่วไป'),
         ('cleaning', 'แม่บ้านทำความสะอาด'),
@@ -77,7 +94,6 @@ class Booking(models.Model):
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
     
-    # [เพิ่มใหม่] Field เก็บประเภทการจอง
     booking_type = models.CharField(
         max_length=20, 
         choices=BOOKING_TYPE_CHOICES, 
@@ -94,9 +110,12 @@ class Booking(models.Model):
     additional_notes = models.TextField(blank=True, null=True)
     
     room_layout = models.CharField(max_length=50, choices=LAYOUT_CHOICES, default='theatre', blank=True)
-    room_layout_attachment = models.FileField(upload_to='layouts/', blank=True, null=True)
     
-    presentation_file = models.FileField(upload_to='presentations/', blank=True, null=True)
+    # --- ส่วนที่ 4: แก้ไขไฟล์แนบให้ใช้ฟังก์ชันเปลี่ยนชื่อด้วย ---
+    room_layout_attachment = models.FileField(upload_to=rename_file, blank=True, null=True)
+    presentation_file = models.FileField(upload_to=rename_file, blank=True, null=True)
+    # ----------------------------------------------------
+    
     presentation_link = models.URLField(max_length=500, blank=True, null=True, verbose_name="ลิงก์เอกสารประกอบ")
     
     equipments = models.ManyToManyField(Equipment, blank=True)

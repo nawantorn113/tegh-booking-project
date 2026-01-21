@@ -7,6 +7,7 @@ urlpatterns = [
     # --- 1. หน้าแรก (Root) ---
     # [แก้ไข] เข้าเว็บปุ๊บ เจอหน้าปฏิทินรวมทันที (ไม่ต้อง Login)
     path('', views.public_calendar_view, name='root'),
+    path('api/notification/read-all/', views.mark_all_notifications_read, name='mark_all_notifications_read'),
     
     # หรือถ้าต้องการเข้าผ่าน url /public-calendar/ ก็ยังเข้าได้
     path('public-calendar/', views.public_calendar_view, name='public_calendar'),
