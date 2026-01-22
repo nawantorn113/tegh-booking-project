@@ -3,6 +3,7 @@ import json
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 from datetime import timedelta
+from django.utils.timezone import localtime  
 # เปลี่ยน booking เป็นชื่อแอปของคุณ
 from booking.models import Booking 
 
@@ -52,7 +53,7 @@ class Command(BaseCommand):
                 f"🔴 แจ้งเตือน: ใกล้ถึงเวลาประชุม!\n"
                 f"📌 หัวข้อ: {booking.title}\n"
                 f"🏢 ห้อง: {booking.room}\n"
-                f"⏰ เวลา: {booking.start_time.strftime('%H:%M')} น."
+                f"⏰ เวลา: {localtime(booking.start_time).strftime('%H:%M')} น."
             )
 
             # ห่อจดหมาย (Payload)
