@@ -1,12 +1,13 @@
 import os
-import uuid  # <--- ส่วนที่ 1: เพิ่ม import
+import uuid
 from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils import timezone
+from django.core.exceptions import ValidationError  # <--- เพิ่ม import สำหรับแจ้ง Error
 
-# --- ส่วนที่ 2: เพิ่มฟังก์ชันเปลี่ยนชื่อไฟล์อัตโนมัติ ---
+# --- ส่วนที่ 2: ฟังก์ชันเปลี่ยนชื่อไฟล์อัตโนมัติ ---
 def rename_file(instance, filename):
     ext = filename.split('.')[-1]
     filename = "%s.%s" % (uuid.uuid4(), ext)
@@ -24,9 +25,7 @@ class Room(models.Model):
     capacity = models.IntegerField(default=10)
     equipment_in_room = models.TextField(blank=True, null=True)
     
-    # --- ส่วนที่ 3: แก้ไขการเก็บรูปภาพให้ใช้ฟังก์ชันเปลี่ยนชื่อ ---
     image = models.ImageField(upload_to=rename_room_image, blank=True, null=True)
-    # -------------------------------------------------------
 
     location = models.CharField(max_length=200, blank=True, null=True)
     floor = models.CharField(max_length=50, blank=True, null=True)
@@ -111,10 +110,8 @@ class Booking(models.Model):
     
     room_layout = models.CharField(max_length=50, choices=LAYOUT_CHOICES, default='theatre', blank=True)
     
-    # --- ส่วนที่ 4: แก้ไขไฟล์แนบให้ใช้ฟังก์ชันเปลี่ยนชื่อด้วย ---
     room_layout_attachment = models.FileField(upload_to=rename_file, blank=True, null=True)
     presentation_file = models.FileField(upload_to=rename_file, blank=True, null=True)
-    # ----------------------------------------------------
     
     presentation_link = models.URLField(max_length=500, blank=True, null=True, verbose_name="ลิงก์เอกสารประกอบ")
     
@@ -128,6 +125,28 @@ class Booking(models.Model):
     
     outlook_event_id = models.CharField(max_length=255, blank=True, null=True)
     is_user_seen = models.BooleanField(default=False)
+    
+    # +++ เพิ่มฟิลด์สำหรับแจ้งเตือนไลน์ +++
+    is_notified = models.BooleanField(default=False, verbose_name="แจ้งเตือนไลน์แล้ว")
+
+    # +++ เพิ่มฟังก์ชันตรวจสอบการจองซ้ำ +++
+    def clean(self):
+        # ตรวจสอบว่ามีข้อมูลครบก่อนเช็ค
+        if self.start_time and self.end_time and self.room:
+            # หาการจองที่ "ห้องเดียวกัน" + "เวลาทับกัน" + "สถานะอนุมัติแล้ว"
+            overlapping = Booking.objects.filter(
+                room=self.room,
+                start_time__lt=self.end_time,
+                end_time__gt=self.start_time,
+                status='APPROVED' 
+            ).exclude(id=self.id) # ยกเว้นตัวเอง (กรณีแก้ไข)
+
+            if overlapping.exists():
+                raise ValidationError(f"❌ จองไม่ได้ครับ! ห้อง {self.room.name} ถูกจองไปแล้วในช่วงเวลานี้")
+
+    def save(self, *args, **kwargs):
+        self.clean() # สั่งให้ทำงานทุกครั้งก่อนบันทึก
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.title} - {self.room.name}"
