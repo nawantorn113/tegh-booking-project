@@ -1,42 +1,76 @@
 {% load static %}
 <!DOCTYPE html>
-<html>
+<html lang="th">
 <head>
     <meta charset="utf-8">
     <title>{{ report_title }}</title>
+
     <style>
-        /* กำหนดฟอนต์ภาษาไทย (ต้องมีไฟล์ฟอนต์ใน static หรือใช้ Google Fonts แบบ Base64) */
         @font-face {
-            font-family: 'Kanit';
-            /* ถ้าไม่มีไฟล์ฟอนต์ในเครื่อง อาจจะแสดงผลภาษาไทยเป็นสี่เหลี่ยม */
-            /* แนะนำให้โหลดไฟล์ .ttf มาวางใน static/fonts/ แล้วชี้ path ให้ถูก */
-            src: local('Kanit'), local('Arial'); 
+            font-family: 'THSarabunNew';
+            src: url("{{ font_url }}");
         }
-        body { font-family: 'Kanit', 'Arial', sans-serif; font-size: 14px; }
-        h1 { text-align: center; color: #4a55a8; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        th { background-color: #f2f2f2; font-weight: bold; }
-        .badge { padding: 4px 8px; border-radius: 4px; color: white; font-size: 12px; }
-        .bg-success { background-color: #198754; }
-        .bg-warning { background-color: #ffc107; color: black; }
+
+        body {
+            font-family: 'THSarabunNew';
+            font-size: 16px;
+            color: #000;
+            line-height: 1.4;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 22px;
+            margin-bottom: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th, td {
+            border: 1px solid #333;
+            padding: 6px;
+            font-size: 14px;
+        }
+
+        th {
+            background-color: #eee;
+            text-align: center;
+        }
+
+        .meta {
+            text-align: center;
+            font-size: 13px;
+            margin-bottom: 15px;
+        }
+
+        @page {
+            size: A4;
+            margin: 1.5cm;
+        }
     </style>
 </head>
 <body>
+
     <h1>{{ report_title }}</h1>
-    <p>ข้อมูล ณ วันที่: {{ export_date|date:"d/m/Y H:i" }}</p>
-    <p>ออกรายงานโดย: {{ user.get_full_name|default:user.username }}</p>
+
+    <div class="meta">
+        ข้อมูล ณ วันที่ {{ export_date|date:"d/m/Y H:i" }} |
+        โดย {{ user.get_full_name|default:user.username }}
+    </div>
 
     <table>
         <thead>
             <tr>
-                <th>วันที่</th>
-                <th>เวลา</th>
-                <th>ห้อง</th>
-                <th>หัวข้อ</th>
-                <th>ผู้จอง</th>
-                <th>แผนก</th>
-                <th>สถานะ</th>
+                <th width="15%">วันที่</th>
+                <th width="15%">เวลา</th>
+                <th width="25%">หัวข้อ</th>
+                <th width="15%">ห้อง</th>
+                <th width="15%">ผู้จอง</th>
+                <th width="15%">แผนก</th>
             </tr>
         </thead>
         <tbody>
@@ -44,24 +78,18 @@
             <tr>
                 <td>{{ b.start_time|date:"d/m/Y" }}</td>
                 <td>{{ b.start_time|date:"H:i" }} - {{ b.end_time|date:"H:i" }}</td>
-                <td>{{ b.room.name }}</td>
                 <td>{{ b.title }}</td>
-                <td>{{ b.user.get_full_name|default:"-" }}</td>
+                <td>{{ b.room.name }}</td>
+                <td>{{ b.user.get_full_name|default:b.user.username }}</td>
                 <td>{{ b.department|default:"-" }}</td>
-                <td>
-                    {% if b.status == 'APPROVED' %}
-                        <span class="badge bg-success">อนุมัติ</span>
-                    {% else %}
-                        <span class="badge bg-warning">รออนุมัติ</span>
-                    {% endif %}
-                </td>
             </tr>
             {% empty %}
             <tr>
-                <td colspan="7" style="text-align: center;">ไม่มีข้อมูลการจองในช่วงเวลานี้</td>
+                <td colspan="6" style="text-align:center;">ไม่พบข้อมูล</td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
+
 </body>
 </html>

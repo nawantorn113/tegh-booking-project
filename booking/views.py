@@ -2,6 +2,8 @@ import json
 import re
 import csv
 import uuid
+import os
+import base64  # <--- [เพิ่ม] จำเป็นสำหรับการแปลงฟอนต์
 from datetime import datetime, timedelta, time
 from collections import defaultdict
 from dateutil.relativedelta import relativedelta
@@ -28,15 +30,14 @@ from django.utils import timezone
 from django.contrib.auth.forms import AuthenticationForm
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.cache import never_cache 
+from django.contrib.staticfiles import finders
 
 from dal import autocomplete
 from dal_select2.views import Select2QuerySetView
 
-try:
-    from weasyprint import HTML, CSS
-except ImportError:
-    HTML = None
-    CSS = None
+from xhtml2pdf import pisa
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
 
 try:
     from linebot import LineBotApi, WebhookHandler
@@ -57,6 +58,27 @@ if hasattr(settings, 'LINE_CHANNEL_ACCESS_TOKEN') and hasattr(settings, 'LINE_CH
         line_bot_api = LineBotApi(settings.LINE_CHANNEL_ACCESS_TOKEN)
         handler = WebhookHandler(settings.LINE_CHANNEL_SECRET)
     except: pass
+
+# =============================================================
+# Helper Functions
+# =============================================================
+def link_callback(uri, rel):
+    sUrl = settings.STATIC_URL
+    mUrl = settings.MEDIA_URL
+    path = ""
+
+    if uri.startswith(mUrl):
+        path = os.path.join(settings.MEDIA_ROOT, uri.replace(mUrl, ""))
+    elif uri.startswith(sUrl):
+        target_file = uri.replace(sUrl, "").lstrip('/')
+        path = finders.find(target_file)
+        if not path:
+            path = os.path.join(settings.BASE_DIR, 'static', target_file)
+
+    if not path or not os.path.isfile(path):
+        return "" 
+        
+    return path
 
 def is_admin(user):
     return user.is_authenticated and (user.is_superuser or user.is_staff or user.groups.filter(name='Admin').exists())
@@ -131,8 +153,6 @@ def get_base_context(request):
     
     if request.user.is_authenticated:
         if is_admin(request.user):
-            # [แก้ไข] รวม PENDING และ CANCELLED ไว้ใน Query เดียวกัน เพื่อแสดงใน Notification List
-            # จะได้เห็นรายการยกเลิกเด้งขึ้นมาด้วย (เรียงตามเวลาแก้ไขล่าสุด updated_at)
             qs = Booking.objects.filter(
                 Q(status='PENDING') | Q(status='CANCELLED'), 
                 is_user_seen=False
@@ -141,7 +161,6 @@ def get_base_context(request):
             pending_notifications = qs[:15]
             pending_count = qs.count()
             
-            # ตัวแปรนี้อาจไม่ได้ใช้แล้ว แต่คงไว้กัน Error ใน Template เก่า
             recent_cancellations = [] 
         else:
             qs = Booking.objects.filter(user=request.user, is_user_seen=False).exclude(status='PENDING').select_related('room').order_by('-updated_at')
@@ -208,7 +227,6 @@ def send_booking_notification(booking, template_name, subject_prefix):
                 line_targets.add(booking.user.profile.line_user_id)
         except: pass
         
-        # [แก้ไข] เปลี่ยนเงื่อนไขการหา Admin ให้ครอบคลุม (Superuser, Staff, Group Admin)
         admins = User.objects.filter(
             Q(is_superuser=True) | 
             Q(is_staff=True) | 
@@ -371,24 +389,12 @@ def smart_search_view(request):
         busy_rooms = Booking.objects.filter(start_time__lt=dt_end, end_time__gt=dt_start, status__in=['APPROVED', 'PENDING']).values_list('room_id', flat=True)
         rooms = rooms.exclude(id__in=busy_rooms)
 
-    stop_words = ['ห้อง', 'ประชุม', 'มี', 'เอา', 'ขอ', 'คน', 'ที่', 'ว่าง', 'ไหม', 'ครับ', 'ค่ะ']
-    for word in stop_words: clean_query = clean_query.replace(word, " ")
     clean_query = clean_query.strip()
     
     if clean_query and len(clean_query) > 1:
         name_filter = Q(name__icontains=clean_query) | Q(location__icontains=clean_query)
-        all_equipments = list(Equipment.objects.filter(is_active=True).values_list('name', flat=True))
-        found_equipments = process.extractBests(clean_query, all_equipments, score_cutoff=60)
-        equipment_names = [e[0] for e in found_equipments]
-        
-        if equipment_names:
-            equip_filter = Q()
-            for eq_name in equipment_names: equip_filter |= Q(equipment_in_room__icontains=eq_name)
-            search_message.append(f"🛠️ หาอุปกรณ์: {', '.join(equipment_names)}")
-            rooms = rooms.filter(name_filter | equip_filter).distinct()
-        else:
-            rooms = rooms.filter(name_filter)
-            search_message.append(f"🔎 คำค้นหา: {clean_query}")
+        rooms = rooms.filter(name_filter)
+        search_message.append(f"🔎 คำค้นหา: {clean_query}")
 
     final_msg = " | ".join(search_message) if search_message else "แสดงห้องทั้งหมด"
     if not rooms.exists():
@@ -411,7 +417,6 @@ def dashboard_view(request):
     for r in all_rooms:
         current_booking = room_booking_map.get(r.id)
         r.current_booking_info = current_booking
-        # ใช้ is_maintenance ตาม Model
         r.is_under_maintenance = r.is_currently_under_maintenance 
         
         if r.is_under_maintenance: r.status, r.status_class = 'ปิดปรับปรุง', 'bg-secondary text-white'
@@ -454,7 +459,6 @@ def room_calendar_view(request, room_id):
             booking_start = form.cleaned_data.get('start_time')
             now = timezone.now()
 
-            # Server-side validation
             if booking_start < now:
                 messages.error(request, "ไม่สามารถจองย้อนหลังได้ กรุณาเลือกเวลาใหม่")
                 return render(request, 'pages/room_calendar.html', {**get_base_context(request), 'room': room, 'form': form})
@@ -717,7 +721,6 @@ def add_room_view(request):
     else: form = RoomForm()
     return render(request, 'pages/room_form.html', {**get_base_context(request), 'form': form})
 
-# [แก้ไข] ฟังก์ชันแก้ไขห้อง ให้รองรับการจองทำความสะอาด
 @login_required
 @user_passes_test(is_admin)
 def edit_room_view(request, room_id):
@@ -725,9 +728,7 @@ def edit_room_view(request, room_id):
     if request.method == 'POST':
         form = RoomForm(request.POST, request.FILES, instance=r)
         if form.is_valid():
-            form.save() # บันทึกข้อมูลห้องปกติ
-            
-            # [เพิ่มใหม่] ตรวจสอบ Checkbox ทำความสะอาด
+            form.save()
             if form.cleaned_data.get('is_cleaning'):
                 Booking.objects.create(
                     room=r,
@@ -1163,6 +1164,9 @@ def reports_view(request):
 
     return render(request, 'pages/reports.html', context)
 
+# =========================================================================
+# Export Excel
+# =========================================================================
 @login_required
 @user_passes_test(is_admin)
 def export_reports_excel(request):
@@ -1177,23 +1181,35 @@ def export_reports_excel(request):
     if dept_filter: bookings_qs = bookings_qs.filter(department=dept_filter)
 
     response = HttpResponse(content_type='text/csv')
-    filename = f"report_{start_date.strftime('%Y%m%d')}_{end_date.strftime('%Y%m%d')}.csv"
-    response['Content-Disposition'] = f'attachment; filename="{filename}"'
-    response.write(u'\ufeff'.encode('utf8'))
+    response['Content-Disposition'] = f'attachment; filename="report.csv"'
+    
+    # [สำคัญ] ใส่ BOM ให้ Excel อ่านภาษาไทยออก
+    response.write(u'\ufeff'.encode('utf-8-sig'))
+    
     writer = csv.writer(response)
-    writer.writerow(['วันที่', 'เวลา', 'หัวข้อ', 'ห้อง', 'ผู้จอง', 'แผนก', 'สถานะ'])
+    writer.writerow(['วันที่', 'เวลา', 'หัวข้อ', 'ห้อง', 'ผู้จอง', 'แผนก'])
+    
     for b in bookings_qs:
+        # [สำคัญ] แปลงเวลาจาก UTC เป็น Local Time (Bangkok)
+        local_start = timezone.localtime(b.start_time)
+        local_end = timezone.localtime(b.end_time)
+        
         writer.writerow([
-            b.start_time.strftime('%d/%m/%Y'), f"{b.start_time.strftime('%H:%M')} - {b.end_time.strftime('%H:%M')}",
-            b.title, b.room.name, b.user.get_full_name() or b.user.username, b.department or "-", b.get_status_display()
+            local_start.strftime('%d/%m/%Y'), 
+            f"{local_start.strftime('%H:%M')} - {local_end.strftime('%H:%M')}",
+            b.title, 
+            b.room.name, 
+            b.user.get_full_name(), 
+            b.department
         ])
     return response
 
+# =========================================================================
+# Export PDF - ใช้ xhtml2pdf + Embed Base64 Font (รองรับภาษาไทยชัวร์)
+# =========================================================================
 @login_required
 @user_passes_test(is_admin)
 def export_reports_pdf(request):
-    if HTML is None: messages.error(request, "PDF Not Available"); return redirect('reports')
-    
     start_date, end_date, title, _ = get_date_range_from_request(request)
     dept_filter = request.GET.get('department', '')
 
@@ -1204,15 +1220,53 @@ def export_reports_pdf(request):
     
     if dept_filter: bookings_qs = bookings_qs.filter(department=dept_filter)
     
-    context = {'bookings': bookings_qs, 'export_date': timezone.now(), 'user': request.user, 'report_title': title}
-    html_string = render_to_string('pages/reports_pdf.html', context)
+    # --- [ส่วนที่แก้ไข: อ่านไฟล์ Font และแปลงเป็น Base64] ---
+    font_base64 = ""
     try:
-        pdf_file = HTML(string=html_string, base_url=request.build_absolute_uri()).write_pdf()
-        response = HttpResponse(pdf_file, content_type='application/pdf')
-        filename = f"report_{start_date.strftime('%Y%m%d')}_{end_date.strftime('%Y%m%d')}.pdf"
-        response['Content-Disposition'] = f'attachment; filename="{filename}"'
-        return response
-    except Exception as e: messages.error(request, f"PDF Error: {e}"); return redirect('reports')
+        # พยายามหาไฟล์ฟอนต์
+        font_path = finders.find('fonts/THSarabunNew.ttf')
+        
+        if not font_path:
+             # กรณีหาไม่เจอ ให้ลองดูใน static โดยตรง
+             font_path = os.path.join(settings.BASE_DIR, 'static', 'fonts', 'THSarabunNew.ttf')
+
+        if font_path and os.path.exists(font_path):
+            with open(font_path, "rb") as pdf_font_file:
+                # อ่านไฟล์เป็น binary และแปลงเป็น base64 string
+                encoded_string = base64.b64encode(pdf_font_file.read())
+                font_base64 = encoded_string.decode("utf-8")
+        else:
+            print("⚠️ Warning: Font THSarabunNew.ttf not found in static/fonts/")
+
+    except Exception as e:
+        print(f"Font Error: {e}")
+
+    # ส่งตัวแปร font_base64 ไปยัง template
+    context = {
+        'bookings': bookings_qs, 
+        'export_date': timezone.now(), 
+        'user': request.user, 
+        'report_title': title,
+        'font_base64': font_base64 
+    }
+    
+    # ใช้ template reports_pdf.html ที่เตรียมไว้
+    # แก้เป็น
+    template = get_template('pages/reports_pdf.html')
+    html = template.render(context)
+
+    response = HttpResponse(content_type='application/pdf')
+    filename = f"report_{start_date.strftime('%Y%m%d')}_{end_date.strftime('%Y%m%d')}.pdf"
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+
+    # สร้าง PDF
+    pisa_status = pisa.CreatePDF(html, dest=response, encoding='utf-8', link_callback=link_callback)
+
+    if pisa_status.err:
+       messages.error(request, "PDF Error")
+       return redirect('reports')
+    
+    return response
 
 @csrf_exempt
 def teams_action_receiver(request): return HttpResponse(status=200)
