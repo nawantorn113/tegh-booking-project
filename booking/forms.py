@@ -11,23 +11,101 @@ from dal import autocomplete
 
 from .models import Booking, Room, Equipment, UserProfile 
 
-# --- 1. Custom Widget ---
+# --- 1. Custom Widget (แก้ไขใหม่: โชว์รูป + AJAX Delete) ---
 class CustomImageWidget(forms.ClearableFileInput):
     def render(self, name, value, attrs=None, renderer=None):
         output = []
+        
+        # --- ส่วนที่ 1: ถ้ามีรูปภาพ ให้โชว์รูป + ปุ่มลบ (AJAX) ---
         if value and hasattr(value, "url"):
             image_html = f"""
-                <div class="mb-3 p-3 border rounded bg-light text-center position-relative">
-                    <img src="{value.url}" alt="Room Preview" 
-                         class="img-fluid rounded shadow-sm" 
-                         style="max-height: 250px; max-width: 100%; object-fit: contain;">
-                    <div class="mt-2 text-primary small fw-bold">
-                        <i class="bi bi-check-circle-fill"></i> รูปภาพปัจจุบัน
+                <div id="image-container-{name}" class="mb-3 p-3 border rounded bg-light text-center position-relative">
+                    <label class="form-label fw-bold text-primary">รูปภาพปัจจุบัน:</label>
+                    <div class="mb-2">
+                        <img src="{value.url}" alt="Room Preview" 
+                             class="img-fluid rounded shadow-sm" 
+                             style="max-height: 250px; object-fit: contain; border: 1px solid #ddd;">
+                    </div>
+                    
+                    <button type="button" class="btn btn-outline-danger btn-sm mt-2" onclick="deleteImageAJAX('{name}')">
+                        <i class="bi bi-trash-fill"></i> ลบรูปภาพนี้ทันที
+                    </button>
+                    
+                    <div id="delete-loading-{name}" class="text-muted small mt-1" style="display:none;">
+                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> กำลังลบ...
                     </div>
                 </div>
+
+                <script>
+                function deleteImageAJAX(fieldName) {{
+                    if (!confirm('คุณแน่ใจหรือไม่ที่จะลบรูปภาพนี้ถาวร? (การกระทำนี้ย้อนกลับไม่ได้)')) {{
+                        return;
+                    }}
+
+                    // 1. สร้าง URL สำหรับลบ
+                    // สมมติ URL ปัจจุบันคือ .../manage/rooms/5/edit/
+                    // เราต้องการเปลี่ยนเป็น .../manage/rooms/5/delete-image/
+                    
+                    let currentUrl = window.location.href;
+                    if (currentUrl.endsWith('/')) {{
+                        currentUrl = currentUrl.slice(0, -1);
+                    }}
+                    
+                    // แทนที่คำสั่งท้ายสุด (edit) ด้วย delete-image
+                    let deleteUrl = currentUrl.replace(/\/edit\/?$/, '/delete-image/');
+                    
+                    // Fallback: ถ้า URL ไม่ลงท้ายด้วย edit ลองต่อท้ายตรงๆ (กรณี URL แปลกๆ)
+                    if (deleteUrl === currentUrl) {{
+                         deleteUrl = currentUrl + '/delete-image/';
+                    }}
+
+                    // แสดงสถานะกำลังโหลด
+                    document.getElementById('delete-loading-' + fieldName).style.display = 'block';
+
+                    // 2. ส่งคำสั่งลบไปที่ Server
+                    fetch(deleteUrl, {{
+                        method: 'POST',
+                        headers: {{
+                            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                            'Content-Type': 'application/json'
+                        }}
+                    }})
+                    .then(response => {{
+                        if (response.ok) {{
+                            return response.json();
+                        }}
+                        throw new Error('Network response was not ok.');
+                    }})
+                    .then(data => {{
+                        if (data.status === 'success') {{
+                            // 3. ลบสำเร็จ: เอากล่องรูปภาพออก
+                            const container = document.getElementById('image-container-' + fieldName);
+                            container.innerHTML = '<div class="alert alert-success py-1"><i class="bi bi-check-circle"></i> ลบรูปภาพเรียบร้อย</div>';
+                            setTimeout(() => container.remove(), 2000); 
+                        }} else {{
+                            alert('เกิดข้อผิดพลาด: ' + data.message);
+                            document.getElementById('delete-loading-' + fieldName).style.display = 'none';
+                        }}
+                    }})
+                    .catch(error => {{
+                        console.error('Error:', error);
+                        alert('เกิดข้อผิดพลาดในการเชื่อมต่อ Server');
+                        document.getElementById('delete-loading-' + fieldName).style.display = 'none';
+                    }});
+                }}
+                </script>
             """
             output.append(image_html)
-        output.append(super().render(name, value, attrs, renderer))
+
+        # --- ส่วนที่ 2: ปุ่มเลือกไฟล์ใหม่ (แสดงเสมอ) ---
+        file_input_html = f"""
+            <div class="mb-1">
+                <label class="form-label text-muted small">อัปโหลดรูปภาพใหม่:</label>
+                <input type="file" name="{name}" class="form-control" accept="image/*">
+            </div>
+        """
+        output.append(file_input_html)
+        
         return mark_safe(''.join(output))
 
 # --- 2. Booking Form ---
@@ -198,7 +276,7 @@ class RoomForm(forms.ModelForm):
         }
 
         widgets = {
-            'image': CustomImageWidget(),
+            'image': CustomImageWidget(), # เรียกใช้ Widget ใหม่ที่นี่
             'maintenance_start': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'form-control'}),
             'maintenance_end': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'form-control'}),
             'is_maintenance': forms.CheckboxInput(attrs={'class': 'form-check-input', 'role': 'switch', 'id': 'maintenanceCheck'}),

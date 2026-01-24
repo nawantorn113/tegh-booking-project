@@ -47,6 +47,9 @@ urlpatterns = [
     
     # [สำคัญ] ปุ่มเปิดใช้งานห้อง (สำหรับเลิกปิดปรับปรุง)
     path('manage/rooms/<int:room_id>/open/', views.open_room_view, name='open_room'),
+    
+    # [ใหม่] ลบรูปภาพห้อง (AJAX)
+    path('manage/rooms/<int:room_id>/delete-image/', views.delete_room_image, name='delete-room-image'),
 
     # --- 7. จัดการอุปกรณ์ (Admin) ---
     path('manage/equipments/', views.equipment_management_view, name='equipments'),

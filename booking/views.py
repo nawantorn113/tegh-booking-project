@@ -3,7 +3,7 @@ import re
 import csv
 import uuid
 import os
-import base64  # <--- [เพิ่ม] จำเป็นสำหรับการแปลงฟอนต์
+import base64
 from datetime import datetime, timedelta, time
 from collections import defaultdict
 from dateutil.relativedelta import relativedelta
@@ -451,6 +451,7 @@ def master_calendar_view(request):
     return render(request, 'pages/master_calendar.html', ctx)
 
 @login_required
+@login_required
 def room_calendar_view(request, room_id):
     room = get_object_or_404(Room, pk=room_id)
     if request.method == 'POST':
@@ -459,13 +460,23 @@ def room_calendar_view(request, room_id):
             booking_start = form.cleaned_data.get('start_time')
             now = timezone.now()
 
+            # --- [เริ่มส่วนที่แก้ไข] เงื่อนไขข้อยกเว้นสำหรับ Admin ---
+            
+            # ตรวจสอบสิทธิ์ว่าเป็น Admin หรือไม่
+            is_user_admin = is_admin(request.user)
+
+            # 1. กฎห้ามจองย้อนหลัง (บังคับใช้ทุกคน)
             if booking_start < now:
                 messages.error(request, "ไม่สามารถจองย้อนหลังได้ กรุณาเลือกเวลาใหม่")
                 return render(request, 'pages/room_calendar.html', {**get_base_context(request), 'room': room, 'form': form})
 
-            if booking_start < now + timedelta(minutes=30):
-                messages.error(request, "กรุณาจองล่วงหน้าอย่างน้อย 30 นาที เพื่อเตรียมห้องและอุปกรณ์")
-                return render(request, 'pages/room_calendar.html', {**get_base_context(request), 'room': room, 'form': form})
+            # 2. กฎจองล่วงหน้า 30 นาที (ยกเว้นให้ Admin)
+            if not is_user_admin:  # ถ้าไม่ใช่ Admin ให้ตรวจสอบกฎ 30 นาที
+                if booking_start < now + timedelta(minutes=30):
+                    messages.error(request, "กรุณาจองล่วงหน้าอย่างน้อย 30 นาที เพื่อเตรียมห้องและอุปกรณ์")
+                    return render(request, 'pages/room_calendar.html', {**get_base_context(request), 'room': room, 'form': form})
+            
+            # --- [จบส่วนที่แก้ไข] ---
             
             recurrence = form.cleaned_data.get('recurrence')
             recurrence_end_date = form.cleaned_data.get('recurrence_end_date')
@@ -485,16 +496,18 @@ def room_calendar_view(request, room_id):
             while current_start.date() <= loop_limit:
                 current_end = current_start + duration
                 
+                # ตรวจสอบการจองซ้ำ (Buffer 30 นาที)
                 buffer_time = timedelta(minutes=30)
                 is_overlap = Booking.objects.filter(
                     room=room, 
                     start_time__lt=current_end + buffer_time, 
                     end_time__gt=current_start - buffer_time,
                     status__in=['APPROVED', 'PENDING']
-                ).exists()
+                ).exclude(id=base_booking.id).exists()
                 
                 if is_overlap:
-                    conflict_dates.append(f"{current_start.strftime('%d/%m/%Y %H:%M')} (ติดระยะเวลาพักห้อง 30 นาที)")
+                    conflict_dates.append(f"{current_start.strftime('%d/%m/%Y %H:%M')}")
+                
                 bookings_to_create.append({'start': current_start, 'end': current_end})
                 
                 if recurrence == 'WEEKLY': current_start += timedelta(weeks=1)
@@ -525,13 +538,13 @@ def room_calendar_view(request, room_id):
                     if 'ใหญ่' not in room.name:
                         new_b.room_layout = ''
 
-                    if new_b.booking_type == 'cleaning':
+                    # ถ้าเป็น Admin จอง หรือเป็นรายการทำความสะอาด ให้สถานะเป็น APPROVED ทันที
+                    if is_user_admin or new_b.booking_type == 'cleaning':
                         new_b.status = 'APPROVED'
                     else:
                         new_b.status = 'PENDING'
                         
                     new_b.is_user_seen = False
-                    
                     new_b.save()
                     
                     if 'equipments' in form.cleaned_data: 
@@ -539,16 +552,7 @@ def room_calendar_view(request, room_id):
 
                     log_action(request, 'BOOKING_CREATED', new_b, f"จองห้อง {room.name}")
                     
-                    if new_b.status == 'APPROVED':
-                        token = get_valid_token(request.user, request)
-                        if token:
-                            try:
-                                client = get_outlook_client(request)
-                                evt = client.create_calendar_event(token, new_b)
-                                new_b.outlook_event_id = evt['id']
-                                new_b.save(update_fields=['outlook_event_id'])
-                            except: pass
-                    
+                    # ส่ง Email/Line แจ้งเตือน
                     if count == 0: 
                         subject = 'โปรดอนุมัติรายการใหม่' if new_b.status == 'PENDING' else 'มีการจองห้องประชุมใหม่'
                         send_booking_notification(new_b, '', subject)
@@ -567,7 +571,6 @@ def room_calendar_view(request, room_id):
         form = BookingForm(initial=initial_data)
     
     return render(request, 'pages/room_calendar.html', {**get_base_context(request), 'room': room, 'form': form})
-
 @login_required
 def booking_detail_view(request, booking_id):
     b = get_object_or_404(Booking, pk=booking_id)
@@ -1285,3 +1288,31 @@ def mark_all_notifications_read(request):
         return JsonResponse({'status': 'success'})
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
+# -------------------------------------------------------------------------
+# [NEW] AJAX Delete Room Image
+# -------------------------------------------------------------------------
+@login_required
+@require_POST
+def delete_room_image(request, room_id):
+    """
+    ฟังก์ชันสำหรับลบรูปภาพห้องผ่าน AJAX
+    """
+    try:
+        room = get_object_or_404(Room, pk=room_id)
+        
+        # ตรวจสอบว่ามีรูปจริงไหม
+        if room.image:
+            # ลบไฟล์ออกจาก Storage (Optional: ถ้าอยากให้ลบไฟล์ขยะทิ้งด้วย)
+            room.image.delete(save=False)
+            
+            # เคลียร์ค่าใน Database
+            room.image = None
+            room.save()
+            
+            return JsonResponse({'status': 'success', 'message': 'ลบรูปภาพเรียบร้อยแล้ว'})
+        else:
+            return JsonResponse({'status': 'error', 'message': 'ไม่พบรูปภาพ'}, status=400)
+            
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)

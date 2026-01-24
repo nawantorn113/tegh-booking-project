@@ -1,7 +1,9 @@
 {% extends 'base.html' %}
 {% load static %}
 {% load crispy_forms_tags %}
-{% load widget_tweaks %} {% block title %}จัดการข้อมูลห้องประชุม{% endblock %}
+{% load widget_tweaks %}
+
+{% block title %}จัดการข้อมูลห้องประชุม{% endblock %}
 
 {% block content %}
 <div class="container py-4">
@@ -16,7 +18,7 @@
                 </div>
                 
                 <div class="card-body p-4 bg-white">
-                    <form method="post" enctype="multipart/form-data">
+                    <form method="post" enctype="multipart/form-data" id="roomForm">
                         {% csrf_token %}
 
                         <h6 class="fw-bold text-primary mb-3 border-bottom pb-2">
@@ -41,8 +43,38 @@
                             <div class="col-12">
                                 {{ form.equipment_in_room|as_crispy_field }}
                             </div>
-                            <div class="col-12">
-                                {{ form.image|as_crispy_field }}
+                            
+                            <div class="col-12 mb-3">
+                                <label class="form-label fw-bold">รูปภาพห้องประชุม</label>
+                                
+                                {% if form.instance.image %}
+                                <div id="image-preview-box" class="card bg-light mb-3">
+                                    <div class="card-body text-center p-4">
+                                        <div class="mb-3">
+                                            <img src="{{ form.instance.image.url }}" 
+                                                 id="room-img-display"
+                                                 onerror="this.style.display='none'; document.getElementById('img-error-icon').classList.remove('d-none');"
+                                                 class="img-fluid rounded shadow-sm border" 
+                                                 style="max-height: 250px; object-fit: contain; background: white;">
+                                            
+                                            <div id="img-error-icon" class="d-none p-4 text-muted border rounded bg-white">
+                                                <i class="bi bi-image-alt fs-1"></i><br>
+                                                <span>ไม่พบไฟล์รูปภาพในระบบ</span>
+                                            </div>
+                                        </div>
+                                        
+                                        <button type="button" class="btn btn-danger btn-sm rounded-pill px-4 shadow-sm" onclick="handleDeleteImage()">
+                                            <i class="bi bi-trash3-fill me-1"></i> ลบรูปภาพ
+                                        </button>
+                                    </div>
+                                </div>
+                                {% endif %}
+
+                                <div class="input-group">
+                                    <label class="input-group-text" for="id_image"><i class="bi bi-upload"></i></label>
+                                    <input type="file" name="image" class="form-control" id="id_image" accept="image/*">
+                                </div>
+                                <div class="form-text small text-muted">เลือกไฟล์ใหม่เพื่อเปลี่ยนรูป หรือกดปุ่มด้านบนเพื่อลบรูปเดิมออก</div>
                             </div>
                         </div>
 
@@ -73,9 +105,6 @@
                                             {% render_field form.maintenance_end class="form-control" type="datetime-local" %}
                                         </div>
                                     </div>
-                                    <div class="mt-2">
-                                        <small class="text-muted"><i class="bi bi-info-circle"></i> หากไม่ระบุวันที่ ระบบจะถือว่าปิดปรับปรุงอย่างไม่มีกำหนด</small>
-                                    </div>
                                 </div>
 
                                 <hr class="text-danger opacity-25">
@@ -98,8 +127,8 @@
                                         <button type="button" class="btn btn-white border border-danger text-danger btn-sm rounded-pill quick-tag shadow-sm" data-text="สาย HDMI หาย/เสีย">
                                             <i class="bi bi-usb-plug"></i> สาย HDMI
                                         </button>
-                                        <button type="button" class="btn btn-light border text-muted btn-sm rounded-pill quick-tag" data-text="clear">
-                                            <i class="bi bi-eraser"></i> ล้างค่า
+                                        <button type="button" class="btn btn-light border text-muted btn-sm rounded-pill quick-tag" data-text="ลบ">
+                                            <i class="bi bi-eraser"></i> ลบข้อความ
                                         </button>
                                     </div>
                                 </div>
@@ -126,7 +155,6 @@
 <style>
     .quick-tag:active { transform: scale(0.95); }
     .quick-tag:hover { background-color: #ffecec !important; }
-    /* ขยายขนาด Switch */
     .custom-switch-lg .form-check-input {
         width: 3em; height: 1.5em; cursor: pointer;
     }
@@ -140,7 +168,6 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // --- 1. จัดการ Show/Hide วันที่ปิดปรับปรุง ---
-        // ใช้ ID ที่เรากำหนดเอง (maintenanceToggle) ชัวร์กว่า
         const maintenanceSwitch = document.getElementById('maintenanceToggle');
         const maintenanceDates = document.getElementById('maintenance-dates-section');
 
@@ -148,9 +175,6 @@
             if (maintenanceSwitch && maintenanceDates) {
                 if (maintenanceSwitch.checked) {
                     maintenanceDates.classList.remove('d-none');
-                    // Focus ไปที่ช่องวันที่เริ่ม เพื่อให้รู้ว่าต้องกรอก
-                    const startInput = maintenanceDates.querySelector('input[type="datetime-local"]');
-                    if(startInput && !startInput.value) startInput.focus();
                 } else {
                     maintenanceDates.classList.add('d-none');
                 }
@@ -158,21 +182,19 @@
         }
 
         if (maintenanceSwitch) {
-            // เรียกใช้ครั้งแรกตอนโหลดหน้า
             toggleDates();
-            // ดักจับเหตุการณ์การเปลี่ยนค่า
             maintenanceSwitch.addEventListener('change', toggleDates);
         }
 
-        // --- 2. จัดการ Quick Tags ---
+        // --- 2. จัดการ Quick Tags (เปลี่ยนชื่อจาก clear เป็น ลบ) ---
         const inputField = document.getElementById('id_status_note');
         if (inputField) {
             document.querySelectorAll('.quick-tag').forEach(btn => {
                 btn.addEventListener('click', function(e) {
-                    e.preventDefault(); // ป้องกันปุ่ม submit form
+                    e.preventDefault();
                     const text = this.getAttribute('data-text');
                     
-                    if (text === "clear") {
+                    if (text === "ลบ") {
                         inputField.value = "";
                     } else {
                         if (inputField.value.includes(text)) return;
@@ -187,5 +209,34 @@
             });
         }
     });
+
+    // --- 3. ฟังก์ชัน AJAX สำหรับลบรูปภาพทันที ---
+    function handleDeleteImage() {
+        if (!confirm('ยืนยันที่จะลบรูปภาพนี้ถาวรหรือไม่? (ลบแล้วกู้คืนไม่ได้)')) return;
+        
+        // ดึง ID ห้องจาก URL (สมมติ URL: /manage/rooms/5/edit/)
+        const pathParts = window.location.pathname.split('/');
+        const roomId = pathParts[pathParts.length - 3]; 
+        
+        fetch(`/manage/rooms/${roomId}/delete-image/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                const previewBox = document.getElementById('image-preview-box');
+                if (previewBox) {
+                    previewBox.innerHTML = '<div class="alert alert-success m-0"><i class="bi bi-check-circle"></i> ลบรูปภาพเรียบร้อยแล้ว</div>';
+                    setTimeout(() => previewBox.remove(), 2000);
+                }
+            } else {
+                alert('เกิดข้อผิดพลาด: ' + data.message);
+            }
+        })
+        .catch(err => alert('ไม่สามารถเชื่อมต่อกับ Server ได้'));
+    }
 </script>
 {% endblock %}
