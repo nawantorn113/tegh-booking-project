@@ -460,23 +460,19 @@ def room_calendar_view(request, room_id):
             booking_start = form.cleaned_data.get('start_time')
             now = timezone.now()
 
-            # --- [เริ่มส่วนที่แก้ไข] เงื่อนไขข้อยกเว้นสำหรับ Admin ---
-            
-            # ตรวจสอบสิทธิ์ว่าเป็น Admin หรือไม่
+            # --- ตรวจสอบสิทธิ์ Admin และกฎการจอง ---
             is_user_admin = is_admin(request.user)
 
-            # 1. กฎห้ามจองย้อนหลัง (บังคับใช้ทุกคน)
             if booking_start < now:
                 messages.error(request, "ไม่สามารถจองย้อนหลังได้ กรุณาเลือกเวลาใหม่")
                 return render(request, 'pages/room_calendar.html', {**get_base_context(request), 'room': room, 'form': form})
 
-            # 2. กฎจองล่วงหน้า 30 นาที (ยกเว้นให้ Admin)
-            if not is_user_admin:  # ถ้าไม่ใช่ Admin ให้ตรวจสอบกฎ 30 นาที
+            if not is_user_admin:  # กฎ 30 นาที (ยกเว้นให้ Admin)
                 if booking_start < now + timedelta(minutes=30):
                     messages.error(request, "กรุณาจองล่วงหน้าอย่างน้อย 30 นาที เพื่อเตรียมห้องและอุปกรณ์")
                     return render(request, 'pages/room_calendar.html', {**get_base_context(request), 'room': room, 'form': form})
             
-            # --- [จบส่วนที่แก้ไข] ---
+            # ------------------------------------
             
             recurrence = form.cleaned_data.get('recurrence')
             recurrence_end_date = form.cleaned_data.get('recurrence_end_date')
@@ -538,7 +534,7 @@ def room_calendar_view(request, room_id):
                     if 'ใหญ่' not in room.name:
                         new_b.room_layout = ''
 
-                    # ถ้าเป็น Admin จอง หรือเป็นรายการทำความสะอาด ให้สถานะเป็น APPROVED ทันที
+                    # ถ้าเป็น Admin หรือแม่บ้านทำความสะอาด -> อนุมัติทันที
                     if is_user_admin or new_b.booking_type == 'cleaning':
                         new_b.status = 'APPROVED'
                     else:
@@ -552,7 +548,7 @@ def room_calendar_view(request, room_id):
 
                     log_action(request, 'BOOKING_CREATED', new_b, f"จองห้อง {room.name}")
                     
-                    # ส่ง Email/Line แจ้งเตือน
+                    # ส่งแจ้งเตือน
                     if count == 0: 
                         subject = 'โปรดอนุมัติรายการใหม่' if new_b.status == 'PENDING' else 'มีการจองห้องประชุมใหม่'
                         send_booking_notification(new_b, '', subject)
@@ -571,6 +567,7 @@ def room_calendar_view(request, room_id):
         form = BookingForm(initial=initial_data)
     
     return render(request, 'pages/room_calendar.html', {**get_base_context(request), 'room': room, 'form': form})
+
 @login_required
 def booking_detail_view(request, booking_id):
     b = get_object_or_404(Booking, pk=booking_id)
@@ -731,7 +728,9 @@ def edit_room_view(request, room_id):
     if request.method == 'POST':
         form = RoomForm(request.POST, request.FILES, instance=r)
         if form.is_valid():
-            form.save()
+            # บันทึกข้อมูลตามปกติ ค่าจากสวิตซ์ Active ใน HTML จะถูกส่งมาและบันทึกเอง
+            room_obj = form.save()
+            
             if form.cleaned_data.get('is_cleaning'):
                 Booking.objects.create(
                     room=r,
@@ -752,9 +751,14 @@ def edit_room_view(request, room_id):
         form = RoomForm(instance=r)
     return render(request, 'pages/room_form.html', {**get_base_context(request), 'form': form})
 
+# [เพิ่มฟังก์ชันที่ขาดไป] ลบห้องประชุม
 @login_required
+@user_passes_test(is_admin)
 @require_POST
-def delete_room_view(request, room_id): Room.objects.filter(pk=room_id).delete(); return redirect('rooms')
+def delete_room_view(request, room_id):
+    Room.objects.filter(pk=room_id).delete()
+    messages.success(request, "ลบห้องประชุมเรียบร้อยแล้ว")
+    return redirect('rooms')
 
 @login_required
 @user_passes_test(is_admin)

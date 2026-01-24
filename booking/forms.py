@@ -11,7 +11,7 @@ from dal import autocomplete
 
 from .models import Booking, Room, Equipment, UserProfile 
 
-# --- 1. Custom Widget (แก้ไขใหม่: โชว์รูป + AJAX Delete) ---
+# --- 1. Custom Widget (โชว์รูป + AJAX Delete) ---
 class CustomImageWidget(forms.ClearableFileInput):
     def render(self, name, value, attrs=None, renderer=None):
         output = []
@@ -42,27 +42,19 @@ class CustomImageWidget(forms.ClearableFileInput):
                         return;
                     }}
 
-                    // 1. สร้าง URL สำหรับลบ
-                    // สมมติ URL ปัจจุบันคือ .../manage/rooms/5/edit/
-                    // เราต้องการเปลี่ยนเป็น .../manage/rooms/5/delete-image/
-                    
                     let currentUrl = window.location.href;
                     if (currentUrl.endsWith('/')) {{
                         currentUrl = currentUrl.slice(0, -1);
                     }}
                     
-                    // แทนที่คำสั่งท้ายสุด (edit) ด้วย delete-image
                     let deleteUrl = currentUrl.replace(/\/edit\/?$/, '/delete-image/');
                     
-                    // Fallback: ถ้า URL ไม่ลงท้ายด้วย edit ลองต่อท้ายตรงๆ (กรณี URL แปลกๆ)
                     if (deleteUrl === currentUrl) {{
                          deleteUrl = currentUrl + '/delete-image/';
                     }}
 
-                    // แสดงสถานะกำลังโหลด
                     document.getElementById('delete-loading-' + fieldName).style.display = 'block';
 
-                    // 2. ส่งคำสั่งลบไปที่ Server
                     fetch(deleteUrl, {{
                         method: 'POST',
                         headers: {{
@@ -78,7 +70,6 @@ class CustomImageWidget(forms.ClearableFileInput):
                     }})
                     .then(data => {{
                         if (data.status === 'success') {{
-                            // 3. ลบสำเร็จ: เอากล่องรูปภาพออก
                             const container = document.getElementById('image-container-' + fieldName);
                             container.innerHTML = '<div class="alert alert-success py-1"><i class="bi bi-check-circle"></i> ลบรูปภาพเรียบร้อย</div>';
                             setTimeout(() => container.remove(), 2000); 
@@ -219,7 +210,7 @@ class BookingForm(forms.ModelForm):
                 
         return cleaned_data
 
-# --- 3. Room Form (แก้ไขห้อง + แจ้งทำความสะอาด) ---
+# --- 3. Room Form (แก้ไขห้อง + แจ้งทำความสะอาด + แก้ไขสถานะห้อง) ---
 class RoomForm(forms.ModelForm):
     approver = forms.ModelChoiceField(
         queryset=User.objects.filter(Q(groups__name__in=['Approver', 'Admin']) | Q(is_superuser=True)).distinct(),
@@ -253,6 +244,7 @@ class RoomForm(forms.ModelForm):
 
     class Meta:
         model = Room
+        # [แก้ไข] เพิ่ม 'is_active' เข้าไปใน fields
         fields = [
             'name', 'capacity', 'equipment_in_room', 'image', 'location', 
             'floor', 'building', 'is_maintenance', 'maintenance_start', 
@@ -272,14 +264,17 @@ class RoomForm(forms.ModelForm):
             'is_maintenance': 'เปิดใช้งานโหมดปิดปรับปรุง',
             'maintenance_start': 'เริ่มปิดปรับปรุง',
             'maintenance_end': 'สิ้นสุดปิดปรับปรุง',
+            'is_active': 'เปิดใช้งานห้องนี้ (Active Status)',
             'status_note': 'หมายเหตุแจ้งเตือน (แสดงหน้า Dashboard)',
         }
 
         widgets = {
-            'image': CustomImageWidget(), # เรียกใช้ Widget ใหม่ที่นี่
+            'image': CustomImageWidget(),
             'maintenance_start': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'form-control'}),
             'maintenance_end': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'form-control'}),
             'is_maintenance': forms.CheckboxInput(attrs={'class': 'form-check-input', 'role': 'switch', 'id': 'maintenanceCheck'}),
+            # [แก้ไข] เพิ่ม Widget สำหรับ is_active
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input', 'role': 'switch', 'id': 'activeToggle'}),
             'equipment_in_room': forms.Textarea(attrs={'rows': 5, 'class': 'form-control'}),
             'name': forms.TextInput(attrs={'class': 'form-control'}),
             'capacity': forms.NumberInput(attrs={'class': 'form-control'}),
@@ -348,9 +343,6 @@ class EquipmentForm(forms.ModelForm):
 
 # --- 5. Custom User Forms ---
 class CustomUserCreationForm(forms.ModelForm):
-    # -----------------------------------------------------------
-    # [UPDATED] Validator: ห้ามใช้ . ให้ใช้ _ แทน
-    # -----------------------------------------------------------
     username_validator = RegexValidator(
         regex=r'^[a-zA-Z0-9@_]+$', 
         message='ชื่อผู้ใช้ต้องประกอบด้วยตัวอักษรภาษาอังกฤษ ตัวเลข เครื่องหมาย @ หรือ _ (ขีดล่าง) เท่านั้น (ห้ามใช้ . - +)',
@@ -359,9 +351,8 @@ class CustomUserCreationForm(forms.ModelForm):
 
     username = forms.CharField(
         label="Username",
-        max_length=20, # [UPDATED] จำกัดความยาว 20 ตัวอักษร
+        max_length=20,
         required=True,
-        # [UPDATED] คำอธิบายภาษาไทย
         help_text="จำเป็นต้องระบุ ความยาวไม่เกิน 20 ตัวอักษร ใช้ได้เฉพาะตัวอักษรภาษาอังกฤษ ตัวเลข และเครื่องหมาย @ หรือ _ เท่านั้น",
         validators=[username_validator],
         widget=forms.TextInput(attrs={

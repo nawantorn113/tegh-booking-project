@@ -85,6 +85,16 @@
                             <div class="card-body" style="background-color: #fff5f5;"> 
                                 
                                 <div class="form-check form-switch mb-3 custom-switch-lg">
+                                    {% render_field form.is_active class="form-check-input" id="activeToggle" role="switch" %}
+                                    <label class="form-check-label fw-bold text-success ms-2" for="activeToggle">
+                                        เปิดใช้งานห้องนี้ (Active Status)
+                                    </label>
+                                    <div class="form-text small text-muted ms-5 mt-0">**หากปิดอยู่ ห้องจะขึ้นสถานะ "ปิดใช้งาน" และจองไม่ได้</div>
+                                </div>
+
+                                <hr class="text-danger opacity-25">
+                                
+                                <div class="form-check form-switch mb-3 custom-switch-lg">
                                     {% render_field form.is_maintenance class="form-check-input" id="maintenanceToggle" role="switch" %}
                                     <label class="form-check-label fw-bold text-danger ms-2" for="maintenanceToggle">
                                         เปิดโหมด "ปิดปรับปรุง" (ห้ามจอง)
@@ -216,7 +226,19 @@
         
         // ดึง ID ห้องจาก URL (สมมติ URL: /manage/rooms/5/edit/)
         const pathParts = window.location.pathname.split('/');
-        const roomId = pathParts[pathParts.length - 3]; 
+        // แก้ไขการดึง ID ให้ยืดหยุ่นขึ้น (หาตัวเลขจาก URL)
+        let roomId = null;
+        for (let i = pathParts.length - 1; i >= 0; i--) {
+            if (!isNaN(pathParts[i]) && pathParts[i] !== "") {
+                roomId = pathParts[i];
+                break;
+            }
+        }
+        
+        if (!roomId) {
+            alert('ไม่สามารถระบุ ID ห้องได้');
+            return;
+        }
         
         fetch(`/manage/rooms/${roomId}/delete-image/`, {
             method: 'POST',
